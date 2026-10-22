@@ -1,5 +1,15 @@
-run = "python src/main.py"
+modules = ["python-3.11"]
+run = "pip install -q -r requirements.txt && python src/main.py"
 entrypoint = "src/main.py"
 
 [nix]
 channel = "stable-24_05"
+
+[deployment]
+build = ["pip", "install", "-r", "requirements.txt"]
+run = ["python", "src/main.py"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 8080
+externalPort = 80

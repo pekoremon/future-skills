@@ -1,1 +1,2 @@
 # Add your project dependencies here, one per line.
+Flask==3.0.3
