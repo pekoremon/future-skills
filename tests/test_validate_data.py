@@ -28,7 +28,7 @@ class TestValidateData(unittest.TestCase):
         self.assertEqual(validate(ROOT / "data"), [])
 
     def test_valid_rows_pass(self):
-        self.append("roles.csv", f"agri_analyst,Agri Data Analyst,,agriculture,,,yes,ICR,low,{SOURCE}")
+        self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,ICR,15-2051.00,2524,,,no,yes,low,{SOURCE},")
         self.append("skills.csv", f"python,Python,,tech,yes,{SOURCE}")
         self.append("role_skills.csv", f"agri_analyst,python,4,{SOURCE}")
         self.append("sdg_map.csv", f"role,agri_analyst,2.4,Improves farm productivity,{SOURCE}")
@@ -50,8 +50,15 @@ class TestValidateData(unittest.TestCase):
         self.assertTrue(any("unknown role 'ghost_role'" in e for e in errors))
         self.assertTrue(any("unknown skill 'python'" in e for e in errors))
 
+    def test_bad_role_codes_fail(self):
+        self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,IIC,15-2051,,,,maybe,yes,,{SOURCE},")
+        errors = validate(self.tmp)
+        self.assertTrue(any("'riasec_code_onet' = 'IIC'" in e for e in errors))
+        self.assertTrue(any("'onet_soc' = '15-2051'" in e for e in errors))
+        self.assertTrue(any("'is_mycol' = 'maybe'" in e for e in errors))
+
     def test_bad_sdg_target_fails(self):
-        self.append("roles.csv", f"agri_analyst,Agri Data Analyst,,agriculture,,,yes,ICR,low,{SOURCE}")
+        self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,ICR,15-2051.00,2524,,,no,yes,low,{SOURCE},")
         self.append("sdg_map.csv", f"role,agri_analyst,SDG 2,Improves farm productivity,{SOURCE}")
         self.assertTrue(any("not a UN target" in e for e in validate(self.tmp)))
 

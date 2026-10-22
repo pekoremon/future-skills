@@ -2,18 +2,35 @@
 
 All tables are UTF-8 CSV. Every row must have `source_name`, `source_url` (http/https) and `source_date` (YYYY-MM-DD); `python scripts/validate_data.py` enforces this. Leave a value empty rather than guessing; write "no data" in a note instead of filling in a number.
 
-## roles.csv — about 18 roles (3 domains × 5 + 3 generic tech roles as a control group)
+## roles.csv — 35 roles (5 per RIASEC type + 5 generic IT roles as a control group)
 
 | Column | Meaning |
 |---|---|
-| role_id | Short unique id, e.g. `agri_data_analyst` |
-| name_en / name_zh | Role name in English / Chinese |
-| domain | `agriculture`, `finance`, `healthcare` or `general_tech` |
-| onet_soc | O*NET-SOC code, e.g. `15-2051.00` |
-| masco | MASCO code |
-| in_mycol | `yes` / `no` |
-| riasec_code | Holland code from O*NET, e.g. `ICR` |
-| ai_risk | AI substitution risk (`low` / `medium` / `high`), from a cited source |
+| role_id | Unique id, e.g. `R11` |
+| group | `IT_CONTROL`, `R`, `I`, `A`, `S`, `E` or `C` |
+| priority | Order within the group (1 = first choice) |
+| role_name_en | Role name in English (O*NET title where one exists) |
+| riasec_type_assigned | RIASEC type the team assigned (`IT` for the control group) |
+| riasec_code_onet | Top 1–3 interest letters from O*NET, e.g. `ICR` (from `scripts/onet_extract.py`) |
+| onet_soc | O*NET-SOC code, e.g. `15-2051.00` (required) |
+| masco_4digit_mycol | 4-digit MASCO code of the MyCOL occupation, if any |
+| mycol_occupation / mycol_matched_title | MyCOL occupation and the job title listed under it |
+| is_mycol | `yes`, `near` (closest MyCOL match only) or `no` |
+| it_reachable_draft | `yes`, `needs_extra_qualification` or `no` for an IT graduate |
+| ai_replacement_risk | `low` / `medium` / `high`, from a cited source; empty until sourced |
+| notes | Free text |
+
+`source_*` cites the MyCOL report when the role is in MyCOL, otherwise the O*NET 31.0 database. `onet_soc` and `riasec_code_onet` always come from O*NET 31.0; see `data/onet/role_onet.csv`.
+
+## data/onet/ — O*NET 31.0 extracts per role (generated, do not edit by hand)
+
+Rebuild with `python scripts/onet_extract.py` after downloading the O*NET CSVs listed in `SOURCES.md` into `raw/onet_db_31_0_csv/`.
+
+| File | Contents |
+|---|---|
+| role_onet.csv | RIASEC scores (1–7), RIASEC code and Job Zone per role |
+| role_skills_onet.csv | Essential skills, transferable skills and knowledge areas with O*NET importance ≥ 3.0 (1–5) and level |
+| role_hot_tech.csv | O*NET "Hot Technology" software examples; `in_demand = Y` marks the most demanded |
 
 ## skills.csv — 60–80 skills
 

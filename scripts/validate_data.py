@@ -20,9 +20,11 @@ SOURCE_COLUMNS = ["source_name", "source_url", "source_date"]
 # Columns each table must have (besides the source columns), and which must be filled.
 TABLES = {
     "roles.csv": {
-        "columns": ["role_id", "name_en", "name_zh", "domain", "onet_soc", "masco",
-                    "in_mycol", "riasec_code", "ai_risk"],
-        "required": ["role_id", "name_en", "domain"],
+        "columns": ["role_id", "group", "priority", "role_name_en", "riasec_type_assigned",
+                    "riasec_code_onet", "onet_soc", "masco_4digit_mycol", "mycol_occupation",
+                    "mycol_matched_title", "is_mycol", "it_reachable_draft",
+                    "ai_replacement_risk", "notes"],
+        "required": ["role_id", "group", "role_name_en", "riasec_type_assigned", "onet_soc"],
     },
     "skills.csv": {
         "columns": ["skill_id", "name_en", "name_zh", "skill_type", "onet_hot_technology"],
@@ -48,9 +50,11 @@ TABLES = {
 }
 
 ALLOWED = {
-    ("roles.csv", "domain"): {"agriculture", "finance", "healthcare", "general_tech"},
-    ("roles.csv", "in_mycol"): {"yes", "no", ""},
-    ("roles.csv", "ai_risk"): {"low", "medium", "high", ""},
+    ("roles.csv", "group"): {"IT_CONTROL", "R", "I", "A", "S", "E", "C"},
+    ("roles.csv", "riasec_type_assigned"): {"IT", "R", "I", "A", "S", "E", "C"},
+    ("roles.csv", "is_mycol"): {"yes", "near", "no", ""},
+    ("roles.csv", "it_reachable_draft"): {"yes", "needs_extra_qualification", "no", ""},
+    ("roles.csv", "ai_replacement_risk"): {"low", "medium", "high", ""},
     ("skills.csv", "skill_type"): {"tech", "domain", "general"},
     ("skills.csv", "onet_hot_technology"): {"yes", "no", ""},
     ("role_skills.csv", "importance"): {"1", "2", "3", "4", "5"},
@@ -64,6 +68,15 @@ ID_COLUMN = {"roles.csv": "role_id", "skills.csv": "skill_id",
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SDG_TARGET_RE = re.compile(r"^(1[0-7]|[1-9])\.([1-9]|10|[a-c])$")
+
+DOMAINS = {"agriculture", "finance", "healthcare", "general_tech"}
+
+# Optional columns that must match a pattern when filled.
+PATTERNS = {
+    ("roles.csv", "onet_soc"): (re.compile(r"^\d{2}-\d{4}\.\d{2}$"), "an O*NET-SOC code like 15-2051.00"),
+    ("roles.csv", "riasec_code_onet"): (re.compile(r"^(?!.*(.).*\1)[RIASEC]{1,3}$"), "1-3 distinct RIASEC letters like ICR"),
+    ("roles.csv", "masco_4digit_mycol"): (re.compile(r"^\d{4}$"), "a 4-digit MASCO code"),
+}
 
 
 def is_valid_date(value: str) -> bool:
@@ -110,6 +123,10 @@ def check_table(name: str, header: list[str], rows: list[dict]) -> list[str]:
             if table == name and values.get(col, "") not in allowed:
                 errors.append(f"{where}: '{col}' = '{values.get(col)}', expected one of {sorted(allowed - {''})}")
 
+        for (table, col), (pattern, expected) in PATTERNS.items():
+            if table == name and values.get(col) and not pattern.match(values[col]):
+                errors.append(f"{where}: '{col}' = '{values[col]}', expected {expected}")
+
         if name == "sdg_map.csv" and values.get("sdg_target") and not SDG_TARGET_RE.match(values["sdg_target"]):
             errors.append(f"{where}: sdg_target '{values['sdg_target']}' is not a UN target like 4.4")
 
@@ -126,7 +143,7 @@ def check_references(tables: dict[str, list[dict]]) -> list[str]:
     ids = {
         "role": {r["role_id"] for r in tables.get("roles.csv", [])},
         "skill": {r["skill_id"] for r in tables.get("skills.csv", [])},
-        "domain": ALLOWED[("roles.csv", "domain")],
+        "domain": DOMAINS,
     }
     errors = []
 
