@@ -75,6 +75,6 @@ Intermediate extracts made from these files with `scripts/onet_extract.py`: `rol
 - **Mathematics** appears twice, as a skill and as a knowledge area, because O*NET lists it under two element IDs.
 - **SDG links** are mostly `indirect`. Many general skills map to target 4.4 as general employability skills.
 - **Education.** Job Zone is O*NET's U.S. measure of preparation. It is not a Malaysian qualification rule. Roles above the user's level are ranked later and marked "needs extra education", not hidden.
-- **Scores.** The weights (0.2 interest, 0.5 skill, 0.3 trend) and the 70/30 split inside the skill score are team design choices, not data. See `scripts/matching.py`.
+- **Scores.** The weights (0.2 interest, 0.5 skill, 0.3 trend) and the 70/30 split inside the skill score are team design choices, not data. See `scripts/matching.py`. Interest is the correlation between the student's and the role's RIASEC scores. Each role takes the trend score of one domain (`ROLE_DOMAIN` in `matching.py`, a draft for the team to confirm); roles outside agriculture, finance, healthcare and ICT get a neutral 50, the score the trend formula gives a sector growing at the national average.
 - **Empty fields.** `ai_replacement_risk` in `roles.csv` is empty until we have a sourced figure. We do not fill it from opinion.
 - **Data policy.** Only public or synthetic data. No real CVs or personal data.

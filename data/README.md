@@ -122,4 +122,12 @@ Only skills that need a licence or certificate as proof; basic skills are covere
 
 ## sample_profiles.json — 3–4 fictional students for the demo
 
-No real CVs or personal data.
+No real CVs or personal data. Each profile is the input to `scripts/matching.py`:
+
+| Field | Meaning |
+|---|---|
+| profile_id / name | Id and a name marked "(fictional)" |
+| education_job_zone | Highest education as an O*NET Job Zone (4 = bachelor's degree) |
+| riasec | Six RIASEC totals from the questionnaire (any scale) |
+| skills | `skill_id` → level on the O*NET 0–7 scale (`rating_to_level()` converts a 1–5 self-rating) |
+| technologies | `skill_id`s of technologies the student already uses |
