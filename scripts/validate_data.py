@@ -27,20 +27,21 @@ TABLES = {
         "required": ["role_id", "group", "role_name_en", "riasec_type_assigned", "onet_soc"],
     },
     "skills.csv": {
-        "columns": ["skill_id", "name_en", "name_zh", "skill_type", "onet_hot_technology"],
-        "required": ["skill_id", "name_en", "skill_type"],
+        "columns": ["skill_id", "skill_name", "skill_type", "onet_source_type", "onet_element_id",
+                    "tech_category", "is_in_demand_tech"],
+        "required": ["skill_id", "skill_name", "skill_type", "is_in_demand_tech"],
     },
     "role_skills.csv": {
-        "columns": ["role_id", "skill_id", "importance"],
-        "required": ["role_id", "skill_id", "importance"],
+        "columns": ["role_id", "skill_id", "importance", "level", "row_type"],
+        "required": ["role_id", "skill_id", "row_type"],  # importance/level checked below
     },
     "trends.csv": {
         "columns": ["trend_id", "entity_type", "entity_id", "metric", "value", "unit", "period"],
         "required": ["trend_id", "entity_type", "entity_id", "metric", "value", "period"],
     },
     "sdg_map.csv": {
-        "columns": ["entity_type", "entity_id", "sdg_target", "rationale"],
-        "required": ["entity_type", "entity_id", "sdg_target", "rationale"],
+        "columns": ["entity_type", "entity_id", "sdg_target", "link_strength", "rationale"],
+        "required": ["entity_type", "entity_id", "sdg_target", "link_strength", "rationale"],
     },
     "courses.csv": {
         "columns": ["course_id", "skill_id", "title", "provider", "url", "duration_hours",
@@ -62,9 +63,10 @@ ALLOWED = {
     ("roles.csv", "is_mycol"): {"yes", "near", "no", ""},
     ("roles.csv", "it_reachable_draft"): {"yes", "needs_extra_qualification", "no", ""},
     ("roles.csv", "ai_replacement_risk"): {"low", "medium", "high", ""},
-    ("skills.csv", "skill_type"): {"tech", "domain", "general"},
-    ("skills.csv", "onet_hot_technology"): {"yes", "no", ""},
-    ("role_skills.csv", "importance"): {"1", "2", "3", "4", "5"},
+    ("skills.csv", "skill_type"): {"technology", "domain_knowledge", "general"},
+    ("skills.csv", "is_in_demand_tech"): {"Y", "N"},  # Y = O*NET In Demand flag
+    ("role_skills.csv", "row_type"): {"skill_knowledge", "in_demand_tech"},
+    ("sdg_map.csv", "link_strength"): {"direct", "indirect"},
     ("trends.csv", "entity_type"): {"role", "skill", "domain"},
     ("sdg_map.csv", "entity_type"): {"role", "skill"},
     ("courses.csv", "hrd_corp_claimable"): {"yes", "no", "unknown", ""},
@@ -79,7 +81,7 @@ ID_COLUMN = {"roles.csv": "role_id", "skills.csv": "skill_id",
              "certifications.csv": "cert_id"}
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-SDG_TARGET_RE = re.compile(r"^(1[0-7]|[1-9])\.([1-9]|10|[a-c])$")
+SDG_TARGET_RE = re.compile(r"^(1[0-7]|[1-9])\.([1-9]|[1-2][0-9]|[a-k])$")
 
 DOMAINS = {"agriculture", "finance", "healthcare", "general_tech"}
 
@@ -140,6 +142,25 @@ def check_table(name: str, header: list[str], rows: list[dict]) -> list[str]:
         for (table, col), (pattern, expected) in PATTERNS.items():
             if table == name and values.get(col) and not pattern.match(values[col]):
                 errors.append(f"{where}: '{col}' = '{values[col]}', expected {expected}")
+
+        if name == "role_skills.csv":
+            is_tech = values.get("row_type") == "in_demand_tech"
+            # skill/knowledge rows need importance 1-5; technology rows have none (O*NET gives only a flag).
+            # level (0-7) may be blank where O*NET suppresses it.
+            for col, lo, hi, must in (("importance", 1, 5, not is_tech), ("level", 0, 7, False)):
+                v = values.get(col, "")
+                if not v:
+                    if must:
+                        errors.append(f"{where}: '{col}' is empty")
+                    continue
+                try:
+                    ok = lo <= float(v) <= hi
+                except ValueError:
+                    ok = False
+                if not ok:
+                    errors.append(f"{where}: '{col}' = '{v}', expected a number from {lo} to {hi}")
+            if is_tech and (values.get("importance") or values.get("level")):
+                errors.append(f"{where}: in_demand_tech rows must not have importance or level")
 
         if name == "sdg_map.csv" and values.get("sdg_target") and not SDG_TARGET_RE.match(values["sdg_target"]):
             errors.append(f"{where}: sdg_target '{values['sdg_target']}' is not a UN target like 4.4")
