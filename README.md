@@ -15,8 +15,8 @@ AI is replacing generic tech jobs. Future Skills helps graduating tech students 
 | Team Name | [TEAM NAME] |
 | Team Domain | Domain 1 — Aiversecity Future-Ready Workforce |
 | SDG Track (1–17) | SDG 4 — Quality Education (targets 4.3, 4.4); SDG 8 — Decent Work (targets 8.2, 8.5) |
-| Team Leader | [LEADER NAME] |
-| University | [UNIVERSITY] |
+| Team Leader | [Hong Zhi Yang] |
+| University | [Universiti Tunku Abdul Rahman] |
 | Number of Members | 3 |
 
 ## Links
