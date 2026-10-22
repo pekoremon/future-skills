@@ -30,7 +30,8 @@ const cache = {};
 let state = loadState();
 
 function loadState() {
-  const base = { answers: Array(30).fill(null), quizSkipped: false, ratings: {}, techs: [], zone: 4, demo: null };
+  const base = { answers: Array(30).fill(null), quizSkipped: false, ratings: {}, techs: [], zone: 4, demo: null,
+    scenario: "baseline", hoursPerWeek: 5 };
   try {
     return Object.assign(base, JSON.parse(sessionStorage.getItem(STORE_KEY) || "{}"));
   } catch (e) {
@@ -284,7 +285,7 @@ function matchCard(m, rank) {
     <div class="match-head">
       <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
       <div class="stack" style="gap: 6px; flex: 1">
-        <h3>${rank}. ${esc(m.role_name)}</h3>
+        <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)}</h3>
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(DOMAINS[m.domain] || "Other field")}</span>
           ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : m.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
@@ -302,11 +303,36 @@ function matchCard(m, rank) {
         ${gaps ? `<div><h3>Biggest skill gaps</h3>${gaps}</div>` : '<p class="note">You meet the level O*NET lists for every rated skill of this role.</p>'}
         ${d.tech_missing.length ? `<div class="stack" style="gap: 8px"><h3>Technologies to learn</h3><div class="row" style="gap: 6px">${d.tech_missing.map((t) => `<span class="chip plain">${esc(t.skill_name)}</span>`).join("")}</div></div>` : ""}
         ${d.tech_used.length ? `<p class="small muted">You already use: ${d.tech_used.map((t) => esc(t.skill_name)).join(", ")}</p>` : ""}
+        ${pathHtml(m.pathway)}
         <div class="role-extra small muted">Loading role details…</div>
         ${m.sdg.map((s) => `<p class="small"><strong>SDG ${esc(s.target)}</strong> (${esc(s.link_strength)} link): ${esc(s.rationale)}</p>`).join("")}
       </div>
     </details>
   </article>`;
+}
+
+function moveBadge(m) {
+  if (state.scenario === "baseline" || !m.baseline_rank || m.baseline_rank === m.rank) return "";
+  const up = m.baseline_rank - m.rank;
+  return `<span class="chip ${up > 0 ? "" : "plain"}" title="Rank under current trends: ${m.baseline_rank}">${up > 0 ? "▲" : "▼"} ${Math.abs(up)} vs current trends</span>`;
+}
+
+function pathHtml(p) {
+  if (!p.steps.length && !p.gaps_without_course.length) return "";
+  const steps = p.steps.map((s) => `
+    <li class="step">
+      <a href="${safeUrl(s.url)}" rel="noopener" target="_blank">${esc(s.title)}</a>
+      <span class="muted small">${esc(s.provider)} · ${s.hours ? `${fmt(s.hours)} h` : "self-paced, no stated length"} · ${s.cost_myr === 0 ? "Free" : `RM ${fmt(s.cost_myr, 0)}`} · checked ${esc(s.verified_date)}</span>
+      <span class="small">Covers: ${s.skills.map(esc).join(", ")}</span>
+    </li>`).join("");
+  const time = p.total_hours
+    ? `About <strong>${fmt(p.total_hours)} hours</strong>, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.steps_without_hours ? ` (plus ${p.steps_without_hours} self-paced resource${p.steps_without_hours > 1 ? "s" : ""})` : ""}.`
+    : "";
+  return `<div class="stack" style="gap: 8px">
+    <h3>Your learning path</h3>
+    ${p.steps.length ? `<p class="small">${time} Ordered by the biggest gap first; all free.</p><ol class="path">${steps}</ol>` : ""}
+    ${p.gaps_without_course.length ? `<p class="small muted">No verified free course in our list yet for: ${p.gaps_without_course.map((g) => esc(g.skill_name)).join(", ")}.</p>` : ""}
+  </div>`;
 }
 
 async function loadRoleExtra(card) {
@@ -334,13 +360,28 @@ async function pageResults() {
   }
   render('<p class="muted" role="status">Scoring 35 roles…</p>');
   let body;
+  const options = { top: 35, scenario: state.scenario, hours_per_week: Number(state.hoursPerWeek) };
   if (demo) {
-    body = { profile_id: demo, top: 35 };
+    body = { profile_id: demo, ...options };
   } else {
     const totals = quizDone() ? await riasecTotals() : Object.fromEntries(ORDER.map((k) => [k, 0]));
-    body = { riasec: totals, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), top: 35 };
+    body = { riasec: totals, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
   }
-  const res = await api("/api/match", { body: JSON.stringify(body) });
+  const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
+  const sc = res.scenario;
+  const scenarioCard = `
+    <section class="card stack" style="gap: 10px" aria-labelledby="sc-title">
+      <h2 id="sc-title">Future scenario</h2>
+      <div class="tabs" role="group" aria-label="Future scenario">
+        ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === sc.id}">${esc(s.name)}</button>`).join("")}
+      </div>
+      <p class="small">${esc(sc.description)}</p>
+      <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Field scores:
+        ${Object.entries(sc.trend_scores).map(([d, v]) => `${esc(DOMAINS[d] || d)} ${fmt(v)}`).join(" · ")}. A field with only one measured part keeps the same score.</p>
+      <label class="row small">Study time per week
+        <select id="hpw">${[3, 5, 10, 15, 20].map((h) => `<option value="${h}"${h === Number(state.hoursPerWeek) ? " selected" : ""}>${h} hours</option>`).join("")}</select>
+      </label>
+    </section>`;
   const profiles = demo ? await cached("/api/profiles") : [];
   const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
   const noInterest = res.results[0] && res.results[0].flags.includes("interest_not_scored");
@@ -359,6 +400,7 @@ async function pageResults() {
       <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles that need more study or a licence are listed later, never hidden.</p>
       <div class="legend"><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
+    ${scenarioCard}
     <div id="list" class="stack"></div>
     <button class="btn" type="button" id="more">Show all ${res.results.length} roles</button>
     <div class="row">
@@ -367,6 +409,10 @@ async function pageResults() {
     </div>
   </div>`);
   document.getElementById("more").onclick = () => { shown = res.results.length; draw(); };
+  app.querySelectorAll("[data-scenario]").forEach((b) => {
+    b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
+  });
+  document.getElementById("hpw").onchange = (e) => { state.hoursPerWeek = Number(e.target.value); saveState(); pageResults().catch(showError); };
   draw();
 }
 

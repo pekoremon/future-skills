@@ -133,7 +133,8 @@ python src/main.py
 | GET | `/api/roles`, `/api/roles/<role_id>` | Roles; one role's skills, technologies, SDG targets and certifications |
 | GET | `/api/profiles` | Fictional demo profiles |
 | POST | `/api/questionnaire/score` | `{"answers": [{"type": "I", "value": 3}, ...]}` (values 0–4, Mini-IP scoring) → RIASEC totals (0–20) and code |
-| POST | `/api/match` | `{"answers" or "riasec", "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "education_job_zone": 4, "top": 10}` or `{"profile_id": "P01"}` → ranked roles with score breakdown, gaps and SDG |
+| POST | `/api/match` | `{"answers" or "riasec", "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "education_job_zone": 4, "scenario": "baseline", "hours_per_week": 5, "top": 10}` or `{"profile_id": "P01", ...}` → ranked roles with score breakdown, gaps, learning path, SDG and the rank under current trends |
+| GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each field's trend score under them |
 | GET | `/api/trends?domain=` | Trend scores and the dated signals behind them |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~3 min) / check its status |
 

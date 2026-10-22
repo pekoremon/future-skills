@@ -167,3 +167,8 @@ pre.log { white-space: pre-wrap; font-size: 12px; background: var(--bg); border:
   .gap-row { grid-template-columns: 1fr; }
   .rating button { width: 36px; }
 }
+
+/* learning path */
+ol.path { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+ol.path .step { display: flex; flex-direction: column; gap: 2px; }
+ol.path .step a { font-weight: 600; }

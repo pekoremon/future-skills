@@ -12,9 +12,13 @@ The weights are team design choices, not data (see SOURCES.md, "Choices and limi
   level, 1), weighted by O*NET importance. Rows whose level O*NET suppresses are skipped.
 - technologies: share of the role's In Demand technologies the student already uses.
   A role with none uses the rated part alone.
-- trend: the 0-100 trend score of the role's domain (data/trend_scores.csv). Roles
-  outside the four domains get a neutral 50, which the trend formula gives to a
-  sector that grows at the national average.
+- trend: the 0-100 trend score of the role's domain (data/trend_scores.csv), or its
+  value under a future scenario (SCENARIOS) that re-weights Malaysian demand against
+  AI momentum. Roles outside the four domains get a neutral 50, which the trend
+  formula gives to a sector that grows at the national average.
+
+Each result also has a learning path: its gaps, biggest first, with the free courses
+in data/courses.csv and the total hours.
 
 Roles whose Job Zone is above the student's education are ranked after the others
 and flagged, never hidden. Roles marked it_reachable_draft = no are ranked last.
@@ -56,6 +60,21 @@ ROLE_DOMAIN = {
     **dict.fromkeys(["R29", "R32", "R33", "R35"], "finance"),
 }
 
+# Future scenarios re-weight the two measured parts of each domain's trend score
+# (data/trend_scores.csv). They change no data; the weights are team assumptions.
+SCENARIOS = {
+    "baseline": {"name": "Current trends", "demand": 0.5, "ai": 0.5,
+                 "description": "Malaysian job demand and AI momentum count equally, as in the trend score."},
+    "fast_ai": {"name": "Fast AI adoption", "demand": 0.2, "ai": 0.8,
+                "description": "AI spreads quickly into every field, so how fast AI research is entering "
+                               "a field matters more than today's hiring."},
+    "local_demand": {"name": "Malaysian demand leads", "demand": 0.8, "ai": 0.2,
+                     "description": "AI adoption is slow and uneven, so today's Malaysian employment growth "
+                                    "decides which fields need people."},
+}
+DEFAULT_HOURS_PER_WEEK = 5
+MIN_PATH_GAP = 0.5  # rated gaps smaller than this (O*NET level points) get no course step
+
 
 def read_csv(name: str) -> list[dict]:
     with (DATA / name).open(encoding="utf-8-sig", newline="") as f:
@@ -72,13 +91,72 @@ def load_data() -> dict:
         sdg.setdefault((r["entity_type"], r["entity_id"]), []).append(
             {"target": r["sdg_target"], "goal_name": r["sdg_goal_name"],
              "link_strength": r["link_strength"], "rationale": r["rationale"]})
+    courses = {}
+    for r in read_csv("courses.csv"):
+        courses.setdefault(r["skill_id"], []).append(r)
     return {
         "roles": read_csv("roles.csv"),
         "skills": {r["skill_id"]: r for r in read_csv("skills.csv")},
         "role_skills": role_skills,
         "trend_scores": {r["domain"]: float(r["trend_score"]) for r in read_csv("trend_scores.csv")},
+        "trend_parts": {r["domain"]: {"demand": number(r["my_demand_score"]),
+                                      "ai": number(r["ai_momentum_score"])}
+                        for r in read_csv("trend_scores.csv")},
+        "courses": courses,
         "sdg": sdg,
     }
+
+
+def number(value: str) -> float | None:
+    try:
+        return float(value)
+    except ValueError:
+        return None  # "no data"
+
+
+def scenario_trend_scores(data: dict, scenario: str) -> dict:
+    """Trend score per domain under a scenario; a part with no data is left out, never filled."""
+    s = SCENARIOS[scenario]
+    scores = {}
+    for domain, parts in data["trend_parts"].items():
+        used = {k: v for k, v in parts.items() if v is not None}
+        weight = sum(s[k] for k in used)
+        if weight:
+            scores[domain] = round(min(100.0, max(0.0, sum(s[k] * v for k, v in used.items()) / weight)), 1)
+    return scores
+
+
+def learning_path(skill: dict, courses: dict, hours_per_week: float = DEFAULT_HOURS_PER_WEEK) -> dict:
+    """Order the gaps (biggest first, then missing technologies) and attach free courses.
+
+    Rated gaps under MIN_PATH_GAP level points are close enough and get no step.
+    A course that covers several gap skills is listed once. Gaps with no verified course
+    are returned separately so the page can say so instead of inventing one.
+    """
+    steps, no_course, seen = [], [], {}
+    gaps = [(g["skill_id"], g["skill_name"]) for g in skill["gaps"]
+            if g["level_needed"] - g["your_level"] >= MIN_PATH_GAP] + \
+           [(t["skill_id"], t["skill_name"]) for t in skill["tech_missing"]]
+    for sid, name in gaps:
+        options = courses.get(sid, [])
+        if not options:
+            no_course.append({"skill_id": sid, "skill_name": name})
+            continue
+        for c in options:
+            if c["url"] in seen:
+                seen[c["url"]]["skills"].append(name)
+                continue
+            step = {"course_id": c["course_id"], "title": c["title"], "provider": c["provider"],
+                    "url": c["url"], "hours": number(c["duration_hours"]) if c["duration_hours"] else None,
+                    "cost_myr": number(c["cost_myr"]), "hrd_corp_claimable": c["hrd_corp_claimable"],
+                    "verified_date": c["verified_date"], "skills": [name]}
+            seen[c["url"]] = step
+            steps.append(step)
+    hours = sum(s["hours"] for s in steps if s["hours"])
+    return {"steps": steps, "total_hours": round(hours, 1), "hours_per_week": hours_per_week,
+            "weeks": round(hours / hours_per_week, 1) if hours_per_week else None,
+            "steps_without_hours": sum(1 for s in steps if not s["hours"]),
+            "gaps_without_course": no_course}
 
 
 def rating_to_level(rating: float) -> float:
@@ -185,6 +263,8 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict) -> dic
                     "skill": f"{skill['rated_score']} rated skills/knowledge, "
                              f"{skill['tech_score']} technologies"},
         "skill_detail": skill,
+        "pathway": learning_path(skill, data["courses"],
+                                 profile.get("hours_per_week", DEFAULT_HOURS_PER_WEEK)),
         "job_zone": int(role["job_zone"]),
         "is_mycol": role["is_mycol"],
         "flags": flags,
@@ -193,9 +273,11 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict) -> dic
 
 
 def rank_roles(profile: dict, data: dict | None = None,
-               trend_scores: dict | None = None) -> list[dict]:
-    """Score every role for the profile. Pass trend_scores to try a future scenario."""
+               trend_scores: dict | None = None, scenario: str | None = None) -> list[dict]:
+    """Score every role for the profile under a scenario (SCENARIOS) or given trend scores."""
     data = data or load_data()
+    if scenario:
+        trend_scores = scenario_trend_scores(data, scenario)
     trend_scores = data["trend_scores"] if trend_scores is None else trend_scores
     results = [match_role(profile, role, data, trend_scores) for role in data["roles"]]
     tier = lambda m: (2 if "not_for_it_graduates" in m["flags"]

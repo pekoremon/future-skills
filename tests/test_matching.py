@@ -5,8 +5,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from matching import (ROLE_DOMAIN, interest_score, load_data, rank_roles, rating_to_level,
-                      skill_score)
+from matching import (ROLE_DOMAIN, SCENARIOS, interest_score, learning_path, load_data,
+                      rank_roles, rating_to_level, scenario_trend_scores, skill_score)
 
 SKILLS = {"S1": {"skill_name": "One"}, "S2": {"skill_name": "Two"}, "T1": {"skill_name": "Tech"},
           "S3": {"skill_name": "Three"}}
@@ -74,6 +74,39 @@ class TestMatching(unittest.TestCase):
         after = {m["role_id"]: m["total"] for m in rank_roles(self.profile, self.data, boom)}
         self.assertGreater(after["R06"], base["R06"])
         self.assertEqual(after["R01"], base["R01"])
+
+    def test_baseline_scenario_matches_trend_score_file(self):
+        self.assertEqual(scenario_trend_scores(self.data, "baseline"), self.data["trend_scores"])
+
+    def test_scenarios_reweight_only_measured_parts(self):
+        for name in SCENARIOS:
+            scores = scenario_trend_scores(self.data, name)
+            for domain, parts in self.data["trend_parts"].items():
+                if None in parts.values():  # one part only: same score in every scenario
+                    self.assertEqual(scores[domain], self.data["trend_scores"][domain])
+        fin = self.data["trend_parts"]["finance"]
+        fast = scenario_trend_scores(self.data, "fast_ai")["finance"]
+        local = scenario_trend_scores(self.data, "local_demand")["finance"]
+        self.assertEqual((fast > local), (fin["ai"] > fin["demand"]))
+
+    def test_learning_path_dedupes_courses_and_skips_small_gaps(self):
+        courses = {"S1": [{"course_id": "C1", "title": "Course", "provider": "P", "url": "https://x",
+                           "duration_hours": "4", "cost_myr": "0", "hrd_corp_claimable": "unknown",
+                           "verified_date": "2026-10-23"}]}
+        courses["S2"] = courses["S1"]
+        skill = {"gaps": [{"skill_id": "S1", "skill_name": "One", "level_needed": 4, "your_level": 1},
+                          {"skill_id": "S2", "skill_name": "Two", "level_needed": 4, "your_level": 2},
+                          {"skill_id": "S3", "skill_name": "Three", "level_needed": 4, "your_level": 3.8}],
+                 "tech_missing": [{"skill_id": "T9", "skill_name": "Tool"}]}
+        path = learning_path(skill, courses, hours_per_week=2)
+        self.assertEqual(len(path["steps"]), 1)
+        self.assertEqual(path["steps"][0]["skills"], ["One", "Two"])
+        self.assertEqual((path["total_hours"], path["weeks"]), (4.0, 2.0))
+        self.assertEqual([g["skill_id"] for g in path["gaps_without_course"]], ["T9"])
+
+    def test_every_course_skill_exists(self):
+        for sid in self.data["courses"]:
+            self.assertIn(sid, self.data["skills"])
 
 
 if __name__ == "__main__":

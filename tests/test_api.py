@@ -65,6 +65,20 @@ class TestApi(unittest.TestCase):
         r = self.client.post("/api/match", json={"profile_id": "P01", "top": 1})
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.json["results"]), 1)
+        self.assertEqual(r.json["scenario"]["id"], "baseline")
+        self.assertIn("pathway", r.json["results"][0])
+
+    def test_match_scenario_and_hours(self):
+        r = self.client.post("/api/match", json={"profile_id": "P01", "scenario": "fast_ai",
+                                                 "hours_per_week": 10})
+        self.assertEqual(r.status_code, 200)
+        first = r.json["results"][0]
+        self.assertEqual(first["rank"], 1)
+        self.assertIn("baseline_rank", first)
+        self.assertEqual(first["pathway"]["hours_per_week"], 10)
+        bad = self.client.post("/api/match", json={"profile_id": "P01", "scenario": "doom"})
+        self.assertEqual(bad.status_code, 400)
+        self.assertEqual(len(self.client.get("/api/scenarios").json), 3)
 
     def test_match_rejects_unknown_ids(self):
         r = self.client.post("/api/match", json={"riasec": dict.fromkeys("RIASEC", 1),
