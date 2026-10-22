@@ -12,12 +12,16 @@ All tables are UTF-8 CSV. Every row must have `source_name`, `source_url` (http/
 | role_name_en | Role name in English (O*NET title where one exists) |
 | riasec_type_assigned | RIASEC type the team assigned (`IT` for the control group) |
 | riasec_code_onet | Top 1–3 interest letters from O*NET, e.g. `ICR` (from `scripts/onet_extract.py`) |
+| score_R … score_C | O*NET RIASEC interest scores, 1–7 |
+| job_zone | O*NET Job Zone 1–5 (U.S. level of preparation, not a Malaysian rule) |
+| onet_title | O*NET occupation title |
 | onet_soc | O*NET-SOC code, e.g. `15-2051.00` (required) |
 | masco_4digit_mycol | 4-digit MASCO code of the MyCOL occupation, if any |
 | mycol_occupation / mycol_matched_title | MyCOL occupation and the job title listed under it |
 | is_mycol | `yes`, `near` (closest MyCOL match only) or `no` |
 | it_reachable_draft | `yes`, `needs_extra_qualification` or `no` for an IT graduate |
 | ai_replacement_risk | `low` / `medium` / `high`, from a cited source; empty until sourced |
+| mycol_source_name / _url / _date | Source of the MyCOL match (the main `source_*` columns cite O*NET) |
 | notes | Free text |
 
 `source_*` cites the MyCOL report when the role is in MyCOL, otherwise the O*NET 31.0 database. `onet_soc` and `riasec_code_onet` always come from O*NET 31.0; see `data/onet/role_onet.csv`.
@@ -32,14 +36,17 @@ Rebuild with `python scripts/onet_extract.py` after downloading the O*NET CSVs l
 | role_skills_onet.csv | Essential skills, transferable skills and knowledge areas with O*NET importance ≥ 3.0 (1–5) and level |
 | role_hot_tech.csv | O*NET "Hot Technology" software examples; `in_demand = Y` marks the most demanded |
 
-## skills.csv — 60–80 skills
+## skills.csv — 153 skills from O*NET 31.0
 
 | Column | Meaning |
 |---|---|
-| skill_id | Short unique id |
-| name_en / name_zh | Skill name |
-| skill_type | `tech`, `domain` or `general` |
-| onet_hot_technology | `yes` / `no` |
+| skill_id | Unique id, e.g. `SK001` |
+| skill_name | O*NET element or technology name |
+| skill_type | `general` (essential and transferable skills), `domain_knowledge` (O*NET knowledge areas) or `technology` |
+| onet_source_type | `essential_skill`, `transferable_skill`, `knowledge` or `technology_skills` |
+| onet_element_id | O*NET element id, e.g. `2.A.2.a` (empty for technologies) |
+| tech_category | O*NET commodity category (technologies only) |
+| is_in_demand_tech | `Y` if O*NET flags the technology In Demand, otherwise `N` |
 
 ## role_skills.csv — which skills each role needs
 
@@ -47,7 +54,9 @@ Rebuild with `python scripts/onet_extract.py` after downloading the O*NET CSVs l
 |---|---|
 | role_id | Must exist in roles.csv |
 | skill_id | Must exist in skills.csv |
-| importance | Integer 1–5 |
+| importance | O*NET importance, 1–5 (only rows with importance ≥ 3.0 are kept); empty for technology rows |
+| level | O*NET level, 0–7; empty for technology rows and where O*NET suppresses the value |
+| row_type | `skill_knowledge` (rated skill or knowledge) or `in_demand_tech` (no rating, O*NET gives only a flag) |
 
 ## trends.csv — at least one signal per role and per skill
 
@@ -72,10 +81,13 @@ This file is written by `scripts/update_trends.py`; edit `raw/dosm_manual.csv` i
 
 | Column | Meaning |
 |---|---|
+| sdg_id | Row id, e.g. `S01` |
 | entity_type | `role` or `skill` |
-| entity_id | Id in roles.csv / skills.csv |
+| entity_id / entity_name | Id and name in roles.csv / skills.csv |
+| sdg_goal / sdg_goal_name | Goal number and name |
 | sdg_target | UN target number, e.g. `4.4` |
-| rationale | One sentence on why |
+| link_strength | `direct` or `indirect` (team judgement) |
+| rationale | One sentence on why (team judgement, not UN text) |
 
 ## courses.csv — 1–2 courses per skill
 

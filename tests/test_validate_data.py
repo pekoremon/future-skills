@@ -1,3 +1,4 @@
+import csv
 import shutil
 import sys
 import tempfile
@@ -24,38 +25,73 @@ class TestValidateData(unittest.TestCase):
         with (self.tmp / table).open("a", encoding="utf-8") as f:
             f.write(line + "\n")
 
+    def add(self, table: str, **values: str) -> None:
+        """Append a row by column name; columns not given are left empty."""
+        path = self.tmp / table
+        with path.open(encoding="utf-8-sig", newline="") as f:
+            header = next(csv.reader(f))
+        values = {**dict(zip(["source_name", "source_url", "source_date"], SOURCE.split(","))), **values}
+        with path.open("a", encoding="utf-8", newline="") as f:
+            csv.writer(f).writerow([values.get(c, "") for c in header])
+
+    def add_valid_role(self, **values: str) -> None:
+        self.add("roles.csv", **{"role_id": "R99", "group": "I", "priority": "6",
+                                 "role_name_en": "Agri Data Analyst", "riasec_type_assigned": "I",
+                                 "riasec_code_onet": "ICR", "onet_soc": "15-2051.00",
+                                 "masco_4digit_mycol": "2524", "is_mycol": "no",
+                                 "it_reachable_draft": "yes", **values})
+
     def test_repo_data_passes(self):
         self.assertEqual(validate(ROOT / "data"), [])
 
     def test_valid_rows_pass(self):
-        self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,ICR,15-2051.00,2524,,,no,yes,low,{SOURCE},")
-        self.append("skills.csv", f"python,Python,,tech,yes,{SOURCE}")
-        self.append("role_skills.csv", f"agri_analyst,python,4,{SOURCE}")
-        self.append("sdg_map.csv", f"role,agri_analyst,2.4,Improves farm productivity,{SOURCE}")
+        self.add_valid_role()
+        self.add("skills.csv", skill_id="SK999", skill_name="Test Skill", skill_type="technology",
+                 onet_source_type="technology_skills", is_in_demand_tech="Y")
+        self.add("role_skills.csv", role_id="R99", skill_id="SK001", importance="4.12", level="3.5",
+                 row_type="skill_knowledge")
+        self.add("role_skills.csv", role_id="R99", skill_id="SK999", row_type="in_demand_tech")
+        self.add("sdg_map.csv", entity_type="role", entity_id="R99", sdg_target="2.4",
+                 link_strength="indirect", rationale="Improves farm productivity")
         self.assertEqual(validate(self.tmp), [])
 
     def test_missing_source_fails(self):
-        self.append("skills.csv", "python,Python,,tech,yes,,,")
+        self.add("skills.csv", skill_id="SK999", skill_name="Test Skill", skill_type="technology",
+                 is_in_demand_tech="Y", source_name="", source_url="", source_date="")
         errors = validate(self.tmp)
         self.assertTrue(any("'source_name' is empty" in e for e in errors))
         self.assertTrue(any("'source_date' is empty" in e for e in errors))
 
     def test_bad_date_fails(self):
-        self.append("skills.csv", "python,Python,,tech,yes,DOSM,https://www.dosm.gov.my/,18/08/2026")
+        self.add("skills.csv", skill_id="SK999", skill_name="Test Skill", skill_type="technology",
+                 is_in_demand_tech="Y", source_date="18/08/2026")
         self.assertTrue(any("YYYY-MM-DD" in e for e in validate(self.tmp)))
 
     def test_unknown_reference_fails(self):
-        self.append("role_skills.csv", f"ghost_role,python,3,{SOURCE}")
+        self.add("role_skills.csv", role_id="ghost_role", skill_id="python", importance="3",
+                 row_type="skill_knowledge")
         errors = validate(self.tmp)
         self.assertTrue(any("unknown role 'ghost_role'" in e for e in errors))
         self.assertTrue(any("unknown skill 'python'" in e for e in errors))
 
     def test_bad_role_codes_fail(self):
-        self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,IIC,15-2051,,,,maybe,yes,,{SOURCE},")
+        self.add_valid_role(riasec_code_onet="IIC", onet_soc="15-2051", masco_4digit_mycol="",
+                            is_mycol="maybe")
         errors = validate(self.tmp)
         self.assertTrue(any("'riasec_code_onet' = 'IIC'" in e for e in errors))
         self.assertTrue(any("'onet_soc' = '15-2051'" in e for e in errors))
         self.assertTrue(any("'is_mycol' = 'maybe'" in e for e in errors))
+
+    def test_bad_role_skill_values_fail(self):
+        self.add("role_skills.csv", role_id="R01", skill_id="SK001", importance="6", level="3",
+                 row_type="skill_knowledge")
+        self.add("role_skills.csv", role_id="R01", skill_id="SK002", row_type="skill_knowledge")
+        self.add("role_skills.csv", role_id="R01", skill_id="SK003", importance="3",
+                 row_type="in_demand_tech")
+        errors = validate(self.tmp)
+        self.assertTrue(any("'importance' = '6'" in e for e in errors))
+        self.assertTrue(any("'importance' is empty" in e for e in errors))
+        self.assertTrue(any("must not have importance or level" in e for e in errors))
 
     def test_bad_certification_fails(self):
         self.append("certifications.csv",
@@ -66,8 +102,9 @@ class TestValidateData(unittest.TestCase):
         self.assertTrue(any("'cost_amount' = 'RM480'" in e for e in errors))
 
     def test_bad_sdg_target_fails(self):
-        self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,ICR,15-2051.00,2524,,,no,yes,low,{SOURCE},")
-        self.append("sdg_map.csv", f"role,agri_analyst,SDG 2,Improves farm productivity,{SOURCE}")
+        self.add_valid_role()
+        self.add("sdg_map.csv", entity_type="role", entity_id="R99", sdg_target="SDG 2",
+                 link_strength="indirect", rationale="Improves farm productivity")
         self.assertTrue(any("not a UN target" in e for e in validate(self.tmp)))
 
 
