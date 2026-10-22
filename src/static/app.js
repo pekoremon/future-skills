@@ -60,7 +60,12 @@ function render(html) {
   app.innerHTML = html;
 }
 function showError(e) {
-  render(`<div class="warn" role="alert">Something went wrong: ${esc(e.message)}. <a href="#/">Back to start</a></div>`);
+  const offline = e instanceof TypeError;  // fetch() rejects with TypeError when the server cannot be reached
+  render(`<div class="warn stack" role="alert" style="gap: 10px">
+    <p>${offline ? "Cannot reach the Future Skills server. It may have stopped or be restarting." : `Something went wrong: ${esc(e.message)}.`}</p>
+    <div class="row"><button class="btn" type="button" id="retry">Try again</button><a href="#/">Back to start</a></div>
+  </div>`);
+  document.getElementById("retry").onclick = route;
 }
 
 function riasecTotals() {
