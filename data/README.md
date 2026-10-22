@@ -82,6 +82,25 @@ Rebuild with `python scripts/onet_extract.py` after downloading the O*NET CSVs l
 | hrd_corp_claimable | `yes` / `no` / `unknown` |
 | verified_date | Date someone opened the link and checked it (YYYY-MM-DD) |
 
+## certifications.csv — licences and certifications that prove a role's skills
+
+Only skills that need a licence or certificate as proof; basic skills are covered by `courses.csv`. Every value was read on the issuer's or regulator's own page (or a cited news/university page when the official one gave no figure); unconfirmed values stay empty and the reason goes in `notes`.
+
+| Column | Meaning |
+|---|---|
+| cert_id | Unique id, e.g. `CERT07` |
+| role_id | Must exist in roles.csv |
+| cert_name / issuer | Certificate or licence, and the body that issues it |
+| cert_type | `licence` (legal registration to practise) or `certification` (industry credential) |
+| required_to_practise_my | `yes` if Malaysian law requires it to practise, `no` if optional, empty if not verified |
+| entry_requirement | What you need before applying (degree, experience, exam) |
+| how_to_get | Steps to obtain it |
+| cost_amount / cost_currency | Fee as published (`MYR` or `USD`); what it covers is in `notes` |
+| hrd_corp_claimable | `yes` / `no` / `unknown` |
+| url | Official page for the certificate |
+| verified_date | Date someone opened the official page and checked it (YYYY-MM-DD) |
+| notes | What the fee covers, caveats, what still needs checking |
+
 ## sample_profiles.json — 3–4 fictional students for the demo
 
 No real CVs or personal data.

@@ -47,6 +47,13 @@ TABLES = {
                     "cost_myr", "hrd_corp_claimable", "verified_date"],
         "required": ["course_id", "skill_id", "title", "provider", "url", "verified_date"],
     },
+    "certifications.csv": {
+        "columns": ["cert_id", "role_id", "cert_name", "issuer", "cert_type",
+                    "required_to_practise_my", "entry_requirement", "how_to_get", "cost_amount",
+                    "cost_currency", "hrd_corp_claimable", "url", "verified_date", "notes"],
+        "required": ["cert_id", "role_id", "cert_name", "issuer", "cert_type", "url",
+                     "verified_date"],
+    },
 }
 
 ALLOWED = {
@@ -61,10 +68,15 @@ ALLOWED = {
     ("trends.csv", "entity_type"): {"role", "skill", "domain"},
     ("sdg_map.csv", "entity_type"): {"role", "skill"},
     ("courses.csv", "hrd_corp_claimable"): {"yes", "no", "unknown", ""},
+    ("certifications.csv", "cert_type"): {"licence", "certification"},
+    ("certifications.csv", "required_to_practise_my"): {"yes", "no", ""},
+    ("certifications.csv", "cost_currency"): {"MYR", "USD", ""},
+    ("certifications.csv", "hrd_corp_claimable"): {"yes", "no", "unknown", ""},
 }
 
 ID_COLUMN = {"roles.csv": "role_id", "skills.csv": "skill_id",
-             "trends.csv": "trend_id", "courses.csv": "course_id"}
+             "trends.csv": "trend_id", "courses.csv": "course_id",
+             "certifications.csv": "cert_id"}
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SDG_TARGET_RE = re.compile(r"^(1[0-7]|[1-9])\.([1-9]|10|[a-c])$")
@@ -76,6 +88,8 @@ PATTERNS = {
     ("roles.csv", "onet_soc"): (re.compile(r"^\d{2}-\d{4}\.\d{2}$"), "an O*NET-SOC code like 15-2051.00"),
     ("roles.csv", "riasec_code_onet"): (re.compile(r"^(?!.*(.).*\1)[RIASEC]{1,3}$"), "1-3 distinct RIASEC letters like ICR"),
     ("roles.csv", "masco_4digit_mycol"): (re.compile(r"^\d{4}$"), "a 4-digit MASCO code"),
+    ("certifications.csv", "cost_amount"): (re.compile(r"^\d+(\.\d{1,2})?$"), "a number like 480 or 5660.40"),
+    ("certifications.csv", "url"): (re.compile(r"^https?://"), "an http(s) link"),
 }
 
 
@@ -156,6 +170,8 @@ def check_references(tables: dict[str, list[dict]]) -> list[str]:
         ref("role_skills.csv", i, "skill", row.get("skill_id", ""))
     for i, row in enumerate(tables.get("courses.csv", []), start=2):
         ref("courses.csv", i, "skill", row.get("skill_id", ""))
+    for i, row in enumerate(tables.get("certifications.csv", []), start=2):
+        ref("certifications.csv", i, "role", row.get("role_id", ""))
     for table in ("trends.csv", "sdg_map.csv"):
         for i, row in enumerate(tables.get(table, []), start=2):
             kind = row.get("entity_type", "")

@@ -13,6 +13,7 @@ Every row in `data/` cites one of the sources below in its `source_name`, `sourc
 | [MyCOL 2024/2025](https://www.ajobthing.com/resources/blog/66-critical-jobs-malaysia-2026-full-mycol-list-talent-corp) | Evidence that chosen roles are in demand in Malaysia (66 critical occupations) | Annual report | [TO CHECK] | Replace with the original TalentCorp report link |
 | MyMahir | 120 emerging roles and skill lists (reference only) | Website, no public API | [TO CHECK] | Manual reference |
 | arXiv API | Monthly AI paper counts per domain (how fast AI enters each field) | API, no key | arXiv metadata: CC0 | Supplementary signal |
+| Certification issuers and regulators (Nursing Board Malaysia, MAHPC, BEM, LKM, SEDA, OffSec, EC-Council, ISC2, CompTIA, ACFE, GARP, ICA/AICB, PMI) | `certifications.csv`: entry requirements, steps and fees | Official websites, checked 2026-10-22 | Facts only, no text copied | Each row cites its page; fees change, re-check before the demo |
 | UN SDG targets | Official target wording for `sdg_map.csv` | Website | [TO CHECK] | |
 
 ## Licence notes

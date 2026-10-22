@@ -57,6 +57,14 @@ class TestValidateData(unittest.TestCase):
         self.assertTrue(any("'onet_soc' = '15-2051'" in e for e in errors))
         self.assertTrue(any("'is_mycol' = 'maybe'" in e for e in errors))
 
+    def test_bad_certification_fails(self):
+        self.append("certifications.csv",
+                    f"CERT99,R99,Some Cert,Issuer,diploma,,,,RM480,USD,unknown,https://example.org,2026-10-01,,{SOURCE}")
+        errors = validate(self.tmp)
+        self.assertTrue(any("unknown role 'R99'" in e for e in errors))
+        self.assertTrue(any("'cert_type' = 'diploma'" in e for e in errors))
+        self.assertTrue(any("'cost_amount' = 'RM480'" in e for e in errors))
+
     def test_bad_sdg_target_fails(self):
         self.append("roles.csv", f"agri_analyst,I,6,Agri Data Analyst,I,ICR,15-2051.00,2524,,,no,yes,low,{SOURCE},")
         self.append("sdg_map.csv", f"role,agri_analyst,SDG 2,Improves farm productivity,{SOURCE}")
