@@ -1,12 +1,15 @@
 """Future Skills web API (Flask). Replit runs this file.
 
 Endpoints (all JSON):
+    GET  /                           the web app (src/static/)
+    GET  /api                        list of endpoints
     GET  /api/health
+    GET  /api/questionnaire          the 30 Mini-IP items, answer scale and attribution
     GET  /api/skills                 ?type=general|domain_knowledge|technology
     GET  /api/roles
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
     GET  /api/profiles               fictional demo profiles
-    POST /api/questionnaire/score    RIASEC answers -> six totals and a 3-letter code
+    POST /api/questionnaire/score    RIASEC answers (0-4) -> six totals (0-20) and a 3-letter code
     POST /api/match                  student profile -> ranked, explained roles
     GET  /api/trends                 ?domain=  trend scores and the signals behind them
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
@@ -34,7 +37,7 @@ sys.path.insert(0, str(SCRIPTS))
 import matching  # noqa: E402  (scripts/ is added to the path above)
 
 RIASEC = matching.RIASEC
-LIKERT = range(1, 6)  # questionnaire answers: 1 = strongly dislike ... 5 = strongly like
+LIKERT = range(0, 5)  # Mini-IP answers: 0 = strongly dislike ... 4 = strongly like
 UPDATE_TIMEOUT_S = 600
 
 app = Flask(__name__)
@@ -79,7 +82,7 @@ def score_answers(answers) -> dict:
     for i, a in enumerate(answers):
         t, v = (a.get("type"), a.get("value")) if isinstance(a, dict) else (None, None)
         if t not in totals or isinstance(v, bool) or v not in LIKERT:
-            raise BadRequest(f"answers[{i}]: type must be one of {RIASEC} and value 1-5")
+            raise BadRequest(f"answers[{i}]: type must be one of {RIASEC} and value 0-4")
         totals[t] += v
     return totals
 
@@ -135,6 +138,11 @@ def build_profile(data: dict, skills: dict) -> dict:
 
 
 @app.get("/")
+def web_app():
+    return app.send_static_file("index.html")
+
+
+@app.get("/api")
 def index():
     return jsonify(name="Future Skills API",
                    endpoints=sorted({str(r) for r in app.url_map.iter_rules()
@@ -144,6 +152,11 @@ def index():
 @app.get("/api/health")
 def health():
     return jsonify(status="ok")
+
+
+@app.get("/api/questionnaire")
+def questionnaire():
+    return jsonify(json.loads((DATA / "riasec_items.json").read_text(encoding="utf-8")))
 
 
 @app.get("/api/skills")

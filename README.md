@@ -60,7 +60,7 @@ Domain 1 requires all six:
 
 | Layer | Technology |
 |---|---|
-| Frontend | [TBD] |
+| Frontend | HTML, CSS and plain JavaScript served by Flask (`src/static/`), no build step |
 | Backend | Python 3.11, Flask 3.0 (JSON API in `src/main.py`) |
 | Data | CSV tables in `data/`, validated by `scripts/validate_data.py` |
 | Hosting / Dev | Replit |
@@ -78,6 +78,7 @@ Domain 1 requires all six:
 │   ├── certifications.csv
 │   ├── sdg_map.csv
 │   ├── courses.csv
+│   ├── riasec_items.json    # 30 O*NET Mini-IP items (verbatim, CC BY-ND 4.0)
 │   └── sample_profiles.json # Fictional demo profiles only
 ├── docs/                    # Screenshots, diagrams
 ├── raw/                     # Raw downloads (git-ignored; listed in SOURCES.md)
@@ -88,7 +89,8 @@ Domain 1 requires all six:
 │   ├── update_trends.py     # Refresh trends.csv ("Update data" button)
 │   └── validate_data.py     # Check every row has a source and date
 ├── src/
-│   └── main.py              # Flask API (Replit entry point)
+│   ├── main.py              # Flask API (Replit entry point)
+│   └── static/              # Web app: index.html, app.js, style.css
 ├── submission/              # Required submission PDFs
 ├── tests/
 ├── .env.example
@@ -123,11 +125,14 @@ python src/main.py
 
 | Method | Path | What it does |
 |---|---|---|
+| GET | `/` | The web app (`src/static/`) |
+| GET | `/api` | List of endpoints |
 | GET | `/api/health` | Health check |
+| GET | `/api/questionnaire` | The 30 O*NET Mini-IP items, answer scale and attribution |
 | GET | `/api/skills?type=` | Skills for the intake form (`general`, `domain_knowledge`, `technology`) |
 | GET | `/api/roles`, `/api/roles/<role_id>` | Roles; one role's skills, technologies, SDG targets and certifications |
 | GET | `/api/profiles` | Fictional demo profiles |
-| POST | `/api/questionnaire/score` | `{"answers": [{"type": "I", "value": 4}, ...]}` (values 1–5) → RIASEC totals and code |
+| POST | `/api/questionnaire/score` | `{"answers": [{"type": "I", "value": 3}, ...]}` (values 0–4, Mini-IP scoring) → RIASEC totals (0–20) and code |
 | POST | `/api/match` | `{"answers" or "riasec", "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "education_job_zone": 4, "top": 10}` or `{"profile_id": "P01"}` → ranked roles with score breakdown, gaps and SDG |
 | GET | `/api/trends?domain=` | Trend scores and the dated signals behind them |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~3 min) / check its status |

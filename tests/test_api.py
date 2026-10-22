@@ -18,7 +18,15 @@ class TestApi(unittest.TestCase):
 
     def test_health_and_index(self):
         self.assertEqual(self.client.get("/api/health").json, {"status": "ok"})
-        self.assertIn("/api/match", self.client.get("/").json["endpoints"])
+        self.assertIn("/api/match", self.client.get("/api").json["endpoints"])
+        page = self.client.get("/")
+        self.assertIn(b"<!doctype html>", page.data.lower())
+        page.close()
+
+    def test_questionnaire_items(self):
+        q = self.client.get("/api/questionnaire").json
+        self.assertEqual(len(q["items"]), 30)
+        self.assertEqual(sorted({i["type"] for i in q["items"]}), sorted("RIASEC"))
 
     def test_skills_filter(self):
         techs = self.client.get("/api/skills?type=technology").json
@@ -33,9 +41,9 @@ class TestApi(unittest.TestCase):
         self.assertEqual(self.client.get("/api/roles/R99").status_code, 404)
 
     def test_questionnaire_score(self):
-        answers = [{"type": t, "value": 5 if t == "I" else 2} for t in "RIASEC" for _ in range(5)]
+        answers = [{"type": t, "value": 4 if t == "I" else 1} for t in "RIASEC" for _ in range(5)]
         r = self.client.post("/api/questionnaire/score", json={"answers": answers}).json
-        self.assertEqual(r["riasec"]["I"], 25)
+        self.assertEqual(r["riasec"]["I"], 20)
         self.assertEqual(r["code"][0], "I")
 
     def test_questionnaire_rejects_bad_answer(self):
@@ -43,7 +51,7 @@ class TestApi(unittest.TestCase):
         self.assertEqual(r.status_code, 400)
 
     def test_match_from_answers_and_ratings(self):
-        answers = [{"type": t, "value": v} for t, v in zip("RIASEC", [2, 5, 1, 2, 2, 4])]
+        answers = [{"type": t, "value": v} for t, v in zip("RIASEC", [1, 4, 0, 1, 1, 3])]
         r = self.client.post("/api/match", json={
             "answers": answers, "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "top": 3})
         self.assertEqual(r.status_code, 200)
