@@ -26,4 +26,8 @@ Downloads kept in `raw/` (git-ignored). One line per file:
 
 | File | URL | Downloaded (YYYY-MM-DD) | By |
 |---|---|---|---|
-| | | | |
+| `onet_interest_profiler/Interest_Profiler.pdf` (Short Form, 60 items) | https://www.onetcenter.org/dl_tools/ipsf/Interest_Profiler.pdf | 2026-10-22 | Claude |
+| `onet_interest_profiler/IP_Score_Report.pdf` | https://www.onetcenter.org/dl_tools/ipsf/IP_Score_Report.pdf | 2026-10-22 | Claude |
+| `onet_interest_profiler/IP_Score_Report_Starter.pdf` | https://www.onetcenter.org/dl_tools/ipsf/IP_Score_Report_Starter.pdf | 2026-10-22 | Claude |
+| `onet_interest_profiler/IP_Career_Listings.pdf` | https://www.onetcenter.org/dl_tools/ipsf/IP_Career_Listings.pdf | 2026-10-22 | Claude |
+| `onet_interest_profiler/IP_Manual.html` | https://www.onetcenter.org/reports/IP_Manual.html | 2026-10-22 | Claude |
