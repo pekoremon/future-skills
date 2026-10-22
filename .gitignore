@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Environment
+.env
+
+# Large raw downloads (DOSM PDFs, O*NET ZIP) stay local; record them in SOURCES.md
+raw/*
+!raw/README.md
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
