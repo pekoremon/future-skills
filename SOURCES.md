@@ -4,17 +4,22 @@ Every row in `data/` cites one of the sources below in its `source_name`, `sourc
 
 Dates are `YYYY-MM-DD`. For downloaded files, `source_date` is the date we downloaded the file. For web pages and documents without a single publication date, it is the date we consulted them. It is not the publication date of the data.
 
+**Exception (to agree as a team):** in `trends.csv`, rows taken from DOSM reports use the report's **publication date** as `source_date`; rows from the OpenDOSM and arXiv APIs use the fetch date.
+
 ## Data sources
 
 | Source | Used for | Format / update | Licence | Notes |
 |---|---|---|---|---|
-| [DOSM Job Market Insights](https://www.dosm.gov.my/uploads/release-content/file_20260818075305.pdf) | Online job ads by occupation, industry, STEM / TVET / MyCOL | PDF, quarterly (latest 2026 Q2) | [TO CHECK] | Numbers extracted by hand or script into `trends.csv` |
-| [OpenDOSM](https://open.dosm.gov.my/data-catalogue/lfs_year) | Programmatic source for the "Update data" button; labour force data | API / CSV / Parquet, no key | [TO CHECK] | Look for a vacancies-by-occupation dataset |
+| [DOSM Big Data Analytics: Job Market Insights](https://www.dosm.gov.my/portal-main/release-content/big-data-analytics-job-market-insights-q22026) (2025 Q3 – 2026 Q2) | Online job ads by occupation and industry (`online_job_ads`) | PDF / release page, quarterly | DOSM official release; cite "Source: Department of Statistics Malaysia" | Copied by hand into `raw/dosm_manual.csv`. DOSM publishes only the top 5 occupations and industries, so most domains have `no data` |
+| [DOSM Employment Statistics](https://www.dosm.gov.my/portal-main/release-content/employment-statistics-Q22026) (2025 Q3 – 2026 Q2) | Jobs, vacancies and jobs created (agriculture and Malaysia total) | Release page, quarterly | Same as above | Survey of registered private establishments; not comparable with the Labour Force Survey |
+| [DOSM Labour Market Review](https://storage.dosm.gov.my/analysis/lmr_2026-q2_en.pdf) 2026 Q1, Q2 | Employment growth by sector (Table 4.2); median monthly wage by sector, March 2026 (Table 5.1) | PDF, quarterly | Same as above | Used for 2026 Q1–Q2 where OpenDOSM has no data yet |
+| [DOSM Agriculture Census Report 2024](https://www.dosm.gov.my/uploads/release-content/file_20260319122516.pdf) | Agricultural employment and average annual wage, 2023 | PDF | Same as above | |
+| [OpenDOSM](https://open.dosm.gov.my/data-catalogue) `productivity_qtr`, `wages_occupation`, `lfs_month_youth` | Live source for the "Update data" button: employment growth by sector, median wage by MASCO major group, youth unemployment | API, no key | OpenDOSM open data, CC BY 4.0 [TO CHECK on the site footer] | OpenDOSM has no vacancies-by-occupation dataset and no healthcare employment series (checked 2026-10-22) |
 | [O*NET Database](https://www.onetcenter.org/database.html) | Role skills, In Demand technologies, RIASEC scores, Job Zone | CSV download (O*NET 31.0) | CC BY 4.0 — attribution required | US data; skill structure only |
 | [ESCO](https://esco.ec.europa.eu/en/use-esco/download) | Backup skill taxonomy; green / digital skill lists for SDG mapping | API / CSV | [TO CHECK] | Based on ISCO-08, same root as MASCO |
 | [MyCOL 2024/2025](https://www.talentcorp.com.my/images/uploads/publication/204/MyMahir-Malaysia-Critical-Occupations-List-MyCOL20242025-1773385490.pdf) (landing page: https://www.talentcorp.com.my/mycol/) | Evidence that chosen roles are in demand in Malaysia (66 critical occupations) | Annual report | [TO CHECK] | Original TalentCorp report. The PDF states no publication date; we use its file date, 2026-03-13 |
 | MyMahir | 120 emerging roles and skill lists (reference only) | Website, no public API | [TO CHECK] | Manual reference |
-| arXiv API | Monthly AI paper counts per domain (how fast AI enters each field) | API, no key | arXiv metadata: CC0 | Supplementary signal |
+| [arXiv API](https://info.arxiv.org/help/api/tou.html) | Monthly AI paper counts per domain (how fast AI enters each field), 2025-10 to 2026-09 | API, no key | arXiv metadata: CC0; follows the API terms of use (3 s between requests) | Global signal, not Malaysian. Counts match abstract keywords in cs.AI / cs.LG, so they are approximate. Agriculture uses `cropland` and `"crop yield"`, not `crop`, to avoid image-cropping papers |
 | [UN SDG targets](https://unstats.un.org/sdgs/indicators/indicators-list/) | Official target numbers for `sdg_map.csv` | Website / PDF | [TO CHECK] | File used: [Global indicator framework, English PDF](https://unstats.un.org/sdgs/indicators/Global-Indicator-Framework-after-2026-refinement_Eng.pdf) (A/RES/71/313 Annex, refined to 2026), consulted 2026-10-22. The one-line rationales and `link_strength` values are our own judgement, not UN text |
 
 ## Licence notes
@@ -26,7 +31,7 @@ Dates are `YYYY-MM-DD`. For downloaded files, `source_date` is the date we downl
 
 ## Raw files
 
-Downloads kept in `raw/` (git-ignored). One line per file:
+Downloads kept in `raw/`. Most are git-ignored; the DOSM PDFs below and `dosm_manual.csv` are committed as evidence for the hand-copied numbers. One line per file:
 
 | File | URL | Downloaded (YYYY-MM-DD) | By |
 |---|---|---|---|
@@ -37,6 +42,15 @@ Downloads kept in `raw/` (git-ignored). One line per file:
 | `onet_interest_profiler/IP_Manual.html` | https://www.onetcenter.org/reports/IP_Manual.html | 2026-10-22 | Claude |
 | `onet_db_31_0_csv/` (occupation_data, career_interest_types, essential_skills, transferable_skills, knowledge, software_skills, job_zones, content_model_reference, scales_reference `.csv`) | https://www.onetcenter.org/dl_files/database/db_31_0_csv/ (O*NET 31.0, one file each) | 2026-10-22 | Claude |
 | `MyMahir-Malaysia-Critical-Occupations-List-MyCOL20242025-1773385490.pdf` | https://www.talentcorp.com.my/images/uploads/publication/204/MyMahir-Malaysia-Critical-Occupations-List-MyCOL20242025-1773385490.pdf | 2026-10-22 | cherylloveslemonade |
+
+| `dosm_manual.csv` | Hand-copied from the DOSM releases above (edit this file, not `data/trends.csv`) | 2026-10-22 | zhiyang19015-stack |
+| `jmi_2025q3.pdf` | https://www.dosm.gov.my/portal-main/release-content/big-data-analytics-job-market-insights-q32025 | 2026-10-22 | zhiyang19015-stack |
+| `jmi_2025q4.pdf` | https://www.dosm.gov.my/portal-main/release-content/big-data-analytics-job-market-insights-q42025 | 2026-10-22 | zhiyang19015-stack |
+| `jmi_2026q1.pdf` | https://www.dosm.gov.my/portal-main/release-content/big-data-analytics-job-market-insights-q12026 | 2026-10-22 | zhiyang19015-stack |
+| `jmi_2026q2.pdf` | https://www.dosm.gov.my/portal-main/release-content/big-data-analytics-job-market-insights-q22026 | 2026-10-22 | zhiyang19015-stack |
+| `lmr_2026q1.pdf` | https://storage.dosm.gov.my/analysis/lmr_2026-q1_en.pdf | 2026-10-22 | zhiyang19015-stack |
+| `lmr_2026q2.pdf` | https://storage.dosm.gov.my/analysis/lmr_2026-q2_en.pdf | 2026-10-22 | zhiyang19015-stack |
+| `agriculture_census_2024_report.pdf` | https://www.dosm.gov.my/uploads/release-content/file_20260319122516.pdf | 2026-10-22 | zhiyang19015-stack |
 
 ## How the O*NET files are used
 

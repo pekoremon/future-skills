@@ -4,7 +4,7 @@
 
 所有马来西亚数字都只来自 DOSM（DOSM 发布的报告和 OpenDOSM）。arXiv 只用来看“AI 进入各领域的速度”，属于全球信号。
 
-> 本文件是 [MEMBER_A_HANDOVER.md](MEMBER_A_HANDOVER.md) 的中文版。数据和脚本都是英文，以英文版为准。
+> 文件位置已按下面的目录整理好（2026-10-22）：数据在 `data/`，脚本在 `scripts/`，DOSM PDF 和手抄数据在 `raw/`。
 
 ---
 
@@ -29,7 +29,7 @@ future-skills/
   data/trends.csv            趋势信号总表（脚本生成，不要手改）
   data/trend_scores.csv      每个领域的趋势分数（脚本生成）
   raw/dosm_manual.csv        从 DOSM 报告手抄的数字（唯一需要手改的文件）
-  raw/dosm/                  这些数字出处的 DOSM PDF（证据）
+  raw/*.pdf                  这些数字出处的 DOSM PDF（证据）
   scripts/update_trends.py   “更新数据”按钮：拉取 OpenDOSM 和 arXiv，合并手抄数据，再算分数
   scripts/trend_score.py     趋势分数公式（可以单独运行）
 ```
@@ -52,7 +52,7 @@ python scripts/trend_score.py               # 只重算分数
 
 ### 数据来源
 
-| 来源 | 提供什么 | 时间段 | `raw/dosm/` 里的证据 |
+| 来源 | 提供什么 | 时间段 | `raw/` 里的证据 |
 |---|---|---|---|
 | OpenDOSM `productivity_qtr`（API） | 各行业就业同比增长 | 2025 Q1–Q4 | 实时 API |
 | OpenDOSM `wages_occupation`（API） | 按 MASCO 职业大类的月薪中位数 | 2024、2025 | 实时 API |
@@ -139,7 +139,8 @@ python scripts/trend_score.py               # 只重算分数
 - `--no-arxiv` 原本会删掉 arXiv 数据，现在会保留上一次的数据。
 
 **属于成员 C 的部分**
-- GitHub repo、`validate_data.py`、`SOURCES.md` 都还没建。上面的来源检查是手动跑的。
+- `scripts/validate_data.py` 已经按本表的列（`period_start`、`period_end`、`geography`、`note`）更新，`python scripts/validate_data.py` 现在全部通过。
+- 第 6 节的来源已经合并进 `SOURCES.md`。
 
 ---
 

@@ -54,12 +54,19 @@ Rebuild with `python scripts/onet_extract.py` after downloading the O*NET CSVs l
 | Column | Meaning |
 |---|---|
 | trend_id | Unique id |
-| entity_type | `role`, `skill` or `domain` |
+| entity_type | `role`, `skill`, `domain`, or one of the types below |
 | entity_id | Id in the matching table (domain name for `domain`) |
 | metric | e.g. `online_job_ads`, `arxiv_ai_papers` |
 | value | Number as published |
 | unit | e.g. `ads`, `papers`, `percent` |
-| period | e.g. `2026-Q2`, `2026-09` |
+| period_start | First day of the period, `YYYY-MM-DD` (empty only on a `no data` row with no period) |
+| period_end | Last day of the period, `YYYY-MM-DD` |
+| geography | `MY` for Malaysia, `global` for arXiv |
+| note | Scope and caveats, e.g. "Sector-level (MSIC); not role-specific" |
+
+`entity_type` can also be `occupation` (a MASCO code, e.g. `masco_2512`), `occupation_group` (a MASCO major group, e.g. `masco_2`) or `population_group` (e.g. `youth_15_24`). Domain ids are `agriculture`, `finance`, `healthcare`, `generic_tech`, plus `overall` (Malaysia-wide baseline) and `services`. `value` is a number or `no data`; we never fill a gap with an estimate.
+
+This file is written by `scripts/update_trends.py`; edit `raw/dosm_manual.csv` instead. `scripts/trend_score.py` turns it into `trend_scores.csv` (one 0–100 score per domain, formula `v0-draft`).
 
 ## sdg_map.csv — at least one SDG target per role and per skill
 

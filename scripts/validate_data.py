@@ -35,8 +35,9 @@ TABLES = {
         "required": ["role_id", "skill_id", "importance"],
     },
     "trends.csv": {
-        "columns": ["trend_id", "entity_type", "entity_id", "metric", "value", "unit", "period"],
-        "required": ["trend_id", "entity_type", "entity_id", "metric", "value", "period"],
+        "columns": ["trend_id", "entity_type", "entity_id", "metric", "value", "unit",
+                    "period_start", "period_end", "geography", "note"],
+        "required": ["trend_id", "entity_type", "entity_id", "metric", "value"],
     },
     "sdg_map.csv": {
         "columns": ["entity_type", "entity_id", "sdg_target", "rationale"],
@@ -65,7 +66,8 @@ ALLOWED = {
     ("skills.csv", "skill_type"): {"tech", "domain", "general"},
     ("skills.csv", "onet_hot_technology"): {"yes", "no", ""},
     ("role_skills.csv", "importance"): {"1", "2", "3", "4", "5"},
-    ("trends.csv", "entity_type"): {"role", "skill", "domain"},
+    ("trends.csv", "entity_type"): {"role", "skill", "domain", "occupation", "occupation_group",
+                                    "population_group"},
     ("sdg_map.csv", "entity_type"): {"role", "skill"},
     ("courses.csv", "hrd_corp_claimable"): {"yes", "no", "unknown", ""},
     ("certifications.csv", "cert_type"): {"licence", "certification"},
@@ -81,10 +83,13 @@ ID_COLUMN = {"roles.csv": "role_id", "skills.csv": "skill_id",
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SDG_TARGET_RE = re.compile(r"^(1[0-7]|[1-9])\.([1-9]|10|[a-c])$")
 
-DOMAINS = {"agriculture", "finance", "healthcare", "general_tech"}
+# Same names as scripts/update_trends.py; `overall` is the Malaysia-wide baseline and
+# `services` the DOSM services sector, used only in trends.csv.
+DOMAINS = {"agriculture", "finance", "healthcare", "generic_tech", "overall", "services"}
 
 # Optional columns that must match a pattern when filled.
 PATTERNS = {
+    ("trends.csv", "value"): (re.compile(r"^(-?\d+(\.\d+)?|no data)$"), "a number or 'no data'"),
     ("roles.csv", "onet_soc"): (re.compile(r"^\d{2}-\d{4}\.\d{2}$"), "an O*NET-SOC code like 15-2051.00"),
     ("roles.csv", "riasec_code_onet"): (re.compile(r"^(?!.*(.).*\1)[RIASEC]{1,3}$"), "1-3 distinct RIASEC letters like ICR"),
     ("roles.csv", "masco_4digit_mycol"): (re.compile(r"^\d{4}$"), "a 4-digit MASCO code"),
@@ -129,7 +134,7 @@ def check_table(name: str, header: list[str], rows: list[dict]) -> list[str]:
         if url and not url.startswith(("http://", "https://")):
             errors.append(f"{where}: source_url must start with http:// or https://")
 
-        for col in ("source_date", "verified_date"):
+        for col in ("source_date", "verified_date", "period_start", "period_end"):
             if values.get(col) and not is_valid_date(values[col]):
                 errors.append(f"{where}: '{col}' must be a real past date in YYYY-MM-DD")
 
