@@ -13,6 +13,8 @@ Endpoints (all JSON):
     GET  /api/profiles               fictional demo profiles
     POST /api/questionnaire/score    RIASEC answers (0-4) -> six totals (0-20) and a 3-letter code
     POST /api/match                  student profile -> ranked, explained roles with a learning path
+    POST /api/explain                same body as /api/match + role_id -> LLM explanation (or fallback)
+    GET  /api/explain/status         whether the LLM is configured, and which model
     GET  /api/scenarios              future scenarios and the trend scores under each
     GET  /api/trends                 ?domain=  trend scores and the signals behind them
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
@@ -40,7 +42,8 @@ SCRIPTS = ROOT / "scripts"
 STATIC = Path(__file__).resolve().parent / "static"
 sys.path.insert(0, str(SCRIPTS))
 
-import matching  # noqa: E402  (scripts/ is added to the path above)
+import explain  # noqa: E402  (scripts/ is added to the path above)
+import matching  # noqa: E402
 
 RIASEC = matching.RIASEC
 LIKERT = range(0, 5)  # Mini-IP answers: 0 = strongly dislike ... 4 = strongly like
@@ -271,21 +274,26 @@ def questionnaire_score(request):
     return jsonify(riasec=totals, code=riasec_code(totals))
 
 
-@route("POST", "/api/match")
-def match(request):
-    data = matching.load_data()
-    req = body(request)
+def match_options(req: dict, data: dict) -> tuple[dict, str]:
+    """Profile (with study hours) and scenario from a /api/match or /api/explain request."""
     profile = build_profile(req, data["skills"])
-    top = req.get("top", 10)
-    if not isinstance(top, int) or top < 1:
-        raise BadRequest("'top' must be a positive integer")
     scenario = req.get("scenario", "baseline")
     if scenario not in matching.SCENARIOS:
         raise BadRequest(f"'scenario' must be one of {list(matching.SCENARIOS)}")
     hours = req.get("hours_per_week", matching.DEFAULT_HOURS_PER_WEEK)
     if isinstance(hours, bool) or not isinstance(hours, (int, float)) or not 1 <= hours <= 40:
         raise BadRequest("'hours_per_week' must be a number from 1 to 40")
-    profile = {**profile, "hours_per_week": hours}
+    return {**profile, "hours_per_week": hours}, scenario
+
+
+@route("POST", "/api/match")
+def match(request):
+    data = matching.load_data()
+    req = body(request)
+    top = req.get("top", 10)
+    if not isinstance(top, int) or top < 1:
+        raise BadRequest("'top' must be a positive integer")
+    profile, scenario = match_options(req, data)
 
     ranked = matching.rank_roles(profile, data, scenario=scenario)
     baseline_rank = {m["role_id"]: i + 1 for i, m in
@@ -297,6 +305,29 @@ def match(request):
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
                              "trend_scores": matching.scenario_trend_scores(data, scenario)},
                    results=ranked[:top])
+
+
+@route("POST", "/api/explain")
+def explain_match(request):
+    """LLM explanation of one role, from the same request body as /api/match plus role_id.
+
+    The match is recomputed here, so the model only ever sees numbers our code produced.
+    """
+    data = matching.load_data()
+    req = body(request)
+    profile, scenario = match_options(req, data)
+    role_id = req.get("role_id")
+    found = next((m for m in matching.rank_roles(profile, data, scenario=scenario)
+                  if m["role_id"] == role_id), None)
+    if found is None:
+        raise BadRequest(f"unknown role_id '{role_id}'")
+    return jsonify(role_id=role_id, **explain.explain(found))
+
+
+@route("GET", "/api/explain/status")
+def explain_status(request):
+    return jsonify(configured=explain.configured(), model=explain.model_name(),
+                   provider="Fireworks AI")
 
 
 @route("GET", "/api/scenarios")

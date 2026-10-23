@@ -49,12 +49,14 @@ Every number shown to the user carries its source and date. The system never inv
 
 Domain 1 requires all six:
 
-1. **Skills profile intake** — [form / RIASEC questionnaire]
+1. **Skills profile intake** — 30-item O*NET Mini Interest Profiler (RIASEC) plus 1–5 skill ratings and technologies
 2. **AI-trend signal layer** — updatable, dated sources (DOSM, OpenDOSM, arXiv)
 3. **Future-role matching** — explainable match score and skills gap
 4. **Personalised reskilling pathway** — ordered plan with estimated time, free / low-cost courses
 5. **SDG mapping** — every role and skill tagged to at least one SDG target
-6. **Handling uncertainty** — more than one AI-disruption scenario
+6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads)
+
+Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
 ## Tech Stack
 
@@ -132,6 +134,8 @@ python src/main.py
 | GET | `/api/profiles` | Fictional demo profiles |
 | POST | `/api/questionnaire/score` | `{"answers": [{"type": "I", "value": 3}, ...]}` (values 0–4, Mini-IP scoring) → RIASEC totals (0–20) and code |
 | POST | `/api/match` | `{"answers" or "riasec", "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "education_job_zone": 4, "scenario": "baseline", "hours_per_week": 5, "top": 10}` or `{"profile_id": "P01", ...}` → ranked roles with score breakdown, gaps, learning path, SDG and the rank under current trends |
+| POST | `/api/explain` | Same body as `/api/match` plus `role_id` → a plain-language explanation (`source`: `llm` or `fallback`) |
+| GET | `/api/explain/status` | Whether the LLM is configured, and which model |
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each field's trend score under them |
 | GET | `/api/trends?domain=` | Trend scores and the dated signals behind them |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~3 min) / check its status |
@@ -161,7 +165,8 @@ python -m unittest discover tests
 
 ## AI Disclosure
 
-[List every AI tool and model used in development and in the product.]
+- **In the product:** `gpt-oss-120b` (open-weight model, Apache 2.0) served by **Fireworks AI**, used only for the "Explain this for me" text (`scripts/explain.py`). It receives one match's computed facts, never personal data; the match scores, skill gaps, trends and courses are computed by our own code, not by the model. The model can be changed with the `FIREWORKS_MODEL` secret.
+- **In development:** [TO FILL: AI tools the team used, e.g. Claude for code, data research and documents; Replit Agent for deployment configuration.]
 
 ## Challenges & Learnings
 

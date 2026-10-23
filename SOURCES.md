@@ -86,6 +86,10 @@ Intermediate extracts made from these files with `scripts/onet_extract.py`: `rol
 - **Empty fields.** `ai_replacement_risk` in `roles.csv` is empty until we have a sourced figure. We do not fill it from opinion.
 - **Data policy.** Only public or synthetic data. No real CVs or personal data.
 
+## AI model in the product
+
+- **gpt-oss-120b** on **Fireworks AI** (`accounts/fireworks/models/gpt-oss-120b`), open-weight model under Apache 2.0, called through the Fireworks chat completions API. Used only to word the "Explain this for me" text from facts our code computed. Replies with numbers not in those facts are rejected (`scripts/explain.py`). It is not a data source.
+
 ## Known risks and fallbacks
 
 - **Hardest risk: no occupation-level Malaysian demand data.** DOSM publishes employment growth by sector, not by occupation, and has no separate healthcare series. The trend signal is therefore per field, not per job, and healthcare has no Malaysian demand score.

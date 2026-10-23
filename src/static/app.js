@@ -298,6 +298,10 @@ function matchCard(m, rank) {
     <details class="more">
       <summary>Why this score, and what to learn</summary>
       <div class="stack" style="gap: 14px">
+        <div class="explain stack" style="gap: 8px">
+          <button class="btn" type="button" data-explain="${esc(m.role_id)}">Explain this for me</button>
+          <div class="explain-out" aria-live="polite" hidden></div>
+        </div>
         <ul style="margin: 0; padding-left: 18px">${parts}</ul>
         <p class="small muted">${esc(m.explain.interest)}. ${esc(domainText(m.explain.trend))}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
         ${gaps ? `<div><h3>Biggest skill gaps</h3>${gaps}</div>` : '<p class="note">You meet the level O*NET lists for every rated skill of this role.</p>'}
@@ -335,6 +339,30 @@ function pathHtml(p) {
   </div>`;
 }
 
+let lastMatchBody = null;
+
+async function explainRole(button) {
+  const out = button.parentElement.querySelector(".explain-out");
+  button.disabled = true;
+  out.hidden = false;
+  out.className = "explain-out small muted";
+  out.textContent = "Writing a plain-language explanation…";
+  try {
+    const r = await api("/api/explain", { body: JSON.stringify({ ...lastMatchBody, role_id: button.dataset.explain }) });
+    out.className = "explain-out note";
+    const label = r.source === "llm"
+      ? `Written by AI (${esc(r.model.split("/").pop())} on Fireworks AI) from your scores above. It may still be wrong; the numbers above are the source of truth.`
+      : "AI explanation not available right now, so this is a plain summary of your scores.";
+    out.innerHTML = `<p>${esc(r.text)}</p><p class="small" style="margin-top: 6px; opacity: 0.85" title="${esc(r.reason || "")}">${label}</p>`;
+    button.textContent = "Explain again";
+  } catch (e) {
+    out.className = "explain-out warn";
+    out.textContent = `Could not get an explanation: ${e.message}`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 async function loadRoleExtra(card) {
   const box = card.querySelector(".role-extra");
   if (!box || box.dataset.done) return;
@@ -368,6 +396,7 @@ async function pageResults() {
     body = { riasec: totals, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
   }
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
+  lastMatchBody = body;
   const sc = res.scenario;
   const scenarioCard = `
     <section class="card stack" style="gap: 10px" aria-labelledby="sc-title">
@@ -390,6 +419,7 @@ async function pageResults() {
     document.getElementById("list").innerHTML = res.results.slice(0, shown).map((m, i) => matchCard(m, i + 1)).join("");
     document.getElementById("more").hidden = shown >= res.results.length;
     app.querySelectorAll("details.more").forEach((d) => d.addEventListener("toggle", () => d.open && loadRoleExtra(d.closest(".match"))));
+    app.querySelectorAll("[data-explain]").forEach((b) => { b.onclick = () => explainRole(b); });
   };
   render(`
   <div class="stack">
