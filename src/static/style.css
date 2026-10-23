@@ -142,7 +142,7 @@ select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1.5px s
 .split > span { height: 100%; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
-.k-interest { background: var(--c-interest); }
+.k-interest, .k-area { background: var(--c-interest); }
 .k-skill { background: var(--c-skill); }
 .k-trend { background: var(--c-trend); }
 details.more > summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 44px; display: flex; align-items: center; }

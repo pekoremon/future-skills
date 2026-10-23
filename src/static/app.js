@@ -17,10 +17,10 @@ const FLAGS = {
   needs_extra_education: "Needs further study",
   needs_extra_qualification: "Needs extra qualification",
   not_for_it_graduates: "Licensed profession, reference only",
-  no_domain_trend: "No domain trend data (neutral 50)",
-  interest_not_scored: "Interest not included",
+  no_trend_data: "No trend data (neutral 50)",
+  area_not_scored: "IT area fit not included",
 };
-const PART_LABEL = { interest: "Interest fit", skill: "Skill fit", trend: "AI-era trend" };
+const PART_LABEL = { area: "IT area fit", skill: "Skill fit", trend: "AI-era trend" };
 const PART_NAMES = { my_demand: "Malaysian demand", ai_momentum: "AI momentum" };
 const domainText = (t) => String(t).replace(/\b(generic_tech|agriculture|finance|healthcare) domain\b/g, (_, d) => `${DOMAINS[d]} field`);
 const STORE_KEY = "future-skills-v1";
@@ -101,6 +101,8 @@ function showError(e) {
   </div>`);
   document.getElementById("retry").onclick = route;
 }
+
+const testDone = () => Boolean(state.test && state.test.result);
 
 function riasecTotals() {
   return cached("/api/questionnaire").then((q) => {
@@ -431,7 +433,7 @@ function splitBar(m) {
     ${ORDER_PARTS.map((k) => `<span class="k-${k}" style="width: ${m.components[k].points || 0}%"></span>`).join("")}
   </div>`;
 }
-const ORDER_PARTS = ["interest", "skill", "trend"];
+const ORDER_PARTS = ["area", "skill", "trend"];
 
 // Roles that need more study than the student's level, or a licence, are left out of the list.
 const isBestMatch = (m) => !m.flags.includes("not_for_it_graduates") && !m.flags.includes("needs_extra_education");
@@ -459,7 +461,7 @@ function matchCard(m, rank) {
       <div class="stack" style="gap: 6px; flex: 1">
         <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)}</h3>
         <div class="row" style="gap: 6px">
-          <span class="chip plain">${esc(DOMAINS[m.domain] || "Other field")}</span>
+          <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
           ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : m.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
           ${flags}
         </div>
@@ -475,7 +477,7 @@ function matchCard(m, rank) {
           <div class="explain-out" aria-live="polite" hidden></div>
         </div>
         <ul style="margin: 0; padding-left: 18px">${parts}</ul>
-        <p class="small muted">${esc(m.explain.interest)}. ${esc(domainText(m.explain.trend))}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
+        <p class="small muted">${esc(m.explain.area)}. ${esc(domainText(m.explain.trend))}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
         ${gaps ? `<div><h3>Biggest skill gaps</h3>${gaps}</div>` : '<p class="note">You meet the level O*NET lists for every rated skill of this role.</p>'}
         ${d.tech_missing.length ? `<div class="stack" style="gap: 8px"><h3>Technologies to learn</h3><div class="row" style="gap: 6px">${d.tech_missing.map((t) => `<span class="chip plain">${esc(t.skill_name)}</span>`).join("")}</div></div>` : ""}
         ${d.tech_used.length ? `<p class="small muted">You already use: ${d.tech_used.map((t) => esc(t.skill_name)).join(", ")}</p>` : ""}
@@ -552,20 +554,20 @@ async function loadRoleExtra(card) {
 
 async function pageResults() {
   const demo = state.demo;
-  if (!demo && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
+  if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
     render(`<div class="stack"><h1>No answers yet</h1><p class="muted">Answer the interest questions or rate your skills first, or try the fictional demo student.</p>
       <div class="row"><a class="btn primary" href="#/quiz">Start</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
     document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); pageResults(); };
     return;
   }
-  render('<p class="muted" role="status">Scoring 35 roles…</p>');
+  render('<p class="muted" role="status">Scoring IT roles…</p>');
   let body;
   const options = { top: 35, scenario: state.scenario, hours_per_week: Number(state.hoursPerWeek) };
   if (demo) {
     body = { profile_id: demo, ...options };
   } else {
-    const totals = quizDone() ? await riasecTotals() : Object.fromEntries(ORDER.map((k) => [k, 0]));
-    body = { riasec: totals, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
+    const test = testDone() ? { seed: state.test.seed, responses: state.test.responses } : undefined;
+    body = { test, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
   }
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
   lastMatchBody = body;
@@ -585,7 +587,7 @@ async function pageResults() {
     </section>`;
   const profiles = demo ? await cached("/api/profiles") : [];
   const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
-  const noInterest = res.results[0] && res.results[0].flags.includes("interest_not_scored");
+  const noArea = !res.sources_used.length;
   const best = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
   let shown = 10;
   const draw = () => {
@@ -600,10 +602,10 @@ async function pageResults() {
   <div class="stack">
     <p class="eyebrow">Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
     <h1>Best matches for your level</h1>
-    ${noInterest ? '<div class="warn">Interest fit is not included because you skipped the questionnaire. <a href="#/quiz">Answer it now</a> to update the ranking.</div>' : `<p class="muted">Your interest code: <strong>${esc(res.riasec_code)}</strong></p>`}
+    ${noArea ? '<div class="warn">IT area fit is not included because you have not taken the skills test. <a href="#/test">Take it now</a> to update the ranking.</div>' : `<div class="card stack" style="gap: 6px"><h2>Your IT areas</h2>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div>`}
     <div class="card stack" style="gap: 8px">
-      <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
-      <div class="legend"><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
+      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
+      <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
     ${scenarioCard}
     <div id="list" class="stack"></div>

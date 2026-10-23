@@ -85,7 +85,7 @@ class TestApi(unittest.TestCase):
     def test_role_detail(self):
         r = self.client.get("/api/roles/R11").json
         self.assertEqual(r["role"]["role_name_en"], "Data Scientists")
-        self.assertEqual(r["domain"], "generic_tech")
+        self.assertEqual(r["it_area"], "data_ai")
         self.assertTrue(r["skills"] and r["technologies"] and r["sdg"])
         self.assertEqual(self.client.get("/api/roles/R99").status_code, 404)
 
@@ -99,16 +99,31 @@ class TestApi(unittest.TestCase):
         r = self.client.post("/api/questionnaire/score", json={"answers": [{"type": "X", "value": 3}]})
         self.assertEqual(r.status_code, 400)
 
-    def test_match_from_answers_and_ratings(self):
-        answers = [{"type": t, "value": v} for t, v in zip("RIASEC", [1, 4, 0, 1, 1, 3])]
+    def test_match_from_areas_and_ratings(self):
         r = self.client.post("/api/match", json={
-            "answers": answers, "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "top": 3})
+            "preferences": {"data_ai": 90, "web_ux": 20}, "cv_areas": {"data_ai": 60},
+            "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "top": 3})
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.json["results"]), 3)
-        self.assertEqual(r.json["riasec_code"][0], "I")
+        self.assertEqual(r.json["best"], "data_ai")
+        self.assertEqual(r.json["sources_used"], ["preference", "cv"])
+        self.assertEqual(len(r.json["areas"]), 6)
         first = r.json["results"][0]
-        self.assertIn("components", first)
+        self.assertIn("area", first["components"])
         self.assertIn("skill_detail", first)
+
+    def test_match_regrades_the_skills_test(self):
+        seed = self.client.get("/api/assessment/start").json["seed"]
+        r = self.client.post("/api/match", json={"test": {"seed": seed, "responses": {}}})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json["sources_used"], ["test"])
+        bad = self.client.post("/api/match", json={"test": {"seed": "x"}})
+        self.assertEqual(bad.status_code, 400)
+
+    def test_match_rejects_bad_area_scores(self):
+        for body in ({"preferences": {"gardening": 50}}, {"cv_areas": {"data_ai": 150}},
+                     {"test_areas": {"data_ai": True}}, {"preferences": [1, 2]}):
+            self.assertEqual(self.client.post("/api/match", json=body).status_code, 400, body)
 
     def test_match_sample_profile(self):
         r = self.client.post("/api/match", json={"profile_id": "P01", "top": 1})
@@ -130,13 +145,13 @@ class TestApi(unittest.TestCase):
         self.assertEqual(len(self.client.get("/api/scenarios").json), 3)
 
     def test_match_rejects_unknown_ids(self):
-        r = self.client.post("/api/match", json={"riasec": dict.fromkeys("RIASEC", 1),
-                                                 "skills": {"SK999": 3}})
+        r = self.client.post("/api/match", json={"skills": {"SK999": 3}})
         self.assertEqual(r.status_code, 400)
-        r = self.client.post("/api/match", json={"riasec": dict.fromkeys("RIASEC", 1),
-                                                 "technologies": ["SK001"]})
+        r = self.client.post("/api/match", json={"technologies": ["SK001"]})
         self.assertEqual(r.status_code, 400)
-        self.assertEqual(self.client.post("/api/match", json={}).status_code, 400)
+        empty = self.client.post("/api/match", json={})  # nothing answered yet: skill and trend only
+        self.assertEqual(empty.status_code, 200)
+        self.assertEqual(empty.json["sources_used"], [])
 
     def test_trends(self):
         r = self.client.get("/api/trends?domain=finance").json

@@ -2,29 +2,124 @@
   {
     "profile_id": "P01",
     "name": "Aiman (fictional)",
-    "note": "Fictional final-year Computer Science student for the demo; not a real person.",
+    "note": "Fictional final-year Computer Science student for the demo; not a real person; area scores are invented demo values.",
     "education_job_zone": 4,
-    "riasec": {"R": 13, "I": 21, "A": 10, "S": 12, "E": 11, "C": 19},
-    "skills": {
-      "SK001": 4.0, "SK002": 3.5, "SK003": 3.5, "SK004": 3.0, "SK005": 4.0,
-      "SK007": 4.0, "SK008": 4.0, "SK010": 3.0, "SK012": 3.0, "SK017": 4.0,
-      "SK022": 4.5, "SK026": 3.5, "SK029": 3.0, "SK030": 3.5, "SK031": 3.0,
-      "SK032": 3.5, "SK044": 5.0, "SK045": 3.5, "SK049": 4.0, "SK059": 4.0
+    "test_areas": {
+      "software_dev": 67,
+      "data_ai": 82,
+      "cybersecurity": 33,
+      "cloud_infra": 50,
+      "web_ux": 33,
+      "it_mgmt": 48
     },
-    "technologies": ["SK090", "SK091", "SK099", "SK103", "SK107", "SK111", "SK118", "SK130", "SK143"]
+    "preferences": {
+      "software_dev": 85,
+      "data_ai": 70,
+      "cybersecurity": 30,
+      "cloud_infra": 40,
+      "web_ux": 25,
+      "it_mgmt": 35
+    },
+    "cv_areas": {
+      "software_dev": 70,
+      "data_ai": 55,
+      "cybersecurity": 0,
+      "cloud_infra": 20,
+      "web_ux": 30,
+      "it_mgmt": 10
+    },
+    "skills": {
+      "SK001": 4.0,
+      "SK002": 3.5,
+      "SK003": 3.5,
+      "SK004": 3.0,
+      "SK005": 4.0,
+      "SK007": 4.0,
+      "SK008": 4.0,
+      "SK010": 3.0,
+      "SK012": 3.0,
+      "SK017": 4.0,
+      "SK022": 4.5,
+      "SK026": 3.5,
+      "SK029": 3.0,
+      "SK030": 3.5,
+      "SK031": 3.0,
+      "SK032": 3.5,
+      "SK044": 5.0,
+      "SK045": 3.5,
+      "SK049": 4.0,
+      "SK059": 4.0
+    },
+    "technologies": [
+      "SK090",
+      "SK091",
+      "SK099",
+      "SK103",
+      "SK107",
+      "SK111",
+      "SK118",
+      "SK130",
+      "SK143"
+    ]
   },
   {
     "profile_id": "P02",
     "name": "Mei Ling (fictional)",
-    "note": "Fictional final-year IT student who likes design and helping people; not a real person.",
+    "note": "Fictional final-year IT student who likes design and helping people; not a real person; area scores are invented demo values.",
     "education_job_zone": 4,
-    "riasec": {"R": 8, "I": 14, "A": 22, "S": 19, "E": 15, "C": 10},
-    "skills": {
-      "SK001": 4.0, "SK002": 4.5, "SK003": 4.0, "SK004": 4.0, "SK007": 3.5,
-      "SK008": 3.5, "SK011": 4.5, "SK012": 3.5, "SK016": 4.0, "SK017": 3.0,
-      "SK022": 2.5, "SK032": 3.5, "SK040": 4.0, "SK044": 3.5, "SK046": 4.5,
-      "SK059": 4.5, "SK065": 4.0
+    "test_areas": {
+      "software_dev": 33,
+      "data_ai": 40,
+      "cybersecurity": 33,
+      "cloud_infra": 33,
+      "web_ux": 80,
+      "it_mgmt": 62
     },
-    "technologies": ["SK070", "SK085", "SK086", "SK089", "SK095", "SK099", "SK107", "SK111", "SK118"]
+    "preferences": {
+      "software_dev": 30,
+      "data_ai": 35,
+      "cybersecurity": 15,
+      "cloud_infra": 10,
+      "web_ux": 90,
+      "it_mgmt": 70
+    },
+    "cv_areas": {
+      "software_dev": 20,
+      "data_ai": 10,
+      "cybersecurity": 0,
+      "cloud_infra": 0,
+      "web_ux": 75,
+      "it_mgmt": 40
+    },
+    "skills": {
+      "SK001": 4.0,
+      "SK002": 4.5,
+      "SK003": 4.0,
+      "SK004": 4.0,
+      "SK007": 3.5,
+      "SK008": 3.5,
+      "SK011": 4.5,
+      "SK012": 3.5,
+      "SK016": 4.0,
+      "SK017": 3.0,
+      "SK022": 2.5,
+      "SK032": 3.5,
+      "SK040": 4.0,
+      "SK044": 3.5,
+      "SK046": 4.5,
+      "SK059": 4.5,
+      "SK065": 4.0
+    },
+    "technologies": [
+      "SK070",
+      "SK085",
+      "SK086",
+      "SK089",
+      "SK095",
+      "SK099",
+      "SK107",
+      "SK111",
+      "SK118"
+    ]
   }
 ]

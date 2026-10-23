@@ -1,33 +1,43 @@
-"""Rank the 35 roles for one student and explain every score.
+"""Find which IT area suits a student, then rank the IT roles in it and explain every score.
 
-    total = 0.2 x interest + 0.5 x skill + 0.3 x trend          (each part 0-100)
+Two steps, so the student first sees *which part of IT* fits them, then the roles:
+
+1. Area fit, for each of the 6 IT areas of the skills test (data/it_assessment.json):
+
+    area_fit = 0.45 x test + 0.30 x preference + 0.25 x CV evidence     (each part 0-100)
+
+   - test: the IT skills test. Every area gets 3 quick-check items, so every area has a
+     score; the 2 areas tested in depth combine quick check and deep items (TEST_SPLIT).
+   - preference: the preference questionnaire, scored 0-100 per area.
+   - CV evidence: projects, internships and certificates in the CV, scored 0-100 per area.
+   A part the student skipped is left out and the other weights are scaled up, never filled.
+
+2. Role score, for every role that belongs to an IT area (roles.csv column it_area):
+
+    total = 0.5 x area fit of the role's area + 0.3 x skill + 0.2 x trend
     skill = 0.7 x rated skills/knowledge + 0.3 x In Demand technologies
 
-The weights are team design choices, not data (see SOURCES.md, "Choices and limits").
+   - rated skills: for each skill_knowledge row, coverage = min(student level / O*NET
+     level, 1), weighted by O*NET importance. Rows whose level O*NET suppresses are skipped.
+   - technologies: share of the role's In Demand technologies the student already uses.
+   - trend: the 0-100 trend score for the role (data/trend_scores.csv, looked up by role_id,
+     then it_area, then the older domain), or its value under a future scenario (SCENARIOS).
+     A role with no trend data gets a neutral 50 and a flag.
 
-- interest: Pearson correlation between the student's six RIASEC scores and the
-  role's O*NET interest scores (roles.csv score_R..score_C), mapped from -1..1 to
-  0..100. Correlation ignores the scale, so raw questionnaire totals work as input.
-- rated skills: for each skill_knowledge row, coverage = min(student level / O*NET
-  level, 1), weighted by O*NET importance. Rows whose level O*NET suppresses are skipped.
-- technologies: share of the role's In Demand technologies the student already uses.
-  A role with none uses the rated part alone.
-- trend: the 0-100 trend score of the role's domain (data/trend_scores.csv), or its
-  value under a future scenario (SCENARIOS) that re-weights Malaysian demand against
-  AI momentum. Roles outside the four domains get a neutral 50, which the trend
-  formula gives to a sector that grows at the national average.
+All weights are team design choices, not data (see SOURCES.md, "Choices and limits").
 
-Each result also has a learning path: its gaps, biggest first, with the free courses
-in data/courses.csv and the total hours.
-
-Roles whose Job Zone is above the student's education are ranked after the others
-and flagged, never hidden. Roles marked it_reachable_draft = no are ranked last.
+Each role also has a learning path: its gaps, biggest first, with the free courses in
+data/courses.csv and the total hours. Roles whose Job Zone is above the student's education
+are ranked after the others and flagged, never hidden.
 
 Student profile (data/sample_profiles.json; fictional people only):
     {"profile_id": "P01", "name": "...", "education_job_zone": 4,
-     "riasec": {"R": 12, "I": 22, "A": 9, "S": 14, "E": 11, "C": 19},
-     "skills": {"SK007": 4.0, ...},       # skill_id -> O*NET level 0-7
-     "technologies": ["SK130", ...]}      # skill_ids of technologies used
+     "test_areas": {"software_dev": 72, ...},   # 0-100 per area (test_area_scores)
+     "preferences": {"software_dev": 80, ...},  # 0-100 per area
+     "cv_areas": {"software_dev": 60, ...},     # 0-100 per area
+     "skills": {"SK007": 4.0, ...},             # skill_id -> O*NET level 0-7
+     "technologies": ["SK130", ...]}            # skill_ids of technologies used
+Every part is optional.
 
 Usage:
     python scripts/matching.py                    # first sample profile, top 5
@@ -44,14 +54,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
-WEIGHTS = {"interest": 0.2, "skill": 0.5, "trend": 0.3}
+AREA_WEIGHTS = {"test": 0.45, "preference": 0.30, "cv": 0.25}
+AREA_SOURCE_LABEL = {"test": "skills test", "preference": "preferences", "cv": "CV evidence"}
+TEST_SPLIT = {"screen": 0.4, "deep": 0.6}  # areas tested in depth: quick check vs deep items
+WEIGHTS = {"area": 0.5, "skill": 0.3, "trend": 0.2}
 SKILL_SPLIT = {"rated": 0.7, "tech": 0.3}
 NEUTRAL_TREND = 50.0
 DEFAULT_JOB_ZONE = 4  # bachelor's degree, the usual level of a graduating student
-RIASEC = ["R", "I", "A", "S", "E", "C"]
+CLEAR_LEAD = 10  # area-fit points the best area needs over the next one to be called clear
 
-# Role -> domain mapping for the trend score, confirmed by the team on 2026-10-23. generic_tech is
-# the DOSM "Information & communication" sector; roles not listed have no domain.
+# Older role -> domain mapping, kept only as the last trend lookup until the IT trend
+# scores replace data/trend_scores.csv. generic_tech is the DOSM "Information & communication" sector.
 ROLE_DOMAIN = {
     **dict.fromkeys(["R01", "R02", "R03", "R04", "R05", "R08", "R11", "R13", "R14",
                      "R16", "R17", "R26", "R31", "R34"], "generic_tech"),
@@ -60,7 +73,7 @@ ROLE_DOMAIN = {
     **dict.fromkeys(["R29", "R32", "R33", "R35"], "finance"),
 }
 
-# Future scenarios re-weight the two measured parts of each domain's trend score
+# Future scenarios re-weight the two measured parts of each trend score
 # (data/trend_scores.csv). They change no data; the weights are team assumptions.
 SCENARIOS = {
     "baseline": {"name": "Current trends", "demand": 0.5, "ai": 0.5,
@@ -81,6 +94,22 @@ def read_csv(name: str) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+def load_areas() -> list[dict]:
+    """The 6 IT areas, from the skills test bank so test and matching always agree."""
+    bank = json.loads((DATA / "it_assessment.json").read_text(encoding="utf-8"))
+    return [{k: d[k] for k in ("id", "name", "name_zh", "description", "onet_soc")}
+            for d in bank["domains"]]
+
+
+def role_area(role: dict, soc_area: dict) -> str | None:
+    """roles.csv it_area if filled in, else the area whose test lists the role's O*NET code."""
+    return (role.get("it_area") or "").strip() or soc_area.get(role["onet_soc"])
+
+
+def trend_key(row: dict) -> str:
+    return next(row[k] for k in ("role_id", "it_area", "domain") if row.get(k))
+
+
 def load_data() -> dict:
     """Read every table matching needs, keyed for fast lookup."""
     role_skills = {}
@@ -94,14 +123,18 @@ def load_data() -> dict:
     courses = {}
     for r in read_csv("courses.csv"):
         courses.setdefault(r["skill_id"], []).append(r)
+    areas = load_areas()
+    soc_area = {soc: a["id"] for a in areas for soc in a["onet_soc"]}
+    roles = [{**r, "it_area": role_area(r, soc_area)} for r in read_csv("roles.csv")]
+    trends = read_csv("trend_scores.csv")
     return {
-        "roles": read_csv("roles.csv"),
+        "areas": areas,
+        "roles": roles,
         "skills": {r["skill_id"]: r for r in read_csv("skills.csv")},
         "role_skills": role_skills,
-        "trend_scores": {r["domain"]: float(r["trend_score"]) for r in read_csv("trend_scores.csv")},
-        "trend_parts": {r["domain"]: {"demand": number(r["my_demand_score"]),
-                                      "ai": number(r["ai_momentum_score"])}
-                        for r in read_csv("trend_scores.csv")},
+        "trend_scores": {trend_key(r): float(r["trend_score"]) for r in trends},
+        "trend_parts": {trend_key(r): {"demand": number(r["my_demand_score"]),
+                                       "ai": number(r["ai_momentum_score"])} for r in trends},
         "courses": courses,
         "sdg": sdg,
     }
@@ -115,14 +148,14 @@ def number(value: str) -> float | None:
 
 
 def scenario_trend_scores(data: dict, scenario: str) -> dict:
-    """Trend score per domain under a scenario; a part with no data is left out, never filled."""
+    """Trend score per key under a scenario; a part with no data is left out, never filled."""
     s = SCENARIOS[scenario]
     scores = {}
-    for domain, parts in data["trend_parts"].items():
+    for key, parts in data["trend_parts"].items():
         used = {k: v for k, v in parts.items() if v is not None}
         weight = sum(s[k] for k in used)
         if weight:
-            scores[domain] = round(min(100.0, max(0.0, sum(s[k] * v for k, v in used.items()) / weight)), 1)
+            scores[key] = round(min(100.0, max(0.0, sum(s[k] * v for k, v in used.items()) / weight)), 1)
     return scores
 
 
@@ -164,21 +197,83 @@ def rating_to_level(rating: float) -> float:
     return round(max(0.0, min(rating, 5.0)) / 5 * 7, 2)
 
 
-def interest_score(user: dict, role: dict) -> tuple[float | None, str]:
-    u = [float(user.get(k, 0)) for k in RIASEC]
-    r = [float(role[f"score_{k}"]) for k in RIASEC]
-    mu, mr = sum(u) / 6, sum(r) / 6
-    cov = sum((a - mu) * (b - mr) for a, b in zip(u, r))
-    su = sum((a - mu) ** 2 for a in u) ** 0.5
-    sr = sum((b - mr) ** 2 for b in r) ** 0.5
-    if su == 0 or sr == 0:
-        return None, "RIASEC answers are all equal, so interest cannot be compared"
-    corr = cov / (su * sr)
-    top_user = "".join(sorted(RIASEC, key=lambda k: -u[RIASEC.index(k)])[:3])
-    shared = sorted(set(top_user) & set(role["riasec_code_onet"]), key=top_user.index)
-    why = (f"Your top interests {top_user} vs role code {role['riasec_code_onet']}"
-           + (f"; shared: {''.join(shared)}" if shared else "; no shared letters"))
-    return round((corr + 1) * 50, 1), why
+def test_area_scores(report: dict) -> dict:
+    """0-100 test score per area from an assessment.report() result.
+
+    Every area has its quick-check profile; the 2 areas tested in depth also have deep and
+    hands-on items, which carry more weight because they are harder and more numerous.
+    """
+    return {d["id"]: round(TEST_SPLIT["screen"] * d["profile"] + TEST_SPLIT["deep"] * d["readiness"], 1)
+            if d["tested_in_depth"] else float(d["profile"]) for d in report["domains"]}
+
+
+def weighted(parts: dict, weights: dict) -> tuple[float | None, dict]:
+    """Weighted mean of the parts that have a value, and each part's share of the result."""
+    used = {k: v for k, v in parts.items() if v is not None}
+    total = sum(weights[k] for k in used)
+    if not total:
+        return None, {k: None for k in parts}
+    return (round(sum(weights[k] * v for k, v in used.items()) / total, 1),
+            {k: None if parts[k] is None else round(weights[k] * parts[k] / total, 1) for k in parts})
+
+
+def top_area(scores: dict | None) -> str | None:
+    """The single highest area, or None when there are no scores or the top is tied."""
+    if not scores:
+        return None
+    ranked = sorted(scores.items(), key=lambda kv: -kv[1])
+    if len(ranked) > 1 and ranked[0][1] == ranked[1][1]:
+        return None
+    return ranked[0][0]
+
+
+def area_fit(profile: dict, areas: list[dict]) -> dict:
+    """Score the 6 IT areas from test, preferences and CV, and say what the sources agree on."""
+    sources = {"test": profile.get("test_areas") or None,
+               "preference": profile.get("preferences") or None,
+               "cv": profile.get("cv_areas") or None}
+    names = {a["id"]: a["name"] for a in areas}
+    rows = []
+    for a in areas:
+        parts = {k: None if s is None or s.get(a["id"]) is None else float(s[a["id"]])
+                 for k, s in sources.items()}
+        fit, points = weighted(parts, AREA_WEIGHTS)
+        given = [f"{AREA_SOURCE_LABEL[k]} {v:g}" for k, v in parts.items() if v is not None]
+        rows.append({"id": a["id"], "name": a["name"], "name_zh": a["name_zh"],
+                     "description": a["description"], "fit": fit,
+                     "parts": {k: {"score": parts[k], "weight": AREA_WEIGHTS[k], "points": points[k]}
+                               for k in AREA_WEIGHTS},
+                     "explain": ", ".join(given) if given else "No answers for this area yet"})
+    rows.sort(key=lambda r: -(r["fit"] if r["fit"] is not None else -1))
+
+    used = [k for k, s in sources.items() if s]
+    tops = {k: top_area(sources[k]) for k in used}
+    best = rows[0] if rows and rows[0]["fit"] is not None else None
+    insights = []
+    if best:
+        lead = best["fit"] - (rows[1]["fit"] or 0) if len(rows) > 1 else best["fit"]
+        agree = [k for k in used if tops[k] == best["id"]]
+        insights.append({"type": "best_area", "area": best["id"],
+                         "text": f"{best['name']} fits you best (area fit {best['fit']:g})"
+                                 + (f", a clear lead of {lead:.1f} points." if lead >= CLEAR_LEAD
+                                    else f", but only {lead:.1f} points ahead of {rows[1]['name']}: "
+                                         "look at both." if len(rows) > 1 else ".")})
+        if len(used) > 1:
+            insights.append({"type": "agreement", "sources": agree,
+                             "text": f"{len(agree)} of your {len(used)} sources rank {best['name']} first"
+                                     + (f" ({', '.join(AREA_SOURCE_LABEL[k] for k in agree)})."
+                                        if agree else ".")})
+    for a, b in (("test", "preference"), ("test", "cv"), ("preference", "cv")):
+        if tops.get(a) and tops.get(b) and tops[a] != tops[b]:
+            insights.append({"type": "mismatch", "sources": [a, b], "areas": [tops[a], tops[b]],
+                             "text": f"Your {AREA_SOURCE_LABEL[a]} result points to {names[tops[a]]}, but your "
+                                     f"{AREA_SOURCE_LABEL[b]} result points to {names[tops[b]]}."})
+    if len(used) == 1:
+        insights.append({"type": "one_source", "sources": used,
+                         "text": f"Only your {AREA_SOURCE_LABEL[used[0]]} result was used. Add the other "
+                                 "parts for a more reliable result."})
+    return {"areas": rows, "sources_used": used, "best": best["id"] if best else None,
+            "insights": insights}
 
 
 def skill_score(profile: dict, rows: list[dict], skills: dict) -> dict:
@@ -223,43 +318,44 @@ def skill_score(profile: dict, rows: list[dict], skills: dict) -> dict:
             "tech_used": used_tech, "tech_missing": missing_tech}
 
 
-def match_role(profile: dict, role: dict, data: dict, trend_scores: dict) -> dict:
-    rid = role["role_id"]
-    interest, interest_why = interest_score(profile.get("riasec", {}), role)
-    skill = skill_score(profile, data["role_skills"].get(rid, []), data["skills"])
-    domain = ROLE_DOMAIN.get(rid)
-    if domain in trend_scores:
-        trend, trend_why = trend_scores[domain], f"Trend score of the {domain} domain"
-    else:
-        trend, trend_why = NEUTRAL_TREND, "No domain trend data for this role; neutral 50 used"
+def role_trend(role: dict, trend_scores: dict) -> tuple[float, str, bool]:
+    """Trend score for the role: its own, else its area's, else its older domain's, else 50."""
+    for key, what in ((role["role_id"], "this role"), (role["it_area"], f"the {role['it_area']} area"),
+                      (ROLE_DOMAIN.get(role["role_id"]), f"the {ROLE_DOMAIN.get(role['role_id'])} sector")):
+        if key in trend_scores:
+            return trend_scores[key], f"Trend score of {what}", True
+    return NEUTRAL_TREND, "No trend data for this role; neutral 50 used", False
 
-    parts = {"interest": interest, "skill": skill["score"], "trend": trend}
-    used = {k: v for k, v in parts.items() if v is not None}
-    weight_sum = sum(WEIGHTS[k] for k in used)
-    total = sum(WEIGHTS[k] * v for k, v in used.items()) / weight_sum if weight_sum else 0.0
+
+def match_role(profile: dict, role: dict, data: dict, trend_scores: dict, fits: dict) -> dict:
+    rid = role["role_id"]
+    area = fits.get(role["it_area"])
+    skill = skill_score(profile, data["role_skills"].get(rid, []), data["skills"])
+    trend, trend_why, has_trend = role_trend(role, trend_scores)
+
+    parts = {"area": area["fit"] if area else None, "skill": skill["score"], "trend": trend}
+    total, points = weighted(parts, WEIGHTS)
 
     flags = []
-    if interest is None:
-        flags.append("interest_not_scored")
-    if trend_why.startswith("No domain"):
-        flags.append("no_domain_trend")
+    if parts["area"] is None:
+        flags.append("area_not_scored")
+    if not has_trend:
+        flags.append("no_trend_data")
     if int(role["job_zone"]) > int(profile.get("education_job_zone", DEFAULT_JOB_ZONE)):
         flags.append("needs_extra_education")
     if role["it_reachable_draft"] == "needs_extra_qualification":
         flags.append("needs_extra_qualification")
-    if role["it_reachable_draft"] == "no":
-        flags.append("not_for_it_graduates")
 
     return {
         "role_id": rid,
         "role_name": role["role_name_en"],
-        "domain": domain,
-        "total": round(total, 1),
-        "components": {
-            k: {"score": parts[k], "weight": WEIGHTS[k],
-                "points": None if parts[k] is None else round(WEIGHTS[k] * parts[k] / weight_sum, 1)}
-            for k in WEIGHTS},
-        "explain": {"interest": interest_why, "trend": trend_why,
+        "it_area": role["it_area"],
+        "area_name": area["name"] if area else None,
+        "total": total or 0.0,
+        "components": {k: {"score": parts[k], "weight": WEIGHTS[k], "points": points[k]} for k in WEIGHTS},
+        "explain": {"area": (f"{area['name']} area fit: {area['explain']}" if area
+                             else "Area fit not scored: no test, preference or CV answers"),
+                    "trend": trend_why,
                     "skill": f"{skill['rated_score']} rated skills/knowledge, "
                              f"{skill['tech_score']} technologies"},
         "skill_detail": skill,
@@ -272,17 +368,37 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict) -> dic
     }
 
 
-def rank_roles(profile: dict, data: dict | None = None,
-               trend_scores: dict | None = None, scenario: str | None = None) -> list[dict]:
-    """Score every role for the profile under a scenario (SCENARIOS) or given trend scores."""
+def it_roles(data: dict) -> list[dict]:
+    """Roles that belong to one of the 6 IT areas; every other role is left out."""
+    ids = {a["id"] for a in data["areas"]}
+    return [r for r in data["roles"] if r["it_area"] in ids]
+
+
+def rank_roles(profile: dict, data: dict | None = None, trend_scores: dict | None = None,
+               scenario: str | None = None, fit: dict | None = None) -> list[dict]:
+    """Score every IT role for the profile under a scenario (SCENARIOS) or given trend scores."""
     data = data or load_data()
     if scenario:
         trend_scores = scenario_trend_scores(data, scenario)
     trend_scores = data["trend_scores"] if trend_scores is None else trend_scores
-    results = [match_role(profile, role, data, trend_scores) for role in data["roles"]]
-    tier = lambda m: (2 if "not_for_it_graduates" in m["flags"]
-                      else 1 if "needs_extra_education" in m["flags"] else 0)
-    return sorted(results, key=lambda m: (tier(m), -m["total"]))
+    fit = fit or area_fit(profile, data["areas"])
+    fits = {a["id"]: a for a in fit["areas"] if a["fit"] is not None}
+    results = [match_role(profile, role, data, trend_scores, fits) for role in it_roles(data)]
+    return sorted(results, key=lambda m: ("needs_extra_education" in m["flags"], -m["total"]))
+
+
+def match_student(profile: dict, data: dict | None = None, scenario: str = "baseline") -> dict:
+    """The whole result: area profile with insights first, then the ranked roles."""
+    data = data or load_data()
+    fit = area_fit(profile, data["areas"])
+    roles = rank_roles(profile, data, scenario=scenario, fit=fit)
+    counts = {}
+    for r in it_roles(data):
+        counts[r["it_area"]] = counts.get(r["it_area"], 0) + 1
+    for a in fit["areas"]:
+        a["role_count"] = counts.get(a["id"], 0)
+        a["top_roles"] = [m["role_id"] for m in roles if m["it_area"] == a["id"]][:3]
+    return {**fit, "roles": roles}
 
 
 def main() -> int:
@@ -302,18 +418,23 @@ def main() -> int:
         print(f"No profile '{args.profile}'")
         return 1
 
-    ranked = rank_roles(profile)[:args.top]
+    result = match_student(profile)
+    result["roles"] = result["roles"][:args.top]
     if args.json:
-        print(json.dumps(ranked, indent=2, ensure_ascii=False))
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
-    print(f"Top {args.top} roles for {profile['name']}")
-    for m in ranked:
+    print(f"IT areas for {profile['name']}")
+    for a in result["areas"]:
+        print(f"  {a['fit'] if a['fit'] is not None else '-':>5}  {a['name']:<36} {a['explain']}"
+              + ("" if a["role_count"] else "  (no roles yet)"))
+    for i in result["insights"]:
+        print(f"  * {i['text']}")
+    print(f"\nTop {args.top} roles")
+    for m in result["roles"]:
         c = m["components"]
-        print(f"\n{m['total']:5.1f}  {m['role_id']} {m['role_name']}  [{m['domain'] or 'no domain'}]"
+        print(f"\n{m['total']:5.1f}  {m['role_id']} {m['role_name']}  [{m['area_name']}]"
               + (f"  flags: {', '.join(m['flags'])}" if m["flags"] else ""))
-        print(f"       interest {c['interest']['score']}  skill {c['skill']['score']}  "
-              f"trend {c['trend']['score']}")
-        print(f"       {m['explain']['interest']}")
+        print(f"       area {c['area']['score']}  skill {c['skill']['score']}  trend {c['trend']['score']}")
         gaps = m["skill_detail"]["gaps"][:3]
         if gaps:
             print("       top gaps: " + "; ".join(
