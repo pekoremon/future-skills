@@ -126,7 +126,7 @@ function pageHome() {
       <div class="card"><h3>Your matches</h3><p class="muted small">Ranked roles with the score split, skill gaps, trends and SDG links.</p></div>
     </div>
     <div class="note stack" style="gap: 8px">
-      <p><strong>New: IT skills test.</strong> 14 questions, about 15–20 minutes. Find out which IT field you are ready for: software, cybersecurity, networking, data &amp; AI, cloud or web.</p>
+      <p><strong>New: IT skills test.</strong> 24 questions, about 25 minutes. Find out which of 6 IT areas you are strongest in: software engineering, data &amp; AI, cybersecurity, cloud &amp; networking, web &amp; interface design, or IT management.</p>
       <div class="row"><a class="btn primary" href="#/test">Take the IT skills test</a></div>
     </div>
     <div class="row">
@@ -783,13 +783,18 @@ function pyRepr(v) {
   return typeof v === "string" ? JSON.stringify(v) : String(v);
 }
 
+// Tests saved by an older version of this page (no selection) are dropped.
+if (state.test && !state.test.selection) state.test = null;
 const testInProgress = () => state.test && !state.test.result;
+// Question counts come from the bank's selection rules, so changing them needs no code change.
+const screenCount = (t) => t.selection.screen_per_domain * t.domains.length;
+const testLength = (t) => screenCount(t) + t.selection.deep_domains * (t.selection.deep_per_domain + t.selection.practical_per_domain);
 const domainName = (id) => (state.test.domains.find((d) => d.id === id) || {}).name || id;
 
 async function startTest() {
   const t = await api("/api/assessment/start");
-  state.test = { seed: t.seed, domains: t.domains, questions: t.questions, responses: {}, code: {}, runs: {},
-    deepDomains: null, result: null };
+  state.test = { seed: t.seed, domains: t.domains, selection: t.selection, questions: t.questions, responses: {},
+    code: {}, runs: {}, deepDomains: null, result: null };
   saveState();
   location.hash = "#/test/1";
 }
@@ -800,12 +805,12 @@ function pageTestIntro() {
   render(`
   <div class="quiz stack">
     <p class="eyebrow">IT skills test</p>
-    <h1>Which IT field are you ready for?</h1>
-    <div class="row"><span class="chip">14 questions</span><span class="chip">About 15–20 minutes</span><span class="chip">6 IT fields</span></div>
+    <h1>Which IT area are you strongest in?</h1>
+    <div class="row"><span class="chip">24 questions</span><span class="chip">About 25 minutes</span><span class="chip">6 IT areas</span></div>
     <div class="card stack">
-      <div><h3>1 · Quick check</h3><p class="muted">One question from each field: software development, cybersecurity, networking, data &amp; AI, cloud &amp; systems, and web &amp; UX.</p></div>
-      <div><h3>2 · In depth</h3><p class="muted">Your 2 strongest fields get 3 harder questions and 1 hands-on task each: write code, a SQL query, or analyse logs.</p></div>
-      <div><h3>3 · Your result</h3><p class="muted">A readiness score per field, the matching jobs, the skills to work on, and an explanation for every answer.</p></div>
+      <div><h3>1 · Quick check</h3><p class="muted">3 questions in each area, so every area gets the same fair chance: software engineering, data &amp; AI, cybersecurity, cloud, infrastructure &amp; networking, web &amp; interface design, and IT management &amp; analysis.</p></div>
+      <div><h3>2 · In depth</h3><p class="muted">Your 2 strongest areas get 2 harder questions and 1 hands-on task each: write code or SQL, analyse logs, or plan a project.</p></div>
+      <div><h3>3 · Your result</h3><p class="muted">All 6 areas ranked for you, a readiness score for your top 2, the matching jobs, the skills to work on, and an explanation for every answer.</p></div>
     </div>
     <p class="muted small">Code runs in your browser, in Python. The first coding question downloads Python (about 10 MB) once.</p>
     <div class="stack">
@@ -941,7 +946,7 @@ async function nextFromItem(idx, button) {
     if (idx + 1 < t.questions.length) {
       location.hash = `#/test/${idx + 2}`;
     } else if (!t.deepDomains) {
-      button.textContent = "Choosing your fields…";
+      button.textContent = "Finding your strongest areas…";
       const next = await api("/api/assessment/next", { body: JSON.stringify({ seed: t.seed, responses: t.responses }) });
       t.deepDomains = next.domains;
       t.questions = t.questions.concat(next.questions);
@@ -963,7 +968,7 @@ function pageTestItem(n) {
   const t = state.test;
   const idx = Math.min(Math.max(n, 1), t.questions.length) - 1;
   const q = t.questions[idx];
-  const total = 6 + 8;  // screen items, then deep + practical items in 2 fields
+  const total = testLength(t);
   const lastScreen = !t.deepDomains && idx === t.questions.length - 1;
   render(`
   <div class="quiz test stack">
@@ -973,7 +978,7 @@ function pageTestItem(n) {
       <a class="btn ghost" href="#/test">Pause</a>
     </div>
     <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / total) * 100)}%"></div></div>
-    ${idx === 6 && t.deepDomains ? `<p class="note">Your strongest fields so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
+    ${idx === screenCount(t) && t.deepDomains ? `<p class="note">Your strongest areas so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
     <div class="row"><span class="chip">${esc(domainName(q.domain))}</span><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
     <h2 id="q-text">${esc(q.prompt)}</h2>
     ${q.code ? `<pre class="code" aria-label="Code or log for this question">${esc(q.code)}</pre>` : ""}
@@ -995,17 +1000,21 @@ function answerText(i) {
 function pageTestResult() {
   const r = state.test && state.test.result;
   if (!r) { location.hash = "#/test"; return; }
-  const deep = r.domains.filter((d) => d.tested_in_depth).sort((a, b) => b.readiness - a.readiness);
-  const best = deep[0];
+  const deep = r.domains.filter((d) => d.tested_in_depth).sort((a, b) => b.readiness - a.readiness || b.profile - a.profile);
+  const best = r.domains.find((d) => d.id === r.recommended);
   const domainCard = (d) => `
     <div class="card stack" style="gap: 10px">
       <div class="row" style="justify-content: space-between"><h3>${esc(d.name)}</h3><span class="chip${d.level.min >= 75 ? "" : d.level.min >= 50 ? " plain" : " warn-chip"}">${esc(d.level.label)}</span></div>
       <div class="row" style="align-items: baseline; gap: 6px"><span class="big">${d.readiness}</span><span class="muted">/ 100 readiness</span></div>
       <div class="bar"><div class="on" style="width: ${d.readiness}%"></div></div>
-      <div><p class="muted small">Jobs in this field (O*NET):</p>
+      <div><p class="muted small">Jobs in this area (O*NET):</p>
         <ul class="quals small">${d.roles.map((x) => `<li><a href="https://www.onetonline.org/link/summary/${esc(x.onet_soc)}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join("")}</ul></div>
     </div>`;
-  const screen = r.domains.map((d) => `<tr><td>${esc(d.name)}</td><td class="num">${d.screen_points} / ${d.screen_max}</td><td>${d.tested_in_depth ? "Tested in depth" : ""}</td></tr>`).join("");
+  const profile = r.domains.slice().sort((a, b) => b.profile - a.profile).map((d) => `
+    <div class="stack" style="gap: 4px">
+      <div class="row" style="justify-content: space-between"><span${d.tested_in_depth ? ' style="font-weight:700"' : ""}>${esc(d.name)} <span class="muted small">${esc(d.name_zh)}</span></span><span class="muted">${d.profile} / 100</span></div>
+      <div class="bar"><div class="${d.tested_in_depth ? "on" : ""}" style="width: ${d.profile}%"></div></div>
+    </div>`).join("");
   const gaps = r.skills_to_improve.length
     ? `<ul class="quals">${r.skills_to_improve.map((g) => `<li><strong>${esc(g.skill)}</strong> <span class="muted small">· ${esc(domainName(g.domain))}</span></li>`).join("")}</ul>`
     : '<p class="muted">Nothing: every answer was right.</p>';
@@ -1023,13 +1032,15 @@ function pageTestResult() {
   render(`
   <div class="stack">
     <p class="eyebrow">IT skills test · Your result</p>
-    <h1>Your best fit right now: ${esc(best.name)}</h1>
-    <p class="muted">${esc(r.disclaimer)} Readiness counts only the in-depth and hands-on questions in that field.</p>
+    <h1>Your strongest IT area: ${esc(best.name)}</h1>
+    <p class="muted">${esc(r.disclaimer)}</p>
+    <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
+      <p class="muted small">Quick-check score in each area: the same number of questions per area, so you can compare them. Your top 2 (highlighted) were then tested in depth.</p>
+      ${profile}</div>
+    <h2>Your top 2, tested in depth</h2>
+    <p class="muted small">Readiness counts the in-depth and hands-on questions in that area.</p>
     <div class="grid">${deep.map(domainCard).join("")}</div>
     <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
-    <div class="stack" style="gap: 10px"><h2>Quick check across all 6 fields</h2>
-      <div class="table-wrap"><table><thead><tr><th>Field</th><th>Points</th><th></th></tr></thead><tbody>${screen}</tbody></table></div>
-      <p class="muted small">One question per field, so this is only a first signal.</p></div>
     <div class="stack" style="gap: 10px"><h2>Review every answer</h2>${review}</div>
     <div class="row"><button class="btn primary" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
   </div>`);

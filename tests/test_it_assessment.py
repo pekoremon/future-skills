@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parent.parent
 BANK = json.loads((ROOT / "data" / "it_assessment.json").read_text(encoding="utf-8"))
 
 TYPES = {"mcq", "multi", "numeric", "text", "code", "sql"}
-STAGES = {"screen": 2, "deep": 6, "practical": 2}  # items per domain
+STAGES = ("screen", "deep", "practical")
+POOL_KEY = {"screen": "screen_per_domain", "deep": "deep_per_domain", "practical": "practical_per_domain"}
 
 
 # Reference answers for the coding questions; each must pass every test in the bank.
@@ -40,6 +41,12 @@ def is_balanced(s):
 def find_bruteforce(lines, threshold):
     counts = Counter(line.rsplit(" from ", 1)[1].split()[0] for line in lines if "Failed password" in line)
     return [ip for ip, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])) if n >= threshold]
+
+
+def find_weak_passwords(hashes, wordlist):
+    import hashlib
+    known = {hashlib.sha256(w.encode()).hexdigest() for w in wordlist}
+    return sorted(user for user, digest in hashes.items() if digest in known)
 
 
 def network_address(ip, prefix):
@@ -113,19 +120,20 @@ class TestItAssessment(unittest.TestCase):
         ids = [q["id"] for q in BANK["questions"]]
         self.assertEqual(len(ids), len(set(ids)))
 
-    def test_each_domain_has_full_pools(self):
+    def test_the_six_team_areas(self):
+        self.assertEqual([d["id"] for d in BANK["domains"]],
+                         ["software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux", "it_mgmt"])
+        for d in BANK["domains"]:
+            self.assertEqual(len(d["onet_soc"]), len(d["onet_titles"]))
+
+    def test_every_pool_is_bigger_than_what_is_asked(self):
+        """Larger pools than the selection, so two students rarely get the same test."""
         domain_ids = {d["id"] for d in BANK["domains"]}
         counts = Counter((q["domain"], q["stage"]) for q in BANK["questions"])
         for domain in domain_ids:
-            for stage, n in STAGES.items():
-                self.assertEqual(counts[(domain, stage)], n, f"{domain}/{stage}")
+            for stage in STAGES:
+                self.assertGreater(counts[(domain, stage)], BANK["selection"][POOL_KEY[stage]], f"{domain}/{stage}")
         self.assertEqual({q["domain"] for q in BANK["questions"]}, domain_ids)
-
-    def test_selection_fits_pools(self):
-        sel = BANK["selection"]
-        self.assertLessEqual(sel["screen_per_domain"], STAGES["screen"])
-        self.assertLessEqual(sel["deep_per_domain"], STAGES["deep"])
-        self.assertLessEqual(sel["practical_per_domain"], STAGES["practical"])
 
     def test_every_question_is_well_formed(self):
         for q in BANK["questions"]:
@@ -171,7 +179,7 @@ class TestItAssessment(unittest.TestCase):
 
     def test_reference_solutions_pass_code_tests(self):
         code_qs = [q for q in BANK["questions"] if q["type"] == "code"]
-        self.assertEqual(len(code_qs), 8)
+        self.assertEqual(len(code_qs), 9)
         for q in code_qs:
             func = globals()[q["function"]]
             self.assertIn(f"def {q['function']}(", q["starter"])
@@ -200,6 +208,17 @@ class TestItAssessment(unittest.TestCase):
         self.assertAlmostEqual(by_id["CL-D3"]["answer"], 30 * 24 * 60 * 0.001)
         self.assertAlmostEqual(by_id["DA-D5"]["answer"], round(7 / 3, 2))
         self.assertEqual(network_address("192.168.50.192", 27) + "/27", by_id["NW-P2"]["answer"])
+        self.assertAlmostEqual(by_id["IM-D1"]["answer"], 60_000 / 75_000)
+        self.assertEqual(by_id["IM-D6"]["answer"], 210 / 30 * 2)
+        spi, cpi = 55_000 / 50_000, 55_000 / 60_000
+        self.assertTrue(spi > 1 and cpi < 1)
+        self.assertEqual(by_id["IM-D2"]["options"][by_id["IM-D2"]["answer"]], "Ahead of schedule but over budget")
+        tasks = {"A": (3, []), "B": (5, ["A"]), "C": (2, ["A"]), "D": (4, ["C"]), "E": (3, ["B", "D"]), "F": (2, ["A"])}
+        finish = {}
+        for name in "ABCDEF":
+            days, deps = tasks[name]
+            finish[name] = days + max((finish[d] for d in deps), default=0)
+        self.assertEqual(max(finish.values()), by_id["IM-P1"]["answer"])
 
     def test_path_traversal_lines(self):
         q = next(q for q in BANK["questions"] if q["id"] == "CS-P2")
@@ -245,7 +264,8 @@ class TestAssessmentFlow(unittest.TestCase):
         bank = {q["id"]: q for q in BANK["questions"]}
         status, start = self.call("GET", "/api/assessment/start")
         self.assertEqual(status, 200)
-        self.assertEqual(len(start["questions"]), 6)
+        sel = BANK["selection"]
+        self.assertEqual(len(start["questions"]), sel["screen_per_domain"] * len(BANK["domains"]))
         self.assertEqual({q["domain"] for q in start["questions"]}, {d["id"] for d in BANK["domains"]})
         for q in start["questions"]:
             self.assertNotIn("answer", q)
@@ -254,13 +274,14 @@ class TestAssessmentFlow(unittest.TestCase):
         status, nxt = self.call("POST", "/api/assessment/next", {"seed": start["seed"], "responses": responses})
         self.assertEqual(status, 200)
         self.assertEqual(len(nxt["domains"]), 2)
-        self.assertEqual(len(nxt["questions"]), 8)
+        self.assertEqual(len(nxt["questions"]), 2 * (sel["deep_per_domain"] + sel["practical_per_domain"]))
         responses.update({q["id"]: self.right_answer(bank[q["id"]], q) for q in nxt["questions"]})
         status, result = self.call("POST", "/api/assessment/result", {"seed": start["seed"], "responses": responses})
         self.assertEqual(status, 200)
         self.assertEqual(result["deep_domains"], nxt["domains"])
         self.assertEqual(result["total_points"], result["total_max"])
         self.assertEqual(result["skills_to_improve"], [])
+        self.assertTrue(all(d["profile"] == 100 for d in result["domains"]))
         for d in result["domains"]:
             if d["tested_in_depth"]:
                 self.assertEqual(d["readiness"], 100)
@@ -269,10 +290,10 @@ class TestAssessmentFlow(unittest.TestCase):
     def test_strong_screen_domains_are_chosen(self):
         _, start = self.call("GET", "/api/assessment/start")
         bank = {q["id"]: q for q in BANK["questions"]}
-        picked = [q for q in start["questions"] if q["domain"] in ("networking", "web_ux")]
+        picked = [q for q in start["questions"] if q["domain"] in ("cybersecurity", "it_mgmt")]
         responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in picked}
         _, nxt = self.call("POST", "/api/assessment/next", {"seed": start["seed"], "responses": responses})
-        self.assertEqual(sorted(nxt["domains"]), ["networking", "web_ux"])
+        self.assertEqual(sorted(nxt["domains"]), ["cybersecurity", "it_mgmt"])
 
     def test_partial_credit(self):
         from assessment import grade

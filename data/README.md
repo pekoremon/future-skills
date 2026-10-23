@@ -138,7 +138,7 @@ No real CVs or personal data. Each profile is the input to `scripts/matching.py`
 
 ## it_assessment.json — IT domain readiness questions
 
-60 questions in 6 domains (`software_dev`, `cybersecurity`, `networking`, `data_ai`, `cloud_systems`, `web_ux`), each mapped to O*NET-SOC codes. Each domain has 2 `screen`, 6 `deep` and 2 `practical` items. A student answers 14: one screen item per domain, then 3 deep + 1 practical in their 2 strongest domains (`selection`).
+90 questions in the team's 6 IT areas (`software_dev`, `data_ai`, `cybersecurity`, `cloud_infra`, `web_ux`, `it_mgmt`), each mapped to O*NET-SOC codes. Each area has at least 5 `screen`, 6 `deep` and 2 `practical` items. A student answers 24: 3 screen items in every area, which ranks all 6 areas fairly, then 2 deep + 1 practical in their 2 strongest areas (`selection`). Single-choice options are shuffled per student.
 
 | Field | Meaning |
 |---|---|
