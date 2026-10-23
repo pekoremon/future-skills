@@ -135,3 +135,18 @@ No real CVs or personal data. Each profile is the input to `scripts/matching.py`
 | riasec | Six RIASEC totals from the questionnaire (any scale) |
 | skills | `skill_id` → level on the O*NET 0–7 scale (`rating_to_level()` converts a 1–5 self-rating) |
 | technologies | `skill_id`s of technologies the student already uses |
+
+## it_assessment.json — IT domain readiness questions
+
+60 questions in 6 domains (`software_dev`, `cybersecurity`, `networking`, `data_ai`, `cloud_systems`, `web_ux`), each mapped to O*NET-SOC codes. Each domain has 2 `screen`, 6 `deep` and 2 `practical` items. A student answers 14: one screen item per domain, then 3 deep + 1 practical in their 2 strongest domains (`selection`).
+
+| Field | Meaning |
+|---|---|
+| id | e.g. `CS-D4` (domain prefix, stage letter S/D/P, number) |
+| type | `mcq` (answer = option index, 0-based), `multi` (list of indexes), `numeric` (with `tolerance`), `text` (`accept` lists valid answers), `code` (Python function, `tests` with `args` and `expected` or `raises`), `sql` (`setup_sql`, `expected_columns`, `expected_rows`) |
+| skill | Specific skill tested, used for the skills gap |
+| onet_skill_ids | Skill ids in skills.csv, links answers to role_skills.csv |
+| time_s | Expected time in seconds |
+| refs | Public sources that back the answer |
+
+`scoring` holds points per stage, partial credit rules and the readiness levels. `tests/test_it_assessment.py` checks every answer: it runs reference solutions against all code tests and the SQL answer in SQLite.

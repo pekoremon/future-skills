@@ -1,0 +1,2430 @@
+{
+  "name": "IT Domain Readiness Assessment",
+  "version": "1.0",
+  "language": "en",
+  "source_name": "Team-written items; skills mapped to O*NET 31.0, references cited per item",
+  "source_url": "https://www.onetcenter.org/database.html",
+  "source_date": "2026-10-23",
+  "disclaimer": "An indicative self-check of job-entry skills, not a certification or a hiring decision.",
+  "selection": {
+    "screen_per_domain": 1,
+    "deep_domains": 2,
+    "deep_per_domain": 3,
+    "practical_per_domain": 1,
+    "note": "Stage 1: one random screen item per domain (6). Stage 2: for the 2 domains with the highest screen score (ties broken randomly), 3 random deep items and 1 random practical item each (8). 14 items, about 15-20 minutes."
+  },
+  "scoring": {
+    "points": {
+      "screen": 1,
+      "deep": 2,
+      "practical": 4
+    },
+    "partial_credit": "code: points x tests passed / tests; multi: points x max(0, correct picks - wrong picks) / correct options; others all-or-nothing",
+    "numeric": "correct when |answer - expected| <= tolerance",
+    "text": "correct when the trimmed, lower-cased answer with spaces removed equals one of accept",
+    "code": "run in the browser (Pyodide in a Web Worker, 5 s limit); outputs are compared after a JSON round trip, so tuples equal lists",
+    "sql": "run setup_sql then the answer in an in-memory SQLite database; rows compared in order with numbers rounded to 2 decimals",
+    "domain_readiness": "deep + practical points earned / possible for that domain, as 0-100",
+    "levels": [
+      {
+        "min": 75,
+        "label": "Job-ready",
+        "label_zh": "可胜任"
+      },
+      {
+        "min": 50,
+        "label": "Developing",
+        "label_zh": "发展中"
+      },
+      {
+        "min": 0,
+        "label": "Foundation",
+        "label_zh": "需打基础"
+      }
+    ]
+  },
+  "domains": [
+    {
+      "id": "software_dev",
+      "name": "Software Development",
+      "name_zh": "软件开发",
+      "onet_soc": [
+        "15-1252.00",
+        "15-1251.00",
+        "15-1253.00"
+      ],
+      "description": "Writing, testing and maintaining application code."
+    },
+    {
+      "id": "cybersecurity",
+      "name": "Cybersecurity",
+      "name_zh": "网络安全",
+      "onet_soc": [
+        "15-1212.00",
+        "15-1299.04",
+        "15-1299.05",
+        "15-1299.06"
+      ],
+      "description": "Finding, preventing and responding to security threats."
+    },
+    {
+      "id": "networking",
+      "name": "Networking",
+      "name_zh": "网络工程",
+      "onet_soc": [
+        "15-1241.00",
+        "15-1231.00",
+        "15-1244.00"
+      ],
+      "description": "Designing, addressing and troubleshooting networks."
+    },
+    {
+      "id": "data_ai",
+      "name": "Data & AI",
+      "name_zh": "数据与人工智能",
+      "onet_soc": [
+        "15-2051.00",
+        "15-2051.01",
+        "15-1242.00",
+        "15-1243.00"
+      ],
+      "description": "Querying data, building and evaluating models."
+    },
+    {
+      "id": "cloud_systems",
+      "name": "Cloud & Systems",
+      "name_zh": "云与系统运维",
+      "onet_soc": [
+        "15-1244.00",
+        "15-1299.08"
+      ],
+      "description": "Running reliable servers, containers and cloud services."
+    },
+    {
+      "id": "web_ux",
+      "name": "Web & UX",
+      "name_zh": "网页与用户体验",
+      "onet_soc": [
+        "15-1254.00",
+        "15-1255.00"
+      ],
+      "description": "Building usable, accessible and fast web front ends."
+    }
+  ],
+  "questions": [
+    {
+      "id": "SD-S1",
+      "domain": "software_dev",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Language semantics (mutable defaults)",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 60,
+      "prompt": "What does this program print?",
+      "code": "def add(item, bucket=[]):\n    bucket.append(item)\n    return bucket\n\nadd(1)\nprint(add(2))",
+      "code_lang": "python",
+      "options": [
+        "[2]",
+        "[1, 2]",
+        "[[1], 2]",
+        "It raises an error"
+      ],
+      "answer": 1,
+      "explanation": "Default values are evaluated once, when the function is defined, so every call shares the same list.",
+      "refs": [
+        {
+          "name": "Python FAQ: Why are default values shared between objects?",
+          "url": "https://docs.python.org/3/faq/programming.html#why-are-default-values-shared-between-objects"
+        }
+      ]
+    },
+    {
+      "id": "SD-S2",
+      "domain": "software_dev",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Algorithmic complexity",
+      "onet_skill_ids": [
+        "SK022",
+        "SK017"
+      ],
+      "time_s": 60,
+      "prompt": "A function checks whether a list of n integers contains a duplicate by comparing every pair (O(n^2)). Which rewrite runs in O(n) on average?",
+      "options": [
+        "Sort the list, then compare neighbours",
+        "Walk the list once, keeping seen values in a hash set",
+        "Binary-search the list for each element",
+        "Rewrite the pair comparison recursively"
+      ],
+      "answer": 1,
+      "explanation": "Hash-set membership is O(1) on average, so one pass is O(n). Sorting first is O(n log n); binary search needs a sorted list and is also O(n log n).",
+      "refs": [
+        {
+          "name": "Python wiki: TimeComplexity",
+          "url": "https://wiki.python.org/moin/TimeComplexity"
+        }
+      ]
+    },
+    {
+      "id": "SD-D1",
+      "domain": "software_dev",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Closures and late binding",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 90,
+      "prompt": "What does this program print?",
+      "code": "funcs = [lambda: i for i in range(3)]\nprint([f() for f in funcs])",
+      "code_lang": "python",
+      "options": [
+        "[0, 1, 2]",
+        "[2, 2, 2]",
+        "[0, 0, 0]",
+        "It raises a NameError"
+      ],
+      "answer": 1,
+      "explanation": "Each lambda looks up i when it is called, not when it is created. By then the loop has finished and i is 2.",
+      "refs": [
+        {
+          "name": "Python FAQ: Why do lambdas defined in a loop all return the same result?",
+          "url": "https://docs.python.org/3/faq/programming.html#why-do-lambdas-defined-in-a-loop-with-different-values-all-return-the-same-result"
+        }
+      ]
+    },
+    {
+      "id": "SD-D2",
+      "domain": "software_dev",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Version control and secret handling",
+      "onet_skill_ids": [
+        "SK022",
+        "SK028"
+      ],
+      "time_s": 90,
+      "prompt": "You committed a database password to a feature branch and already pushed it to the shared remote. What is the correct FIRST step?",
+      "options": [
+        "Run git revert on the commit and push again",
+        "Revoke or rotate the password, then clean it out of the history",
+        "Amend the commit and force-push the branch",
+        "Delete the feature branch on the remote"
+      ],
+      "answer": 1,
+      "explanation": "Anyone who fetched the branch already has the password, and rewriting history does not remove their copies. Treat it as leaked: rotate it first, then remove it from the history.",
+      "refs": [
+        {
+          "name": "GitHub Docs: Removing sensitive data from a repository",
+          "url": "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository"
+        }
+      ]
+    },
+    {
+      "id": "SD-D3",
+      "domain": "software_dev",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Software design principles",
+      "onet_skill_ids": [
+        "SK019",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "A ReportExporter class has an if/elif chain on format (\"pdf\", \"xlsx\", ...). Every new format means editing and re-testing this class. Which principle does this most directly break?",
+      "options": [
+        "Liskov Substitution",
+        "Open/Closed",
+        "Interface Segregation",
+        "YAGNI"
+      ],
+      "answer": 1,
+      "explanation": "Open/Closed: code should be open for extension (add a new exporter) but closed for modification (no edits to existing, tested code).",
+      "refs": [
+        {
+          "name": "Wikipedia: Open-closed principle",
+          "url": "https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle"
+        }
+      ]
+    },
+    {
+      "id": "SD-D4",
+      "domain": "software_dev",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Test design (boundary cases)",
+      "onet_skill_ids": [
+        "SK028"
+      ],
+      "time_s": 90,
+      "prompt": "is_leap(year) should follow the Gregorian rule: divisible by 4, except centuries, unless divisible by 400. Which set of test years is most likely to catch a wrong implementation?",
+      "options": [
+        "2020, 2021, 2022, 2023",
+        "2024, 2023, 1900, 2000",
+        "2000, 2400, 2800, 3200",
+        "1, 4, 8, 12"
+      ],
+      "answer": 1,
+      "explanation": "It covers one case for each branch of the rule: an ordinary leap year, a non-leap year, a century that is not leap (1900) and a century that is (2000).",
+      "refs": [
+        {
+          "name": "Wikipedia: Leap year (Gregorian calendar)",
+          "url": "https://en.wikipedia.org/wiki/Leap_year#Gregorian_calendar"
+        }
+      ]
+    },
+    {
+      "id": "SD-D5",
+      "domain": "software_dev",
+      "stage": "deep",
+      "type": "numeric",
+      "difficulty": 2,
+      "skill": "Algorithmic complexity",
+      "onet_skill_ids": [
+        "SK022",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "Binary search on a sorted list of 1,000 distinct numbers: what is the maximum number of probes (elements checked) needed to find a value or decide it is missing?",
+      "answer": 10,
+      "tolerance": 0,
+      "explanation": "Each probe halves the range: floor(log2(1000)) + 1 = 9 + 1 = 10.",
+      "refs": [
+        {
+          "name": "Wikipedia: Binary search (performance)",
+          "url": "https://en.wikipedia.org/wiki/Binary_search#Performance"
+        }
+      ]
+    },
+    {
+      "id": "SD-D6",
+      "domain": "software_dev",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Concurrency",
+      "onet_skill_ids": [
+        "SK022",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "Two threads each run `counter += 1` 100,000 times on a shared global, with no lock. What can you say about the final value?",
+      "options": [
+        "It is always 200,000 because Python has a GIL",
+        "It can be less than 200,000 because += is a read-modify-write, not one atomic step",
+        "It is always 100,000",
+        "Python raises an error for unsynchronised writes"
+      ],
+      "answer": 1,
+      "explanation": "The GIL lets only one thread run bytecode at a time, but a thread can be switched out between reading counter and writing it back, so updates can be lost. Use a threading.Lock.",
+      "refs": [
+        {
+          "name": "Python glossary: global interpreter lock",
+          "url": "https://docs.python.org/3/glossary.html#term-global-interpreter-lock"
+        }
+      ]
+    },
+    {
+      "id": "SD-P1",
+      "domain": "software_dev",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Problem solving in code",
+      "onet_skill_ids": [
+        "SK022",
+        "SK017"
+      ],
+      "time_s": 360,
+      "prompt": "Write merge_intervals(intervals). It takes a list of [start, end] pairs (start <= end, any order) and returns the overlapping or touching intervals merged, sorted by start. [1, 4] and [4, 5] touch, so they merge to [1, 5].",
+      "function": "merge_intervals",
+      "starter": "def merge_intervals(intervals):\n    # intervals: list of [start, end]\n    # return: list of [start, end], merged and sorted\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            [
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                6
+              ],
+              [
+                8,
+                10
+              ],
+              [
+                15,
+                18
+              ]
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              6
+            ],
+            [
+              8,
+              10
+            ],
+            [
+              15,
+              18
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                4
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              5
+            ]
+          ]
+        },
+        {
+          "args": [
+            []
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            [
+              [
+                5,
+                7
+              ],
+              [
+                1,
+                2
+              ]
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              2
+            ],
+            [
+              5,
+              7
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                1,
+                10
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              10
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                6,
+                8
+              ],
+              [
+                1,
+                9
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                4,
+                7
+              ]
+            ]
+          ],
+          "expected": [
+            [
+              1,
+              9
+            ]
+          ]
+        }
+      ],
+      "explanation": "Sort by start, then extend the last merged interval while the next start is <= its end.",
+      "refs": [
+        {
+          "name": "Python docs: Sorting HOW TO",
+          "url": "https://docs.python.org/3/howto/sorting.html"
+        }
+      ]
+    },
+    {
+      "id": "SD-P2",
+      "domain": "software_dev",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Data structures (stack)",
+      "onet_skill_ids": [
+        "SK022",
+        "SK017"
+      ],
+      "time_s": 300,
+      "prompt": "Write is_balanced(s). Return True if every bracket in s, (), [] and {}, is closed by the matching type in the right order. Other characters are ignored.",
+      "function": "is_balanced",
+      "starter": "def is_balanced(s):\n    # return True or False\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            "([]{})"
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            "([)]"
+          ],
+          "expected": false
+        },
+        {
+          "args": [
+            "(("
+          ],
+          "expected": false
+        },
+        {
+          "args": [
+            ""
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            "a(b)c[d]"
+          ],
+          "expected": true
+        },
+        {
+          "args": [
+            "}"
+          ],
+          "expected": false
+        },
+        {
+          "args": [
+            "([]"
+          ],
+          "expected": false
+        }
+      ],
+      "explanation": "Push each opening bracket on a stack; each closing bracket must match the top. The stack must be empty at the end.",
+      "refs": [
+        {
+          "name": "Python docs: Using lists as stacks",
+          "url": "https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks"
+        }
+      ]
+    },
+    {
+      "id": "CS-S1",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Injection prevention",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "A login check builds its SQL like this. What is the right fix?",
+      "code": "sql = \"SELECT * FROM users WHERE name = '\" + name + \"' AND pw_hash = '\" + h + \"'\"",
+      "code_lang": "python",
+      "options": [
+        "Strip single quotes from name before building the string",
+        "Use a parameterised query with placeholders",
+        "Hide database error messages from the user",
+        "Validate the name field with JavaScript in the browser"
+      ],
+      "answer": 1,
+      "explanation": "Parameterised queries keep data separate from SQL code. Stripping characters is easy to bypass and browser checks can be skipped.",
+      "refs": [
+        {
+          "name": "OWASP Top 10",
+          "url": "https://owasp.org/Top10/"
+        },
+        {
+          "name": "OWASP SQL Injection Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-S2",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Password storage",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "How should a new web app store user passwords?",
+      "options": [
+        "SHA-256 hash of the password",
+        "AES-encrypted, with the key in the config file",
+        "Argon2id or bcrypt, with a unique salt per password",
+        "MD5 with one site-wide salt"
+      ],
+      "answer": 2,
+      "explanation": "Password hashing functions such as Argon2id and bcrypt are deliberately slow and salted, so cracking stolen hashes is expensive. Fast hashes and reversible encryption are not suitable.",
+      "refs": [
+        {
+          "name": "OWASP Password Storage Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-D1",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Log analysis",
+      "onet_skill_ids": [
+        "SK026",
+        "SK018"
+      ],
+      "time_s": 120,
+      "prompt": "You see these lines in /var/log/auth.log on a public server. What happened, and what do you do?",
+      "code": "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2\nOct 23 10:01:03 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52013 ssh2\n... 412 more failed attempts from 203.0.113.5 ...\nOct 23 10:09:41 web01 sshd[811]: Accepted password for root from 203.0.113.5 port 53990 ssh2",
+      "code_lang": "text",
+      "options": [
+        "A port scan; no action because it was only probing",
+        "A successful brute-force login as root; treat the server as compromised and start incident response",
+        "A user who forgot the password; reset it",
+        "Normal SSH keep-alive traffic"
+      ],
+      "answer": 1,
+      "explanation": "Hundreds of failures followed by a success from the same address is a successful password-guessing attack. Isolate the host, preserve logs, and then disable password and root logins.",
+      "refs": [
+        {
+          "name": "NIST SP 800-61r3: Incident Response Recommendations",
+          "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
+        },
+        {
+          "name": "NIST NICE Framework (SP 800-181r1)",
+          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
+        }
+      ]
+    },
+    {
+      "id": "CS-D2",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Cross-site scripting (XSS)",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 90,
+      "prompt": "A comment box shows comments with the code below. A user posts <img src=x onerror=alert(document.cookie)>. What is the best fix?",
+      "code": "commentDiv.innerHTML = comment.text;",
+      "code_lang": "javascript",
+      "options": [
+        "Block the word 'script' in comments",
+        "Set commentDiv.textContent instead, or encode the output for HTML",
+        "Only allow logged-in users to comment",
+        "Move the code into a separate .js file"
+      ],
+      "answer": 1,
+      "explanation": "The payload has no <script> tag, so keyword filters miss it. textContent treats the input as text, never as HTML.",
+      "refs": [
+        {
+          "name": "OWASP Cross Site Scripting Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-D3",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Security fundamentals (CIA triad)",
+      "onet_skill_ids": [
+        "SK007"
+      ],
+      "time_s": 60,
+      "prompt": "Ransomware encrypts a clinic's patient files and the attackers threaten to publish a copy. Which security properties are hit?",
+      "options": [
+        "Integrity only",
+        "Availability and confidentiality",
+        "Confidentiality only",
+        "Non-repudiation only"
+      ],
+      "answer": 1,
+      "explanation": "Encrypted files cannot be used (availability), and the stolen copy is exposed (confidentiality).",
+      "refs": [
+        {
+          "name": "NIST CSRC glossary: confidentiality, integrity, availability",
+          "url": "https://csrc.nist.gov/glossary/term/cia_triad"
+        },
+        {
+          "name": "NIST NICE Framework (SP 800-181r1)",
+          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
+        }
+      ]
+    },
+    {
+      "id": "CS-D4",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Authentication tokens (JWT)",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 90,
+      "prompt": "An API accepts a JWT whose header says {\"alg\": \"none\"} and has an empty signature. What is the impact and fix?",
+      "options": [
+        "None; the payload is still Base64-encoded",
+        "Anyone can forge a token for any user; the server must allow only its expected algorithm and always verify the signature",
+        "Tokens expire too quickly; raise the exp claim",
+        "The token is too long; switch to cookies"
+      ],
+      "answer": 1,
+      "explanation": "Without signature verification the claims, including the user id and role, are whatever the attacker writes.",
+      "refs": [
+        {
+          "name": "RFC 8725: JSON Web Token Best Current Practices",
+          "url": "https://www.rfc-editor.org/rfc/rfc8725"
+        }
+      ]
+    },
+    {
+      "id": "CS-D5",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Incident response",
+      "onet_skill_ids": [
+        "SK026",
+        "SK007"
+      ],
+      "time_s": 90,
+      "prompt": "EDR shows one staff laptop beaconing to a known command-and-control server after a phishing email. What is the best NEXT step?",
+      "options": [
+        "Wipe and reinstall the laptop immediately",
+        "Isolate the laptop from the network while keeping it powered on for evidence",
+        "Shut down the whole office network",
+        "Email all staff about the phishing first"
+      ],
+      "answer": 1,
+      "explanation": "Containment comes first, and isolating rather than wiping keeps memory and disk evidence so you can find out what else was touched.",
+      "refs": [
+        {
+          "name": "NIST SP 800-61r3: Incident Response Recommendations",
+          "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
+        }
+      ]
+    },
+    {
+      "id": "CS-D6",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Access control",
+      "onet_skill_ids": [
+        "SK022",
+        "SK030"
+      ],
+      "time_s": 60,
+      "prompt": "GET /api/invoices/1043 shows your invoice. Changing it to /api/invoices/1044 shows another customer's invoice. What is this, and what fixes it?",
+      "options": [
+        "SQL injection; use prepared statements",
+        "Broken access control (IDOR); check on the server that the invoice belongs to the logged-in user",
+        "Cross-site request forgery; add a CSRF token",
+        "Weak encryption; switch to TLS 1.3"
+      ],
+      "answer": 1,
+      "explanation": "The server trusts the id in the URL. Every request must be authorised against the current user; random ids alone only hide the problem.",
+      "refs": [
+        {
+          "name": "OWASP Top 10",
+          "url": "https://owasp.org/Top10/"
+        },
+        {
+          "name": "OWASP Insecure Direct Object Reference Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-P1",
+      "domain": "cybersecurity",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Log analysis automation",
+      "onet_skill_ids": [
+        "SK022",
+        "SK026"
+      ],
+      "time_s": 420,
+      "prompt": "Write find_bruteforce(lines, threshold). lines are sshd log lines. Count the lines containing \"Failed password\" per source IP; the IP is the word after the LAST \" from \" in the line (a username can itself be \"from\"). Return the IPs with at least threshold failures, sorted by count (highest first), then by IP as a string (ascending).",
+      "function": "find_bruteforce",
+      "starter": "def find_bruteforce(lines, threshold):\n    # return: list of IP strings\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            [
+              "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2",
+              "Oct 23 10:01:04 web01 sshd[811]: Failed password for invalid user admin from 203.0.113.5 port 52013 ssh2",
+              "Oct 23 10:01:06 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52015 ssh2",
+              "Oct 23 10:02:00 web01 sshd[901]: Accepted publickey for deploy from 192.0.2.10 port 40022 ssh2",
+              "Oct 23 10:03:11 web01 sshd[930]: Failed password for aiman from 198.51.100.20 port 61001 ssh2",
+              "Oct 23 10:03:15 web01 sshd[930]: Failed password for aiman from 198.51.100.20 port 61002 ssh2",
+              "Oct 23 10:04:00 web01 CRON[1001]: pam_unix(cron:session): session opened for user root",
+              "Oct 23 10:05:00 web01 sshd[990]: Failed password for invalid user from from 192.0.2.99 port 5000 ssh2"
+            ],
+            2
+          ],
+          "expected": [
+            "203.0.113.5",
+            "198.51.100.20"
+          ]
+        },
+        {
+          "args": [
+            [
+              "Oct 23 10:05:00 web01 sshd[990]: Failed password for invalid user from from 192.0.2.99 port 5000 ssh2",
+              "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2"
+            ],
+            1
+          ],
+          "expected": [
+            "192.0.2.99",
+            "203.0.113.5"
+          ]
+        },
+        {
+          "args": [
+            [
+              "Oct 23 11:00:00 db01 sshd[1]: Failed password for root from 10.0.0.9 port 1 ssh2",
+              "Oct 23 11:00:01 db01 sshd[1]: Failed password for root from 10.0.0.10 port 2 ssh2",
+              "Oct 23 11:00:02 db01 sshd[1]: Failed password for root from 10.0.0.9 port 3 ssh2",
+              "Oct 23 11:00:03 db01 sshd[1]: Failed password for root from 10.0.0.10 port 4 ssh2"
+            ],
+            2
+          ],
+          "expected": [
+            "10.0.0.10",
+            "10.0.0.9"
+          ]
+        },
+        {
+          "args": [
+            [
+              "Oct 23 10:02:00 web01 sshd[901]: Accepted publickey for deploy from 192.0.2.10 port 40022 ssh2"
+            ],
+            1
+          ],
+          "expected": []
+        }
+      ],
+      "explanation": "Filter on 'Failed password', take the text after rsplit(' from ', 1), count with a dict or Counter, then sort with a (-count, ip) key.",
+      "refs": [
+        {
+          "name": "Python docs: str.rsplit",
+          "url": "https://docs.python.org/3/library/stdtypes.html#str.rsplit"
+        },
+        {
+          "name": "NIST NICE Framework (SP 800-181r1)",
+          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
+        }
+      ]
+    },
+    {
+      "id": "CS-P2",
+      "domain": "cybersecurity",
+      "stage": "practical",
+      "type": "multi",
+      "difficulty": 3,
+      "skill": "Web attack detection",
+      "onet_skill_ids": [
+        "SK026",
+        "SK018"
+      ],
+      "time_s": 240,
+      "prompt": "Select EVERY line that is a path traversal attempt (trying to reach files outside the web folder).",
+      "code": "1  198.51.100.7   GET /index.html                                   200\n2  198.51.100.7   GET /download?file=../../etc/passwd                400\n3  203.0.113.9    GET /download?file=report.pdf                      200\n4  203.0.113.9    GET /download?file=%2e%2e%2f%2e%2e%2fetc%2fpasswd  200\n5  192.0.2.44     GET /search?q=dot..dot                             200\n6  198.51.100.23  GET /download?file=..%2f..%2fwindows%2fwin.ini     200\n7  192.0.2.44     GET /login                                         302\n8  203.0.113.9    GET /download?file=....//....//etc/passwd          403",
+      "code_lang": "text",
+      "options": [
+        "Line 1",
+        "Line 2",
+        "Line 3",
+        "Line 4",
+        "Line 5",
+        "Line 6",
+        "Line 7",
+        "Line 8"
+      ],
+      "answer": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "explanation": "Lines 2, 4, 6 and 8 all try to climb directories: plain ../, URL-encoded %2e%2e%2f, mixed ..%2f, and ....// (which becomes ../ after a naive filter removes ../). Line 5 only contains '..' inside a search word. Line 4 returned 200 and needs urgent investigation.",
+      "refs": [
+        {
+          "name": "OWASP: Path Traversal",
+          "url": "https://owasp.org/www-community/attacks/Path_Traversal"
+        }
+      ]
+    },
+    {
+      "id": "NW-S1",
+      "domain": "networking",
+      "stage": "screen",
+      "type": "numeric",
+      "difficulty": 2,
+      "skill": "IPv4 subnetting",
+      "onet_skill_ids": [
+        "SK064",
+        "SK005"
+      ],
+      "time_s": 60,
+      "prompt": "How many usable host addresses are in an IPv4 /27 subnet?",
+      "answer": 30,
+      "tolerance": 0,
+      "explanation": "32 - 27 = 5 host bits, 2^5 = 32 addresses, minus the network and broadcast addresses = 30.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-S2",
+      "domain": "networking",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Network troubleshooting",
+      "onet_skill_ids": [
+        "SK026",
+        "SK064"
+      ],
+      "time_s": 60,
+      "prompt": "A user can ping 1.1.1.1 but no website opens by name (for example, www.mohe.gov.my). What is the most likely cause?",
+      "options": [
+        "The network cable is faulty",
+        "DNS resolution is failing",
+        "The default gateway is wrong",
+        "The browser cache is full"
+      ],
+      "answer": 1,
+      "explanation": "Reaching an internet IP proves the cable, IP settings and gateway work. Failing only by name points to DNS.",
+      "refs": [
+        {
+          "name": "RFC 1034: Domain names - concepts and facilities",
+          "url": "https://www.rfc-editor.org/rfc/rfc1034"
+        }
+      ]
+    },
+    {
+      "id": "NW-D1",
+      "domain": "networking",
+      "stage": "deep",
+      "type": "text",
+      "difficulty": 3,
+      "skill": "IPv4 subnetting",
+      "onet_skill_ids": [
+        "SK064",
+        "SK005"
+      ],
+      "time_s": 120,
+      "prompt": "You must split 192.168.10.0/24 into as many equal subnets as possible, each with at least 50 usable hosts. Which subnet mask do you use? (dotted decimal, e.g. 255.255.255.0)",
+      "answer": "255.255.255.192",
+      "accept": [
+        "255.255.255.192",
+        "/26"
+      ],
+      "explanation": "50 hosts need 6 host bits (62 usable), so the prefix is /26 = 255.255.255.192, giving 4 subnets.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-D2",
+      "domain": "networking",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "IPv4 subnetting",
+      "onet_skill_ids": [
+        "SK064",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "A host is 10.0.5.20/22. Which address is in the SAME subnet?",
+      "options": [
+        "10.0.3.250",
+        "10.0.7.200",
+        "10.0.8.1",
+        "10.0.12.5"
+      ],
+      "answer": 1,
+      "explanation": "A /22 block covers 4 values of the third octet. 5 falls in 4-7, so the subnet is 10.0.4.0 - 10.0.7.255.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-D3",
+      "domain": "networking",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Network troubleshooting (OSI layers)",
+      "onet_skill_ids": [
+        "SK026",
+        "SK064"
+      ],
+      "time_s": 90,
+      "prompt": "A new PC has a link light and the correct static IP, mask and gateway, but cannot ping the gateway. `arp -a` shows the gateway entry as incomplete. Where is the fault most likely?",
+      "options": [
+        "Layer 1: the cable is unplugged",
+        "Layer 2: the switch port is in the wrong VLAN",
+        "Layer 3: the ISP route is down",
+        "Layer 7: DNS is misconfigured"
+      ],
+      "answer": 1,
+      "explanation": "The link is up (layer 1 works) but ARP gets no reply, so frames are not reaching the gateway's broadcast domain - typically a wrong access VLAN.",
+      "refs": [
+        {
+          "name": "RFC 826: An Ethernet Address Resolution Protocol",
+          "url": "https://www.rfc-editor.org/rfc/rfc826"
+        }
+      ]
+    },
+    {
+      "id": "NW-D4",
+      "domain": "networking",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Transport protocols",
+      "onet_skill_ids": [
+        "SK064"
+      ],
+      "time_s": 60,
+      "prompt": "Why do voice and video calls usually run over UDP rather than TCP?",
+      "options": [
+        "UDP encrypts traffic by default",
+        "A late, retransmitted packet is useless for live audio, and TCP would stall waiting for it",
+        "UDP packets are always delivered in order",
+        "TCP cannot carry binary data"
+      ],
+      "answer": 1,
+      "explanation": "TCP guarantees ordered delivery by retransmitting, which adds delay. Real-time media prefers to skip a lost packet.",
+      "refs": [
+        {
+          "name": "RFC 3550: RTP, A Transport Protocol for Real-Time Applications",
+          "url": "https://www.rfc-editor.org/rfc/rfc3550"
+        }
+      ]
+    },
+    {
+      "id": "NW-D5",
+      "domain": "networking",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Network security",
+      "onet_skill_ids": [
+        "SK064",
+        "SK026"
+      ],
+      "time_s": 90,
+      "prompt": "A web server's connection table is full. The firewall shows thousands of SYN packets from many source addresses, with no matching final ACK. What is this?",
+      "options": [
+        "A normal traffic spike",
+        "A TCP SYN flood (denial of service)",
+        "A DNS amplification attack",
+        "An ARP spoofing attack"
+      ],
+      "answer": 1,
+      "explanation": "Half-open handshakes fill the server's backlog. Mitigations include SYN cookies and upstream filtering.",
+      "refs": [
+        {
+          "name": "RFC 4987: TCP SYN Flooding Attacks and Common Mitigations",
+          "url": "https://www.rfc-editor.org/rfc/rfc4987"
+        }
+      ]
+    },
+    {
+      "id": "NW-D6",
+      "domain": "networking",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Routing",
+      "onet_skill_ids": [
+        "SK064",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "A router has these routes. Which next hop does it use for a packet to 10.1.3.7?",
+      "code": "10.0.0.0/8    via R1\n10.1.0.0/16   via R2\n10.1.2.0/24   via R3\n0.0.0.0/0     via R4",
+      "code_lang": "text",
+      "options": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "answer": 1,
+      "explanation": "Longest prefix match: 10.1.2.0/24 does not contain 10.1.3.7, so the most specific match is 10.1.0.0/16 via R2.",
+      "refs": [
+        {
+          "name": "RFC 1812: Requirements for IP Version 4 Routers (5.2.4.3)",
+          "url": "https://www.rfc-editor.org/rfc/rfc1812"
+        }
+      ]
+    },
+    {
+      "id": "NW-P1",
+      "domain": "networking",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Subnet calculation in code",
+      "onet_skill_ids": [
+        "SK022",
+        "SK064"
+      ],
+      "time_s": 360,
+      "prompt": "Write network_address(ip, prefix) without the ipaddress module. ip is a dotted IPv4 string and prefix is 0-32. Return the network address as a dotted string.",
+      "function": "network_address",
+      "forbidden_imports": [
+        "ipaddress"
+      ],
+      "starter": "def network_address(ip, prefix):\n    # e.g. network_address('192.168.10.77', 26) -> '192.168.10.64'\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            "192.168.10.77",
+            26
+          ],
+          "expected": "192.168.10.64"
+        },
+        {
+          "args": [
+            "10.0.5.20",
+            22
+          ],
+          "expected": "10.0.4.0"
+        },
+        {
+          "args": [
+            "172.16.255.1",
+            12
+          ],
+          "expected": "172.16.0.0"
+        },
+        {
+          "args": [
+            "8.8.8.8",
+            32
+          ],
+          "expected": "8.8.8.8"
+        },
+        {
+          "args": [
+            "203.0.113.200",
+            0
+          ],
+          "expected": "0.0.0.0"
+        }
+      ],
+      "explanation": "Turn the four octets into one 32-bit integer, AND it with a mask of prefix leading 1-bits, then split back into octets. Watch prefix 0.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-P2",
+      "domain": "networking",
+      "stage": "practical",
+      "type": "text",
+      "difficulty": 3,
+      "skill": "Network design (VLSM)",
+      "onet_skill_ids": [
+        "SK064",
+        "SK019"
+      ],
+      "time_s": 300,
+      "prompt": "Plan 192.168.50.0/24 with VLSM, allocating the largest subnet first, each starting at the lowest free address: Sales needs 100 hosts, IT 50 hosts, HR 20 hosts, and a router link 2 hosts. What is HR's subnet? Answer as network/prefix, e.g. 10.0.0.0/24.",
+      "answer": "192.168.50.192/27",
+      "accept": [
+        "192.168.50.192/27"
+      ],
+      "explanation": "Sales 192.168.50.0/25, IT 192.168.50.128/26, HR 192.168.50.192/27 (30 usable), link 192.168.50.224/30.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "DA-S1",
+      "domain": "data_ai",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "SQL aggregation",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "Table orders(customer_id, amount). Which query lists customers whose total spend is above 1000?",
+      "options": [
+        "SELECT customer_id FROM orders WHERE SUM(amount) > 1000;",
+        "SELECT customer_id FROM orders GROUP BY customer_id HAVING SUM(amount) > 1000;",
+        "SELECT customer_id, SUM(amount) FROM orders WHERE amount > 1000 GROUP BY customer_id;",
+        "SELECT DISTINCT customer_id FROM orders ORDER BY amount > 1000;"
+      ],
+      "answer": 1,
+      "explanation": "WHERE filters rows before grouping and cannot use aggregates. HAVING filters groups after aggregation.",
+      "refs": [
+        {
+          "name": "SQLite: SELECT (GROUP BY and HAVING)",
+          "url": "https://www.sqlite.org/lang_select.html"
+        }
+      ]
+    },
+    {
+      "id": "DA-S2",
+      "domain": "data_ai",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Model evaluation",
+      "onet_skill_ids": [
+        "SK005",
+        "SK007"
+      ],
+      "time_s": 60,
+      "prompt": "A fraud model scores 99% accuracy on data where 1% of transactions are fraud. What is the main concern?",
+      "options": [
+        "Nothing; 99% is excellent",
+        "Predicting 'not fraud' for everything also scores 99%, so check precision and recall on the fraud class",
+        "The model is underfitting",
+        "Accuracy should be computed on the training set"
+      ],
+      "answer": 1,
+      "explanation": "On imbalanced data accuracy hides failure on the rare class. Recall shows how many frauds are caught.",
+      "refs": [
+        {
+          "name": "scikit-learn: Metrics and scoring",
+          "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+        }
+      ]
+    },
+    {
+      "id": "DA-D1",
+      "domain": "data_ai",
+      "stage": "deep",
+      "type": "numeric",
+      "difficulty": 2,
+      "skill": "Model evaluation",
+      "onet_skill_ids": [
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "A classifier gives TP = 40, FP = 10, FN = 60, TN = 890. What is its recall? (decimal, e.g. 0.75)",
+      "answer": 0.4,
+      "tolerance": 0.01,
+      "explanation": "Recall = TP / (TP + FN) = 40 / 100 = 0.4. (Precision would be 40 / 50 = 0.8.)",
+      "refs": [
+        {
+          "name": "scikit-learn: Precision, recall and F-measures",
+          "url": "https://scikit-learn.org/stable/modules/model_evaluation.html#precision-recall-f-measure-metrics"
+        }
+      ]
+    },
+    {
+      "id": "DA-D2",
+      "domain": "data_ai",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Data leakage",
+      "onet_skill_ids": [
+        "SK007",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "A churn model predicts whether a customer will leave next month. It reaches 98% AUC in testing but fails in production. Which input feature is the most likely cause?",
+      "options": [
+        "Months since sign-up",
+        "account_closed_date",
+        "Number of support tickets last quarter",
+        "Monthly plan price"
+      ],
+      "answer": 1,
+      "explanation": "account_closed_date is only known after the customer has churned, so it leaks the answer during training and is missing at prediction time.",
+      "refs": [
+        {
+          "name": "scikit-learn: Common pitfalls - data leakage",
+          "url": "https://scikit-learn.org/stable/common_pitfalls.html#data-leakage"
+        }
+      ]
+    },
+    {
+      "id": "DA-D3",
+      "domain": "data_ai",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Model training",
+      "onet_skill_ids": [
+        "SK007",
+        "SK017"
+      ],
+      "time_s": 60,
+      "prompt": "Training accuracy is 99% but validation accuracy is 70%. Which action is most likely to help?",
+      "options": [
+        "Make the model deeper",
+        "Train for more epochs",
+        "Add regularisation or reduce model complexity",
+        "Report the training accuracy instead"
+      ],
+      "answer": 2,
+      "explanation": "A large train/validation gap means overfitting. Regularisation, a simpler model or more data narrows it.",
+      "refs": [
+        {
+          "name": "scikit-learn: Underfitting vs. Overfitting",
+          "url": "https://scikit-learn.org/stable/auto_examples/model_selection/plot_underfitting_overfitting.html"
+        }
+      ]
+    },
+    {
+      "id": "DA-D4",
+      "domain": "data_ai",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "SQL joins",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 90,
+      "prompt": "Which query returns customers who have NEVER placed an order?",
+      "options": [
+        "SELECT c.id FROM customers c JOIN orders o ON o.customer_id = c.id WHERE o.id IS NULL;",
+        "SELECT c.id FROM customers c LEFT JOIN orders o ON o.customer_id = c.id WHERE o.id IS NULL;",
+        "SELECT c.id FROM customers c LEFT JOIN orders o ON o.customer_id = c.id WHERE o.id = NULL;",
+        "SELECT c.id FROM customers c LEFT JOIN orders o ON o.customer_id = c.id AND o.id IS NULL;"
+      ],
+      "answer": 1,
+      "explanation": "LEFT JOIN keeps customers without orders, with NULL order columns. `= NULL` is never true; an inner JOIN drops them; moving the test into ON returns every customer.",
+      "refs": [
+        {
+          "name": "SQLite: SELECT (join operators)",
+          "url": "https://www.sqlite.org/lang_select.html"
+        }
+      ]
+    },
+    {
+      "id": "DA-D5",
+      "domain": "data_ai",
+      "stage": "deep",
+      "type": "numeric",
+      "difficulty": 3,
+      "skill": "SQL NULL handling",
+      "onet_skill_ids": [
+        "SK022",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "Table t has one column x with the values 1, 2, NULL, 4. What does SELECT AVG(x) FROM t; return? (2 decimal places)",
+      "answer": 2.33,
+      "tolerance": 0.01,
+      "explanation": "Aggregates skip NULL: (1 + 2 + 4) / 3 = 2.33, not 7 / 4.",
+      "refs": [
+        {
+          "name": "SQLite: Built-in aggregate functions",
+          "url": "https://www.sqlite.org/lang_aggfunc.html"
+        }
+      ]
+    },
+    {
+      "id": "DA-D6",
+      "domain": "data_ai",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Applied generative AI",
+      "onet_skill_ids": [
+        "SK030",
+        "SK019"
+      ],
+      "time_s": 60,
+      "prompt": "An HR chatbot built on an LLM invents company leave policies that do not exist. What is the most effective fix?",
+      "options": [
+        "Raise the temperature",
+        "Retrieve the real policy documents and have the model answer from them, citing sources (RAG)",
+        "Add 'do not lie' to the prompt",
+        "Fine-tune it on random internet text"
+      ],
+      "answer": 1,
+      "explanation": "Retrieval-augmented generation grounds answers in your own documents and lets users check the cited source.",
+      "refs": [
+        {
+          "name": "Lewis et al. (2020), Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "url": "https://arxiv.org/abs/2005.11401"
+        }
+      ]
+    },
+    {
+      "id": "DA-P1",
+      "domain": "data_ai",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Data wrangling in code",
+      "onet_skill_ids": [
+        "SK022",
+        "SK018"
+      ],
+      "time_s": 360,
+      "prompt": "Write top_categories(rows, n). rows is a list of [category, amount]; amount may be None (skip that row). Return the n categories with the highest total as a list of [category, total] with total rounded to 2 decimals, sorted by total (highest first), then category name (A-Z).",
+      "function": "top_categories",
+      "starter": "def top_categories(rows, n):\n    # return: list of [category, total]\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            [
+              [
+                "food",
+                10
+              ],
+              [
+                "tech",
+                50
+              ],
+              [
+                "food",
+                45.5
+              ],
+              [
+                "books",
+                20
+              ]
+            ],
+            2
+          ],
+          "expected": [
+            [
+              "food",
+              55.5
+            ],
+            [
+              "tech",
+              50
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                "b",
+                10
+              ],
+              [
+                "a",
+                10
+              ],
+              [
+                "c",
+                5
+              ]
+            ],
+            2
+          ],
+          "expected": [
+            [
+              "a",
+              10
+            ],
+            [
+              "b",
+              10
+            ]
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                "x",
+                null
+              ],
+              [
+                "y",
+                3
+              ]
+            ],
+            5
+          ],
+          "expected": [
+            [
+              "y",
+              3
+            ]
+          ]
+        },
+        {
+          "args": [
+            [],
+            3
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            [
+              [
+                "a",
+                0.1
+              ],
+              [
+                "a",
+                0.2
+              ]
+            ],
+            1
+          ],
+          "expected": [
+            [
+              "a",
+              0.3
+            ]
+          ]
+        }
+      ],
+      "explanation": "Sum into a dict, skipping None; sort items with key (-total, name); round; slice to n.",
+      "refs": [
+        {
+          "name": "Python docs: Sorting HOW TO (key functions)",
+          "url": "https://docs.python.org/3/howto/sorting.html#key-functions"
+        }
+      ]
+    },
+    {
+      "id": "DA-P2",
+      "domain": "data_ai",
+      "stage": "practical",
+      "type": "sql",
+      "difficulty": 3,
+      "skill": "SQL querying",
+      "onet_skill_ids": [
+        "SK022",
+        "SK018"
+      ],
+      "time_s": 360,
+      "prompt": "Write one SQL query (SQLite). Using only orders dated in 2025, list each customer's name and total spend as columns name, total, for customers with at least 2 orders in 2025, highest total first.",
+      "setup_sql": "CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT);\nCREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL, order_date TEXT);\nINSERT INTO customers VALUES (1,'Aiman'),(2,'Mei Ling'),(3,'Ravi'),(4,'Siti');\nINSERT INTO orders VALUES\n (1,1,120.00,'2025-01-10'),(2,1,80.50,'2025-03-02'),(3,2,300.00,'2025-02-14'),\n (4,2,50.00,'2024-12-30'),(5,3,40.00,'2025-05-05'),(6,3,60.00,'2025-06-06'),\n (7,3,200.00,'2025-07-07'),(8,4,500.00,'2025-08-08'),(9,2,25.00,'2025-09-09');",
+      "expected_columns": [
+        "name",
+        "total"
+      ],
+      "expected_rows": [
+        [
+          "Mei Ling",
+          325.0
+        ],
+        [
+          "Ravi",
+          300.0
+        ],
+        [
+          "Aiman",
+          200.5
+        ]
+      ],
+      "ordered": true,
+      "explanation": "JOIN customers to orders, filter order_date to 2025 in WHERE, GROUP BY customer, HAVING COUNT(*) >= 2, ORDER BY total DESC. Mei Ling's 2024 order must not count.",
+      "refs": [
+        {
+          "name": "SQLite: SELECT",
+          "url": "https://www.sqlite.org/lang_select.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-S1",
+      "domain": "cloud_systems",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Linux permissions",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "After `chmod 640 secrets.env`, who can do what?",
+      "options": [
+        "Everyone can read; only the owner can write",
+        "Owner can read and write; group can read; others have no access",
+        "Owner can read, write and execute; group can read",
+        "Owner and group can read and write; others can read"
+      ],
+      "answer": 1,
+      "explanation": "6 = rw- (owner), 4 = r-- (group), 0 = --- (others).",
+      "refs": [
+        {
+          "name": "chmod(1) manual page",
+          "url": "https://man7.org/linux/man-pages/man1/chmod.1.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-S2",
+      "domain": "cloud_systems",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Scalability",
+      "onet_skill_ids": [
+        "SK030",
+        "SK019"
+      ],
+      "time_s": 60,
+      "prompt": "A stateless web app slows down every evening at peak load and is fine the rest of the day. What is the best cloud approach?",
+      "options": [
+        "Buy the largest VM and run it all day",
+        "Run several instances behind a load balancer with auto scaling on load",
+        "Restart the server every evening",
+        "Move the database onto the web server"
+      ],
+      "answer": 1,
+      "explanation": "Stateless apps scale out easily; auto scaling adds instances at peak and removes them afterwards, so you only pay for what you use.",
+      "refs": [
+        {
+          "name": "AWS Well-Architected Framework: Reliability pillar",
+          "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-D1",
+      "domain": "cloud_systems",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Containers",
+      "onet_skill_ids": [
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "With this Dockerfile, every small code change reinstalls all dependencies and the build takes 5 minutes. What fixes it?",
+      "code": "FROM python:3.12-slim\nCOPY . /app\nRUN pip install -r /app/requirements.txt\nCMD [\"python\", \"/app/main.py\"]",
+      "code_lang": "dockerfile",
+      "options": [
+        "Use a bigger base image",
+        "Copy requirements.txt and run pip install first, then COPY the rest of the code",
+        "Add --no-cache to the build",
+        "Put everything in one RUN line"
+      ],
+      "answer": 1,
+      "explanation": "Docker reuses a cached layer until one of its inputs changes. Copying only requirements.txt first means code changes no longer invalidate the pip layer.",
+      "refs": [
+        {
+          "name": "Docker Docs: Build cache",
+          "url": "https://docs.docker.com/build/cache/"
+        }
+      ]
+    },
+    {
+      "id": "CL-D2",
+      "domain": "cloud_systems",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Job scheduling",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "When does the cron entry `30 2 * * 1 /opt/backup.sh` run?",
+      "options": [
+        "Every day at 01:30",
+        "At 02:30 every Monday",
+        "On the 2nd of every month at 00:30",
+        "Every 30 minutes on Mondays"
+      ],
+      "answer": 1,
+      "explanation": "Fields are minute, hour, day of month, month, day of week: minute 30, hour 2, any day, any month, weekday 1 (Monday).",
+      "refs": [
+        {
+          "name": "crontab(5) manual page",
+          "url": "https://man7.org/linux/man-pages/man5/crontab.5.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-D3",
+      "domain": "cloud_systems",
+      "stage": "deep",
+      "type": "numeric",
+      "difficulty": 2,
+      "skill": "Reliability (SLA)",
+      "onet_skill_ids": [
+        "SK005",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "A service promises 99.9% availability over a 30-day month. How many minutes of downtime does that allow?",
+      "answer": 43.2,
+      "tolerance": 0.5,
+      "explanation": "30 x 24 x 60 = 43,200 minutes; 0.1% of that is 43.2 minutes.",
+      "refs": [
+        {
+          "name": "Google SRE Book: Availability table",
+          "url": "https://sre.google/sre-book/availability-table/"
+        }
+      ]
+    },
+    {
+      "id": "CL-D4",
+      "domain": "cloud_systems",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Identity and access management",
+      "onet_skill_ids": [
+        "SK030"
+      ],
+      "time_s": 60,
+      "prompt": "A CI pipeline only needs to upload build files to one storage bucket. Which permission should its credentials get?",
+      "options": [
+        "Administrator access",
+        "Full access to all storage buckets",
+        "Write (put object) on that one bucket only",
+        "Read-only access to all buckets"
+      ],
+      "answer": 2,
+      "explanation": "Least privilege: if the CI secret leaks, the attacker can only write to one bucket.",
+      "refs": [
+        {
+          "name": "AWS IAM: Security best practices (least privilege)",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-D5",
+      "domain": "cloud_systems",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Linux troubleshooting",
+      "onet_skill_ids": [
+        "SK026",
+        "SK044"
+      ],
+      "time_s": 120,
+      "prompt": "`df -h` shows / at 100%, but `du -sh /*` adds up to only 60% of the disk. You already deleted a 20 GB log file. What is the most likely explanation?",
+      "options": [
+        "df is cached and will update tomorrow",
+        "A running process still holds the deleted log file open, so its space is not freed",
+        "The disk is physically damaged",
+        "du does not count files in /var"
+      ],
+      "answer": 1,
+      "explanation": "A file's blocks are only freed when the last open handle closes. `lsof +L1` finds it; restart the process or truncate it via /proc.",
+      "refs": [
+        {
+          "name": "unlink(2) manual page",
+          "url": "https://man7.org/linux/man-pages/man2/unlink.2.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-D6",
+      "domain": "cloud_systems",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Backup and disaster recovery",
+      "onet_skill_ids": [
+        "SK030",
+        "SK019"
+      ],
+      "time_s": 90,
+      "prompt": "The business requires at most 15 minutes of data loss (RPO) and recovery within 1 hour (RTO). Today there is one nightly full backup on the same server. Which change meets both targets?",
+      "options": [
+        "Move the nightly backup to another disk in the same server",
+        "Use RAID 1 mirroring",
+        "Ship transaction logs to another region every 5 minutes and rehearse the restore regularly",
+        "Switch to weekly backups kept offsite"
+      ],
+      "answer": 2,
+      "explanation": "Log shipping every 5 minutes keeps data loss under 15 minutes, a separate region survives the server's loss, and rehearsal proves the 1-hour RTO. RAID is not a backup.",
+      "refs": [
+        {
+          "name": "AWS Well-Architected: Reliability pillar (disaster recovery objectives)",
+          "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-P1",
+      "domain": "cloud_systems",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Ops automation (parsing)",
+      "onet_skill_ids": [
+        "SK022",
+        "SK026"
+      ],
+      "time_s": 360,
+      "prompt": "Write find_full_disks(df_text, threshold). df_text is the output of `df -h` (a header line, then one line per filesystem). Return the mount points whose Use% is at least threshold, sorted by Use% (highest first), then mount point (A-Z). A mount point can contain spaces.",
+      "function": "find_full_disks",
+      "starter": "def find_full_disks(df_text, threshold):\n    # return: list of mount point strings\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   46G  4.0G  92% /\ntmpfs           3.9G     0  3.9G   0% /dev/shm\n/dev/sdb1       200G  150G   50G  75% /data\n/dev/sdc1       100G   80G   20G  80% /var/log",
+            80
+          ],
+          "expected": [
+            "/",
+            "/var/log"
+          ]
+        },
+        {
+          "args": [
+            "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        50G   46G  4.0G  92% /\ntmpfs           3.9G     0  3.9G   0% /dev/shm\n/dev/sdb1       200G  150G   50G  75% /data\n/dev/sdc1       100G   80G   20G  80% /var/log",
+            0
+          ],
+          "expected": [
+            "/",
+            "/var/log",
+            "/data",
+            "/dev/shm"
+          ]
+        },
+        {
+          "args": [
+            "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sdd1        10G  9.9G  100M  99% /mnt/usb drive\n/dev/sda1        50G   46G  4.0G  92% /",
+            95
+          ],
+          "expected": [
+            "/mnt/usb drive"
+          ]
+        },
+        {
+          "args": [
+            "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sde1        10G  8.5G  1.5G  85% /b\n/dev/sdf1        10G  8.5G  1.5G  85% /a\n",
+            85
+          ],
+          "expected": [
+            "/a",
+            "/b"
+          ]
+        }
+      ],
+      "explanation": "Skip the header and blank lines, split each line with maxsplit=5 so the mount point keeps its spaces, strip '%' from Use%, filter, then sort by (-use, mount).",
+      "refs": [
+        {
+          "name": "df(1) manual page",
+          "url": "https://man7.org/linux/man-pages/man1/df.1.html"
+        }
+      ]
+    },
+    {
+      "id": "CL-P2",
+      "domain": "cloud_systems",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Reliability (SLA) in code",
+      "onet_skill_ids": [
+        "SK022",
+        "SK005"
+      ],
+      "time_s": 360,
+      "prompt": "Write availability(outages, period_minutes). outages is a list of [start, end] minutes; outages can overlap and can start before 0 or end after period_minutes (only the part inside [0, period_minutes] counts). Return the availability percentage rounded to 3 decimals.",
+      "function": "availability",
+      "starter": "def availability(outages, period_minutes):\n    # e.g. availability([[10, 40]], 1000) -> 97.0\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            [],
+            43200
+          ],
+          "expected": 100.0
+        },
+        {
+          "args": [
+            [
+              [
+                10,
+                40
+              ]
+            ],
+            43200
+          ],
+          "expected": 99.931
+        },
+        {
+          "args": [
+            [
+              [
+                10,
+                40
+              ],
+              [
+                30,
+                60
+              ]
+            ],
+            1000
+          ],
+          "expected": 95.0
+        },
+        {
+          "args": [
+            [
+              [
+                0,
+                100
+              ],
+              [
+                50,
+                80
+              ],
+              [
+                200,
+                250
+              ]
+            ],
+            1000
+          ],
+          "expected": 85.0
+        },
+        {
+          "args": [
+            [
+              [
+                950,
+                1100
+              ]
+            ],
+            1000
+          ],
+          "expected": 95.0
+        },
+        {
+          "args": [
+            [
+              [
+                -20,
+                10
+              ]
+            ],
+            100
+          ],
+          "expected": 90.0
+        }
+      ],
+      "explanation": "Clip each outage to the period, merge overlaps (do not double-count), sum the downtime, then 100 * (1 - down / period).",
+      "refs": [
+        {
+          "name": "Google SRE Book: Availability table",
+          "url": "https://sre.google/sre-book/availability-table/"
+        }
+      ]
+    },
+    {
+      "id": "WX-S1",
+      "domain": "web_ux",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "CSS specificity",
+      "onet_skill_ids": [
+        "SK046"
+      ],
+      "time_s": 60,
+      "prompt": "What colour is the heading?",
+      "code": "<h1 id=\"title\" class=\"heading big\">Hello</h1>\n\nh1.heading.big { color: blue; }\n#title { color: red; }\nh1 { color: green; }",
+      "code_lang": "html",
+      "options": [
+        "Blue",
+        "Red",
+        "Green",
+        "Black (browser default)"
+      ],
+      "answer": 1,
+      "explanation": "One id selector outranks any number of class selectors, so #title wins regardless of order.",
+      "refs": [
+        {
+          "name": "MDN: Specificity",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity"
+        }
+      ]
+    },
+    {
+      "id": "WX-S2",
+      "domain": "web_ux",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Accessibility",
+      "onet_skill_ids": [
+        "SK046"
+      ],
+      "time_s": 60,
+      "prompt": "What is the best fix for this delete control?",
+      "code": "<div class=\"icon\" onclick=\"remove()\"><img src=\"trash.svg\"></div>",
+      "code_lang": "html",
+      "options": [
+        "Add cursor: pointer in CSS",
+        "Use <button type=\"button\" aria-label=\"Delete\"> with the icon inside",
+        "Add a title attribute to the img",
+        "Make the icon bigger"
+      ],
+      "answer": 1,
+      "explanation": "A div cannot be reached with the keyboard and has no accessible name. A real button is focusable and keyboard-operable; aria-label gives screen readers a name.",
+      "refs": [
+        {
+          "name": "WCAG 2.2",
+          "url": "https://www.w3.org/TR/WCAG22/"
+        },
+        {
+          "name": "MDN: <button>",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button"
+        }
+      ]
+    },
+    {
+      "id": "WX-D1",
+      "domain": "web_ux",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "JavaScript event loop",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 90,
+      "prompt": "In what order are the letters logged?",
+      "code": "console.log('A');\nsetTimeout(() => console.log('B'), 0);\nPromise.resolve().then(() => console.log('C'));\nconsole.log('D');",
+      "code_lang": "javascript",
+      "options": [
+        "A B C D",
+        "A D B C",
+        "A D C B",
+        "A C D B"
+      ],
+      "answer": 2,
+      "explanation": "Synchronous code runs first (A, D). Promise callbacks are microtasks and run before the next macrotask, the timer (C, then B).",
+      "refs": [
+        {
+          "name": "MDN: Using microtasks",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide"
+        }
+      ]
+    },
+    {
+      "id": "WX-D2",
+      "domain": "web_ux",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "HTTP APIs",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "A logged-in user calls DELETE /api/users/7 but is not an admin. Which status code should the API return?",
+      "options": [
+        "400 Bad Request",
+        "401 Unauthorized",
+        "403 Forbidden",
+        "404 Not Found is the only safe choice"
+      ],
+      "answer": 2,
+      "explanation": "401 means not authenticated. The user is authenticated but lacks permission, which is 403.",
+      "refs": [
+        {
+          "name": "MDN: 403 Forbidden",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+        }
+      ]
+    },
+    {
+      "id": "WX-D3",
+      "domain": "web_ux",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Web security (CORS)",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 90,
+      "prompt": "A React app at http://localhost:3000 calls fetch('http://localhost:8000/api'). The browser console shows a CORS error. Where is the fix?",
+      "options": [
+        "Add mode: 'no-cors' to the fetch call",
+        "Have the API server send Access-Control-Allow-Origin: http://localhost:3000 (and handle preflight)",
+        "Turn off the browser's security settings",
+        "Change fetch to XMLHttpRequest"
+      ],
+      "answer": 1,
+      "explanation": "CORS is a permission the server grants. no-cors only gives you an opaque response you cannot read.",
+      "refs": [
+        {
+          "name": "MDN: Cross-Origin Resource Sharing (CORS)",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
+        }
+      ]
+    },
+    {
+      "id": "WX-D4",
+      "domain": "web_ux",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Web performance",
+      "onet_skill_ids": [
+        "SK030"
+      ],
+      "time_s": 60,
+      "prompt": "Largest Contentful Paint is 6 s on mobile. The largest element is a 4 MB, 4000 px wide hero photo. What helps most?",
+      "options": [
+        "Minify the CSS",
+        "Serve a resized, compressed image (e.g. AVIF/WebP with srcset) and preload it",
+        "Add a loading spinner",
+        "Lazy-load the hero image"
+      ],
+      "answer": 1,
+      "explanation": "The LCP element itself is the bottleneck. Shrinking it and fetching it early speeds up LCP; lazy-loading the hero image makes it worse.",
+      "refs": [
+        {
+          "name": "web.dev: Optimize Largest Contentful Paint",
+          "url": "https://web.dev/articles/optimize-lcp"
+        }
+      ]
+    },
+    {
+      "id": "WX-D5",
+      "domain": "web_ux",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "User-centred design",
+      "onet_skill_ids": [
+        "SK046",
+        "SK018"
+      ],
+      "time_s": 60,
+      "prompt": "Analytics show 40% of users abandon an 18-field checkout form. What is the best next step?",
+      "options": [
+        "Change the button colour to red",
+        "Watch 5 users try the form, remove or defer non-essential fields, then measure again",
+        "Make every field required so data is complete",
+        "Split it into 18 one-field pages"
+      ],
+      "answer": 1,
+      "explanation": "Find the actual problem by observing users, fix it, and test again. Shorter forms reduce effort.",
+      "refs": [
+        {
+          "name": "ISO 9241-210: Human-centred design for interactive systems",
+          "url": "https://www.iso.org/standard/77520.html"
+        }
+      ]
+    },
+    {
+      "id": "WX-D6",
+      "domain": "web_ux",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Accessibility",
+      "onet_skill_ids": [
+        "SK046"
+      ],
+      "time_s": 60,
+      "prompt": "What is the minimum contrast ratio WCAG 2.2 level AA requires for normal-size body text?",
+      "options": [
+        "3:1",
+        "4.5:1",
+        "7:1",
+        "There is no requirement"
+      ],
+      "answer": 1,
+      "explanation": "AA needs 4.5:1 for normal text and 3:1 for large text; 7:1 is the AAA level.",
+      "refs": [
+        {
+          "name": "WCAG 2.2 Understanding 1.4.3: Contrast (Minimum)",
+          "url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"
+        }
+      ]
+    },
+    {
+      "id": "WX-P1",
+      "domain": "web_ux",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Back-end logic for UI",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 360,
+      "prompt": "Write paginate(items, page, per_page). page starts at 1. Return a dict with keys items (that page's slice), page, total_pages, has_prev, has_next. Raise ValueError if per_page < 1 or page < 1, or if page > total_pages when there is at least one item. An empty list has total_pages 0 and page 1 is allowed.",
+      "function": "paginate",
+      "starter": "def paginate(items, page, per_page):\n    # return: {'items': [...], 'page': ..., 'total_pages': ..., 'has_prev': ..., 'has_next': ...}\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            1,
+            3
+          ],
+          "expected": {
+            "items": [
+              1,
+              2,
+              3
+            ],
+            "page": 1,
+            "total_pages": 4,
+            "has_prev": false,
+            "has_next": true
+          }
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            4,
+            3
+          ],
+          "expected": {
+            "items": [
+              10
+            ],
+            "page": 4,
+            "total_pages": 4,
+            "has_prev": true,
+            "has_next": false
+          }
+        },
+        {
+          "args": [
+            [],
+            1,
+            5
+          ],
+          "expected": {
+            "items": [],
+            "page": 1,
+            "total_pages": 0,
+            "has_prev": false,
+            "has_next": false
+          }
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            2,
+            3
+          ],
+          "expected": {
+            "items": [
+              4,
+              5,
+              6
+            ],
+            "page": 2,
+            "total_pages": 2,
+            "has_prev": true,
+            "has_next": false
+          }
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            5,
+            3
+          ],
+          "raises": "ValueError"
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3
+            ],
+            1,
+            0
+          ],
+          "raises": "ValueError"
+        }
+      ],
+      "explanation": "total_pages = ceil(len / per_page); validate first; slice items[(page-1)*per_page : page*per_page].",
+      "refs": [
+        {
+          "name": "Python docs: Common sequence operations (slicing)",
+          "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
+        }
+      ]
+    },
+    {
+      "id": "WX-P2",
+      "domain": "web_ux",
+      "stage": "practical",
+      "type": "multi",
+      "difficulty": 3,
+      "skill": "Accessibility audit",
+      "onet_skill_ids": [
+        "SK046",
+        "SK028"
+      ],
+      "time_s": 240,
+      "prompt": "Select EVERY line that fails WCAG 2.2 level AA.",
+      "code": "1  <img src=\"sales-chart.png\">\n2  <label for=\"email\">Email</label> <input id=\"email\" type=\"email\">\n3  <div class=\"btn\" onclick=\"save()\">Save</div>\n4  <input type=\"password\" placeholder=\"Password\">\n5  <a href=\"/report.pdf\">Download annual report (PDF)</a>\n6  <p style=\"color:#999999; background:#ffffff\">Terms and conditions apply</p>",
+      "code_lang": "html",
+      "options": [
+        "Line 1",
+        "Line 2",
+        "Line 3",
+        "Line 4",
+        "Line 5",
+        "Line 6"
+      ],
+      "answer": [
+        0,
+        2,
+        3,
+        5
+      ],
+      "explanation": "1: no alt text. 3: a div is not keyboard-operable. 4: a placeholder is not a label. 6: #999 on white is about 2.85:1, below 4.5:1. Lines 2 and 5 are fine.",
+      "refs": [
+        {
+          "name": "WCAG 2.2",
+          "url": "https://www.w3.org/TR/WCAG22/"
+        }
+      ]
+    }
+  ]
+}
