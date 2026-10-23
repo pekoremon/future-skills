@@ -50,7 +50,7 @@ NEUTRAL_TREND = 50.0
 DEFAULT_JOB_ZONE = 4  # bachelor's degree, the usual level of a graduating student
 RIASEC = ["R", "I", "A", "S", "E", "C"]
 
-# Draft role -> domain mapping for the trend score (team to confirm). generic_tech is
+# Role -> domain mapping for the trend score, confirmed by the team on 2026-10-23. generic_tech is
 # the DOSM "Information & communication" sector; roles not listed have no domain.
 ROLE_DOMAIN = {
     **dict.fromkeys(["R01", "R02", "R03", "R04", "R05", "R08", "R11", "R13", "R14",

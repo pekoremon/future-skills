@@ -442,7 +442,7 @@ async function pageTrends() {
     <div class="grid">${scoreCards}</div>
     <div class="card stack" style="gap: 8px">
       <h2>How the trend score works</h2>
-      <p class="small"><strong>Malaysian demand</strong> = 50 + 10 × (the field's average employment growth over the last 4 quarters − the national average). <strong>AI momentum</strong> = 50 + 100 × (AI papers in the last 6 months ÷ the 6 months before − 1). The trend score is the average of the parts that have data; a missing part is never estimated. Formula version v0 (draft).</p>
+      <p class="small"><strong>Malaysian demand</strong> = 50 + 10 × (the field's average employment growth over the last 4 quarters − the national average). <strong>AI momentum</strong> = 50 + 100 × (AI papers in the last 6 months ÷ the 6 months before − 1). The trend score is the average of the parts that have data; a missing part is never estimated. Formula version v1; the equal weights are a team choice, and the future scenarios on the Matches page change them.</p>
     </div>
     <div class="card stack" style="gap: 10px">
       <h2>Update data</h2>
