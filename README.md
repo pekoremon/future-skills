@@ -12,7 +12,7 @@ AI is replacing generic tech jobs. Future Skills helps graduating tech students 
 
 | Field | Details |
 |---|---|
-| Team Name | [TEAM NAME] |
+| Team Name | Hands Off Our Rights |
 | Team Domain | Domain 1 — Aiversecity Future-Ready Workforce |
 | SDG Track (1–17) | SDG 4 — Quality Education (targets 4.3, 4.4); SDG 8 — Decent Work (targets 8.2, 8.5) |
 | Team Leader | [Hong Zhi Yang] |
@@ -23,9 +23,9 @@ AI is replacing generic tech jobs. Future Skills helps graduating tech students 
 
 | Resource | Link |
 |---|---|
-| GitHub Repository | [REPO URL] |
+| GitHub Repository | https://github.com/pekoremon/future-skills |
 | Replit Project | [REPLIT PROJECT URL] |
-| Live Demo | [REPLIT DEPLOYMENT URL] |
+| Live Demo | https://future-skills.replit.app |
 | Slide Deck | [SLIDES URL] |
 | Demo Video | [YOUTUBE URL] |
 
@@ -112,7 +112,7 @@ Domain 1 requires all six:
 ### Option 2 — Run Locally
 
 ```bash
-git clone [REPO URL]
+git clone https://github.com/pekoremon/future-skills.git
 cd future-skills
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
