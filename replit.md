@@ -17,3 +17,14 @@ python -m unittest discover tests
 ```
 
 The health endpoint is `GET /api/health`. Data refreshes use public external sources and require network access; they are not required for startup.
+
+## Publishing dependency settings
+
+Production environment variables:
+
+- `PIP_USER=false`
+- `PIP_TARGET=.pythonlibs/lib/python3.12/site-packages`
+
+These make the automatic dependency-install step write into the project's Python dependency folder rather than attempting a disabled user-site install or writing to the immutable system Python. If the Python runtime version changes, update the target path to match.
+
+Verification used a pip install dry run with user site-packages disabled and checked Flask imports plus the root and health routes. A new publish is required to verify the deployment itself.

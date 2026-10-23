@@ -12,6 +12,10 @@ deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 8080
 externalPort = 80
 
 [workflows]
@@ -37,3 +41,9 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[userenv]
+
+[userenv.production]
+PIP_USER = "false"
+PIP_TARGET = ".pythonlibs/lib/python3.12/site-packages"

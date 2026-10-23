@@ -1,0 +1,1 @@
+- [Deployment dependency installation](deployment-dependencies.md) — automatic package installation runs before the custom build command; fix its environment, not just the build script.
