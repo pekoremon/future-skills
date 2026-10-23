@@ -1,0 +1,10 @@
+[project]
+name = "future-skills"
+version = "0.1.0"
+description = "Find AI-resistant, SDG-aligned tech + domain roles and the skills to get there"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+# The app uses only the Python standard library. This file exists so Replit's
+# package step recognises a Python project; there is nothing to install.
+dependencies = []

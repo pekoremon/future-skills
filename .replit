@@ -5,11 +5,14 @@ entrypoint = "src/main.py"
 [nix]
 channel = "stable-25_05"
 
-# The app uses only the Python standard library, so there is nothing to install.
-# (Replit's automatic "pip install -r requirements.txt" step failed with "--user"
-# errors on publish; with no requirements.txt it has nothing to run.)
+# The app uses only the Python standard library. pyproject.toml + uv.lock declare a
+# Python project with no dependencies, so Replit's package step runs uv with nothing
+# to install. (A requirements.txt made it run pip --user, which failed on publish.)
+[packager]
+language = "python3"
+
 [packager.features]
-enabledForHosting = false
+guessImports = false
 
 [deployment]
 run = ["python", "src/main.py"]
