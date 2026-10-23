@@ -109,6 +109,22 @@ const testDone = () => Boolean(state.test && state.test.result);
 
 const interestResult = () => api("/api/questionnaire/score", { body: JSON.stringify({ answers: state.answers }) });
 const quizDone = () => state.answers.every((a) => a !== null);
+const skillsDone = () => Object.keys(state.ratings).length > 0 || state.techs.length > 0;
+
+// The guided path: every step page shows where the student is and links to the next step.
+const JOURNEY = [
+  { id: "quiz", label: "Interests", href: "#/quiz", done: quizDone },
+  { id: "test", label: "IT skills test", href: "#/test", done: testDone },
+  { id: "skills", label: "Your skills", href: "#/skills", done: skillsDone },
+  { id: "results", label: "Your jobs", href: "#/results", done: () => false },
+];
+const nextStep = (id) => JOURNEY[Math.min(JOURNEY.findIndex((s) => s.id === id) + 1, JOURNEY.length - 1)];
+function stepBar(current) {
+  return `<ol class="journey" aria-label="Your progress">${JOURNEY.map((s, i) => `
+    <li class="${s.done() ? "done" : ""}"${s.id === current ? ' aria-current="step"' : ""}>
+      <a href="${s.href}"><span class="num" aria-hidden="true">${s.done() ? "✓" : i + 1}</span>${esc(s.label)}${s.done() ? '<span class="visually-hidden"> (done)</span>' : ""}</a>
+    </li>`).join("")}</ol>`;
+}
 
 /* ---------- pages ---------- */
 
@@ -120,15 +136,13 @@ function pageHome() {
     <p class="muted">Future Skills combines an interest questionnaire, an IT skills test and your CV to show which of 6 IT areas fits you best, then ranks 26 IT roles, explains every score, shows the skills you still need, and links each role to the UN Sustainable Development Goals.</p>
     <div class="steps">
       <div class="card"><h3>Your interests</h3><p class="muted small">36 quick statements about IT work you would enjoy. About 8 minutes.</p></div>
-      <div class="card"><h3>Your skills</h3><p class="muted small">Rate the skills you have and pick the tools you use, or let AI read your CV.</p></div>
-      <div class="card"><h3>Your matches</h3><p class="muted small">Ranked roles with the score split, skill gaps, trends and SDG links.</p></div>
+      <div class="card"><h3>IT skills test</h3><p class="muted small">24 questions in 6 IT areas, with code you run in the browser. About 25 minutes.</p></div>
+      <div class="card"><h3>Your skills</h3><p class="muted small">Upload your CV, or rate your skills and pick the tools you use. About 3 minutes.</p></div>
+      <div class="card"><h3>Your jobs</h3><p class="muted small">Your best IT area, ranked roles, the skills you still need and free courses.</p></div>
     </div>
-    <div class="note stack" style="gap: 8px">
-      <p><strong>New: IT skills test.</strong> 24 questions, about 25 minutes. Find out which of 6 IT areas you are strongest in: software engineering, data &amp; AI, cybersecurity, cloud &amp; networking, web &amp; interface design, or IT management.</p>
-      <div class="row"><a class="btn primary" href="#/test">Take the IT skills test</a></div>
-    </div>
+    <p class="muted small">Every step is optional and you can go back any time; the more you do, the better the result.</p>
     <div class="row">
-      <a class="btn" href="#/quiz">Start with interests</a>
+      <a class="btn primary" href="${(JOURNEY.find((st) => !st.done()) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done()) ? "Continue where I left off" : "Start: step 1, interests"}</a>
       <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
       <a class="btn ghost" href="#/trends">See the AI-trend data</a>
     </div>
@@ -139,7 +153,8 @@ function pageHome() {
 async function pageQuizIntro() {
   render(`
   <div class="quiz stack">
-    <p class="eyebrow">Optional step · Interests</p>
+    ${stepBar("quiz")}
+    <p class="eyebrow">Step 1 of 4 · Interests</p>
     <h1>What kind of work do you actually enjoy?</h1>
     <div class="row"><span class="chip">36 items</span><span class="chip">About 8 minutes</span><span class="chip">Skip any time</span></div>
     <div class="card stack">
@@ -150,7 +165,7 @@ async function pageQuizIntro() {
     <p class="muted small">Each item starts with "I would enjoy...". Say how much you agree, based on what you would enjoy, not what you are already good at.</p>
     <div class="stack">
       <button class="btn primary" type="button" id="start">${state.answers.some((a) => a !== null) ? "Continue questionnaire" : "Start questionnaire"}</button>
-      <button class="btn" type="button" id="skip">Skip for now</button>
+      <button class="btn" type="button" id="skip">Skip to step 2: the IT skills test</button>
     </div>
     <p class="attribution">Questions written by the team, based on Holland's RIASEC interest types as used by <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET</a>.</p>
   </div>`);
@@ -158,7 +173,7 @@ async function pageQuizIntro() {
     const first = state.answers.indexOf(null);
     location.hash = `#/quiz/${first === -1 ? 1 : first + 1}`;
   };
-  document.getElementById("skip").onclick = () => { state.quizSkipped = true; state.demo = null; saveState(); location.hash = "#/skills"; };
+  document.getElementById("skip").onclick = () => { state.quizSkipped = true; state.demo = null; saveState(); location.hash = "#/test"; };
 }
 
 async function pageQuizItem(n) {
@@ -211,7 +226,8 @@ async function pageInterests() {
     </div>`).join("");
   render(`
   <div class="quiz stack">
-    <p class="eyebrow">Your interest results</p>
+    ${stepBar("quiz")}
+    <p class="eyebrow">Step 1 of 4 · Your interest results</p>
     ${r.warnings.map((w) => `<div class="warn">${esc(w.text)}</div>`).join("")}
     <div><p class="muted small">Your interest code (Holland code)</p><div class="big" style="letter-spacing: 0.12em">${esc(r.code)}</div></div>
     <div class="card stack" style="gap: 12px"><h3>Which IT areas you would enjoy</h3><p class="muted small">From the 4 questions about each area (0–100).</p>${areaBars}</div>
@@ -220,8 +236,7 @@ async function pageInterests() {
     ${cards}
     <div class="note">This is a direction, not a verdict. Interests change with experience. In your matches they sit next to the skills test and your CV.</div>
     <div class="stack">
-      <a class="btn primary" href="#/test">Next: the IT skills test</a>
-      <a class="btn" href="#/results">See my matches</a>
+      <a class="btn primary" href="#/test">Next: step 2, the IT skills test</a>
       <button class="btn" type="button" id="redo">Answer again</button>
     </div>
     <p class="attribution">${esc(areas.attribution)} Type descriptions written by the team, based on <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET Career Interest Types</a>.</p>
@@ -253,10 +268,14 @@ async function pageSkills() {
   const techs = skills.filter((s) => s.skill_type === "technology");
   render(`
   <div class="stack">
-    <p class="eyebrow">Your skills</p>
+    ${stepBar("skills")}
+    <p class="eyebrow">Step 3 of 4 · Your skills</p>
     <h1>What can you already do?</h1>
-    <p class="muted">Rate only what you know; anything left at “–” counts as not yet learned. Scale: 1 Basic · 2 Some · 3 Good · 4 Strong · 5 Expert.</p>
-    <p class="small"><a href="#/cv">Have a CV? Let AI read it</a> to summarise your skills and fill in your technologies.</p>
+    <div class="note stack" style="gap: 8px">
+      <p><strong>Fastest: upload your CV.</strong> AI reads it and ticks the technologies you use; then check the list below.</p>
+      <div class="row"><a class="btn primary" href="#/cv">Upload my CV</a></div>
+    </div>
+    <p class="muted">Or rate what you know below; anything left at “–” counts as not yet learned. Scale: 1 Basic · 2 Some · 3 Good · 4 Strong · 5 Expert.</p>
     <div class="card row">
       <label for="zone"><strong>Highest education (finished or about to finish)</strong></label>
       <select id="zone">${Object.entries(ZONES).map(([z, l]) => `<option value="${z}"${Number(z) === Number(state.zone) ? " selected" : ""}>${l}</option>`).join("")}</select>
@@ -272,7 +291,7 @@ async function pageSkills() {
       </div>
     </details>
     <div class="sticky-actions row">
-      <a class="btn primary" href="#/results" id="go">See my matches</a>
+      <a class="btn primary" href="#/results" id="go">Next: step 4, see my jobs</a>
       <span class="muted small" id="count"></span>
     </div>
   </div>`);
@@ -376,7 +395,8 @@ function cvResultHtml(r) {
 async function pageCV() {
   render(`
   <div class="stack">
-    <p class="eyebrow">Optional step · Your CV</p>
+    ${stepBar("skills")}
+    <p class="eyebrow">Step 3 of 4 · Your skills from your CV</p>
     <h1>Let AI read your CV</h1>
     <p class="muted">Upload your CV to get a short summary of your skills and qualifications, and to fill in the technologies you use on the Skills page.</p>
     <div class="drop" id="drop">
@@ -387,7 +407,7 @@ async function pageCV() {
     <p class="small muted">Your CV is sent to our server and, when AI is on, to Fireworks AI to write the summary. It is not saved. Leave out your IC number, address and phone if you prefer.</p>
     <div id="cv-status" role="status" aria-live="polite"></div>
     <div id="cv-out" class="stack"></div>
-    <div class="row"><a class="btn" href="#/skills">Go to my skills</a></div>
+    <div class="row"><a class="btn" href="#/skills">Back to rating my skills</a><a class="btn ghost" href="#/results">Skip to step 4, my jobs</a></div>
   </div>`);
   const status = document.getElementById("cv-status");
   const out = document.getElementById("cv-out");
@@ -558,8 +578,8 @@ async function loadRoleExtra(card) {
 async function pageResults() {
   const demo = state.demo;
   if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
-    render(`<div class="stack"><h1>No answers yet</h1><p class="muted">Answer the interest questions or rate your skills first, or try the fictional demo student.</p>
-      <div class="row"><a class="btn primary" href="#/quiz">Start</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
+    render(`<div class="stack">${stepBar("results")}<h1>No answers yet</h1><p class="muted">Do at least one of steps 1 to 3 first, or try the fictional demo student.</p>
+      <div class="row"><a class="btn primary" href="#/quiz">Start: step 1, interests</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
     document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); pageResults(); };
     return;
   }
@@ -603,7 +623,8 @@ async function pageResults() {
   };
   render(`
   <div class="stack">
-    <p class="eyebrow">Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
+    ${demo ? "" : stepBar("results")}
+    <p class="eyebrow">${demo ? "" : "Step 4 of 4 · "}Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
     <h1>Best matches for your level</h1>
     ${noArea ? '<div class="warn">IT area fit is not included because you have not taken the skills test. <a href="#/test">Take it now</a> to update the ranking.</div>' : `<div class="card stack" style="gap: 6px"><h2>Your IT areas</h2>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div>`}
     <div class="card stack" style="gap: 8px">
@@ -817,7 +838,8 @@ function pageTestIntro() {
   const answered = going ? Object.keys(state.test.responses).length : 0;
   render(`
   <div class="quiz stack">
-    <p class="eyebrow">IT skills test</p>
+    ${stepBar("test")}
+    <p class="eyebrow">Step 2 of 4 · IT skills test</p>
     <h1>Which IT area are you strongest in?</h1>
     <div class="row"><span class="chip">24 questions</span><span class="chip">About 25 minutes</span><span class="chip">6 IT areas</span></div>
     <div class="card stack">
@@ -1044,7 +1066,8 @@ function pageTestResult() {
     </details>`).join("");
   render(`
   <div class="stack">
-    <p class="eyebrow">IT skills test · Your result</p>
+    ${stepBar("test")}
+    <p class="eyebrow">Step 2 of 4 · IT skills test result</p>
     <h1>Your strongest IT area: ${esc(best.name)}</h1>
     <p class="muted">${esc(r.disclaimer)}</p>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
@@ -1055,11 +1078,11 @@ function pageTestResult() {
     <div class="grid">${deep.map(domainCard).join("")}</div>
     <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
     <div class="note stack" style="gap: 8px">
-      <p><strong>Next: your recommended jobs.</strong> Your matches combine this test${quizDone() ? " with your interest answers" : ""} to rank 26 IT roles.</p>
-      <div class="row"><a class="btn primary" href="#/results">See my recommended jobs</a>${quizDone() ? "" : '<a class="btn" href="#/quiz">Add your interests first (8 min)</a>'}</div>
+      <p><strong>Next: step 3, your skills.</strong> Upload your CV or rate your skills (about 3 minutes), so your job matches can show the skills you still need.</p>
+      <div class="row"><a class="btn primary" href="#/skills">Next: step 3, my skills</a><a class="btn" href="#/results">Skip to my jobs</a>${quizDone() ? "" : '<a class="btn ghost" href="#/quiz">Do step 1, interests (8 min)</a>'}</div>
     </div>
     <div class="stack" style="gap: 10px"><h2>Review every answer</h2>${review}</div>
-    <div class="row"><a class="btn primary" href="#/results">See my recommended jobs</a><button class="btn" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
+    <div class="row"><a class="btn primary" href="#/skills">Next: step 3, my skills</a><button class="btn" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
   </div>`);
   document.getElementById("again").onclick = (e) => { e.target.disabled = true; startTest().catch(showError); };
 }

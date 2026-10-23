@@ -197,3 +197,12 @@ ol.tests code, .review code { font-family: ui-monospace, Consolas, monospace; fo
 .fail { color: var(--warn-text); font-weight: 700; }
 details.review { padding: 4px 16px 12px; }
 details.review > summary { flex-wrap: wrap; }
+
+/* Guided path: steps 1-4 at the top of each step page */
+.journey { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.journey a { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--muted); text-decoration: none; font-size: 13px; line-height: 1.2; }
+.journey .num { flex: none; display: inline-flex; width: 22px; height: 22px; border-radius: 6px; align-items: center; justify-content: center; background: var(--track); color: var(--text); font-weight: 700; font-size: 12px; }
+.journey li.done .num { background: var(--accent); color: var(--on-accent); }
+.journey li[aria-current="step"] a { border-color: var(--accent); color: var(--text); font-weight: 700; background: var(--accent-soft); }
+@media (max-width: 480px) { .journey a { flex-direction: column; justify-content: center; text-align: center; font-size: 12px; padding: 6px 4px; } }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
