@@ -45,5 +45,7 @@ outputType = "webview"
 [userenv]
 
 [userenv.production]
-PIP_USER = "false"
+
+[userenv.shared]
 PIP_TARGET = ".pythonlibs/lib/python3.12/site-packages"
+PIP_USER = "false"

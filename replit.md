@@ -20,11 +20,11 @@ The health endpoint is `GET /api/health`. Data refreshes use public external sou
 
 ## Publishing dependency settings
 
-Production environment variables:
+Shared environment variables (not production-only):
 
 - `PIP_USER=false`
 - `PIP_TARGET=.pythonlibs/lib/python3.12/site-packages`
 
-These make the automatic dependency-install step write into the project's Python dependency folder rather than attempting a disabled user-site install or writing to the immutable system Python. If the Python runtime version changes, update the target path to match.
+These configure pip to write into the project's Python dependency folder rather than attempting a disabled user-site install or writing to the immutable system Python. Keep them shared: a publish with these settings scoped only to production still failed during automatic package installation. If the Python runtime version changes, update the target path to match.
 
-Verification used a pip install dry run with user site-packages disabled and checked Flask imports plus the root and health routes. A new publish is required to verify the deployment itself.
+Verification uses a pip install dry run with user site-packages disabled and checks Flask imports plus the root and health routes. A new publish is required to verify the deployment itself; local success does not prove the publishing service uses the same environment.
