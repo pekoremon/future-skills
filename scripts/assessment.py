@@ -1,7 +1,8 @@
 """IT domain readiness assessment: pick questions, grade answers, build the report.
 
-The question bank is data/it_assessment.json. A student answers one screen item per
-domain, then deep and practical items in the 2 domains they scored best on.
+The question bank is data/it_assessment.json. A student answers the same number of
+quick-check (screen) items in each of the 6 IT areas, which ranks all areas against each
+other, then deep and practical items in the 2 areas they scored best on.
 
 Code questions run in the student's browser (Pyodide), so the server only receives how
 many tests passed. SQL questions run here, in a throwaway in-memory SQLite database that
@@ -64,7 +65,7 @@ def _pick(stage: str, domain: str, n: int, rng: random.Random) -> list:
 
 
 def screen_questions(seed: int) -> list:
-    """Stage 1: one screen item per domain, in a seed-dependent order."""
+    """Stage 1: the same number of screen items per domain, in a seed-dependent order."""
     rng = random.Random(seed)
     sel = load_bank()["selection"]
     picked = [q for d in load_bank()["domains"] for q in _pick("screen", d["id"], sel["screen_per_domain"], rng)]
@@ -191,16 +192,17 @@ def report(seed: int, responses: dict) -> dict:
 
     domains = []
     for d in bank["domains"]:
+        screen_points, screen_max = earned.get((d["id"], "screen"), 0), possible[(d["id"], "screen")]
         row = {"id": d["id"], "name": d["name"], "name_zh": d["name_zh"],
-               "screen_points": earned.get((d["id"], "screen"), 0),
-               "screen_max": possible.get((d["id"], "screen"), 0), "tested_in_depth": d["id"] in deep,
+               "screen_points": screen_points, "screen_max": screen_max,
+               "profile": round(100 * screen_points / screen_max), "tested_in_depth": d["id"] in deep,
                "roles": [{"onet_soc": s, "title": t} for s, t in zip(d["onet_soc"], d["onet_titles"])]}
         if d["id"] in deep:
             score = round(100 * earned[(d["id"], "deep")] / possible[(d["id"], "deep")])
             row.update(readiness=score, level=level_for(score))
         domains.append(row)
 
-    best = max((d for d in domains if d["tested_in_depth"]), key=lambda d: d["readiness"])
+    best = max((d for d in domains if d["tested_in_depth"]), key=lambda d: (d["readiness"], d["profile"]))
     gaps = [{"skill": i["skill"], "domain": i["domain"], "id": i["id"]} for i in items if not i["correct"]]
     return {"seed": seed, "deep_domains": deep, "recommended": best["id"], "domains": domains,
             "skills_to_improve": gaps, "items": items,

@@ -1,17 +1,17 @@
 {
   "name": "IT Domain Readiness Assessment",
-  "version": "1.0",
+  "version": "2.0",
   "language": "en",
   "source_name": "Team-written items; skills mapped to O*NET 31.0, references cited per item",
   "source_url": "https://www.onetcenter.org/database.html",
   "source_date": "2026-10-23",
   "disclaimer": "An indicative self-check of job-entry skills, not a certification or a hiring decision.",
   "selection": {
-    "screen_per_domain": 1,
+    "screen_per_domain": 3,
     "deep_domains": 2,
-    "deep_per_domain": 3,
+    "deep_per_domain": 2,
     "practical_per_domain": 1,
-    "note": "Stage 1: one random screen item per domain (6). Stage 2: for the 2 domains with the highest screen score (ties broken randomly), 3 random deep items and 1 random practical item each (8). 14 items, about 15-20 minutes."
+    "note": "Stage 1: 3 random quick-check items in each of the 6 areas (18), giving every area the same chance. Stage 2: in the 2 areas with the most quick-check points (ties broken by the seed), 2 deep items and 1 hands-on item each (6). 24 items, about 25 minutes."
   },
   "scoring": {
     "points": {
@@ -41,13 +41,14 @@
         "label": "Foundation",
         "label_zh": "需打基础"
       }
-    ]
+    ],
+    "area_profile": "quick-check points / possible for every area, as 0-100; ranks all 6 areas"
   },
   "domains": [
     {
       "id": "software_dev",
-      "name": "Software Development",
-      "name_zh": "软件开发",
+      "name": "Software Engineering",
+      "name_zh": "软件工程",
       "onet_soc": [
         "15-1252.00",
         "15-1251.00",
@@ -58,6 +59,24 @@
         "Software Developers",
         "Computer Programmers",
         "Software Quality Assurance Analysts and Testers"
+      ]
+    },
+    {
+      "id": "data_ai",
+      "name": "Data & AI",
+      "name_zh": "数据与 AI",
+      "onet_soc": [
+        "15-2051.00",
+        "15-2051.01",
+        "15-1242.00",
+        "15-1243.00"
+      ],
+      "description": "Querying data, building and evaluating models.",
+      "onet_titles": [
+        "Data Scientists",
+        "Business Intelligence Analysts",
+        "Database Administrators",
+        "Database Architects"
       ]
     },
     {
@@ -79,57 +98,27 @@
       ]
     },
     {
-      "id": "networking",
-      "name": "Networking",
-      "name_zh": "网络工程",
+      "id": "cloud_infra",
+      "name": "Cloud, Infrastructure & Networking",
+      "name_zh": "云端与基础设施 / 网络",
       "onet_soc": [
         "15-1241.00",
         "15-1231.00",
-        "15-1244.00"
-      ],
-      "description": "Designing, addressing and troubleshooting networks.",
-      "onet_titles": [
-        "Computer Network Architects",
-        "Computer Network Support Specialists",
-        "Network and Computer Systems Administrators"
-      ]
-    },
-    {
-      "id": "data_ai",
-      "name": "Data & AI",
-      "name_zh": "数据与人工智能",
-      "onet_soc": [
-        "15-2051.00",
-        "15-2051.01",
-        "15-1242.00",
-        "15-1243.00"
-      ],
-      "description": "Querying data, building and evaluating models.",
-      "onet_titles": [
-        "Data Scientists",
-        "Business Intelligence Analysts",
-        "Database Administrators",
-        "Database Architects"
-      ]
-    },
-    {
-      "id": "cloud_systems",
-      "name": "Cloud & Systems",
-      "name_zh": "云与系统运维",
-      "onet_soc": [
         "15-1244.00",
         "15-1299.08"
       ],
-      "description": "Running reliable servers, containers and cloud services.",
       "onet_titles": [
+        "Computer Network Architects",
+        "Computer Network Support Specialists",
         "Network and Computer Systems Administrators",
         "Computer Systems Engineers/Architects"
-      ]
+      ],
+      "description": "Designing, running and troubleshooting networks, servers and cloud services."
     },
     {
       "id": "web_ux",
-      "name": "Web & UX",
-      "name_zh": "网页与用户体验",
+      "name": "Web & Interface Design",
+      "name_zh": "Web 与界面设计",
       "onet_soc": [
         "15-1254.00",
         "15-1255.00"
@@ -139,6 +128,22 @@
         "Web Developers",
         "Web and Digital Interface Designers"
       ]
+    },
+    {
+      "id": "it_mgmt",
+      "name": "IT Management & Analysis",
+      "name_zh": "IT 管理与分析",
+      "onet_soc": [
+        "15-1299.09",
+        "15-1211.00",
+        "11-3021.00"
+      ],
+      "onet_titles": [
+        "Information Technology Project Managers",
+        "Computer Systems Analysts",
+        "Computer and Information Systems Managers"
+      ],
+      "description": "Running IT projects, analysing requirements and planning systems."
     }
   ],
   "questions": [
@@ -196,6 +201,92 @@
         {
           "name": "Python wiki: TimeComplexity",
           "url": "https://wiki.python.org/moin/TimeComplexity"
+        }
+      ]
+    },
+    {
+      "id": "SD-S3",
+      "domain": "software_dev",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Floating-point numbers",
+      "onet_skill_ids": [
+        "SK022",
+        "SK005"
+      ],
+      "time_s": 45,
+      "prompt": "What does this print?",
+      "code": "print(0.1 + 0.2 == 0.3)",
+      "code_lang": "python",
+      "options": [
+        "True",
+        "False",
+        "It raises a TypeError",
+        "0.3"
+      ],
+      "answer": 1,
+      "explanation": "0.1 and 0.2 have no exact binary representation, so the sum is 0.30000000000000004. Compare floats with math.isclose().",
+      "refs": [
+        {
+          "name": "Python tutorial: Floating-point arithmetic",
+          "url": "https://docs.python.org/3/tutorial/floatingpoint.html"
+        }
+      ]
+    },
+    {
+      "id": "SD-S4",
+      "domain": "software_dev",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "References and mutability",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 45,
+      "prompt": "What does this print?",
+      "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(len(a))",
+      "code_lang": "python",
+      "options": [
+        "3",
+        "4",
+        "It raises a NameError",
+        "7"
+      ],
+      "answer": 1,
+      "explanation": "b = a does not copy the list; both names point to the same list object.",
+      "refs": [
+        {
+          "name": "Python FAQ: How do I copy an object?",
+          "url": "https://docs.python.org/3/faq/programming.html#how-do-i-copy-an-object-in-python"
+        }
+      ]
+    },
+    {
+      "id": "SD-S5",
+      "domain": "software_dev",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Unit testing",
+      "onet_skill_ids": [
+        "SK028"
+      ],
+      "time_s": 60,
+      "prompt": "A unit test for checkout() calls the real payment gateway and fails whenever the network is slow. What is the best fix?",
+      "options": [
+        "Retry the test up to 5 times",
+        "Replace the gateway with a mock or stub in the unit test",
+        "Delete the test",
+        "Run the tests only at night"
+      ],
+      "answer": 1,
+      "explanation": "Unit tests should not depend on outside services. A mock makes the test fast and repeatable; the real gateway belongs in a separate integration test.",
+      "refs": [
+        {
+          "name": "Python docs: unittest.mock",
+          "url": "https://docs.python.org/3/library/unittest.mock.html"
         }
       ]
     },
@@ -593,678 +684,6 @@
       ]
     },
     {
-      "id": "CS-S1",
-      "domain": "cybersecurity",
-      "stage": "screen",
-      "type": "mcq",
-      "difficulty": 2,
-      "skill": "Injection prevention",
-      "onet_skill_ids": [
-        "SK022",
-        "SK044"
-      ],
-      "time_s": 60,
-      "prompt": "A login check builds its SQL like this. What is the right fix?",
-      "code": "sql = \"SELECT * FROM users WHERE name = '\" + name + \"' AND pw_hash = '\" + h + \"'\"",
-      "code_lang": "python",
-      "options": [
-        "Strip single quotes from name before building the string",
-        "Use a parameterised query with placeholders",
-        "Hide database error messages from the user",
-        "Validate the name field with JavaScript in the browser"
-      ],
-      "answer": 1,
-      "explanation": "Parameterised queries keep data separate from SQL code. Stripping characters is easy to bypass and browser checks can be skipped.",
-      "refs": [
-        {
-          "name": "OWASP Top 10",
-          "url": "https://owasp.org/Top10/"
-        },
-        {
-          "name": "OWASP SQL Injection Prevention Cheat Sheet",
-          "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
-        }
-      ]
-    },
-    {
-      "id": "CS-S2",
-      "domain": "cybersecurity",
-      "stage": "screen",
-      "type": "mcq",
-      "difficulty": 2,
-      "skill": "Password storage",
-      "onet_skill_ids": [
-        "SK044"
-      ],
-      "time_s": 60,
-      "prompt": "How should a new web app store user passwords?",
-      "options": [
-        "SHA-256 hash of the password",
-        "AES-encrypted, with the key in the config file",
-        "Argon2id or bcrypt, with a unique salt per password",
-        "MD5 with one site-wide salt"
-      ],
-      "answer": 2,
-      "explanation": "Password hashing functions such as Argon2id and bcrypt are deliberately slow and salted, so cracking stolen hashes is expensive. Fast hashes and reversible encryption are not suitable.",
-      "refs": [
-        {
-          "name": "OWASP Password Storage Cheat Sheet",
-          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
-        }
-      ]
-    },
-    {
-      "id": "CS-D1",
-      "domain": "cybersecurity",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Log analysis",
-      "onet_skill_ids": [
-        "SK026",
-        "SK018"
-      ],
-      "time_s": 120,
-      "prompt": "You see these lines in /var/log/auth.log on a public server. What happened, and what do you do?",
-      "code": "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2\nOct 23 10:01:03 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52013 ssh2\n... 412 more failed attempts from 203.0.113.5 ...\nOct 23 10:09:41 web01 sshd[811]: Accepted password for root from 203.0.113.5 port 53990 ssh2",
-      "code_lang": "text",
-      "options": [
-        "A port scan; no action because it was only probing",
-        "A successful brute-force login as root; treat the server as compromised and start incident response",
-        "A user who forgot the password; reset it",
-        "Normal SSH keep-alive traffic"
-      ],
-      "answer": 1,
-      "explanation": "Hundreds of failures followed by a success from the same address is a successful password-guessing attack. Isolate the host, preserve logs, and then disable password and root logins.",
-      "refs": [
-        {
-          "name": "NIST SP 800-61r3: Incident Response Recommendations",
-          "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
-        },
-        {
-          "name": "NIST NICE Framework (SP 800-181r1)",
-          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
-        }
-      ]
-    },
-    {
-      "id": "CS-D2",
-      "domain": "cybersecurity",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Cross-site scripting (XSS)",
-      "onet_skill_ids": [
-        "SK022"
-      ],
-      "time_s": 90,
-      "prompt": "A comment box shows comments with the code below. A user posts <img src=x onerror=alert(document.cookie)>. What is the best fix?",
-      "code": "commentDiv.innerHTML = comment.text;",
-      "code_lang": "javascript",
-      "options": [
-        "Block the word 'script' in comments",
-        "Set commentDiv.textContent instead, or encode the output for HTML",
-        "Only allow logged-in users to comment",
-        "Move the code into a separate .js file"
-      ],
-      "answer": 1,
-      "explanation": "The payload has no <script> tag, so keyword filters miss it. textContent treats the input as text, never as HTML.",
-      "refs": [
-        {
-          "name": "OWASP Cross Site Scripting Prevention Cheat Sheet",
-          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
-        }
-      ]
-    },
-    {
-      "id": "CS-D3",
-      "domain": "cybersecurity",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 2,
-      "skill": "Security fundamentals (CIA triad)",
-      "onet_skill_ids": [
-        "SK007"
-      ],
-      "time_s": 60,
-      "prompt": "Ransomware encrypts a clinic's patient files and the attackers threaten to publish a copy. Which security properties are hit?",
-      "options": [
-        "Integrity only",
-        "Availability and confidentiality",
-        "Confidentiality only",
-        "Non-repudiation only"
-      ],
-      "answer": 1,
-      "explanation": "Encrypted files cannot be used (availability), and the stolen copy is exposed (confidentiality).",
-      "refs": [
-        {
-          "name": "NIST CSRC glossary: confidentiality, integrity, availability",
-          "url": "https://csrc.nist.gov/glossary/term/cia_triad"
-        },
-        {
-          "name": "NIST NICE Framework (SP 800-181r1)",
-          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
-        }
-      ]
-    },
-    {
-      "id": "CS-D4",
-      "domain": "cybersecurity",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Authentication tokens (JWT)",
-      "onet_skill_ids": [
-        "SK044"
-      ],
-      "time_s": 90,
-      "prompt": "An API accepts a JWT whose header says {\"alg\": \"none\"} and has an empty signature. What is the impact and fix?",
-      "options": [
-        "None; the payload is still Base64-encoded",
-        "Anyone can forge a token for any user; the server must allow only its expected algorithm and always verify the signature",
-        "Tokens expire too quickly; raise the exp claim",
-        "The token is too long; switch to cookies"
-      ],
-      "answer": 1,
-      "explanation": "Without signature verification the claims, including the user id and role, are whatever the attacker writes.",
-      "refs": [
-        {
-          "name": "RFC 8725: JSON Web Token Best Current Practices",
-          "url": "https://www.rfc-editor.org/rfc/rfc8725"
-        }
-      ]
-    },
-    {
-      "id": "CS-D5",
-      "domain": "cybersecurity",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Incident response",
-      "onet_skill_ids": [
-        "SK026",
-        "SK007"
-      ],
-      "time_s": 90,
-      "prompt": "EDR shows one staff laptop beaconing to a known command-and-control server after a phishing email. What is the best NEXT step?",
-      "options": [
-        "Wipe and reinstall the laptop immediately",
-        "Isolate the laptop from the network while keeping it powered on for evidence",
-        "Shut down the whole office network",
-        "Email all staff about the phishing first"
-      ],
-      "answer": 1,
-      "explanation": "Containment comes first, and isolating rather than wiping keeps memory and disk evidence so you can find out what else was touched.",
-      "refs": [
-        {
-          "name": "NIST SP 800-61r3: Incident Response Recommendations",
-          "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
-        }
-      ]
-    },
-    {
-      "id": "CS-D6",
-      "domain": "cybersecurity",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 2,
-      "skill": "Access control",
-      "onet_skill_ids": [
-        "SK022",
-        "SK030"
-      ],
-      "time_s": 60,
-      "prompt": "GET /api/invoices/1043 shows your invoice. Changing it to /api/invoices/1044 shows another customer's invoice. What is this, and what fixes it?",
-      "options": [
-        "SQL injection; use prepared statements",
-        "Broken access control (IDOR); check on the server that the invoice belongs to the logged-in user",
-        "Cross-site request forgery; add a CSRF token",
-        "Weak encryption; switch to TLS 1.3"
-      ],
-      "answer": 1,
-      "explanation": "The server trusts the id in the URL. Every request must be authorised against the current user; random ids alone only hide the problem.",
-      "refs": [
-        {
-          "name": "OWASP Top 10",
-          "url": "https://owasp.org/Top10/"
-        },
-        {
-          "name": "OWASP Insecure Direct Object Reference Prevention Cheat Sheet",
-          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
-        }
-      ]
-    },
-    {
-      "id": "CS-P1",
-      "domain": "cybersecurity",
-      "stage": "practical",
-      "type": "code",
-      "difficulty": 3,
-      "skill": "Log analysis automation",
-      "onet_skill_ids": [
-        "SK022",
-        "SK026"
-      ],
-      "time_s": 420,
-      "prompt": "Write find_bruteforce(lines, threshold). lines are sshd log lines. Count the lines containing \"Failed password\" per source IP; the IP is the word after the LAST \" from \" in the line (a username can itself be \"from\"). Return the IPs with at least threshold failures, sorted by count (highest first), then by IP as a string (ascending).",
-      "function": "find_bruteforce",
-      "starter": "def find_bruteforce(lines, threshold):\n    # return: list of IP strings\n    pass\n",
-      "tests": [
-        {
-          "args": [
-            [
-              "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2",
-              "Oct 23 10:01:04 web01 sshd[811]: Failed password for invalid user admin from 203.0.113.5 port 52013 ssh2",
-              "Oct 23 10:01:06 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52015 ssh2",
-              "Oct 23 10:02:00 web01 sshd[901]: Accepted publickey for deploy from 192.0.2.10 port 40022 ssh2",
-              "Oct 23 10:03:11 web01 sshd[930]: Failed password for aiman from 198.51.100.20 port 61001 ssh2",
-              "Oct 23 10:03:15 web01 sshd[930]: Failed password for aiman from 198.51.100.20 port 61002 ssh2",
-              "Oct 23 10:04:00 web01 CRON[1001]: pam_unix(cron:session): session opened for user root",
-              "Oct 23 10:05:00 web01 sshd[990]: Failed password for invalid user from from 192.0.2.99 port 5000 ssh2"
-            ],
-            2
-          ],
-          "expected": [
-            "203.0.113.5",
-            "198.51.100.20"
-          ]
-        },
-        {
-          "args": [
-            [
-              "Oct 23 10:05:00 web01 sshd[990]: Failed password for invalid user from from 192.0.2.99 port 5000 ssh2",
-              "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2"
-            ],
-            1
-          ],
-          "expected": [
-            "192.0.2.99",
-            "203.0.113.5"
-          ]
-        },
-        {
-          "args": [
-            [
-              "Oct 23 11:00:00 db01 sshd[1]: Failed password for root from 10.0.0.9 port 1 ssh2",
-              "Oct 23 11:00:01 db01 sshd[1]: Failed password for root from 10.0.0.10 port 2 ssh2",
-              "Oct 23 11:00:02 db01 sshd[1]: Failed password for root from 10.0.0.9 port 3 ssh2",
-              "Oct 23 11:00:03 db01 sshd[1]: Failed password for root from 10.0.0.10 port 4 ssh2"
-            ],
-            2
-          ],
-          "expected": [
-            "10.0.0.10",
-            "10.0.0.9"
-          ]
-        },
-        {
-          "args": [
-            [
-              "Oct 23 10:02:00 web01 sshd[901]: Accepted publickey for deploy from 192.0.2.10 port 40022 ssh2"
-            ],
-            1
-          ],
-          "expected": []
-        }
-      ],
-      "explanation": "Filter on 'Failed password', take the text after rsplit(' from ', 1), count with a dict or Counter, then sort with a (-count, ip) key.",
-      "refs": [
-        {
-          "name": "Python docs: str.rsplit",
-          "url": "https://docs.python.org/3/library/stdtypes.html#str.rsplit"
-        },
-        {
-          "name": "NIST NICE Framework (SP 800-181r1)",
-          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
-        }
-      ]
-    },
-    {
-      "id": "CS-P2",
-      "domain": "cybersecurity",
-      "stage": "practical",
-      "type": "multi",
-      "difficulty": 3,
-      "skill": "Web attack detection",
-      "onet_skill_ids": [
-        "SK026",
-        "SK018"
-      ],
-      "time_s": 240,
-      "prompt": "Select EVERY line that is a path traversal attempt (trying to reach files outside the web folder).",
-      "code": "1  198.51.100.7   GET /index.html                                   200\n2  198.51.100.7   GET /download?file=../../etc/passwd                400\n3  203.0.113.9    GET /download?file=report.pdf                      200\n4  203.0.113.9    GET /download?file=%2e%2e%2f%2e%2e%2fetc%2fpasswd  200\n5  192.0.2.44     GET /search?q=dot..dot                             200\n6  198.51.100.23  GET /download?file=..%2f..%2fwindows%2fwin.ini     200\n7  192.0.2.44     GET /login                                         302\n8  203.0.113.9    GET /download?file=....//....//etc/passwd          403",
-      "code_lang": "text",
-      "options": [
-        "Line 1",
-        "Line 2",
-        "Line 3",
-        "Line 4",
-        "Line 5",
-        "Line 6",
-        "Line 7",
-        "Line 8"
-      ],
-      "answer": [
-        1,
-        3,
-        5,
-        7
-      ],
-      "explanation": "Lines 2, 4, 6 and 8 all try to climb directories: plain ../, URL-encoded %2e%2e%2f, mixed ..%2f, and ....// (which becomes ../ after a naive filter removes ../). Line 5 only contains '..' inside a search word. Line 4 returned 200 and needs urgent investigation.",
-      "refs": [
-        {
-          "name": "OWASP: Path Traversal",
-          "url": "https://owasp.org/www-community/attacks/Path_Traversal"
-        }
-      ]
-    },
-    {
-      "id": "NW-S1",
-      "domain": "networking",
-      "stage": "screen",
-      "type": "numeric",
-      "difficulty": 2,
-      "skill": "IPv4 subnetting",
-      "onet_skill_ids": [
-        "SK064",
-        "SK005"
-      ],
-      "time_s": 60,
-      "prompt": "How many usable host addresses are in an IPv4 /27 subnet?",
-      "answer": 30,
-      "tolerance": 0,
-      "explanation": "32 - 27 = 5 host bits, 2^5 = 32 addresses, minus the network and broadcast addresses = 30.",
-      "refs": [
-        {
-          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
-          "url": "https://www.rfc-editor.org/rfc/rfc4632"
-        }
-      ]
-    },
-    {
-      "id": "NW-S2",
-      "domain": "networking",
-      "stage": "screen",
-      "type": "mcq",
-      "difficulty": 2,
-      "skill": "Network troubleshooting",
-      "onet_skill_ids": [
-        "SK026",
-        "SK064"
-      ],
-      "time_s": 60,
-      "prompt": "A user can ping 1.1.1.1 but no website opens by name (for example, www.mohe.gov.my). What is the most likely cause?",
-      "options": [
-        "The network cable is faulty",
-        "DNS resolution is failing",
-        "The default gateway is wrong",
-        "The browser cache is full"
-      ],
-      "answer": 1,
-      "explanation": "Reaching an internet IP proves the cable, IP settings and gateway work. Failing only by name points to DNS.",
-      "refs": [
-        {
-          "name": "RFC 1034: Domain names - concepts and facilities",
-          "url": "https://www.rfc-editor.org/rfc/rfc1034"
-        }
-      ]
-    },
-    {
-      "id": "NW-D1",
-      "domain": "networking",
-      "stage": "deep",
-      "type": "text",
-      "difficulty": 3,
-      "skill": "IPv4 subnetting",
-      "onet_skill_ids": [
-        "SK064",
-        "SK005"
-      ],
-      "time_s": 120,
-      "prompt": "You must split 192.168.10.0/24 into as many equal subnets as possible, each with at least 50 usable hosts. Which subnet mask do you use? (dotted decimal, e.g. 255.255.255.0)",
-      "answer": "255.255.255.192",
-      "accept": [
-        "255.255.255.192",
-        "/26"
-      ],
-      "explanation": "50 hosts need 6 host bits (62 usable), so the prefix is /26 = 255.255.255.192, giving 4 subnets.",
-      "refs": [
-        {
-          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
-          "url": "https://www.rfc-editor.org/rfc/rfc4632"
-        }
-      ]
-    },
-    {
-      "id": "NW-D2",
-      "domain": "networking",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "IPv4 subnetting",
-      "onet_skill_ids": [
-        "SK064",
-        "SK005"
-      ],
-      "time_s": 90,
-      "prompt": "A host is 10.0.5.20/22. Which address is in the SAME subnet?",
-      "options": [
-        "10.0.3.250",
-        "10.0.7.200",
-        "10.0.8.1",
-        "10.0.12.5"
-      ],
-      "answer": 1,
-      "explanation": "A /22 block covers 4 values of the third octet. 5 falls in 4-7, so the subnet is 10.0.4.0 - 10.0.7.255.",
-      "refs": [
-        {
-          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
-          "url": "https://www.rfc-editor.org/rfc/rfc4632"
-        }
-      ]
-    },
-    {
-      "id": "NW-D3",
-      "domain": "networking",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Network troubleshooting (OSI layers)",
-      "onet_skill_ids": [
-        "SK026",
-        "SK064"
-      ],
-      "time_s": 90,
-      "prompt": "A new PC has a link light and the correct static IP, mask and gateway, but cannot ping the gateway. `arp -a` shows the gateway entry as incomplete. Where is the fault most likely?",
-      "options": [
-        "Layer 1: the cable is unplugged",
-        "Layer 2: the switch port is in the wrong VLAN",
-        "Layer 3: the ISP route is down",
-        "Layer 7: DNS is misconfigured"
-      ],
-      "answer": 1,
-      "explanation": "The link is up (layer 1 works) but ARP gets no reply, so frames are not reaching the gateway's broadcast domain - typically a wrong access VLAN.",
-      "refs": [
-        {
-          "name": "RFC 826: An Ethernet Address Resolution Protocol",
-          "url": "https://www.rfc-editor.org/rfc/rfc826"
-        }
-      ]
-    },
-    {
-      "id": "NW-D4",
-      "domain": "networking",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 2,
-      "skill": "Transport protocols",
-      "onet_skill_ids": [
-        "SK064"
-      ],
-      "time_s": 60,
-      "prompt": "Why do voice and video calls usually run over UDP rather than TCP?",
-      "options": [
-        "UDP encrypts traffic by default",
-        "A late, retransmitted packet is useless for live audio, and TCP would stall waiting for it",
-        "UDP packets are always delivered in order",
-        "TCP cannot carry binary data"
-      ],
-      "answer": 1,
-      "explanation": "TCP guarantees ordered delivery by retransmitting, which adds delay. Real-time media prefers to skip a lost packet.",
-      "refs": [
-        {
-          "name": "RFC 3550: RTP, A Transport Protocol for Real-Time Applications",
-          "url": "https://www.rfc-editor.org/rfc/rfc3550"
-        }
-      ]
-    },
-    {
-      "id": "NW-D5",
-      "domain": "networking",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Network security",
-      "onet_skill_ids": [
-        "SK064",
-        "SK026"
-      ],
-      "time_s": 90,
-      "prompt": "A web server's connection table is full. The firewall shows thousands of SYN packets from many source addresses, with no matching final ACK. What is this?",
-      "options": [
-        "A normal traffic spike",
-        "A TCP SYN flood (denial of service)",
-        "A DNS amplification attack",
-        "An ARP spoofing attack"
-      ],
-      "answer": 1,
-      "explanation": "Half-open handshakes fill the server's backlog. Mitigations include SYN cookies and upstream filtering.",
-      "refs": [
-        {
-          "name": "RFC 4987: TCP SYN Flooding Attacks and Common Mitigations",
-          "url": "https://www.rfc-editor.org/rfc/rfc4987"
-        }
-      ]
-    },
-    {
-      "id": "NW-D6",
-      "domain": "networking",
-      "stage": "deep",
-      "type": "mcq",
-      "difficulty": 3,
-      "skill": "Routing",
-      "onet_skill_ids": [
-        "SK064",
-        "SK030"
-      ],
-      "time_s": 90,
-      "prompt": "A router has these routes. Which next hop does it use for a packet to 10.1.3.7?",
-      "code": "10.0.0.0/8    via R1\n10.1.0.0/16   via R2\n10.1.2.0/24   via R3\n0.0.0.0/0     via R4",
-      "code_lang": "text",
-      "options": [
-        "R1",
-        "R2",
-        "R3",
-        "R4"
-      ],
-      "answer": 1,
-      "explanation": "Longest prefix match: 10.1.2.0/24 does not contain 10.1.3.7, so the most specific match is 10.1.0.0/16 via R2.",
-      "refs": [
-        {
-          "name": "RFC 1812: Requirements for IP Version 4 Routers (5.2.4.3)",
-          "url": "https://www.rfc-editor.org/rfc/rfc1812"
-        }
-      ]
-    },
-    {
-      "id": "NW-P1",
-      "domain": "networking",
-      "stage": "practical",
-      "type": "code",
-      "difficulty": 3,
-      "skill": "Subnet calculation in code",
-      "onet_skill_ids": [
-        "SK022",
-        "SK064"
-      ],
-      "time_s": 360,
-      "prompt": "Write network_address(ip, prefix) without the ipaddress module. ip is a dotted IPv4 string and prefix is 0-32. Return the network address as a dotted string.",
-      "function": "network_address",
-      "forbidden_imports": [
-        "ipaddress"
-      ],
-      "starter": "def network_address(ip, prefix):\n    # e.g. network_address('192.168.10.77', 26) -> '192.168.10.64'\n    pass\n",
-      "tests": [
-        {
-          "args": [
-            "192.168.10.77",
-            26
-          ],
-          "expected": "192.168.10.64"
-        },
-        {
-          "args": [
-            "10.0.5.20",
-            22
-          ],
-          "expected": "10.0.4.0"
-        },
-        {
-          "args": [
-            "172.16.255.1",
-            12
-          ],
-          "expected": "172.16.0.0"
-        },
-        {
-          "args": [
-            "8.8.8.8",
-            32
-          ],
-          "expected": "8.8.8.8"
-        },
-        {
-          "args": [
-            "203.0.113.200",
-            0
-          ],
-          "expected": "0.0.0.0"
-        }
-      ],
-      "explanation": "Turn the four octets into one 32-bit integer, AND it with a mask of prefix leading 1-bits, then split back into octets. Watch prefix 0.",
-      "refs": [
-        {
-          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
-          "url": "https://www.rfc-editor.org/rfc/rfc4632"
-        }
-      ]
-    },
-    {
-      "id": "NW-P2",
-      "domain": "networking",
-      "stage": "practical",
-      "type": "text",
-      "difficulty": 3,
-      "skill": "Network design (VLSM)",
-      "onet_skill_ids": [
-        "SK064",
-        "SK019"
-      ],
-      "time_s": 300,
-      "prompt": "Plan 192.168.50.0/24 with VLSM, allocating the largest subnet first, each starting at the lowest free address: Sales needs 100 hosts, IT 50 hosts, HR 20 hosts, and a router link 2 hosts. What is HR's subnet? Answer as network/prefix, e.g. 10.0.0.0/24.",
-      "answer": "192.168.50.192/27",
-      "accept": [
-        "192.168.50.192/27"
-      ],
-      "explanation": "Sales 192.168.50.0/25, IT 192.168.50.128/26, HR 192.168.50.192/27 (30 usable), link 192.168.50.224/30.",
-      "refs": [
-        {
-          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
-          "url": "https://www.rfc-editor.org/rfc/rfc4632"
-        }
-      ]
-    },
-    {
       "id": "DA-S1",
       "domain": "data_ai",
       "stage": "screen",
@@ -1317,6 +736,89 @@
         {
           "name": "scikit-learn: Metrics and scoring",
           "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+        }
+      ]
+    },
+    {
+      "id": "DA-S3",
+      "domain": "data_ai",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Descriptive statistics",
+      "onet_skill_ids": [
+        "SK005"
+      ],
+      "time_s": 60,
+      "prompt": "In a survey of fresh graduates, the mean monthly salary is RM 12,000 but the median is RM 4,500. What does this most likely mean?",
+      "options": [
+        "The data has an error",
+        "A few very high salaries pull the mean up (right-skewed data)",
+        "Most graduates earn about RM 12,000",
+        "The median is always lower than the mean"
+      ],
+      "answer": 1,
+      "explanation": "The median is resistant to extreme values; a mean far above it signals a long right tail. Report the median for typical pay.",
+      "refs": [
+        {
+          "name": "OpenStax Introductory Statistics: Skewness and the mean, median and mode",
+          "url": "https://openstax.org/books/introductory-statistics-2e/pages/2-6-skewness-and-the-mean-median-and-mode"
+        }
+      ]
+    },
+    {
+      "id": "DA-S4",
+      "domain": "data_ai",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Database design (normalisation)",
+      "onet_skill_ids": [
+        "SK044",
+        "SK030"
+      ],
+      "time_s": 60,
+      "prompt": "An orders table repeats each customer's full address in every order row. A customer moves house. What problem does this design cause?",
+      "options": [
+        "Queries become impossible",
+        "The address must be updated in many rows, and missed rows leave inconsistent data",
+        "The table cannot have a primary key",
+        "None; repeating data is faster"
+      ],
+      "answer": 1,
+      "explanation": "This is an update anomaly. Normalise: keep the address once in a customers table and reference it by customer_id.",
+      "refs": [
+        {
+          "name": "Wikipedia: Database normalization",
+          "url": "https://en.wikipedia.org/wiki/Database_normalization"
+        }
+      ]
+    },
+    {
+      "id": "DA-S5",
+      "domain": "data_ai",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Machine learning basics",
+      "onet_skill_ids": [
+        "SK005",
+        "SK007"
+      ],
+      "time_s": 45,
+      "prompt": "Which task is unsupervised learning?",
+      "options": [
+        "Predicting house prices from past sales",
+        "Grouping customers into segments when no labels exist",
+        "Classifying emails as spam or not spam from labelled examples",
+        "Predicting exam scores from study hours"
+      ],
+      "answer": 1,
+      "explanation": "Clustering finds structure without labels. The other tasks learn from known answers, which is supervised learning.",
+      "refs": [
+        {
+          "name": "scikit-learn: Clustering",
+          "url": "https://scikit-learn.org/stable/modules/clustering.html"
         }
       ]
     },
@@ -1654,8 +1156,650 @@
       ]
     },
     {
+      "id": "CS-S1",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Injection prevention",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "A login check builds its SQL like this. What is the right fix?",
+      "code": "sql = \"SELECT * FROM users WHERE name = '\" + name + \"' AND pw_hash = '\" + h + \"'\"",
+      "code_lang": "python",
+      "options": [
+        "Strip single quotes from name before building the string",
+        "Use a parameterised query with placeholders",
+        "Hide database error messages from the user",
+        "Validate the name field with JavaScript in the browser"
+      ],
+      "answer": 1,
+      "explanation": "Parameterised queries keep data separate from SQL code. Stripping characters is easy to bypass and browser checks can be skipped.",
+      "refs": [
+        {
+          "name": "OWASP Top 10",
+          "url": "https://owasp.org/Top10/"
+        },
+        {
+          "name": "OWASP SQL Injection Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-S2",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Password storage",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 60,
+      "prompt": "How should a new web app store user passwords?",
+      "options": [
+        "SHA-256 hash of the password",
+        "AES-encrypted, with the key in the config file",
+        "Argon2id or bcrypt, with a unique salt per password",
+        "MD5 with one site-wide salt"
+      ],
+      "answer": 2,
+      "explanation": "Password hashing functions such as Argon2id and bcrypt are deliberately slow and salted, so cracking stolen hashes is expensive. Fast hashes and reversible encryption are not suitable.",
+      "refs": [
+        {
+          "name": "OWASP Password Storage Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-S3",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Phishing awareness",
+      "onet_skill_ids": [
+        "SK007"
+      ],
+      "time_s": 60,
+      "prompt": "An email from security@mayb4nk-support.com says your account is locked and asks you to log in through its link within 1 hour. What do you do?",
+      "options": [
+        "Click the link quickly before the account is closed",
+        "Reply asking whether it is real",
+        "Do not click; report it, and check by typing the bank's official address yourself",
+        "Forward it to friends to warn them"
+      ],
+      "answer": 2,
+      "explanation": "Look-alike domain, urgency and a login link are classic phishing signs. Use a channel you trust, not anything in the email.",
+      "refs": [
+        {
+          "name": "CISA: Recognize and report phishing",
+          "url": "https://www.cisa.gov/secure-our-world/recognize-and-report-phishing"
+        }
+      ]
+    },
+    {
+      "id": "CS-S4",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Authentication (MFA)",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 45,
+      "prompt": "What does multi-factor authentication (MFA) protect against best?",
+      "options": [
+        "Malware already running on the server",
+        "An attacker logging in with a stolen or guessed password",
+        "SQL injection",
+        "Denial-of-service attacks"
+      ],
+      "answer": 1,
+      "explanation": "With MFA the password alone is not enough; the attacker also needs the second factor.",
+      "refs": [
+        {
+          "name": "CISA: Multifactor authentication",
+          "url": "https://www.cisa.gov/MFA"
+        }
+      ]
+    },
+    {
+      "id": "CS-S5",
+      "domain": "cybersecurity",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Transport security (HTTPS)",
+      "onet_skill_ids": [
+        "SK044",
+        "SK064"
+      ],
+      "time_s": 45,
+      "prompt": "A website shows the HTTPS padlock. What does that tell you?",
+      "options": [
+        "The site is safe and run by an honest company",
+        "The connection to that domain is encrypted, nothing more",
+        "The site cannot contain malware",
+        "Your password is stored securely by the site"
+      ],
+      "answer": 1,
+      "explanation": "TLS protects data in transit to the named domain. Phishing sites routinely have valid certificates.",
+      "refs": [
+        {
+          "name": "MDN: Transport Layer Security",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security"
+        }
+      ]
+    },
+    {
+      "id": "CS-D1",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Log analysis",
+      "onet_skill_ids": [
+        "SK026",
+        "SK018"
+      ],
+      "time_s": 120,
+      "prompt": "You see these lines in /var/log/auth.log on a public server. What happened, and what do you do?",
+      "code": "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2\nOct 23 10:01:03 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52013 ssh2\n... 412 more failed attempts from 203.0.113.5 ...\nOct 23 10:09:41 web01 sshd[811]: Accepted password for root from 203.0.113.5 port 53990 ssh2",
+      "code_lang": "text",
+      "options": [
+        "A port scan; no action because it was only probing",
+        "A successful brute-force login as root; treat the server as compromised and start incident response",
+        "A user who forgot the password; reset it",
+        "Normal SSH keep-alive traffic"
+      ],
+      "answer": 1,
+      "explanation": "Hundreds of failures followed by a success from the same address is a successful password-guessing attack. Isolate the host, preserve logs, and then disable password and root logins.",
+      "refs": [
+        {
+          "name": "NIST SP 800-61r3: Incident Response Recommendations",
+          "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
+        },
+        {
+          "name": "NIST NICE Framework (SP 800-181r1)",
+          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
+        }
+      ]
+    },
+    {
+      "id": "CS-D2",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Cross-site scripting (XSS)",
+      "onet_skill_ids": [
+        "SK022"
+      ],
+      "time_s": 90,
+      "prompt": "A comment box shows comments with the code below. A user posts <img src=x onerror=alert(document.cookie)>. What is the best fix?",
+      "code": "commentDiv.innerHTML = comment.text;",
+      "code_lang": "javascript",
+      "options": [
+        "Block the word 'script' in comments",
+        "Set commentDiv.textContent instead, or encode the output for HTML",
+        "Only allow logged-in users to comment",
+        "Move the code into a separate .js file"
+      ],
+      "answer": 1,
+      "explanation": "The payload has no <script> tag, so keyword filters miss it. textContent treats the input as text, never as HTML.",
+      "refs": [
+        {
+          "name": "OWASP Cross Site Scripting Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-D3",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Security fundamentals (CIA triad)",
+      "onet_skill_ids": [
+        "SK007"
+      ],
+      "time_s": 60,
+      "prompt": "Ransomware encrypts a clinic's patient files and the attackers threaten to publish a copy. Which security properties are hit?",
+      "options": [
+        "Integrity only",
+        "Availability and confidentiality",
+        "Confidentiality only",
+        "Non-repudiation only"
+      ],
+      "answer": 1,
+      "explanation": "Encrypted files cannot be used (availability), and the stolen copy is exposed (confidentiality).",
+      "refs": [
+        {
+          "name": "NIST CSRC glossary: confidentiality, integrity, availability",
+          "url": "https://csrc.nist.gov/glossary/term/cia_triad"
+        },
+        {
+          "name": "NIST NICE Framework (SP 800-181r1)",
+          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
+        }
+      ]
+    },
+    {
+      "id": "CS-D4",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Authentication tokens (JWT)",
+      "onet_skill_ids": [
+        "SK044"
+      ],
+      "time_s": 90,
+      "prompt": "An API accepts a JWT whose header says {\"alg\": \"none\"} and has an empty signature. What is the impact and fix?",
+      "options": [
+        "None; the payload is still Base64-encoded",
+        "Anyone can forge a token for any user; the server must allow only its expected algorithm and always verify the signature",
+        "Tokens expire too quickly; raise the exp claim",
+        "The token is too long; switch to cookies"
+      ],
+      "answer": 1,
+      "explanation": "Without signature verification the claims, including the user id and role, are whatever the attacker writes.",
+      "refs": [
+        {
+          "name": "RFC 8725: JSON Web Token Best Current Practices",
+          "url": "https://www.rfc-editor.org/rfc/rfc8725"
+        }
+      ]
+    },
+    {
+      "id": "CS-D5",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Incident response",
+      "onet_skill_ids": [
+        "SK026",
+        "SK007"
+      ],
+      "time_s": 90,
+      "prompt": "EDR shows one staff laptop beaconing to a known command-and-control server after a phishing email. What is the best NEXT step?",
+      "options": [
+        "Wipe and reinstall the laptop immediately",
+        "Isolate the laptop from the network while keeping it powered on for evidence",
+        "Shut down the whole office network",
+        "Email all staff about the phishing first"
+      ],
+      "answer": 1,
+      "explanation": "Containment comes first, and isolating rather than wiping keeps memory and disk evidence so you can find out what else was touched.",
+      "refs": [
+        {
+          "name": "NIST SP 800-61r3: Incident Response Recommendations",
+          "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
+        }
+      ]
+    },
+    {
+      "id": "CS-D6",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Access control",
+      "onet_skill_ids": [
+        "SK022",
+        "SK030"
+      ],
+      "time_s": 60,
+      "prompt": "GET /api/invoices/1043 shows your invoice. Changing it to /api/invoices/1044 shows another customer's invoice. What is this, and what fixes it?",
+      "options": [
+        "SQL injection; use prepared statements",
+        "Broken access control (IDOR); check on the server that the invoice belongs to the logged-in user",
+        "Cross-site request forgery; add a CSRF token",
+        "Weak encryption; switch to TLS 1.3"
+      ],
+      "answer": 1,
+      "explanation": "The server trusts the id in the URL. Every request must be authorised against the current user; random ids alone only hide the problem.",
+      "refs": [
+        {
+          "name": "OWASP Top 10",
+          "url": "https://owasp.org/Top10/"
+        },
+        {
+          "name": "OWASP Insecure Direct Object Reference Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-D7",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Cross-site request forgery (CSRF)",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 90,
+      "prompt": "A bank moves money with GET /transfer?to=ACC&amount=500, authenticated only by the session cookie. An attacker's page contains <img src=\"https://bank.example/transfer?to=EVIL&amount=500\">. What is this, and what fixes it?",
+      "options": [
+        "XSS; escape the output",
+        "CSRF; use POST with a CSRF token and SameSite cookies",
+        "SQL injection; use prepared statements",
+        "Clickjacking; add a CAPTCHA to the image"
+      ],
+      "answer": 1,
+      "explanation": "The victim's browser sends the cookie automatically. State changes must not use GET, and need a token the attacker's page cannot read.",
+      "refs": [
+        {
+          "name": "OWASP CSRF Prevention Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
+      "id": "CS-D8",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Attack surface review",
+      "onet_skill_ids": [
+        "SK026",
+        "SK064"
+      ],
+      "time_s": 90,
+      "prompt": "A port scan of your public web server shows this. Which finding is the most urgent?",
+      "code": "PORT     STATE SERVICE\n22/tcp   open  ssh\n80/tcp   open  http\n443/tcp  open  https\n3306/tcp open  mysql",
+      "code_lang": "text",
+      "options": [
+        "Port 80 should redirect to 443",
+        "The MySQL database (3306) is reachable from the internet",
+        "SSH on 22 should move to another port",
+        "Port 443 is open"
+      ],
+      "answer": 1,
+      "explanation": "A database should only be reachable from the app servers. Exposing it invites password guessing and exploits; firewall it to the private network.",
+      "refs": [
+        {
+          "name": "CIS Controls v8: Control 4 (secure configuration)",
+          "url": "https://www.cisecurity.org/controls/v8"
+        }
+      ]
+    },
+    {
+      "id": "CS-D9",
+      "domain": "cybersecurity",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Network traffic analysis",
+      "onet_skill_ids": [
+        "SK026",
+        "SK064"
+      ],
+      "time_s": 90,
+      "prompt": "In a Wireshark capture on the campus Wi-Fi you can read this request in plain text. What is the root problem and fix?",
+      "code": "POST /login HTTP/1.1\nHost: portal.example.edu.my\nContent-Type: application/x-www-form-urlencoded\n\nusername=aiman&password=Kopi%40123",
+      "code_lang": "text",
+      "options": [
+        "The password is too weak; force longer passwords",
+        "The login uses HTTP, not HTTPS; serve it over TLS and enable HSTS",
+        "Wi-Fi should be turned off",
+        "The username should be hashed in the browser"
+      ],
+      "answer": 1,
+      "explanation": "Anyone on the network can read unencrypted HTTP. TLS encrypts the request; HSTS stops browsers from falling back to HTTP.",
+      "refs": [
+        {
+          "name": "MDN: Strict-Transport-Security",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security"
+        }
+      ]
+    },
+    {
+      "id": "CS-P1",
+      "domain": "cybersecurity",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Log analysis automation",
+      "onet_skill_ids": [
+        "SK022",
+        "SK026"
+      ],
+      "time_s": 420,
+      "prompt": "Write find_bruteforce(lines, threshold). lines are sshd log lines. Count the lines containing \"Failed password\" per source IP; the IP is the word after the LAST \" from \" in the line (a username can itself be \"from\"). Return the IPs with at least threshold failures, sorted by count (highest first), then by IP as a string (ascending).",
+      "function": "find_bruteforce",
+      "starter": "def find_bruteforce(lines, threshold):\n    # return: list of IP strings\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            [
+              "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2",
+              "Oct 23 10:01:04 web01 sshd[811]: Failed password for invalid user admin from 203.0.113.5 port 52013 ssh2",
+              "Oct 23 10:01:06 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52015 ssh2",
+              "Oct 23 10:02:00 web01 sshd[901]: Accepted publickey for deploy from 192.0.2.10 port 40022 ssh2",
+              "Oct 23 10:03:11 web01 sshd[930]: Failed password for aiman from 198.51.100.20 port 61001 ssh2",
+              "Oct 23 10:03:15 web01 sshd[930]: Failed password for aiman from 198.51.100.20 port 61002 ssh2",
+              "Oct 23 10:04:00 web01 CRON[1001]: pam_unix(cron:session): session opened for user root",
+              "Oct 23 10:05:00 web01 sshd[990]: Failed password for invalid user from from 192.0.2.99 port 5000 ssh2"
+            ],
+            2
+          ],
+          "expected": [
+            "203.0.113.5",
+            "198.51.100.20"
+          ]
+        },
+        {
+          "args": [
+            [
+              "Oct 23 10:05:00 web01 sshd[990]: Failed password for invalid user from from 192.0.2.99 port 5000 ssh2",
+              "Oct 23 10:01:02 web01 sshd[811]: Failed password for root from 203.0.113.5 port 52011 ssh2"
+            ],
+            1
+          ],
+          "expected": [
+            "192.0.2.99",
+            "203.0.113.5"
+          ]
+        },
+        {
+          "args": [
+            [
+              "Oct 23 11:00:00 db01 sshd[1]: Failed password for root from 10.0.0.9 port 1 ssh2",
+              "Oct 23 11:00:01 db01 sshd[1]: Failed password for root from 10.0.0.10 port 2 ssh2",
+              "Oct 23 11:00:02 db01 sshd[1]: Failed password for root from 10.0.0.9 port 3 ssh2",
+              "Oct 23 11:00:03 db01 sshd[1]: Failed password for root from 10.0.0.10 port 4 ssh2"
+            ],
+            2
+          ],
+          "expected": [
+            "10.0.0.10",
+            "10.0.0.9"
+          ]
+        },
+        {
+          "args": [
+            [
+              "Oct 23 10:02:00 web01 sshd[901]: Accepted publickey for deploy from 192.0.2.10 port 40022 ssh2"
+            ],
+            1
+          ],
+          "expected": []
+        }
+      ],
+      "explanation": "Filter on 'Failed password', take the text after rsplit(' from ', 1), count with a dict or Counter, then sort with a (-count, ip) key.",
+      "refs": [
+        {
+          "name": "Python docs: str.rsplit",
+          "url": "https://docs.python.org/3/library/stdtypes.html#str.rsplit"
+        },
+        {
+          "name": "NIST NICE Framework (SP 800-181r1)",
+          "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
+        }
+      ]
+    },
+    {
+      "id": "CS-P2",
+      "domain": "cybersecurity",
+      "stage": "practical",
+      "type": "multi",
+      "difficulty": 3,
+      "skill": "Web attack detection",
+      "onet_skill_ids": [
+        "SK026",
+        "SK018"
+      ],
+      "time_s": 240,
+      "prompt": "Select EVERY line that is a path traversal attempt (trying to reach files outside the web folder).",
+      "code": "1  198.51.100.7   GET /index.html                                   200\n2  198.51.100.7   GET /download?file=../../etc/passwd                400\n3  203.0.113.9    GET /download?file=report.pdf                      200\n4  203.0.113.9    GET /download?file=%2e%2e%2f%2e%2e%2fetc%2fpasswd  200\n5  192.0.2.44     GET /search?q=dot..dot                             200\n6  198.51.100.23  GET /download?file=..%2f..%2fwindows%2fwin.ini     200\n7  192.0.2.44     GET /login                                         302\n8  203.0.113.9    GET /download?file=....//....//etc/passwd          403",
+      "code_lang": "text",
+      "options": [
+        "Line 1",
+        "Line 2",
+        "Line 3",
+        "Line 4",
+        "Line 5",
+        "Line 6",
+        "Line 7",
+        "Line 8"
+      ],
+      "answer": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "explanation": "Lines 2, 4, 6 and 8 all try to climb directories: plain ../, URL-encoded %2e%2e%2f, mixed ..%2f, and ....// (which becomes ../ after a naive filter removes ../). Line 5 only contains '..' inside a search word. Line 4 returned 200 and needs urgent investigation.",
+      "refs": [
+        {
+          "name": "OWASP: Path Traversal",
+          "url": "https://owasp.org/www-community/attacks/Path_Traversal"
+        }
+      ]
+    },
+    {
+      "id": "CS-P3",
+      "domain": "cybersecurity",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Password auditing",
+      "onet_skill_ids": [
+        "SK022",
+        "SK044"
+      ],
+      "time_s": 360,
+      "prompt": "Write find_weak_passwords(hashes, wordlist). hashes maps username -> the unsalted SHA-256 hex digest of the password. Return the usernames whose password is in wordlist, sorted A-Z. (hashlib is allowed.) This is why real systems use salted, slow hashes.",
+      "function": "find_weak_passwords",
+      "starter": "import hashlib\n\ndef find_weak_passwords(hashes, wordlist):\n    # hashlib.sha256(word.encode()).hexdigest()\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            {
+              "aiman": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+              "meiling": "953e7bbc11a3eca8d560e3c786c951df47ba3e7d4ee6e6f498d921cb71a6fd0e",
+              "ravi": "a941a4c4fd0c01cddef61b8be963bf4c1e2b0811c037ce3f1835fddf6ef6c223",
+              "siti": "65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5"
+            },
+            [
+              "123456",
+              "password123",
+              "qwerty",
+              "iloveyou",
+              "sunshine",
+              "admin"
+            ]
+          ],
+          "expected": [
+            "aiman",
+            "ravi",
+            "siti"
+          ]
+        },
+        {
+          "args": [
+            {
+              "x": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+            },
+            [
+              "admin"
+            ]
+          ],
+          "expected": [
+            "x"
+          ]
+        },
+        {
+          "args": [
+            {
+              "meiling": "953e7bbc11a3eca8d560e3c786c951df47ba3e7d4ee6e6f498d921cb71a6fd0e"
+            },
+            [
+              "123456",
+              "password123",
+              "qwerty",
+              "iloveyou",
+              "sunshine",
+              "admin"
+            ]
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            {
+              "b": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+              "a": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+            },
+            [
+              "123456"
+            ]
+          ],
+          "expected": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "args": [
+            {},
+            [
+              "123456",
+              "password123",
+              "qwerty",
+              "iloveyou",
+              "sunshine",
+              "admin"
+            ]
+          ],
+          "expected": []
+        }
+      ],
+      "explanation": "Hash each word once into a dict {digest: word}, then look up every user's hash. Without salts one wordlist pass cracks every user at once.",
+      "refs": [
+        {
+          "name": "OWASP Password Storage Cheat Sheet",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+        }
+      ]
+    },
+    {
       "id": "CL-S1",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "screen",
       "type": "mcq",
       "difficulty": 2,
@@ -1682,7 +1826,7 @@
     },
     {
       "id": "CL-S2",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "screen",
       "type": "mcq",
       "difficulty": 2,
@@ -1709,8 +1853,87 @@
       ]
     },
     {
+      "id": "CL-S3",
+      "domain": "cloud_infra",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Cloud service models",
+      "onet_skill_ids": [
+        "SK030",
+        "SK044"
+      ],
+      "time_s": 45,
+      "prompt": "You rent a virtual machine in the cloud and must install and patch its operating system yourself. Which service model is this?",
+      "options": [
+        "SaaS",
+        "PaaS",
+        "IaaS",
+        "FaaS"
+      ],
+      "answer": 2,
+      "explanation": "Infrastructure as a Service gives you the VM; you manage everything from the OS up. PaaS and SaaS manage the OS for you.",
+      "refs": [
+        {
+          "name": "NIST SP 800-145: The NIST Definition of Cloud Computing",
+          "url": "https://csrc.nist.gov/pubs/sp/800/145/final"
+        }
+      ]
+    },
+    {
+      "id": "NW-S1",
+      "domain": "cloud_infra",
+      "stage": "screen",
+      "type": "numeric",
+      "difficulty": 2,
+      "skill": "IPv4 subnetting",
+      "onet_skill_ids": [
+        "SK064",
+        "SK005"
+      ],
+      "time_s": 60,
+      "prompt": "How many usable host addresses are in an IPv4 /27 subnet?",
+      "answer": 30,
+      "tolerance": 0,
+      "explanation": "32 - 27 = 5 host bits, 2^5 = 32 addresses, minus the network and broadcast addresses = 30.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-S2",
+      "domain": "cloud_infra",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Network troubleshooting",
+      "onet_skill_ids": [
+        "SK026",
+        "SK064"
+      ],
+      "time_s": 60,
+      "prompt": "A user can ping 1.1.1.1 but no website opens by name (for example, www.mohe.gov.my). What is the most likely cause?",
+      "options": [
+        "The network cable is faulty",
+        "DNS resolution is failing",
+        "The default gateway is wrong",
+        "The browser cache is full"
+      ],
+      "answer": 1,
+      "explanation": "Reaching an internet IP proves the cable, IP settings and gateway work. Failing only by name points to DNS.",
+      "refs": [
+        {
+          "name": "RFC 1034: Domain names - concepts and facilities",
+          "url": "https://www.rfc-editor.org/rfc/rfc1034"
+        }
+      ]
+    },
+    {
       "id": "CL-D1",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "deep",
       "type": "mcq",
       "difficulty": 3,
@@ -1739,7 +1962,7 @@
     },
     {
       "id": "CL-D2",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "deep",
       "type": "mcq",
       "difficulty": 2,
@@ -1766,7 +1989,7 @@
     },
     {
       "id": "CL-D3",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "deep",
       "type": "numeric",
       "difficulty": 2,
@@ -1789,7 +2012,7 @@
     },
     {
       "id": "CL-D4",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "deep",
       "type": "mcq",
       "difficulty": 2,
@@ -1816,7 +2039,7 @@
     },
     {
       "id": "CL-D5",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "deep",
       "type": "mcq",
       "difficulty": 3,
@@ -1844,7 +2067,7 @@
     },
     {
       "id": "CL-D6",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "deep",
       "type": "mcq",
       "difficulty": 3,
@@ -1871,8 +2094,175 @@
       ]
     },
     {
+      "id": "NW-D1",
+      "domain": "cloud_infra",
+      "stage": "deep",
+      "type": "text",
+      "difficulty": 3,
+      "skill": "IPv4 subnetting",
+      "onet_skill_ids": [
+        "SK064",
+        "SK005"
+      ],
+      "time_s": 120,
+      "prompt": "You must split 192.168.10.0/24 into as many equal subnets as possible, each with at least 50 usable hosts. Which subnet mask do you use? (dotted decimal, e.g. 255.255.255.0)",
+      "answer": "255.255.255.192",
+      "accept": [
+        "255.255.255.192",
+        "/26"
+      ],
+      "explanation": "50 hosts need 6 host bits (62 usable), so the prefix is /26 = 255.255.255.192, giving 4 subnets.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-D2",
+      "domain": "cloud_infra",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "IPv4 subnetting",
+      "onet_skill_ids": [
+        "SK064",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "A host is 10.0.5.20/22. Which address is in the SAME subnet?",
+      "options": [
+        "10.0.3.250",
+        "10.0.7.200",
+        "10.0.8.1",
+        "10.0.12.5"
+      ],
+      "answer": 1,
+      "explanation": "A /22 block covers 4 values of the third octet. 5 falls in 4-7, so the subnet is 10.0.4.0 - 10.0.7.255.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-D3",
+      "domain": "cloud_infra",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Network troubleshooting (OSI layers)",
+      "onet_skill_ids": [
+        "SK026",
+        "SK064"
+      ],
+      "time_s": 90,
+      "prompt": "A new PC has a link light and the correct static IP, mask and gateway, but cannot ping the gateway. `arp -a` shows the gateway entry as incomplete. Where is the fault most likely?",
+      "options": [
+        "Layer 1: the cable is unplugged",
+        "Layer 2: the switch port is in the wrong VLAN",
+        "Layer 3: the ISP route is down",
+        "Layer 7: DNS is misconfigured"
+      ],
+      "answer": 1,
+      "explanation": "The link is up (layer 1 works) but ARP gets no reply, so frames are not reaching the gateway's broadcast domain - typically a wrong access VLAN.",
+      "refs": [
+        {
+          "name": "RFC 826: An Ethernet Address Resolution Protocol",
+          "url": "https://www.rfc-editor.org/rfc/rfc826"
+        }
+      ]
+    },
+    {
+      "id": "NW-D4",
+      "domain": "cloud_infra",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Transport protocols",
+      "onet_skill_ids": [
+        "SK064"
+      ],
+      "time_s": 60,
+      "prompt": "Why do voice and video calls usually run over UDP rather than TCP?",
+      "options": [
+        "UDP encrypts traffic by default",
+        "A late, retransmitted packet is useless for live audio, and TCP would stall waiting for it",
+        "UDP packets are always delivered in order",
+        "TCP cannot carry binary data"
+      ],
+      "answer": 1,
+      "explanation": "TCP guarantees ordered delivery by retransmitting, which adds delay. Real-time media prefers to skip a lost packet.",
+      "refs": [
+        {
+          "name": "RFC 3550: RTP, A Transport Protocol for Real-Time Applications",
+          "url": "https://www.rfc-editor.org/rfc/rfc3550"
+        }
+      ]
+    },
+    {
+      "id": "NW-D5",
+      "domain": "cloud_infra",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Network security",
+      "onet_skill_ids": [
+        "SK064",
+        "SK026"
+      ],
+      "time_s": 90,
+      "prompt": "A web server's connection table is full. The firewall shows thousands of SYN packets from many source addresses, with no matching final ACK. What is this?",
+      "options": [
+        "A normal traffic spike",
+        "A TCP SYN flood (denial of service)",
+        "A DNS amplification attack",
+        "An ARP spoofing attack"
+      ],
+      "answer": 1,
+      "explanation": "Half-open handshakes fill the server's backlog. Mitigations include SYN cookies and upstream filtering.",
+      "refs": [
+        {
+          "name": "RFC 4987: TCP SYN Flooding Attacks and Common Mitigations",
+          "url": "https://www.rfc-editor.org/rfc/rfc4987"
+        }
+      ]
+    },
+    {
+      "id": "NW-D6",
+      "domain": "cloud_infra",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Routing",
+      "onet_skill_ids": [
+        "SK064",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "A router has these routes. Which next hop does it use for a packet to 10.1.3.7?",
+      "code": "10.0.0.0/8    via R1\n10.1.0.0/16   via R2\n10.1.2.0/24   via R3\n0.0.0.0/0     via R4",
+      "code_lang": "text",
+      "options": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "answer": 1,
+      "explanation": "Longest prefix match: 10.1.2.0/24 does not contain 10.1.3.7, so the most specific match is 10.1.0.0/16 via R2.",
+      "refs": [
+        {
+          "name": "RFC 1812: Requirements for IP Version 4 Routers (5.2.4.3)",
+          "url": "https://www.rfc-editor.org/rfc/rfc1812"
+        }
+      ]
+    },
+    {
       "id": "CL-P1",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "practical",
       "type": "code",
       "difficulty": 3,
@@ -1938,7 +2328,7 @@
     },
     {
       "id": "CL-P2",
-      "domain": "cloud_systems",
+      "domain": "cloud_infra",
       "stage": "practical",
       "type": "code",
       "difficulty": 3,
@@ -2041,6 +2431,94 @@
       ]
     },
     {
+      "id": "NW-P1",
+      "domain": "cloud_infra",
+      "stage": "practical",
+      "type": "code",
+      "difficulty": 3,
+      "skill": "Subnet calculation in code",
+      "onet_skill_ids": [
+        "SK022",
+        "SK064"
+      ],
+      "time_s": 360,
+      "prompt": "Write network_address(ip, prefix) without the ipaddress module. ip is a dotted IPv4 string and prefix is 0-32. Return the network address as a dotted string.",
+      "function": "network_address",
+      "forbidden_imports": [
+        "ipaddress"
+      ],
+      "starter": "def network_address(ip, prefix):\n    # e.g. network_address('192.168.10.77', 26) -> '192.168.10.64'\n    pass\n",
+      "tests": [
+        {
+          "args": [
+            "192.168.10.77",
+            26
+          ],
+          "expected": "192.168.10.64"
+        },
+        {
+          "args": [
+            "10.0.5.20",
+            22
+          ],
+          "expected": "10.0.4.0"
+        },
+        {
+          "args": [
+            "172.16.255.1",
+            12
+          ],
+          "expected": "172.16.0.0"
+        },
+        {
+          "args": [
+            "8.8.8.8",
+            32
+          ],
+          "expected": "8.8.8.8"
+        },
+        {
+          "args": [
+            "203.0.113.200",
+            0
+          ],
+          "expected": "0.0.0.0"
+        }
+      ],
+      "explanation": "Turn the four octets into one 32-bit integer, AND it with a mask of prefix leading 1-bits, then split back into octets. Watch prefix 0.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
+      "id": "NW-P2",
+      "domain": "cloud_infra",
+      "stage": "practical",
+      "type": "text",
+      "difficulty": 3,
+      "skill": "Network design (VLSM)",
+      "onet_skill_ids": [
+        "SK064",
+        "SK019"
+      ],
+      "time_s": 300,
+      "prompt": "Plan 192.168.50.0/24 with VLSM, allocating the largest subnet first, each starting at the lowest free address: Sales needs 100 hosts, IT 50 hosts, HR 20 hosts, and a router link 2 hosts. What is HR's subnet? Answer as network/prefix, e.g. 10.0.0.0/24.",
+      "answer": "192.168.50.192/27",
+      "accept": [
+        "192.168.50.192/27"
+      ],
+      "explanation": "Sales 192.168.50.0/25, IT 192.168.50.128/26, HR 192.168.50.192/27 (30 usable), link 192.168.50.224/30.",
+      "refs": [
+        {
+          "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
+          "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ]
+    },
+    {
       "id": "WX-S1",
       "domain": "web_ux",
       "stage": "screen",
@@ -2099,6 +2577,88 @@
         {
           "name": "MDN: <button>",
           "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button"
+        }
+      ]
+    },
+    {
+      "id": "WX-S3",
+      "domain": "web_ux",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Semantic HTML",
+      "onet_skill_ids": [
+        "SK046"
+      ],
+      "time_s": 45,
+      "prompt": "Which element should wrap a site's main menu links?",
+      "options": [
+        "<div class=\"menu\">",
+        "<nav>",
+        "<section id=\"links\">",
+        "<span>"
+      ],
+      "answer": 1,
+      "explanation": "<nav> tells browsers and screen readers that this is navigation, so users can jump straight to it.",
+      "refs": [
+        {
+          "name": "MDN: <nav>",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nav"
+        }
+      ]
+    },
+    {
+      "id": "WX-S4",
+      "domain": "web_ux",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Responsive design",
+      "onet_skill_ids": [
+        "SK046"
+      ],
+      "time_s": 60,
+      "prompt": "On phones your responsive site shows the tiny, zoomed-out desktop layout, even though the CSS has media queries. What is most likely missing?",
+      "options": [
+        "A CSS reset",
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+        "A mobile-only domain",
+        "Bootstrap"
+      ],
+      "answer": 1,
+      "explanation": "Without the viewport meta tag, mobile browsers render at about 980 px wide and scale down, so the media queries never match.",
+      "refs": [
+        {
+          "name": "MDN: Viewport meta tag",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Viewport_meta_tag"
+        }
+      ]
+    },
+    {
+      "id": "WX-S5",
+      "domain": "web_ux",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Form usability",
+      "onet_skill_ids": [
+        "SK046",
+        "SK018"
+      ],
+      "time_s": 45,
+      "prompt": "A registration form rejects a phone number. How should it show the error?",
+      "options": [
+        "A red border on the field only",
+        "An alert box saying \"Invalid input\"",
+        "A message next to the field saying what is wrong and how to fix it, e.g. \"Use digits only, like 0123456789\"",
+        "Clear the whole form so the user starts again"
+      ],
+      "answer": 2,
+      "explanation": "Errors should be specific, next to the field, and not rely on colour alone (WCAG 3.3.1, 3.3.3, 1.4.1).",
+      "refs": [
+        {
+          "name": "WCAG 2.2 Understanding 3.3.3: Error Suggestion",
+          "url": "https://www.w3.org/WAI/WCAG22/Understanding/error-suggestion.html"
         }
       ]
     },
@@ -2453,6 +3013,369 @@
         {
           "name": "WCAG 2.2",
           "url": "https://www.w3.org/TR/WCAG22/"
+        }
+      ]
+    },
+    {
+      "id": "IM-S1",
+      "domain": "it_mgmt",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Agile roles (Scrum)",
+      "onet_skill_ids": [
+        "SK036",
+        "SK012"
+      ],
+      "time_s": 45,
+      "prompt": "In Scrum, who decides the order of items in the Product Backlog?",
+      "options": [
+        "The Scrum Master",
+        "The Product Owner",
+        "The most senior developer",
+        "The customer's IT department"
+      ],
+      "answer": 1,
+      "explanation": "The Product Owner is accountable for ordering the Product Backlog to maximise value.",
+      "refs": [
+        {
+          "name": "The Scrum Guide (2020)",
+          "url": "https://scrumguides.org/scrum-guide.html"
+        }
+      ]
+    },
+    {
+      "id": "IM-S2",
+      "domain": "it_mgmt",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Requirements analysis",
+      "onet_skill_ids": [
+        "SK030",
+        "SK018"
+      ],
+      "time_s": 45,
+      "prompt": "Which of these is a NON-functional requirement?",
+      "options": [
+        "Students can download their transcript as PDF",
+        "Search results appear within 2 seconds for 95% of requests",
+        "Lecturers can enter marks for each assignment",
+        "Admins can deactivate an account"
+      ],
+      "answer": 1,
+      "explanation": "Non-functional requirements describe qualities such as performance, security and availability, not features.",
+      "refs": [
+        {
+          "name": "Wikipedia: Non-functional requirement",
+          "url": "https://en.wikipedia.org/wiki/Non-functional_requirement"
+        }
+      ]
+    },
+    {
+      "id": "IM-S3",
+      "domain": "it_mgmt",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Scope management",
+      "onet_skill_ids": [
+        "SK036",
+        "SK032"
+      ],
+      "time_s": 60,
+      "prompt": "Halfway through a fixed-price project, the client keeps asking for \"small\" extra features but the deadline and budget stay the same. What is this, and what should the project manager do?",
+      "options": [
+        "Normal agile work; just add them",
+        "Scope creep; route each request through change control and agree the impact on time and cost",
+        "Gold plating; refuse to talk to the client",
+        "Risk acceptance; ask the team to work weekends"
+      ],
+      "answer": 1,
+      "explanation": "Uncontrolled additions are scope creep. A change-control process makes the trade-off visible before work starts.",
+      "refs": [
+        {
+          "name": "Wikipedia: Scope creep",
+          "url": "https://en.wikipedia.org/wiki/Scope_creep"
+        }
+      ]
+    },
+    {
+      "id": "IM-S4",
+      "domain": "it_mgmt",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Project scheduling",
+      "onet_skill_ids": [
+        "SK032",
+        "SK030"
+      ],
+      "time_s": 45,
+      "prompt": "Which tool shows task dependencies and lets you find the critical path?",
+      "options": [
+        "A network diagram (CPM / PERT)",
+        "A pie chart",
+        "A SWOT analysis",
+        "A fishbone diagram"
+      ],
+      "answer": 0,
+      "explanation": "A network diagram links each task to the ones it depends on; the longest path through it is the critical path.",
+      "refs": [
+        {
+          "name": "Wikipedia: Critical path method",
+          "url": "https://en.wikipedia.org/wiki/Critical_path_method"
+        }
+      ]
+    },
+    {
+      "id": "IM-S5",
+      "domain": "it_mgmt",
+      "stage": "screen",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Change management",
+      "onet_skill_ids": [
+        "SK011",
+        "SK012"
+      ],
+      "time_s": 60,
+      "prompt": "Staff are resisting a new HR system that goes live next month. What is the best first step?",
+      "options": [
+        "Make it compulsory and switch off the old system early",
+        "Involve key users: explain why it changes, train them and act on their feedback",
+        "Delay the launch by a year",
+        "Only train the managers"
+      ],
+      "answer": 1,
+      "explanation": "People adopt systems they understand and helped shape. Communication, training and listening reduce resistance.",
+      "refs": [
+        {
+          "name": "Prosci: The ADKAR Model",
+          "url": "https://www.prosci.com/methodology/adkar"
+        }
+      ]
+    },
+    {
+      "id": "IM-D1",
+      "domain": "it_mgmt",
+      "stage": "deep",
+      "type": "numeric",
+      "difficulty": 3,
+      "skill": "Earned value (cost)",
+      "onet_skill_ids": [
+        "SK033",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "A project has Planned Value RM 80,000, Earned Value RM 60,000 and Actual Cost RM 75,000. What is its Cost Performance Index (CPI)? (2 decimal places)",
+      "answer": 0.8,
+      "tolerance": 0.01,
+      "explanation": "CPI = EV / AC = 60,000 / 75,000 = 0.80: every ringgit spent delivers 80 sen of planned work.",
+      "refs": [
+        {
+          "name": "PMI: Earned Value Management",
+          "url": "https://www.pmi.org/learning/library/earned-value-management-systems-analysis-8026"
+        }
+      ]
+    },
+    {
+      "id": "IM-D2",
+      "domain": "it_mgmt",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Earned value (status)",
+      "onet_skill_ids": [
+        "SK033",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "PV = RM 50,000, EV = RM 55,000, AC = RM 60,000. What is the project's status?",
+      "options": [
+        "Behind schedule and under budget",
+        "Ahead of schedule but over budget",
+        "Ahead of schedule and under budget",
+        "Behind schedule and over budget"
+      ],
+      "answer": 1,
+      "explanation": "SPI = EV / PV = 1.10 (ahead of schedule). CPI = EV / AC = 0.92 (over budget).",
+      "refs": [
+        {
+          "name": "PMI: Earned Value Management",
+          "url": "https://www.pmi.org/learning/library/earned-value-management-systems-analysis-8026"
+        }
+      ]
+    },
+    {
+      "id": "IM-D3",
+      "domain": "it_mgmt",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 2,
+      "skill": "Risk management",
+      "onet_skill_ids": [
+        "SK036",
+        "SK035"
+      ],
+      "time_s": 60,
+      "prompt": "The only developer who knows the payment module might leave mid-project (medium probability, high impact). Which response is best?",
+      "options": [
+        "Accept it and do nothing",
+        "Mitigate: pair programming, documentation and cross-training",
+        "Avoid it by cancelling the project",
+        "Transfer it by buying insurance"
+      ],
+      "answer": 1,
+      "explanation": "Mitigation lowers the impact if the risk happens. Cancelling is out of proportion, and insurance does not replace knowledge.",
+      "refs": [
+        {
+          "name": "Wikipedia: Risk management (risk options)",
+          "url": "https://en.wikipedia.org/wiki/Risk_management#Risk_options"
+        }
+      ]
+    },
+    {
+      "id": "IM-D4",
+      "domain": "it_mgmt",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Delivery approach (agile vs waterfall)",
+      "onet_skill_ids": [
+        "SK036",
+        "SK030"
+      ],
+      "time_s": 90,
+      "prompt": "Which project suits a predictive (waterfall) approach best?",
+      "options": [
+        "A start-up app whose features depend on user feedback",
+        "A system for a legally fixed tax rule, with complete requirements and a fixed-price government contract",
+        "A research prototype exploring new AI ideas",
+        "A marketing website that changes weekly"
+      ],
+      "answer": 1,
+      "explanation": "Waterfall works when requirements are stable and well understood up front. Uncertain or changing products fit agile better.",
+      "refs": [
+        {
+          "name": "The Scrum Guide (2020)",
+          "url": "https://scrumguides.org/scrum-guide.html"
+        }
+      ]
+    },
+    {
+      "id": "IM-D5",
+      "domain": "it_mgmt",
+      "stage": "deep",
+      "type": "mcq",
+      "difficulty": 3,
+      "skill": "Data modelling (ERD)",
+      "onet_skill_ids": [
+        "SK030",
+        "SK044"
+      ],
+      "time_s": 90,
+      "prompt": "A student can enrol in many courses and a course has many students. How do you model this in a relational database?",
+      "options": [
+        "Put a course_id column in the students table",
+        "Put a list of student ids in one column of courses",
+        "Create an enrolments table with student_id and course_id foreign keys",
+        "Merge students and courses into one table"
+      ],
+      "answer": 2,
+      "explanation": "A many-to-many relationship needs a junction (associative) table; it can also hold enrolment data such as the grade.",
+      "refs": [
+        {
+          "name": "Wikipedia: Associative entity",
+          "url": "https://en.wikipedia.org/wiki/Associative_entity"
+        }
+      ]
+    },
+    {
+      "id": "IM-D6",
+      "domain": "it_mgmt",
+      "stage": "deep",
+      "type": "numeric",
+      "difficulty": 2,
+      "skill": "Agile forecasting",
+      "onet_skill_ids": [
+        "SK032",
+        "SK005"
+      ],
+      "time_s": 90,
+      "prompt": "A team completes 30 story points per 2-week sprint on average. 210 points remain in the backlog. How many weeks until it is done, at this pace?",
+      "answer": 14,
+      "tolerance": 0,
+      "explanation": "210 / 30 = 7 sprints x 2 weeks = 14 weeks. (A real forecast would give a range, since velocity varies.)",
+      "refs": [
+        {
+          "name": "The Scrum Guide (2020)",
+          "url": "https://scrumguides.org/scrum-guide.html"
+        }
+      ]
+    },
+    {
+      "id": "IM-P1",
+      "domain": "it_mgmt",
+      "stage": "practical",
+      "type": "numeric",
+      "difficulty": 3,
+      "skill": "Critical path analysis",
+      "onet_skill_ids": [
+        "SK032",
+        "SK030"
+      ],
+      "time_s": 300,
+      "prompt": "What is the shortest possible duration of this project, in days?",
+      "code": "Task  Days  Depends on\nA     3     -\nB     5     A\nC     2     A\nD     4     C\nE     3     B, D\nF     2     A",
+      "code_lang": "text",
+      "answer": 12,
+      "tolerance": 0,
+      "explanation": "Paths: A-B-E = 11, A-C-D-E = 12, A-F = 5. The critical path A-C-D-E takes 12 days; B has 1 day of float.",
+      "refs": [
+        {
+          "name": "Wikipedia: Critical path method",
+          "url": "https://en.wikipedia.org/wiki/Critical_path_method"
+        }
+      ]
+    },
+    {
+      "id": "IM-P2",
+      "domain": "it_mgmt",
+      "stage": "practical",
+      "type": "multi",
+      "difficulty": 3,
+      "skill": "Requirements classification",
+      "onet_skill_ids": [
+        "SK030",
+        "SK018"
+      ],
+      "time_s": 240,
+      "prompt": "These requirements are for a university assignment portal. Select EVERY non-functional requirement.",
+      "code": "1  Students can submit an assignment before its deadline.\n2  Pages load in under 2 seconds on a 4G connection.\n3  Student data is stored in Malaysia to comply with the PDPA.\n4  Lecturers can export marks as a CSV file.\n5  The portal is available 99.5% of the time during semester.\n6  Students receive an email when a mark is released.\n7  Passwords are stored as salted bcrypt hashes.\n8  The interface meets WCAG 2.2 level AA.",
+      "code_lang": "text",
+      "options": [
+        "Line 1",
+        "Line 2",
+        "Line 3",
+        "Line 4",
+        "Line 5",
+        "Line 6",
+        "Line 7",
+        "Line 8"
+      ],
+      "answer": [
+        1,
+        2,
+        4,
+        6,
+        7
+      ],
+      "explanation": "Lines 2, 3, 5, 7 and 8 set qualities or constraints (performance, compliance, availability, security, accessibility). Lines 1, 4 and 6 are features.",
+      "refs": [
+        {
+          "name": "Wikipedia: Non-functional requirement",
+          "url": "https://en.wikipedia.org/wiki/Non-functional_requirement"
         }
       ]
     }
