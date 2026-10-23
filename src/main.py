@@ -327,7 +327,10 @@ def explain_match(request):
 @route("GET", "/api/explain/status")
 def explain_status(request):
     return jsonify(configured=explain.configured(), model=explain.model_name(),
-                   provider="Fireworks AI", env_names_seen=explain.env_names_seen())
+                   provider="Fireworks AI", env_names_seen=explain.env_names_seen(),
+                   # yes/no only: do other deployment secrets reach the app?
+                   other_secrets_seen={n: bool(os.getenv(n)) for n in
+                                       ("SESSION_SECRET", "REPLIT_CONNECTORS_HOSTNAME")})
 
 
 @route("GET", "/api/scenarios")
