@@ -121,6 +121,7 @@ details.group > summary::after { content: "+"; font-size: 20px; color: var(--mut
 details.group[open] > summary::after { content: "–"; }
 .group-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 4px; }
 .skill-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 6px 0; border-top: 1px solid var(--line); }
+.skill-name { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; }
 .rating { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .rating button { width: 40px; height: 40px; border: 0; border-left: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; font-weight: 600; }
 .rating button:first-child { border-left: 0; }

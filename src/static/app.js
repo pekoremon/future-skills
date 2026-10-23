@@ -24,6 +24,39 @@ const PART_LABEL = { interest: "Interest fit", skill: "Skill fit", trend: "AI-er
 const PART_NAMES = { my_demand: "Malaysian demand", ai_momentum: "AI momentum" };
 const domainText = (t) => String(t).replace(/\b(generic_tech|agriculture|finance|healthcare) domain\b/g, (_, d) => `${DOMAINS[d]} field`);
 const STORE_KEY = "future-skills-v1";
+// The 65 O*NET skills and knowledge areas, grouped so a student rates 22 groups instead.
+// A group's rating is copied to every O*NET skill in it, so matching still runs per skill.
+const SKILL_GROUPS = {
+  general: [
+    ["Communication", "Reading, writing, listening and speaking", ["SK001", "SK002", "SK003", "SK004"]],
+    ["Maths and science", "Using maths and scientific methods to solve problems", ["SK005", "SK006"]],
+    ["Problem solving", "Critical thinking, complex problems, judgement and decisions", ["SK007", "SK017", "SK029"]],
+    ["Learning and teaching", "Picking up new things fast and teaching others", ["SK008", "SK009", "SK015"]],
+    ["Working with people", "Reading people, coordinating with others, helping customers", ["SK011", "SK012", "SK016"]],
+    ["Persuading and negotiating", "Changing minds and reaching agreements", ["SK013", "SK014"]],
+    ["Programming and design", "Writing code, designing technology, working out what users need", ["SK018", "SK019", "SK022"]],
+    ["Systems and quality", "Analysing and evaluating systems, monitoring performance, testing quality", ["SK010", "SK028", "SK030", "SK031"]],
+    ["Setting up and running equipment", "Choosing, installing, operating and watching machines or systems", ["SK020", "SK021", "SK023", "SK024"]],
+    ["Troubleshooting and repair", "Finding faults, maintaining and fixing equipment", ["SK025", "SK026", "SK027"]],
+    ["Managing time, money and people", "Planning time, budgets, materials and staff", ["SK032", "SK033", "SK034", "SK035"]],
+  ],
+  domain_knowledge: [
+    ["Business and management", "Running organisations, office administration, HR", ["SK036", "SK037", "SK041"]],
+    ["Finance and economics", "Accounting, banking, economics", ["SK038"]],
+    ["Sales and customer service", "Marketing, selling, serving customers", ["SK039", "SK040"]],
+    ["Computers and telecoms", "Hardware, software, networks, telecommunications", ["SK044", "SK064"]],
+    ["Engineering and manufacturing", "Engineering, mechanics, construction, production", ["SK042", "SK045", "SK047", "SK048"]],
+    ["Maths and physical sciences", "Mathematics, physics, chemistry", ["SK049", "SK050", "SK051"]],
+    ["Biology, food and agriculture", "Living things, crops, livestock, food production", ["SK043", "SK052"]],
+    ["Health and medicine", "Medicine, therapy, psychology", ["SK053", "SK056", "SK057"]],
+    ["Society and education", "Sociology, geography, philosophy, teaching", ["SK054", "SK055", "SK058", "SK061"]],
+    ["Language, media and design", "English, media, design, fine arts", ["SK046", "SK059", "SK060", "SK065"]],
+    ["Law and public safety", "Law, government, security", ["SK062", "SK063"]],
+  ],
+};
+// Older saved answers rated single skills; show the group at its highest member rating.
+const groupRating = (ids) => Math.max(0, ...ids.map((id) => state.ratings[id] || 0));
+
 
 const app = document.getElementById("app");
 const cache = {};
@@ -190,19 +223,22 @@ async function pageInterests() {
 async function pageSkills() {
   const skills = await cached("/api/skills");
   const groups = [
-    ["general", "General skills", "Skills used in most jobs, rated by O*NET for each role."],
+    ["general", "General skills", "Skills used in most jobs, rated by O*NET for each role. Similar skills are grouped together."],
     ["domain_knowledge", "Knowledge areas", "Subjects you have studied or worked with."],
   ];
-  const rated = () => Object.values(state.ratings).filter((v) => v > 0).length;
+  const known = new Set(skills.map((s) => s.skill_id));
+  const allGroups = Object.values(SKILL_GROUPS).flat();
+  const rated = () => allGroups.filter(([, , ids]) => groupRating(ids) > 0).length;
   const groupHtml = groups.map(([type, title, hint], gi) => {
-    const rows = skills.filter((s) => s.skill_type === type).map((s) => `
+    const rows = SKILL_GROUPS[type].map(([name, covers, ids]) => [name, covers, ids.filter((id) => known.has(id))])
+      .filter(([, , ids]) => ids.length).map(([name, covers, ids]) => `
       <div class="skill-row">
-        <span>${esc(s.skill_name)}</span>
-        <span class="rating" role="group" aria-label="${esc(s.skill_name)} level">
-          ${RATING.map((label, v) => `<button type="button" data-skill="${esc(s.skill_id)}" data-v="${v}" aria-pressed="${(state.ratings[s.skill_id] || 0) === v}" title="${label}" aria-label="${label}">${v === 0 ? "–" : v}</button>`).join("")}
+        <span class="skill-name">${esc(name)}<span class="muted small">${esc(covers)}</span></span>
+        <span class="rating" role="group" aria-label="${esc(name)} level">
+          ${RATING.map((label, v) => `<button type="button" data-skills="${ids.join(" ")}" data-v="${v}" aria-pressed="${groupRating(ids) === v}" title="${label}" aria-label="${label}">${v === 0 ? "–" : v}</button>`).join("")}
         </span>
       </div>`).join("");
-    return `<details class="group"${gi === 0 ? " open" : ""}><summary><span>${title} <span class="muted small">(${skills.filter((s) => s.skill_type === type).length})</span></span></summary>
+    return `<details class="group"${gi === 0 ? " open" : ""}><summary><span>${title} <span class="muted small">(${SKILL_GROUPS[type].length})</span></span></summary>
       <div class="group-body"><p class="muted small">${hint}</p>${rows}</div></details>`;
   }).join("");
   const techs = skills.filter((s) => s.skill_type === "technology");
@@ -230,14 +266,13 @@ async function pageSkills() {
       <span class="muted small" id="count"></span>
     </div>
   </div>`);
-  const count = () => { document.getElementById("count").textContent = `${rated()} skills rated · ${state.techs.length} technologies`; };
+  const count = () => { document.getElementById("count").textContent = `${rated()} of ${allGroups.length} skill groups rated · ${state.techs.length} technologies`; };
   count();
   document.getElementById("zone").onchange = (e) => { state.zone = Number(e.target.value); saveState(); };
   app.querySelectorAll(".rating button").forEach((b) => {
     b.onclick = () => {
-      const id = b.dataset.skill;
       const v = Number(b.dataset.v);
-      if (v) state.ratings[id] = v; else delete state.ratings[id];
+      b.dataset.skills.split(" ").forEach((id) => { if (v) state.ratings[id] = v; else delete state.ratings[id]; });
       b.parentElement.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       saveState(); count();
     };
