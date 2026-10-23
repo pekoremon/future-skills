@@ -1,13 +1,15 @@
 modules = ["python-3.11"]
-run = "pip install -q -r requirements.txt && python src/main.py"
+# Replit's Python forces pip --user installs, which fail where user site-packages are
+# disabled. Install into a project venv with --no-user instead.
+run = "python -m venv .venv && .venv/bin/pip install -q --no-user -r requirements.txt && .venv/bin/python src/main.py"
 entrypoint = "src/main.py"
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
-build = ["pip", "install", "-r", "requirements.txt"]
-run = ["python", "src/main.py"]
+build = ["sh", "-c", "python -m venv .venv && .venv/bin/pip install --no-user -r requirements.txt"]
+run = ["sh", "-c", ".venv/bin/python src/main.py"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
