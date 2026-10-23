@@ -1,4 +1,4 @@
-/* Future Skills web app: hash-routed pages over the Flask JSON API. */
+/* Future Skills web app: hash-routed pages over the JSON API in src/main.py. */
 "use strict";
 
 const TYPES = {

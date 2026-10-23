@@ -5,14 +5,14 @@ entrypoint = "src/main.py"
 [nix]
 channel = "stable-25_05"
 
-# Replit's automatic package install runs before the build and fails with "Can not
-# perform a '--user' install". Skip it; the build below installs into a project venv.
+# The app uses only the Python standard library, so there is nothing to install.
+# (Replit's automatic "pip install -r requirements.txt" step failed with "--user"
+# errors on publish; with no requirements.txt it has nothing to run.)
 [packager.features]
 enabledForHosting = false
 
 [deployment]
-build = ["sh", "-c", "unset PIP_TARGET PIP_USER; python -m venv .venv && .venv/bin/pip install --no-user -r requirements.txt"]
-run = ["sh", "-c", ".venv/bin/python src/main.py"]
+run = ["python", "src/main.py"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
@@ -46,11 +46,3 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
-
-[userenv]
-
-[userenv.production]
-
-[userenv.shared]
-PIP_TARGET = ".pythonlibs/lib/python3.12/site-packages"
-PIP_USER = "false"

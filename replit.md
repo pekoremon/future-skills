@@ -2,8 +2,7 @@
 
 ## Run on Replit
 
-- The existing app uses Flask and plain HTML, CSS, and JavaScript. Keep this structure; no frontend build is needed.
-- Install the dependencies listed in `requirements.txt` using Replit's package tools.
+- The app uses only the Python standard library plus plain HTML, CSS and JavaScript. There are no packages to install and no frontend build.
 - Click **Run** to start the **Start application** workflow (`PORT=5000 python src/main.py`).
 - The development server listens on `0.0.0.0:5000`; open Preview to use the app.
 - No API keys or external services are needed to use the bundled CSV data. `PROJECT_NAME` in `.env.example` is optional.
@@ -20,13 +19,6 @@ The health endpoint is `GET /api/health`. Data refreshes use public external sou
 
 ## Publishing dependency settings
 
-Publishing skips Replit's automatic package-install step with `[packager.features] enabledForHosting = false`, because that step runs `pip install --user` and fails where user site-packages are disabled.
+Publishing kept failing in Replit's automatic "Installing packages" step (`pip install -r requirements.txt` ended with "Can not perform a '--user' install"), and `[packager.features] enabledForHosting = false` did not skip it. The fix was to remove the only dependency: `src/main.py` now uses Python's built-in `http.server`, and the repository has no `requirements.txt`. The deployment has no build step and runs `python src/main.py`.
 
-The deployment build then creates a project virtualenv and installs `requirements.txt` into it: `unset PIP_TARGET PIP_USER; python -m venv .venv && .venv/bin/pip install --no-user -r requirements.txt`. The deployment runs `.venv/bin/python src/main.py`. The `unset` matters: the shared `PIP_TARGET` below would otherwise send packages to `.pythonlibs` instead of the venv.
-
-Shared environment variables keep pip working in the workspace (the Run button):
-
-- `PIP_USER=false`
-- `PIP_TARGET=.pythonlibs/lib/python3.12/site-packages`
-
-Do not use "Fix with Agent" to change `.replit` without checking the result into GitHub: merges that replace the whole file have dropped these settings before.
+Do not add a `requirements.txt` back without checking that publishing still works. Do not let "Fix with Agent" rewrite `.replit` without checking the result into GitHub.

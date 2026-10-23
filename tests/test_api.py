@@ -1,20 +1,69 @@
+import json
 import sys
+import threading
 import unittest
+import urllib.request
 from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-try:
-    import main
-except ImportError:  # Flask not installed
-    main = None
+import main  # noqa: E402
 
 
-@unittest.skipIf(main is None, "Flask is not installed (pip install -r requirements.txt)")
+class Result:
+    def __init__(self, res):
+        self.status_code, self.data = res.status, res.body
+        self.json = json.loads(res.body) if res.content_type.startswith("application/json") else None
+
+    def close(self):
+        pass
+
+
+class Client:
+    """Calls main.dispatch directly, like a test client."""
+
+    def get(self, path):
+        return Result(main.dispatch("GET", path))
+
+    def post(self, path, json=None):
+        return Result(main.dispatch("POST", path, b"" if json is None else _dumps(json)))
+
+
+def _dumps(value):
+    return json.dumps(value).encode("utf-8")
+
+
 class TestApi(unittest.TestCase):
     def setUp(self):
-        self.client = main.app.test_client()
+        self.client = Client()
+
+    def test_real_http_server(self):
+        server = main.ThreadingHTTPServer(("127.0.0.1", 0), main.Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            base = f"http://127.0.0.1:{server.server_address[1]}"
+            with urllib.request.urlopen(base + "/api/health") as r:
+                self.assertEqual(json.loads(r.read()), {"status": "ok"})
+            req = urllib.request.Request(base + "/api/match", data=_dumps({"profile_id": "P01", "top": 1}),
+                                         headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req) as r:
+                self.assertEqual(len(json.loads(r.read())["results"]), 1)
+            with urllib.request.urlopen(base + "/static/app.js") as r:
+                self.assertIn("javascript", r.headers["Content-Type"])
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_static_files_stay_inside_static(self):
+        self.assertEqual(self.client.get("/static/../main.py").status_code, 404)
+        self.assertEqual(self.client.get("/static/style.css").status_code, 200)
+        self.assertEqual(self.client.get("/nope").status_code, 404)
+        self.assertEqual(self.client.get("/api/match").status_code, 405)
+
+    def test_bad_json_body_is_400(self):
+        res = Result(main.dispatch("POST", "/api/match", b"{not json"))
+        self.assertEqual(res.status_code, 400)
 
     def test_health_and_index(self):
         self.assertEqual(self.client.get("/api/health").json, {"status": "ok"})

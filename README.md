@@ -60,8 +60,8 @@ Domain 1 requires all six:
 
 | Layer | Technology |
 |---|---|
-| Frontend | HTML, CSS and plain JavaScript served by Flask (`src/static/`), no build step |
-| Backend | Python 3.11, Flask 3.0 (JSON API in `src/main.py`) |
+| Frontend | HTML, CSS and plain JavaScript (`src/static/`), no build step |
+| Backend | Python 3.12 standard library only (`http.server` JSON API in `src/main.py`); no packages to install |
 | Data | CSV tables in `data/`, validated by `scripts/validate_data.py` |
 | Hosting / Dev | Replit |
 
@@ -89,7 +89,7 @@ Domain 1 requires all six:
 │   ├── update_trends.py     # Refresh trends.csv ("Update data" button)
 │   └── validate_data.py     # Check every row has a source and date
 ├── src/
-│   ├── main.py              # Flask API (Replit entry point)
+│   ├── main.py              # Web server and JSON API (Replit entry point)
 │   └── static/              # Web app: index.html, app.js, style.css
 ├── submission/              # Required submission PDFs
 ├── tests/
@@ -97,7 +97,6 @@ Domain 1 requires all six:
 ├── .replit
 ├── LICENSE
 ├── SOURCES.md               # All data sources and their licences
-└── requirements.txt
 ```
 
 ## How to Run
@@ -106,7 +105,7 @@ Domain 1 requires all six:
 
 1. Open the Replit Project, or import this repository via **Create Repl → Import from GitHub**.
 2. Add any variables from `.env.example` in the **Secrets** tab.
-3. Click **Run**. Replit installs `requirements.txt` and starts `python src/main.py` on port 8080.
+3. Click **Run**. Replit starts `python src/main.py` (the Run button uses port 5000). There is nothing to install.
 4. To publish the live demo, use **Deploy**; `.replit` sets the build and run commands.
 
 ### Option 2 — Run Locally
@@ -116,7 +115,6 @@ git clone https://github.com/pekoremon/future-skills.git
 cd future-skills
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
 cp .env.example .env            # then fill in your values
 python src/main.py
 ```
