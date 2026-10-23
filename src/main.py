@@ -15,6 +15,7 @@ Endpoints (all JSON):
     POST /api/match                  student profile -> ranked, explained roles with a learning path
     POST /api/explain                same body as /api/match + role_id -> LLM explanation (or fallback)
     GET  /api/explain/status         whether the LLM is configured, and which model
+    POST /api/cv/summary             {"text"} or {"docx_base64"} -> CV summary, skills, qualifications
     GET  /api/scenarios              future scenarios and the trend scores under each
     GET  /api/trends                 ?domain=  trend scores and the signals behind them
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
@@ -42,13 +43,14 @@ SCRIPTS = ROOT / "scripts"
 STATIC = Path(__file__).resolve().parent / "static"
 sys.path.insert(0, str(SCRIPTS))
 
-import explain  # noqa: E402  (scripts/ is added to the path above)
+import cv_reader  # noqa: E402  (scripts/ is added to the path above)
+import explain  # noqa: E402
 import matching  # noqa: E402
 
 RIASEC = matching.RIASEC
 LIKERT = range(0, 5)  # Mini-IP answers: 0 = strongly dislike ... 4 = strongly like
 UPDATE_TIMEOUT_S = 600
-MAX_BODY = 1_000_000
+MAX_BODY = 4_000_000  # room for a base64 .docx CV
 
 _update_lock = threading.Lock()
 _update_state = {"status": "idle", "started": None, "finished": None, "arxiv": None,
@@ -331,6 +333,15 @@ def explain_status(request):
                    # yes/no only: do other deployment secrets reach the app?
                    other_secrets_seen={n: bool(os.getenv(n)) for n in
                                        ("SESSION_SECRET", "REPLIT_CONNECTORS_HOSTNAME")})
+
+
+@route("POST", "/api/cv/summary")
+def cv_summary(request):
+    """Summarise an uploaded CV. The CV is used for this request only, never stored."""
+    try:
+        return jsonify(cv_reader.summarise(body(request), matching.load_data()["skills"]))
+    except cv_reader.CVError as e:
+        raise BadRequest(str(e)) from None
 
 
 @route("GET", "/api/scenarios")

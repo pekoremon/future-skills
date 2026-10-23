@@ -1,0 +1,27 @@
+NUR AIMAN BINTI HASSAN (fictional sample CV)
+Kuala Lumpur, Malaysia
+
+PROFILE
+Final-year Computer Science student interested in using data to help smallholder farmers and clinics. Enjoys building dashboards and small web apps.
+
+EDUCATION
+Bachelor of Computer Science (Data Science), Universiti Contoh Malaysia, 2022 - 2026, CGPA 3.62
+Diploma in Information Technology, Politeknik Contoh, 2019 - 2022
+
+CERTIFICATIONS
+Google Data Analytics Professional Certificate, 2024
+Microsoft Certified: Azure Fundamentals (AZ-900), 2025
+
+TECHNICAL SKILLS
+Python, SQL, R, Microsoft Excel, Power BI, Tableau, Git, GitHub, HTML, CSS, JavaScript, React, Docker, Linux
+
+EXPERIENCE
+Data Analyst Intern, Contoh AgriTech Sdn Bhd, Mar 2025 - Aug 2025
+- Cleaned 3 years of crop yield records in Python and SQL and built a Power BI dashboard used by 4 field officers.
+- Wrote a short guide on soil sensor data for non-technical staff.
+
+PROJECTS
+Clinic queue tracker: a React and Node.js web app with a PostgreSQL database for a university health centre.
+
+SOFT SKILLS
+Teamwork, presenting to non-technical audiences, Bahasa Malaysia and English
