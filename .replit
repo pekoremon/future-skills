@@ -8,7 +8,11 @@ entrypoint = "src/main.py"
 channel = "stable-24_05"
 
 [deployment]
-build = ["sh", "-c", "python -m venv .venv && .venv/bin/pip install --no-user -r requirements.txt"]
+build = [
+  "sh",
+  "-c",
+  "python -m venv .venv && .venv/bin/pip install --no-user -r requirements.txt",
+]
 run = ["sh", "-c", ".venv/bin/python src/main.py"]
 deploymentTarget = "cloudrun"
 
