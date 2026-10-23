@@ -6,7 +6,7 @@ Endpoints (all JSON):
     GET  /                           the web app (src/static/)
     GET  /api                        list of endpoints
     GET  /api/health
-    GET  /api/questionnaire          the 30 Mini-IP items, answer scale and attribution
+    GET  /api/questionnaire          the 36 interest items (RIASEC type + IT area), scale and attribution
     GET  /api/assessment/start       IT skills test: a seed, the 6 screen questions and the rules
     POST /api/assessment/next        seed + screen answers -> the 2 strongest domains and 8 questions
     POST /api/assessment/sql         question id + SQL -> the rows it returns (read-only SQLite)
@@ -15,7 +15,7 @@ Endpoints (all JSON):
     GET  /api/roles
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
     GET  /api/profiles               fictional demo profiles
-    POST /api/questionnaire/score    RIASEC answers (0-4) -> six totals (0-20) and a 3-letter code
+    POST /api/questionnaire/score    36 answers (1-5) -> RIASEC totals, code, IT-area scores, warnings
     POST /api/match                  test/preferences/CV -> IT area fit, then ranked roles with a learning path
     POST /api/explain                same body as /api/match + role_id -> LLM explanation (or fallback)
     GET  /api/explain/status         whether the LLM is configured, and which model
@@ -51,10 +51,9 @@ sys.path.insert(0, str(SCRIPTS))
 import assessment  # noqa: E402  (scripts/ is added to the path above)
 import cv_reader  # noqa: E402
 import explain  # noqa: E402
+import interest  # noqa: E402
 import matching  # noqa: E402
 
-RIASEC = ["R", "I", "A", "S", "E", "C"]  # the old interest questionnaire, until it is replaced
-LIKERT = range(0, 5)  # Mini-IP answers: 0 = strongly dislike ... 4 = strongly like
 UPDATE_TIMEOUT_S = 600
 MAX_BODY = 4_000_000  # room for a base64 .docx CV
 
@@ -148,21 +147,11 @@ def body(request: Request) -> dict:
     return data
 
 
-def score_answers(answers) -> dict:
-    """Sum questionnaire answers per RIASEC type."""
-    if not isinstance(answers, list) or not answers:
-        raise BadRequest("'answers' must be a non-empty list of {type, value}")
-    totals = dict.fromkeys(RIASEC, 0)
-    for i, a in enumerate(answers):
-        t, v = (a.get("type"), a.get("value")) if isinstance(a, dict) else (None, None)
-        if t not in totals or isinstance(v, bool) or v not in LIKERT:
-            raise BadRequest(f"answers[{i}]: type must be one of {RIASEC} and value 0-4")
-        totals[t] += v
-    return totals
-
-
-def riasec_code(totals: dict) -> str:
-    return "".join(sorted(RIASEC, key=lambda k: -totals[k])[:3])
+def interest_result(answers) -> dict:
+    try:
+        return interest.score(answers)
+    except interest.InterestError as e:
+        raise BadRequest(str(e)) from e
 
 
 def build_profile(data: dict, skills: dict) -> dict:
@@ -172,7 +161,7 @@ def build_profile(data: dict, skills: dict) -> dict:
         found = next((p for p in profiles if p["profile_id"] == data["profile_id"]), None)
         if found is None:
             raise BadRequest(f"unknown profile_id '{data['profile_id']}'")
-        return found
+        return matching.with_interest(found)
 
     areas = {a["id"] for a in matching.load_areas()}
     per_area = {}
@@ -185,6 +174,8 @@ def build_profile(data: dict, skills: dict) -> dict:
                 for v in given.values()):
             raise BadRequest(f"'{key}' must map IT area ids {sorted(areas)} to numbers 0-100")
         per_area[key] = given
+    if data.get("interest_answers") is not None:
+        per_area["interest"] = interest_result(data["interest_answers"])
     if "test" in data:
         seed, responses = assessment_input(data["test"])
         try:
@@ -238,7 +229,7 @@ def health(request):
 
 @route("GET", "/api/questionnaire")
 def questionnaire(request):
-    return jsonify(json.loads((DATA / "riasec_items.json").read_text(encoding="utf-8")))
+    return jsonify(interest.load_items())
 
 
 def assessment_input(data) -> tuple[int, dict]:
@@ -301,8 +292,8 @@ def skills(request):
 
 @route("GET", "/api/roles")
 def roles(request):
-    keep = ["role_id", "role_name_en", "it_area", "job_zone", "is_mycol",
-            "it_reachable_draft", "onet_soc", "masco_4digit_mycol"]
+    keep = ["role_id", "role_name_en", "subfield", "it_area", "riasec_code_onet", "job_zone",
+            "is_mycol", "onet_soc", "masco_4digit_mycol"]
     return jsonify([{k: r[k] for k in keep} for r in matching.it_roles(matching.load_data())])
 
 
@@ -335,8 +326,7 @@ def profiles(request):
 
 @route("POST", "/api/questionnaire/score")
 def questionnaire_score(request):
-    totals = score_answers(body(request).get("answers"))
-    return jsonify(riasec=totals, code=riasec_code(totals))
+    return jsonify(interest_result(body(request).get("answers")))
 
 
 def match_options(req: dict, data: dict) -> tuple[dict, str]:

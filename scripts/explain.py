@@ -29,7 +29,7 @@ SYSTEM_PROMPT = """You explain career matches to final-year IT students in Malay
 You get the facts for one student and one role as JSON inside <facts> tags. The facts were computed by a scoring program from public data (O*NET, DOSM, MyCOL, UN SDG targets).
 
 Write 4 to 5 sentences in plain English, speaking to the student as "you":
-1. Why the role fits or does not fit them, using the IT area fit and skill parts.
+1. Why the role fits or does not fit them, using the IT area fit, interest and skill parts.
 2. What the field's AI-era trend score means for them.
 3. The first concrete step: the first course in the learning path, if there is one, or else the biggest skill gap.
 4. What the role's SDG target means in everyday terms.
@@ -78,9 +78,11 @@ def build_facts(match: dict) -> dict:
         "it_area": match["area_name"] or "no IT area",
         "match_score": match["total"],
         "area_fit": c["area"]["score"],
+        "interest_fit": c["interest"]["score"],
         "skill_fit": c["skill"]["score"],
         "trend_score": c["trend"]["score"],
         "area_note": match["explain"]["area"],
+        "interest_note": match["explain"]["interest"],
         "trend_note": match["explain"]["trend"],
         "biggest_gaps": [{"skill": g["skill_name"], "your_level": g["your_level"],
                           "level_needed": g["level_needed"]} for g in d["gaps"][:3]],

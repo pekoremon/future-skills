@@ -100,7 +100,7 @@ class TestCvApi(unittest.TestCase):
         docx = base64.b64encode(make_docx(SAMPLE.splitlines())).decode()
         status, data = self.post({"docx_base64": docx})
         self.assertEqual(status, 200)
-        self.assertIn("SK130", [t["skill_id"] for t in data["technologies"]])
+        self.assertIn("SK145", [t["skill_id"] for t in data["technologies"]])
 
     def test_bad_requests(self):
         self.assertEqual(self.post({})[0], 400)

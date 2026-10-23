@@ -1,0 +1,245 @@
+{
+  "name": "IT Career Interest Profiler",
+  "version": 2,
+  "description": "36 statements written by the team, based on Holland's RIASEC interest types. Each item measures one RIASEC type (6 per type); 24 items also point to one of the 6 IT areas (4 per area).",
+  "stem": "I would enjoy...",
+  "scale": {
+    "1": "Strongly disagree",
+    "2": "Disagree",
+    "3": "Not sure",
+    "4": "Agree",
+    "5": "Strongly agree"
+  },
+  "scoring": {
+    "riasec": "sum of the 6 items per type, 6-30; percent = (total - 6) / 24 x 100",
+    "area_items": "mean of the 4 items per IT area; score = (mean - 1) / 4 x 100",
+    "role_interest": "Pearson correlation between the six RIASEC totals and the role's O*NET interest scores, mapped from -1..1 to 0..100",
+    "preference": "0.6 x area items + 0.4 x mean role interest of the area's roles (team choice)"
+  },
+  "source_name": "Team-written items; RIASEC types from O*NET Career Interest Types",
+  "source_url": "https://www.onetonline.org/find/descriptor/browse/1.B.1",
+  "source_date": "2026-10-23",
+  "attribution": "Questions written by the team, based on Holland's RIASEC types as used by O*NET (USDOL/ETA). Not an official O*NET instrument.",
+  "items": [
+    {
+      "n": 1,
+      "type": "R",
+      "area": null,
+      "text": "Taking apart an old computer to see how the parts fit together."
+    },
+    {
+      "n": 2,
+      "type": "I",
+      "area": "software_dev",
+      "text": "Finding out why a program keeps crashing by testing different ideas."
+    },
+    {
+      "n": 3,
+      "type": "A",
+      "area": null,
+      "text": "Designing a logo, icon or poster on the computer."
+    },
+    {
+      "n": 4,
+      "type": "S",
+      "area": null,
+      "text": "Helping a classmate who is stuck with their computer or phone."
+    },
+    {
+      "n": 5,
+      "type": "E",
+      "area": "it_mgmt",
+      "text": "Leading a group project and making sure it finishes on time."
+    },
+    {
+      "n": 6,
+      "type": "C",
+      "area": "cybersecurity",
+      "text": "Setting passwords and access rights so only the right people can open each file.",
+      "changed": "2026-10-23: replaces an item most students would agree with"
+    },
+    {
+      "n": 7,
+      "type": "I",
+      "area": "data_ai",
+      "text": "Training a simple model that predicts something, like exam results from study hours.",
+      "changed": "2026-10-23: replaces an item most students would agree with"
+    },
+    {
+      "n": 8,
+      "type": "S",
+      "area": null,
+      "text": "Explaining a technical idea in simple words to someone who is not into tech."
+    },
+    {
+      "n": 9,
+      "type": "C",
+      "area": "software_dev",
+      "text": "Writing tests that check my code still works after every change.",
+      "changed": "2026-10-23: replaces an item most students would agree with"
+    },
+    {
+      "n": 10,
+      "type": "A",
+      "area": "web_ux",
+      "text": "Choosing colours, fonts and layouts that make an app look attractive."
+    },
+    {
+      "n": 11,
+      "type": "R",
+      "area": "cloud_infra",
+      "text": "Setting up a Wi-Fi router and connecting network cables at home or school."
+    },
+    {
+      "n": 12,
+      "type": "E",
+      "area": "it_mgmt",
+      "text": "Pitching an app idea and convincing others to support it."
+    },
+    {
+      "n": 13,
+      "type": "A",
+      "area": "web_ux",
+      "text": "Sketching how a new app screen could look before anyone builds it."
+    },
+    {
+      "n": 14,
+      "type": "E",
+      "area": null,
+      "text": "Starting my own tech company one day."
+    },
+    {
+      "n": 15,
+      "type": "R",
+      "area": "cloud_infra",
+      "text": "Installing an operating system (like Windows or Linux) on a laptop from scratch."
+    },
+    {
+      "n": 16,
+      "type": "C",
+      "area": "software_dev",
+      "text": "Checking a program or spreadsheet carefully for small mistakes."
+    },
+    {
+      "n": 17,
+      "type": "I",
+      "area": "data_ai",
+      "text": "Studying a large set of data to discover hidden patterns."
+    },
+    {
+      "n": 18,
+      "type": "S",
+      "area": "web_ux",
+      "text": "Interviewing people to understand the problems they face with an app."
+    },
+    {
+      "n": 19,
+      "type": "S",
+      "area": "cybersecurity",
+      "text": "Giving a short talk to warn classmates about scam links and phishing.",
+      "changed": "2026-10-23: replaces an item most students would agree with"
+    },
+    {
+      "n": 20,
+      "type": "C",
+      "area": "data_ai",
+      "text": "Entering, sorting and cleaning up data in a spreadsheet."
+    },
+    {
+      "n": 21,
+      "type": "I",
+      "area": "data_ai",
+      "text": "Learning how a search engine or recommendation system decides what to show."
+    },
+    {
+      "n": 22,
+      "type": "E",
+      "area": "it_mgmt",
+      "text": "Deciding which features a product should have first."
+    },
+    {
+      "n": 23,
+      "type": "A",
+      "area": null,
+      "text": "Creating animations, short videos or characters for a game."
+    },
+    {
+      "n": 24,
+      "type": "R",
+      "area": null,
+      "text": "Fixing a device that stopped working by testing it step by step."
+    },
+    {
+      "n": 25,
+      "type": "E",
+      "area": "it_mgmt",
+      "text": "Meeting clients to find out what they want and agreeing on a deal."
+    },
+    {
+      "n": 26,
+      "type": "R",
+      "area": "cloud_infra",
+      "text": "Building a gaming PC or small server from separate parts."
+    },
+    {
+      "n": 27,
+      "type": "S",
+      "area": null,
+      "text": "Teaching older family members how to use apps safely."
+    },
+    {
+      "n": 28,
+      "type": "I",
+      "area": "cybersecurity",
+      "text": "Reading about how hackers break into systems and how to stop them."
+    },
+    {
+      "n": 29,
+      "type": "C",
+      "area": null,
+      "text": "Writing clear instructions or guides that others can follow."
+    },
+    {
+      "n": 30,
+      "type": "A",
+      "area": null,
+      "text": "Coming up with an original idea for a game or website."
+    },
+    {
+      "n": 31,
+      "type": "C",
+      "area": "cybersecurity",
+      "text": "Making sure a system follows rules, policies and security standards."
+    },
+    {
+      "n": 32,
+      "type": "A",
+      "area": "web_ux",
+      "text": "Making a personal website that shows my own style."
+    },
+    {
+      "n": 33,
+      "type": "E",
+      "area": null,
+      "text": "Organising a coding competition or tech event at school."
+    },
+    {
+      "n": 34,
+      "type": "R",
+      "area": "cloud_infra",
+      "text": "Working with real equipment in a server room, not only at a desk."
+    },
+    {
+      "n": 35,
+      "type": "S",
+      "area": null,
+      "text": "Building technology that makes life easier for people with disabilities."
+    },
+    {
+      "n": 36,
+      "type": "I",
+      "area": "software_dev",
+      "text": "Running experiments to compare which solution works faster."
+    }
+  ]
+}

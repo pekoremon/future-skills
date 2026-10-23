@@ -5,8 +5,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, it_roles, learning_path, load_data,
-                      match_student, rank_roles, rating_to_level, role_area, role_trend,
+import interest
+from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, interest_score, it_roles, learning_path,
+                      load_data, match_student, rank_roles, rating_to_level, role_area, role_trend,
                       scenario_trend_scores, skill_score, test_area_scores)
 
 SKILLS = {"S1": {"skill_name": "One"}, "S2": {"skill_name": "Two"}, "T1": {"skill_name": "Tech"},
@@ -60,7 +61,7 @@ class TestMatching(unittest.TestCase):
         cls.profile = {"profile_id": "T", "name": "Test", "education_job_zone": 4,
                        "test_areas": {"software_dev": 90, "data_ai": 40, "cybersecurity": 30,
                                       "cloud_infra": 30, "web_ux": 30, "it_mgmt": 30},
-                       "skills": {"SK022": 4.0}, "technologies": ["SK130"]}
+                       "skills": {"SK020": 4.0}, "technologies": ["SK145"]}
 
     def test_skill_score_weights_importance_and_skips_suppressed_level(self):
         result = skill_score({"skills": {"S1": 4, "S2": 2}, "technologies": []}, ROWS, SKILLS)
@@ -77,9 +78,38 @@ class TestMatching(unittest.TestCase):
 
     def test_role_area_prefers_csv_column(self):
         soc = {"15-1252.00": "software_dev"}
-        self.assertEqual(role_area({"onet_soc": "15-1252.00", "it_area": ""}, soc), "software_dev")
-        self.assertEqual(role_area({"onet_soc": "15-1252.00", "it_area": "web_ux"}, soc), "web_ux")
+        self.assertEqual(role_area({"onet_soc": "15-1252.00", "subfield_code": ""}, soc), "software_dev")
+        self.assertEqual(role_area({"onet_soc": "15-1252.00", "subfield_code": "WD"}, soc), "web_ux")
         self.assertIsNone(role_area({"onet_soc": "29-1141.00"}, soc))
+
+    def test_every_role_has_an_area_and_interest_scores(self):
+        self.assertEqual(len(it_roles(self.data)), len(self.data["roles"]))
+        self.assertTrue(all(r["interest_scores"] for r in self.data["roles"]))
+
+    def test_interest_same_shape_scores_100(self):
+        role = {"interest_scores": dict(zip("RIASEC", [2, 6, 1, 2, 2, 5])), "riasec_code_onet": "IC"}
+        score, why = interest_score(dict(zip("RIASEC", [4, 12, 2, 4, 4, 10])), role)
+        self.assertEqual(score, 100.0)
+        self.assertIn("shared: IC", why)
+        self.assertIsNone(interest_score(dict.fromkeys("RIASEC", 3), role)[0])
+
+    def test_questionnaire_feeds_preferences_and_role_interest(self):
+        items = interest.load_items()["items"]
+        answers = [5 if i["area"] == "web_ux" or i["type"] == "A" else 2 for i in items]
+        profile = {**self.profile, "test_areas": None, "interest": interest.score(answers)}
+        result = match_student(profile, self.data)
+        self.assertEqual(result["best"], "web_ux")
+        self.assertEqual(result["sources_used"], ["preference"])
+        game = next(m for m in result["roles"] if m["role_id"] == "IT22")  # Video Game Designers, AIE
+        web = next(m for m in result["roles"] if m["role_id"] == "IT20")   # Web Developers, CIA
+        self.assertGreater(game["components"]["interest"]["score"], web["components"]["interest"]["score"])
+
+    def test_same_answer_questionnaire_is_left_out(self):
+        profile = {"interest": interest.score([3] * 36)}
+        result = match_student(profile, self.data)
+        self.assertEqual(result["sources_used"], [])
+        self.assertIn("same_answer", [i["type"] for i in result["insights"]])
+        self.assertIn("interest_not_scored", result["roles"][0]["flags"])
 
     def test_only_it_roles_are_ranked_with_sdg(self):
         ranked = rank_roles(self.profile, self.data)
@@ -101,18 +131,18 @@ class TestMatching(unittest.TestCase):
         self.assertEqual(tiers, sorted(tiers))
 
     def test_trend_lookup_order(self):
-        role = {"role_id": "R02", "it_area": "software_dev"}
-        self.assertEqual(role_trend(role, {"R02": 70, "software_dev": 60})[0], 70)
+        role = {"role_id": "IT01", "it_area": "software_dev"}
+        self.assertEqual(role_trend(role, {"IT01": 70, "software_dev": 60})[0], 70)
         self.assertEqual(role_trend(role, {"software_dev": 60, "generic_tech": 50})[0], 60)
         self.assertEqual(role_trend(role, {"generic_tech": 55})[0], 55)
         self.assertFalse(role_trend(role, {})[2])
 
     def test_trend_change_changes_score(self):
         base = {m["role_id"]: m["total"] for m in rank_roles(self.profile, self.data)}
-        boom = {**self.data["trend_scores"], "R11": 100.0}
+        boom = {**self.data["trend_scores"], "IT05": 100.0}
         after = {m["role_id"]: m["total"] for m in rank_roles(self.profile, self.data, boom)}
-        self.assertGreater(after["R11"], base["R11"])
-        self.assertEqual(after["R02"], base["R02"])
+        self.assertGreater(after["IT05"], base["IT05"])
+        self.assertEqual(after["IT01"], base["IT01"])
 
     def test_baseline_scenario_matches_trend_score_file(self):
         self.assertEqual(scenario_trend_scores(self.data, "baseline"), self.data["trend_scores"])
