@@ -6,7 +6,7 @@
 
 # Future Skills
 
-AI is replacing generic tech jobs. Future Skills helps graduating tech students find "tech + domain knowledge" roles in agriculture, finance and healthcare that are harder for AI to replace and that advance the UN SDGs, and gives them a step-by-step pathway to get there.
+Future Skills helps IT students find the part of IT that suits them. An interest questionnaire, an IT skills test and the student's CV score 6 IT areas (software engineering, data & AI, cybersecurity, cloud & networking, web & interface design, IT management), then 26 IT roles are ranked with an explained score, the skills still missing, a free-course pathway, Malaysian demand and AI-trend signals, and SDG links.
 
 ## Team Information
 
@@ -49,9 +49,9 @@ Every number shown to the user carries its source and date. The system never inv
 
 Domain 1 requires all six:
 
-1. **Skills profile intake** — 30-item O*NET Mini Interest Profiler (RIASEC) plus 1–5 skill ratings and technologies
-2. **AI-trend signal layer** — updatable, dated sources (DOSM, OpenDOSM, arXiv)
-3. **Future-role matching** — explainable match score and skills gap
+1. **Skills profile intake** — 36-item IT interest questionnaire (RIASEC + IT area), a 24-item IT skills test graded in the browser, CV reading, plus 1–5 skill ratings and technologies
+2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
+3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), then an explainable role score and skills gap
 4. **Personalised reskilling pathway** — ordered plan with estimated time, free / low-cost courses
 5. **SDG mapping** — every role and skill tagged to at least one SDG target
 6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads)
@@ -75,8 +75,11 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── roles.csv
 │   ├── skills.csv
 │   ├── role_skills.csv
-│   ├── trends.csv
-│   ├── trend_scores.csv     # 0–100 trend score per domain
+│   ├── trends.csv           # Trend inputs with release and fetch dates (generated)
+│   ├── trend_signals.csv    # Direction + confidence per IT area and role (generated)
+│   ├── trend_scores.csv     # 0–100 trend score per IT area and role (generated)
+│   ├── subdomains.csv       # IT areas -> arXiv categories and DOSM series
+│   ├── it_assessment.json   # IT skills test: 90 questions in 6 areas
 │   ├── certifications.csv
 │   ├── sdg_map.csv
 │   ├── courses.csv
@@ -86,9 +89,13 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 ├── raw/                     # Raw downloads (git-ignored; listed in SOURCES.md)
 ├── scripts/
 │   ├── onet_extract.py      # Extract role skills and RIASEC codes from O*NET
-│   ├── matching.py          # Explainable role match score + skills gap
-│   ├── trend_score.py       # Trend score per domain
-│   ├── update_trends.py     # Refresh trends.csv ("Update data" button)
+│   ├── build_role_skills.py # Build role_skills.csv from O*NET
+│   ├── interest.py          # Score the interest questionnaire
+│   ├── assessment.py        # IT skills test: pick, grade, report
+│   ├── matching.py          # IT area fit, then explainable role score + skills gap
+│   ├── update_trends.py     # Refresh trends.csv, then trend_signals.py ("Update data" button)
+│   ├── trend_signals.py     # Direction + confidence per signal
+│   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
 │   └── validate_data.py     # Check every row has a source and date
 ├── src/
 │   ├── main.py              # Web server and JSON API (Replit entry point)
@@ -128,17 +135,18 @@ python src/main.py
 | GET | `/` | The web app (`src/static/`) |
 | GET | `/api` | List of endpoints |
 | GET | `/api/health` | Health check |
-| GET | `/api/questionnaire` | The 30 O*NET Mini-IP items, answer scale and attribution |
+| GET | `/api/questionnaire` | The 36 interest items (RIASEC type + IT area), answer scale and attribution |
+| GET / POST | `/api/assessment/start`, `/next`, `/sql`, `/result` | IT skills test: questions, the 2 strongest areas, read-only SQL runs, graded report |
 | GET | `/api/skills?type=` | Skills for the intake form (`general`, `domain_knowledge`, `technology`) |
 | GET | `/api/roles`, `/api/roles/<role_id>` | Roles; one role's skills, technologies, SDG targets and certifications |
 | GET | `/api/profiles` | Fictional demo profiles |
-| POST | `/api/questionnaire/score` | `{"answers": [{"type": "I", "value": 3}, ...]}` (values 0–4, Mini-IP scoring) → RIASEC totals (0–20) and code |
-| POST | `/api/match` | `{"answers" or "riasec", "skill_ratings": {"SK022": 4}, "technologies": ["SK130"], "education_job_zone": 4, "scenario": "baseline", "hours_per_week": 5, "top": 10}` or `{"profile_id": "P01", ...}` → ranked roles with score breakdown, gaps, learning path, SDG and the rank under current trends |
+| POST | `/api/questionnaire/score` | `{"answers": [36 numbers 1–5]}` → RIASEC totals (6–30), code, IT-area scores (0–100), warnings |
+| POST | `/api/match` | `{"interest_answers": [...36], "test": {"seed", "responses"}, "cv_areas": {...}, "skill_ratings": {"SK020": 4}, "technologies": ["SK145"], "education_job_zone": 4, "scenario": "baseline", "hours_per_week": 5, "top": 10}` (every part optional) or `{"profile_id": "P01", ...}` → IT area fit with insights, then ranked roles with score breakdown, gaps, learning path, SDG and the rank under current trends |
 | POST | `/api/explain` | Same body as `/api/match` plus `role_id` → a plain-language explanation (`source`: `llm` or `fallback`) |
 | GET | `/api/explain/status` | Whether the LLM is configured, and which model |
-| GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each field's trend score under them |
-| GET | `/api/trends?domain=` | Trend scores and the dated signals behind them |
-| POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~3 min) / check its status |
+| GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
+| GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
+| POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~2 min) / check its status |
 
 `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
 

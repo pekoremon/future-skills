@@ -21,7 +21,7 @@ Endpoints (all JSON):
     GET  /api/explain/status         whether the LLM is configured, and which model
     POST /api/cv/summary             {"text"} or {"docx_base64"} -> CV summary, skills, qualifications
     GET  /api/scenarios              future scenarios and the trend scores under each
-    GET  /api/trends                 ?domain=  trend scores and the signals behind them
+    GET  /api/trends                 ?area=  trend scores, the signals behind them and the inputs
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
     GET  /api/trends/update          status of the last update job
 
@@ -407,14 +407,20 @@ def scenarios(request):
 
 @route("GET", "/api/trends")
 def trends(request):
-    domain = request.args.get("domain")
+    """Trend scores per IT area and role, the signals behind them, and the raw inputs."""
+    area = request.args.get("area")
     scores = read_csv("trend_scores.csv")
-    signals = read_csv("trends.csv")
-    if domain:
-        scores = [s for s in scores if s["domain"] == domain]
-        signals = [s for s in signals if s["entity_type"] == "domain" and s["entity_id"] == domain]
+    signals = read_csv("trend_signals.csv")
+    subdomains = read_csv("subdomains.csv")
+    if area:
+        codes = {c for c, a in matching.SUBFIELD_AREA.items() if a == area}
+        ids = {d["subdomain_id"] for d in subdomains if d["subfield_code"] in codes}
+        roles = {r["role_id"] for r in read_csv("roles.csv") if r["subfield_code"] in codes}
+        scores = [s for s in scores if s["it_area"] == area]
+        signals = [s for s in signals if (s["layer"] == "subdomain" and s["entity_id"] in ids)
+                   or (s["layer"] == "role" and s["entity_id"] in roles)]
     return jsonify(computed_date=max((s["computed_date"] for s in scores), default=None),
-                   scores=scores, signals=signals)
+                   scores=scores, signals=signals, subdomains=subdomains, inputs=read_csv("trends.csv"))
 
 
 def run_update(arxiv: bool) -> None:
@@ -423,6 +429,10 @@ def run_update(arxiv: bool) -> None:
         done = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
                               timeout=UPDATE_TIMEOUT_S)
         code, log = done.returncode, done.stdout + done.stderr
+        if code == 0:  # the signals changed, so the 0-100 scores matching uses must too
+            done = subprocess.run([sys.executable, str(SCRIPTS / "trend_score.py")], cwd=ROOT,
+                                  capture_output=True, text=True, timeout=60)
+            code, log = done.returncode, log + done.stdout + done.stderr
     except subprocess.TimeoutExpired as e:
         code, log = -1, f"timed out after {UPDATE_TIMEOUT_S} s\n{e.stdout or ''}"
     _update_state.update(status="done" if code == 0 else "failed", returncode=code,
