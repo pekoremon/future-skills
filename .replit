@@ -53,4 +53,3 @@ outputType = "webview"
 [userenv]
 
 [userenv.shared]
-FIREWORKS_API_KEY = "fw_9fwNBd1tgh2GWBnfWYxcPQ"
