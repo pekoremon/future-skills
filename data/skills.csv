@@ -18,137 +18,170 @@ SK016,Service Orientation,general,transferable_skill,2.B.1.f,,N,O*NET 31.0 Datab
 SK017,Complex Problem Solving,general,transferable_skill,2.B.2.i,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
 SK018,Operations Analysis,general,transferable_skill,2.B.3.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
 SK019,Technology Design,general,transferable_skill,2.B.3.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK020,Equipment Selection,general,transferable_skill,2.B.3.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK021,Installation,general,transferable_skill,2.B.3.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK022,Programming,general,transferable_skill,2.B.3.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK023,Operations Monitoring,general,transferable_skill,2.B.3.g,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK024,Operation and Control,general,transferable_skill,2.B.3.h,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK025,Equipment Maintenance,general,transferable_skill,2.B.3.j,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK026,Troubleshooting,general,transferable_skill,2.B.3.k,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK027,Repairing,general,transferable_skill,2.B.3.l,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK028,Quality Control Analysis,general,transferable_skill,2.B.3.m,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK029,Judgment and Decision Making,general,transferable_skill,2.B.4.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK030,Systems Analysis,general,transferable_skill,2.B.4.g,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK031,Systems Evaluation,general,transferable_skill,2.B.4.h,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK032,Time Management,general,transferable_skill,2.B.5.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK033,Management of Financial Resources,general,transferable_skill,2.B.5.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK034,Management of Material Resources,general,transferable_skill,2.B.5.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK035,Management of Personnel Resources,general,transferable_skill,2.B.5.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK036,Administration and Management,domain_knowledge,knowledge,2.C.1.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK037,Administrative,domain_knowledge,knowledge,2.C.1.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK038,Economics and Accounting,domain_knowledge,knowledge,2.C.1.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK039,Sales and Marketing,domain_knowledge,knowledge,2.C.1.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK040,Customer and Personal Service,domain_knowledge,knowledge,2.C.1.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK041,Personnel and Human Resources,domain_knowledge,knowledge,2.C.1.f,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK042,Production and Processing,domain_knowledge,knowledge,2.C.2.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK043,Food Production,domain_knowledge,knowledge,2.C.2.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK044,Computers and Electronics,domain_knowledge,knowledge,2.C.3.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK045,Engineering and Technology,domain_knowledge,knowledge,2.C.3.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK046,Design,domain_knowledge,knowledge,2.C.3.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK047,Building and Construction,domain_knowledge,knowledge,2.C.3.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK048,Mechanical,domain_knowledge,knowledge,2.C.3.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK049,Mathematics (knowledge),domain_knowledge,knowledge,2.C.4.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK050,Physics,domain_knowledge,knowledge,2.C.4.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK051,Chemistry,domain_knowledge,knowledge,2.C.4.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK052,Biology,domain_knowledge,knowledge,2.C.4.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK053,Psychology,domain_knowledge,knowledge,2.C.4.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK054,Sociology and Anthropology,domain_knowledge,knowledge,2.C.4.f,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK055,Geography,domain_knowledge,knowledge,2.C.4.g,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK056,Medicine and Dentistry,domain_knowledge,knowledge,2.C.5.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK057,Therapy and Counseling,domain_knowledge,knowledge,2.C.5.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK058,Education and Training,domain_knowledge,knowledge,2.C.6,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK059,English Language,domain_knowledge,knowledge,2.C.7.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK060,Fine Arts,domain_knowledge,knowledge,2.C.7.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK061,Philosophy and Theology,domain_knowledge,knowledge,2.C.7.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK062,Public Safety and Security,domain_knowledge,knowledge,2.C.8.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK063,Law and Government,domain_knowledge,knowledge,2.C.8.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK064,Telecommunications,domain_knowledge,knowledge,2.C.9.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK065,Communications and Media,domain_knowledge,knowledge,2.C.9.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK066,Adobe After Effects,technology,technology_skills,,Video creation and editing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK067,Adobe Creative Cloud software,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK068,Adobe Illustrator,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK069,Adobe InDesign,technology,technology_skills,,Desktop publishing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK070,Adobe Photoshop,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK071,Amazon Redshift,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK072,Amazon Web Services AWS software,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK073,Apache Airflow,technology,technology_skills,,Procedure management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK074,Apache Hadoop,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK075,Apache Kafka,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK076,Apache Spark,technology,technology_skills,,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK077,Apple iOS,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK078,Apple macOS,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK079,Atlassian Confluence,technology,technology_skills,,Project management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK080,Atlassian JIRA,technology,technology_skills,,Content workflow software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK081,Bash,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK082,C,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK083,C#,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK084,C++,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK085,Canva,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK086,Cascading style sheets CSS,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK087,Docker,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK088,Extensible markup language XML,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK089,Figma,technology,technology_skills,,Graphical user interface development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK090,Git,technology,technology_skills,,File versioning software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK091,GitHub,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK092,Go,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK093,Google Angular,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK094,GraphQL,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK095,Hypertext markup language HTML,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK096,IBM SPSS Statistics,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK097,IBM Terraform,technology,technology_skills,,Configuration management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK098,Informatica software,technology,technology_skills,,Metadata management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK099,JavaScript,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK100,JavaScript Object Notation JSON,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK101,Jenkins CI,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK102,Kubernetes,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK103,Linux,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK104,Microsoft Access,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK105,Microsoft Active Directory,technology,technology_skills,,Internet directory services software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK106,Microsoft Azure software,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK107,Microsoft Excel,technology,technology_skills,,Spreadsheet software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK108,Microsoft Office software,technology,technology_skills,,Office suite software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK109,Microsoft Outlook,technology,technology_skills,,Electronic mail software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK110,Microsoft Power BI,technology,technology_skills,,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK111,Microsoft PowerPoint,technology,technology_skills,,Presentation software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK112,Microsoft PowerShell,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK113,Microsoft SQL Server,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK114,Microsoft SQL Server Integration Services SSIS,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK115,Microsoft SharePoint,technology,technology_skills,,Document management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK116,Microsoft Visual Studio,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK117,Microsoft Windows,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK118,Microsoft Word,technology,technology_skills,,Word processing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK119,MongoDB,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK120,MySQL,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK121,NoSQL,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK122,Node.js,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK123,Oracle Database,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK124,Oracle Java,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK125,Oracle PL/SQL,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK126,PHP,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK127,Perl,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK128,PostgreSQL,technology,technology_skills,,Object oriented data base management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK129,PyTorch,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK130,Python,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK131,R,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK132,React,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK133,SAP software,technology,technology_skills,,Enterprise resource planning ERP software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK134,SAS,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK135,Salesforce software,technology,technology_skills,,Customer relationship management CRM software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK136,Scala,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK137,ServiceNow,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK138,Shell script,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK139,Snowflake,technology,technology_skills,,Data mining software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK140,Splunk Enterprise,technology,technology_skills,,Enterprise system management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK141,Spring Boot,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK142,Spring Framework,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK143,Structured query language SQL,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK144,Tableau,technology,technology_skills,,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK145,TensorFlow,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK146,The MathWorks MATLAB,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK147,Transact-SQL,technology,technology_skills,,Object oriented data base management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK148,TypeScript,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK149,UNIX,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK150,Vue.js,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK151,WordPress,technology,technology_skills,,Web page creation and editing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK152,jQuery,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-SK153,Microsoft Visual Basic for Applications VBA,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK020,Programming,general,transferable_skill,2.B.3.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK021,Operations Monitoring,general,transferable_skill,2.B.3.g,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK022,Operation and Control,general,transferable_skill,2.B.3.h,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK023,Equipment Maintenance,general,transferable_skill,2.B.3.j,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK024,Troubleshooting,general,transferable_skill,2.B.3.k,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK025,Repairing,general,transferable_skill,2.B.3.l,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK026,Quality Control Analysis,general,transferable_skill,2.B.3.m,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK027,Judgment and Decision Making,general,transferable_skill,2.B.4.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK028,Systems Analysis,general,transferable_skill,2.B.4.g,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK029,Systems Evaluation,general,transferable_skill,2.B.4.h,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK030,Time Management,general,transferable_skill,2.B.5.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK031,Management of Financial Resources,general,transferable_skill,2.B.5.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK032,Management of Material Resources,general,transferable_skill,2.B.5.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK033,Management of Personnel Resources,general,transferable_skill,2.B.5.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK034,Administration and Management,domain_knowledge,knowledge,2.C.1.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK035,Administrative,domain_knowledge,knowledge,2.C.1.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK036,Economics and Accounting,domain_knowledge,knowledge,2.C.1.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK037,Sales and Marketing,domain_knowledge,knowledge,2.C.1.d,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK038,Customer and Personal Service,domain_knowledge,knowledge,2.C.1.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK039,Personnel and Human Resources,domain_knowledge,knowledge,2.C.1.f,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK040,Computers and Electronics,domain_knowledge,knowledge,2.C.3.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK041,Engineering and Technology,domain_knowledge,knowledge,2.C.3.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK042,Design,domain_knowledge,knowledge,2.C.3.c,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK043,Mechanical,domain_knowledge,knowledge,2.C.3.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK044,Mathematics (knowledge),domain_knowledge,knowledge,2.C.4.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK045,Psychology,domain_knowledge,knowledge,2.C.4.e,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK046,Education and Training,domain_knowledge,knowledge,2.C.6,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK047,English Language,domain_knowledge,knowledge,2.C.7.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK048,Public Safety and Security,domain_knowledge,knowledge,2.C.8.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK049,Law and Government,domain_knowledge,knowledge,2.C.8.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK050,Telecommunications,domain_knowledge,knowledge,2.C.9.a,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK051,Communications and Media,domain_knowledge,knowledge,2.C.9.b,,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK052,Adobe Creative Cloud software,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK053,Adobe Illustrator,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK054,Adobe Photoshop,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK055,Adobe XD,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK056,Amazon Redshift,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK057,Amazon Web Services AWS CloudFormation,technology,technology_skills,,Cloud-based management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK058,Amazon Web Services AWS SageMaker,technology,technology_skills,,Cloud-based management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK059,Amazon Web Services AWS software,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK060,Ansible software,technology,technology_skills,,Expert system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK061,Apache Airflow,technology,technology_skills,,Procedure management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK062,Apache Hadoop,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK063,Apache JMeter,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK064,Apache Kafka,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK065,Apache Spark,technology,technology_skills,,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK066,Appium,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK067,Apple iOS,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK068,Apple macOS,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK069,Atlassian Confluence,technology,technology_skills,,Project management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK070,Atlassian JIRA,technology,technology_skills,,Content workflow software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK071,Autodesk Maya,technology,technology_skills,,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK072,Bash,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK073,Border Gateway Protocol BGP,technology,technology_skills,,Switch or router software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK074,C,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK075,C#,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK076,C++,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK077,Cascading style sheets CSS,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK078,Content management systems CMS,technology,technology_skills,,Web page creation and editing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK079,Docker,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK080,Drupal,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK081,eMASS,technology,technology_skills,,Risk management data and analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK082,Enterprise application integration EAI software,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK083,Extensible markup language XML,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK084,Figma,technology,technology_skills,,Graphical user interface development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK085,Firewall software,technology,technology_skills,,Network security and virtual private network VPN equipment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK086,Git,technology,technology_skills,,File versioning software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK087,GitHub,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK088,Go,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK089,Google Analytics,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK090,Google Angular,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK091,Grafana Labs Grafana Cloud,technology,technology_skills,,Graphical user interface development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK092,GraphQL,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK093,Hugging Face,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK094,Hypertext markup language HTML,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK095,IBM Terraform,technology,technology_skills,,Configuration management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK096,Informatica software,technology,technology_skills,,Metadata management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK097,JavaScript,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK098,JavaScript framework software,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK099,JavaScript Object Notation JSON,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK100,Jenkins CI,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK101,jQuery,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK102,Kali Linux,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK103,Kubernetes,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK104,LangChain,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK105,Linux,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK106,Metasploit,technology,technology_skills,,Transaction security and virus protection software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK107,Microsoft Access,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK108,Microsoft Active Directory,technology,technology_skills,,Internet directory services software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK109,Microsoft Azure Data Factory,technology,technology_skills,,Cloud-based management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK110,Microsoft Azure DevOps Services,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK111,Microsoft Azure software,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK112,Microsoft Excel,technology,technology_skills,,Spreadsheet software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK113,Microsoft Internet Information Services (IIS),technology,technology_skills,,Transaction server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK114,Microsoft Internet Information Services (IIS) Manager,technology,technology_skills,,Transaction server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK115,Microsoft Office software,technology,technology_skills,,Office suite software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK116,Microsoft Outlook,technology,technology_skills,,Electronic mail software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK117,Microsoft Playwright,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK118,Microsoft Power BI,technology,technology_skills,,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK119,Microsoft PowerPoint,technology,technology_skills,,Presentation software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK120,Microsoft PowerShell,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK121,Microsoft SharePoint,technology,technology_skills,,Document management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK122,Microsoft SQL Server,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK123,Microsoft SQL Server Integration Services SSIS,technology,technology_skills,,Enterprise application integration software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK124,Microsoft Visual Studio,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK125,Microsoft Windows,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK126,Microsoft Windows Server,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK127,MITRE ATT&CK software,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK128,MongoDB,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK129,MySQL,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK130,Nmap,technology,technology_skills,,Transaction security and virus protection software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK131,Node.js,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK132,NoSQL,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK133,NumPy,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK134,Operational Data Store ODS software,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK135,Oracle Database,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK136,Oracle Java,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK137,Oracle PL/SQL,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK138,pandas,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK139,PHP,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK140,Portswigger BurP Suite,technology,technology_skills,,Transaction security and virus protection software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK141,PostgreSQL,technology,technology_skills,,Object oriented data base management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK142,Postman,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK143,Prometheus,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK144,PySpark,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK145,Python,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK146,PyTorch,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK147,Qualys Cloud Platform,technology,technology_skills,,Cloud-based protection or security software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK148,R,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK149,React,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK150,Red Hat Enterprise Linux,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK151,Relational database management system software,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK152,REST Assured,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK153,RESTful API,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK154,Rust programming language,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK155,Salesforce software,technology,technology_skills,,Customer relationship management CRM software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK156,SAP software,technology,technology_skills,,Enterprise resource planning ERP software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK157,SAS,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK158,Scala,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK159,Scikit-learn,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK160,Selenium,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK161,ServiceNow,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK162,Shell script,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK163,Single sign-on SSO,technology,technology_skills,,Authentication server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK164,Snowflake,technology,technology_skills,,Data mining software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK165,Software development tools,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK166,Solidity,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK167,Splunk Enterprise,technology,technology_skills,,Cloud-based management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK168,Spring Boot,technology,technology_skills,,Application server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK169,Spring Framework,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK170,Structured query language SQL,technology,technology_skills,,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK171,Tableau,technology,technology_skills,,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK172,Tenable Nessus,technology,technology_skills,,Transaction security and virus protection software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK173,TensorFlow,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK174,TestNG,technology,technology_skills,,Program testing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK175,The MathWorks MATLAB,technology,technology_skills,,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK176,Transact-SQL,technology,technology_skills,,Object oriented data base management software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK177,TypeScript,technology,technology_skills,,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK178,Unity Technologies Unity,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK179,UNIX,technology,technology_skills,,Operating system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK180,Unreal Technology Unreal Engine,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK181,Vector database software,technology,technology_skills,,Data base management system software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK182,Vue.js,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK183,Web application framework software,technology,technology_skills,,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK184,Web application software,technology,technology_skills,,Development environment software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK185,Web server software,technology,technology_skills,,Transaction server software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+SK186,WordPress,technology,technology_skills,,Web page creation and editing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
