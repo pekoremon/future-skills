@@ -12,9 +12,9 @@ const TYPES = {
 const ORDER = ["R", "I", "A", "S", "E", "C"];
 const AREA_NAMES = { software_dev: "Software Engineering", data_ai: "Data & AI", cybersecurity: "Cybersecurity",
   cloud_infra: "Cloud, Infrastructure & Networking", web_ux: "Web & Interface Design", it_mgmt: "IT Management & Analysis" };
+const SUBFIELD_AREA = { SE: "software_dev", DA: "data_ai", CS: "cybersecurity", CI: "cloud_infra", WD: "web_ux", IM: "it_mgmt" };
 const RATING = ["None", "Basic", "Some", "Good", "Strong", "Expert"];
 const ZONES = { 3: "Diploma", 4: "Bachelor's degree", 5: "Master's degree or higher" };
-const DOMAINS = { generic_tech: "ICT", agriculture: "Agriculture", finance: "Finance", healthcare: "Healthcare", overall: "Malaysia overall", services: "Services" };
 const FLAGS = {
   needs_extra_education: "Needs further study",
   needs_extra_qualification: "Needs extra qualification",
@@ -24,7 +24,6 @@ const FLAGS = {
 const QUIET_FLAGS = ["area_not_scored", "interest_not_scored"];  // explained once at the top of the page
 const PART_LABEL = { area: "IT area fit", interest: "Interest fit", skill: "Skill fit", trend: "AI-era trend" };
 const PART_NAMES = { my_demand: "Malaysian demand", ai_momentum: "AI momentum" };
-const domainText = (t) => String(t).replace(/\b(generic_tech|agriculture|finance|healthcare) domain\b/g, (_, d) => `${DOMAINS[d]} field`);
 const STORE_KEY = "future-skills-v1";
 // The 51 O*NET skills and knowledge areas, grouped so a student rates 21 groups instead.
 // A group's rating is copied to every O*NET skill in it, so matching still runs per skill.
@@ -481,7 +480,7 @@ function matchCard(m, rank) {
           <div class="explain-out" aria-live="polite" hidden></div>
         </div>
         <ul style="margin: 0; padding-left: 18px">${parts}</ul>
-        <p class="small muted">${esc(m.explain.area)}. ${esc(m.explain.interest)}. ${esc(domainText(m.explain.trend))}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
+        <p class="small muted">${esc(m.explain.area)}. ${esc(m.explain.interest)}. ${esc(m.explain.trend)}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
         ${gaps ? `<div><h3>Biggest skill gaps</h3>${gaps}</div>` : '<p class="note">You meet the level O*NET lists for every rated skill of this role.</p>'}
         ${d.tech_missing.length ? `<div class="stack" style="gap: 8px"><h3>Technologies to learn</h3><div class="row" style="gap: 6px">${d.tech_missing.map((t) => `<span class="chip plain">${esc(t.skill_name)}</span>`).join("")}</div></div>` : ""}
         ${d.tech_used.length ? `<p class="small muted">You already use: ${d.tech_used.map((t) => esc(t.skill_name)).join(", ")}</p>` : ""}
@@ -583,8 +582,8 @@ async function pageResults() {
         ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === sc.id}">${esc(s.name)}</button>`).join("")}
       </div>
       <p class="small">${esc(sc.description)}</p>
-      <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Field scores:
-        ${Object.entries(sc.trend_scores).map(([d, v]) => `${esc(DOMAINS[d] || d)} ${fmt(v)}`).join(" · ")}. A field with only one measured part keeps the same score.</p>
+      <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Area scores:
+        ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.</p>
       <label class="row small">Study time per week
         <select id="hpw">${[3, 5, 10, 15, 20].map((h) => `<option value="${h}"${h === Number(state.hoursPerWeek) ? " selected" : ""}>${h} hours</option>`).join("")}</select>
       </label>
@@ -608,7 +607,7 @@ async function pageResults() {
     <h1>Best matches for your level</h1>
     ${noArea ? '<div class="warn">IT area fit is not included because you have not taken the skills test. <a href="#/test">Take it now</a> to update the ranking.</div>' : `<div class="card stack" style="gap: 6px"><h2>Your IT areas</h2>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div>`}
     <div class="card stack" style="gap: 8px">
-      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
+      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
       <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
     ${scenarioCard}
@@ -627,46 +626,54 @@ async function pageResults() {
   draw();
 }
 
-let trendTab = "agriculture";
+let trendTab = "software_dev";
 async function pageTrends() {
   const t = await api("/api/trends");
   const status = await api("/api/trends/update");
-  const scoreCards = t.scores.map((s) => `
+  const scoreCards = t.scores.filter((s) => !s.role_id).map((s) => `
     <div class="card stack" style="gap: 6px">
-      <span class="muted small">${esc(DOMAINS[s.domain] || s.domain)}</span>
+      <span class="muted small">${esc(AREA_NAMES[s.it_area] || s.it_area)}</span>
       <span class="big">${esc(s.trend_score)}</span>
       <span class="small">Malaysian demand: <strong>${esc(s.my_demand_score)}</strong> · AI momentum: <strong>${esc(s.ai_momentum_score)}</strong></span>
       ${s.missing ? `<span class="chip warn-chip">No data: ${esc(s.missing.split(";").map((k) => PART_NAMES[k] || k).join(", "))}</span>` : ""}
     </div>`).join("");
-  const domains = ["agriculture", "finance", "healthcare", "generic_tech", "overall"];
-  const signals = t.signals.filter((r) => r.entity_type === "domain" && r.entity_id === trendTab);
-  const other = t.signals.filter((r) => r.entity_type !== "domain");
-  const rows = (list) => list.map((r) => `
-    <tr><td>${esc(r.metric.replace(/_/g, " "))}</td><td class="num">${esc(r.value)} ${esc(r.unit === "percent" ? "%" : r.unit)}</td>
+  const sub = t.subdomains.find((d) => SUBFIELD_AREA[d.subfield_code] === trendTab) || {};
+  const roleIds = new Set(t.scores.filter((s) => s.role_id && s.it_area === trendTab).map((s) => s.role_id));
+  const signals = t.signals.filter((r) => (r.layer === "subdomain" && r.entity_id === sub.subdomain_id) || (r.layer === "role" && roleIds.has(r.entity_id)));
+  const context = t.signals.filter((r) => r.scored !== "TRUE");
+  const sigRows = (list) => list.map((r) => `
+    <tr><td>${esc(r.entity_label)}</td><td>${esc(r.signal.replace(/_/g, " "))}</td><td>${esc(r.direction.replace(/_/g, " "))}${r.composition_effect === "TRUE" ? ' <span class="chip warn-chip" title="All papers in the category grew faster, so the AI share did not rise">composition effect</span>' : ""}</td>
+    <td>${esc(r.confidence)}</td><td class="small">${esc(r.detail)}<br><span class="muted">${esc(r.confidence_reason)}</span></td></tr>`).join("");
+  const inRows = t.inputs.map((r) => `
+    <tr><td>${esc(r.entity_type)} · ${esc(r.entity_id)}</td><td>${esc(r.metric.replace(/_/g, " "))}</td><td class="num">${r.value ? esc(r.value) : `≤ ${esc(r.upper_bound)}`} ${esc(r.unit === "percent" ? "%" : r.unit)}</td>
     <td>${esc(r.period_start)}${r.period_end && r.period_end !== r.period_start ? ` – ${esc(r.period_end)}` : ""}</td>
-    <td>${esc(r.note)}</td><td><a href="${safeUrl(r.source_url)}">${esc(r.source_name)}</a><br><span class="muted">${esc(r.source_date)}</span></td></tr>`).join("");
+    <td><a href="${safeUrl(r.source_url)}">${esc(r.source_name)}</a><br><span class="muted">released ${esc(r.release_date)} · fetched ${esc(r.fetched_date)}</span></td></tr>`).join("");
+  const head = "<tr><th>For</th><th>Signal</th><th>Direction</th><th>Confidence</th><th>Detail</th></tr>";
   render(`
   <div class="stack">
     <p class="eyebrow">AI-era trend signals</p>
-    <h1>Which fields are growing, and how fast is AI entering them?</h1>
-    <p class="muted">Every number below comes from DOSM / OpenDOSM (Malaysia) or the arXiv API (global AI research), with its source and date. Scores computed ${esc(t.computed_date)}.</p>
+    <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
+    <p class="muted">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
     <div class="grid">${scoreCards}</div>
     <div class="card stack" style="gap: 8px">
       <h2>How the trend score works</h2>
-      <p class="small"><strong>Malaysian demand</strong> = 50 + 10 × (the field's average employment growth over the last 4 quarters − the national average). <strong>AI momentum</strong> = 50 + 100 × (AI papers in the last 6 months ÷ the 6 months before − 1). The trend score is the average of the parts that have data; a missing part is never estimated. Formula version v1; the equal weights are a team choice, and the future scenarios on the Matches page change them.</p>
+      <p class="small">Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction. <strong>Malaysian demand</strong>: MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.</p>
+      <p class="small muted">Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked "composition effect".</p>
     </div>
     <div class="card stack" style="gap: 10px">
       <h2>Update data</h2>
-      <p class="small muted">Fetches the latest OpenDOSM figures (and optionally arXiv, about 3 minutes), then recomputes the scores. If a source fails, its previous data is kept.</p>
+      <p class="small muted">Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.</p>
       <label class="row small"><input type="checkbox" id="arxiv"> Also refresh arXiv paper counts</label>
       <div class="row"><button class="btn primary" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
       <pre class="log" id="log" hidden></pre>
     </div>
-    <h2>Signals by field</h2>
-    <div class="tabs" role="group" aria-label="Field">${domains.map((d) => `<button type="button" data-tab="${d}" aria-pressed="${d === trendTab}">${esc(DOMAINS[d])}</button>`).join("")}</div>
-    <div class="table-wrap"><table><thead><tr><th>Metric</th><th>Value</th><th>Period</th><th>Note</th><th>Source</th></tr></thead><tbody>${rows(signals)}</tbody></table></div>
-    <details class="group"><summary><span>Occupation and youth signals <span class="muted small">(${other.length})</span></span></summary>
-      <div class="group-body"><div class="table-wrap"><table><thead><tr><th>Metric</th><th>Value</th><th>Period</th><th>Note</th><th>Source</th></tr></thead><tbody>${rows(other)}</tbody></table></div></div></details>
+    <h2>Signals by IT area</h2>
+    <div class="tabs" role="group" aria-label="IT area">${Object.keys(AREA_NAMES).map((d) => `<button type="button" data-tab="${d}" aria-pressed="${d === trendTab}">${esc(AREA_NAMES[d])}</button>`).join("")}</div>
+    <div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(signals)}</tbody></table></div>
+    <details class="group"><summary><span>ICT sector background (not scored) <span class="muted small">(${context.length})</span></span></summary>
+      <div class="group-body"><div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(context)}</tbody></table></div></div></details>
+    <details class="group"><summary><span>All input data with sources <span class="muted small">(${t.inputs.length})</span></span></summary>
+      <div class="group-body"><div class="table-wrap"><table><thead><tr><th>Entity</th><th>Metric</th><th>Value</th><th>Period</th><th>Source</th></tr></thead><tbody>${inRows}</tbody></table></div></div></details>
   </div>`);
   app.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => { trendTab = b.dataset.tab; pageTrends().catch(showError); }; });
   const btn = document.getElementById("update");

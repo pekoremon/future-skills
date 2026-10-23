@@ -167,9 +167,12 @@ class TestApi(unittest.TestCase):
         self.assertEqual(empty.json["sources_used"], [])
 
     def test_trends(self):
-        r = self.client.get("/api/trends?domain=finance").json
-        self.assertEqual([s["domain"] for s in r["scores"]], ["finance"])
-        self.assertTrue(all(s["entity_id"] == "finance" for s in r["signals"]))
+        r = self.client.get("/api/trends?area=cybersecurity").json
+        self.assertEqual({s["it_area"] for s in r["scores"]}, {"cybersecurity"})
+        self.assertEqual({s["entity_id"] for s in r["signals"] if s["layer"] == "role"},
+                         {"IT11", "IT12", "IT13", "IT14"})
+        self.assertTrue(any(s["entity_id"] == "cybersecurity" for s in r["signals"]))
+        self.assertTrue(r["inputs"])
 
     def test_update_starts_once(self):
         with mock.patch.object(main.threading, "Thread"):  # do not really fetch data

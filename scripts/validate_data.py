@@ -35,9 +35,12 @@ TABLES = {
         "required": ["role_id", "skill_id", "row_type"],  # importance/level checked below
     },
     "trends.csv": {
-        "columns": ["trend_id", "entity_type", "entity_id", "metric", "value", "unit",
-                    "period_start", "period_end", "geography", "note"],
-        "required": ["trend_id", "entity_type", "entity_id", "metric", "value"],
+        "columns": ["trend_id", "entity_type", "entity_id", "metric", "value", "upper_bound", "unit",
+                    "period_start", "period_end", "geography", "note", "is_proxy", "is_censored",
+                    "series_break_flag", "fetch_method"],
+        "required": ["trend_id", "entity_type", "entity_id", "metric", "fetch_method"],
+        # member A's trend inputs say when the source published a figure and when we fetched it
+        "sources": ["source_name", "source_url", "release_date", "fetched_date"],
     },
     "sdg_map.csv": {
         "columns": ["entity_type", "entity_id", "sdg_target", "link_strength", "rationale"],
@@ -67,8 +70,12 @@ ALLOWED = {
     ("skills.csv", "is_in_demand_tech"): {"Y", "N"},  # Y = O*NET In Demand flag
     ("role_skills.csv", "row_type"): {"skill_knowledge", "in_demand_tech"},
     ("sdg_map.csv", "link_strength"): {"direct", "indirect"},
-    ("trends.csv", "entity_type"): {"role", "skill", "domain", "occupation", "occupation_group",
-                                    "population_group"},
+    ("trends.csv", "entity_type"): {"subdomain", "mycol_occupation", "occupation", "occupation_group",
+                                    "sector"},
+    ("trends.csv", "is_proxy"): {"TRUE", "FALSE"},
+    ("trends.csv", "is_censored"): {"TRUE", "FALSE"},
+    ("trends.csv", "series_break_flag"): {"TRUE", "FALSE"},
+    ("trends.csv", "fetch_method"): {"api", "dosm_file", "manual_snapshot"},
     ("sdg_map.csv", "entity_type"): {"role", "skill"},
     ("courses.csv", "hrd_corp_claimable"): {"yes", "no", "unknown", ""},
     ("certifications.csv", "cert_type"): {"licence", "certification"},
@@ -117,7 +124,8 @@ def check_table(name: str, header: list[str], rows: list[dict]) -> list[str]:
     spec = TABLES[name]
     errors = []
 
-    missing = [c for c in spec["columns"] + SOURCE_COLUMNS if c not in header]
+    sources = spec.get("sources", SOURCE_COLUMNS)
+    missing = [c for c in spec["columns"] + sources if c not in header]
     if missing:
         return [f"{name}: missing columns {missing}"]
 
@@ -126,7 +134,7 @@ def check_table(name: str, header: list[str], rows: list[dict]) -> list[str]:
         where = f"{name} line {i}"
         values = {k: (v or "").strip() for k, v in row.items() if k}
 
-        for col in spec["required"] + SOURCE_COLUMNS:
+        for col in spec["required"] + sources:
             if not values.get(col):
                 errors.append(f"{where}: '{col}' is empty")
 
@@ -134,7 +142,11 @@ def check_table(name: str, header: list[str], rows: list[dict]) -> list[str]:
         if url and not url.startswith(("http://", "https://")):
             errors.append(f"{where}: source_url must start with http:// or https://")
 
-        for col in ("source_date", "verified_date", "period_start", "period_end"):
+        if name == "trends.csv" and not values.get("value") and not values.get("upper_bound"):
+            errors.append(f"{where}: needs a 'value', or an 'upper_bound' for a censored figure")
+
+        for col in ("source_date", "verified_date", "period_start", "period_end", "release_date",
+                    "fetched_date"):
             if values.get(col) and not is_valid_date(values[col]):
                 errors.append(f"{where}: '{col}' must be a real past date in YYYY-MM-DD")
 

@@ -387,6 +387,10 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict, fits: 
     area = fits.get(role["it_area"])
     skill = skill_score(profile, data["role_skills"].get(rid, []), data["skills"])
     trend, trend_why, has_trend = role_trend(role, trend_scores)
+    parts_now = data["trend_parts"].get(rid)
+    if has_trend and parts_now and trend_why == "Trend score of this role":
+        trend_why += "".join(f", {label} {parts_now[k]:g}" for k, label in
+                             (("demand", "Malaysian demand"), ("ai", "AI momentum")) if parts_now[k] is not None)
     interest = profile.get("interest") if (profile.get("interest") or {}).get("usable") else None
     interest_fit, interest_why = interest_score(interest and interest["riasec"], role)
 
