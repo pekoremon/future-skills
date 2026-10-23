@@ -8,6 +8,10 @@
 - No API keys or external services are needed to use the bundled CSV data. `PROJECT_NAME` in `.env.example` is optional.
 - Outside the workflow, `python src/main.py` defaults to port 8080; `PORT` overrides it.
 
+## IT skills test
+
+Open **IT Test** in the app (`#/test`). Questions come from `data/it_assessment.json`. Coding answers run in the student's browser with Pyodide, loaded from cdn.jsdelivr.net, so the browser needs internet access; nothing extra is installed on Replit. SQL answers run on the server in a read-only, in-memory SQLite database.
+
 ## Checks
 
 ```sh

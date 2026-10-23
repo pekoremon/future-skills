@@ -7,6 +7,10 @@ Endpoints (all JSON):
     GET  /api                        list of endpoints
     GET  /api/health
     GET  /api/questionnaire          the 30 Mini-IP items, answer scale and attribution
+    GET  /api/assessment/start       IT skills test: a seed, the 6 screen questions and the rules
+    POST /api/assessment/next        seed + screen answers -> the 2 strongest domains and 8 questions
+    POST /api/assessment/sql         question id + SQL -> the rows it returns (read-only SQLite)
+    POST /api/assessment/result      seed + all answers -> graded answers and domain readiness
     GET  /api/skills                 ?type=general|domain_knowledge|technology
     GET  /api/roles
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
@@ -28,6 +32,7 @@ import csv
 import json
 import mimetypes
 import os
+import random
 import re
 import subprocess
 import sys
@@ -43,7 +48,8 @@ SCRIPTS = ROOT / "scripts"
 STATIC = Path(__file__).resolve().parent / "static"
 sys.path.insert(0, str(SCRIPTS))
 
-import cv_reader  # noqa: E402  (scripts/ is added to the path above)
+import assessment  # noqa: E402  (scripts/ is added to the path above)
+import cv_reader  # noqa: E402
 import explain  # noqa: E402
 import matching  # noqa: E402
 
@@ -224,6 +230,54 @@ def health(request):
 @route("GET", "/api/questionnaire")
 def questionnaire(request):
     return jsonify(json.loads((DATA / "riasec_items.json").read_text(encoding="utf-8")))
+
+
+def assessment_input(request) -> tuple[int, dict]:
+    """Seed and answers from an assessment request, with every question id checked."""
+    data = body(request)
+    seed, responses = data.get("seed"), data.get("responses", {})
+    if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed < 2 ** 31:
+        raise BadRequest("'seed' must be the integer from /api/assessment/start")
+    if not isinstance(responses, dict):
+        raise BadRequest("'responses' must be an object of question id -> answer")
+    unknown = set(responses) - set(assessment.questions_by_id())
+    if unknown:
+        raise BadRequest(f"unknown question id(s): {', '.join(sorted(unknown))}")
+    return seed, responses
+
+
+@route("GET", "/api/assessment/start")
+def assessment_start(request):
+    bank = assessment.load_bank()
+    seed = random.randrange(2 ** 31)
+    return jsonify(seed=seed, name=bank["name"], disclaimer=bank["disclaimer"],
+                   selection=bank["selection"], domains=bank["domains"],
+                   questions=[assessment.public(q, seed) for q in assessment.screen_questions(seed)])
+
+
+@route("POST", "/api/assessment/next")
+def assessment_next(request):
+    seed, responses = assessment_input(request)
+    domains = assessment.top_domains(seed, responses)
+    return jsonify(domains=domains,
+                   questions=[assessment.public(q, seed) for q in assessment.deep_questions(seed, domains)])
+
+
+@route("POST", "/api/assessment/sql")
+def assessment_sql(request):
+    data = body(request)
+    q = assessment.questions_by_id().get(data.get("id"))
+    if q is None or q["type"] != "sql":
+        raise BadRequest("'id' must be a SQL question id")
+    try:
+        return jsonify(assessment.run_sql(q, data.get("sql")))
+    except assessment.AssessmentError as e:
+        raise BadRequest(str(e)) from None
+
+
+@route("POST", "/api/assessment/result")
+def assessment_result(request):
+    return jsonify(assessment.report(*assessment_input(request)))
 
 
 @route("GET", "/api/skills")
