@@ -327,7 +327,7 @@ def explain_match(request):
 @route("GET", "/api/explain/status")
 def explain_status(request):
     return jsonify(configured=explain.configured(), model=explain.model_name(),
-                   provider="Fireworks AI")
+                   provider="Fireworks AI", env_names_seen=explain.env_names_seen())
 
 
 @route("GET", "/api/scenarios")
@@ -410,6 +410,8 @@ def main() -> None:
     port = int(os.getenv("PORT", "8080"))
     server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print(f"Future Skills running on http://0.0.0.0:{port}", flush=True)
+    print(f"Explain feature: LLM {'configured' if explain.configured() else 'NOT configured'}"
+          f" (env names seen: {explain.env_names_seen() or 'none'})", flush=True)
     server.serve_forever()
 
 

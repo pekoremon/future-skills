@@ -44,11 +44,30 @@ _cache = {}
 
 
 def configured() -> bool:
-    return bool(os.getenv("FIREWORKS_API_KEY"))
+    return bool(api_key())
+
+
+def _env(name: str) -> str:
+    """Environment value by name, tolerating stray spaces or case in the secret's name."""
+    if os.getenv(name):
+        return os.environ[name].strip()
+    for key, value in os.environ.items():
+        if key.strip().upper() == name and value.strip():
+            return value.strip()
+    return ""
+
+
+def api_key() -> str:
+    return _env("FIREWORKS_API_KEY")
+
+
+def env_names_seen() -> list[str]:
+    """Names (never values) of environment variables that mention Fireworks, for diagnosis."""
+    return sorted(repr(k) for k in os.environ if "FIREWORKS" in k.upper())
 
 
 def model_name() -> str:
-    return os.getenv("FIREWORKS_MODEL") or DEFAULT_MODEL
+    return _env("FIREWORKS_MODEL") or DEFAULT_MODEL
 
 
 def build_facts(match: dict) -> dict:
@@ -123,7 +142,7 @@ def _call_llm(facts: dict) -> str:
         ],
     }
     req = urllib.request.Request(API_URL, data=json.dumps(body).encode("utf-8"), headers={
-        "Authorization": f"Bearer {os.environ['FIREWORKS_API_KEY']}",
+        "Authorization": f"Bearer {api_key()}",
         "Content-Type": "application/json", "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
         data = json.loads(r.read())
