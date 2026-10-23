@@ -53,7 +53,12 @@
         "15-1251.00",
         "15-1253.00"
       ],
-      "description": "Writing, testing and maintaining application code."
+      "description": "Writing, testing and maintaining application code.",
+      "onet_titles": [
+        "Software Developers",
+        "Computer Programmers",
+        "Software Quality Assurance Analysts and Testers"
+      ]
     },
     {
       "id": "cybersecurity",
@@ -65,7 +70,13 @@
         "15-1299.05",
         "15-1299.06"
       ],
-      "description": "Finding, preventing and responding to security threats."
+      "description": "Finding, preventing and responding to security threats.",
+      "onet_titles": [
+        "Information Security Analysts",
+        "Penetration Testers",
+        "Information Security Engineers",
+        "Digital Forensics Analysts"
+      ]
     },
     {
       "id": "networking",
@@ -76,7 +87,12 @@
         "15-1231.00",
         "15-1244.00"
       ],
-      "description": "Designing, addressing and troubleshooting networks."
+      "description": "Designing, addressing and troubleshooting networks.",
+      "onet_titles": [
+        "Computer Network Architects",
+        "Computer Network Support Specialists",
+        "Network and Computer Systems Administrators"
+      ]
     },
     {
       "id": "data_ai",
@@ -88,7 +104,13 @@
         "15-1242.00",
         "15-1243.00"
       ],
-      "description": "Querying data, building and evaluating models."
+      "description": "Querying data, building and evaluating models.",
+      "onet_titles": [
+        "Data Scientists",
+        "Business Intelligence Analysts",
+        "Database Administrators",
+        "Database Architects"
+      ]
     },
     {
       "id": "cloud_systems",
@@ -98,7 +120,11 @@
         "15-1244.00",
         "15-1299.08"
       ],
-      "description": "Running reliable servers, containers and cloud services."
+      "description": "Running reliable servers, containers and cloud services.",
+      "onet_titles": [
+        "Network and Computer Systems Administrators",
+        "Computer Systems Engineers/Architects"
+      ]
     },
     {
       "id": "web_ux",
@@ -108,7 +134,11 @@
         "15-1254.00",
         "15-1255.00"
       ],
-      "description": "Building usable, accessible and fast web front ends."
+      "description": "Building usable, accessible and fast web front ends.",
+      "onet_titles": [
+        "Web Developers",
+        "Web and Digital Interface Designers"
+      ]
     }
   ],
   "questions": [

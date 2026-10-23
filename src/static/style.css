@@ -182,3 +182,16 @@ ol.path .step a { font-weight: 600; }
 .check-list label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 999px; cursor: pointer; font-size: 14px; }
 .check-list label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
 ul.quals { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+
+/* IT skills test */
+.quiz.test { max-width: 760px; }
+.test h2 { font-size: 19px; line-height: 1.45; }
+pre.code { margin: 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; font: 13px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; white-space: pre; }
+.code-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font: 14px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; tab-size: 4; resize: vertical; }
+.test .options button { min-height: 48px; padding: 10px 18px; line-height: 1.4; font-size: 15px; }
+ol.tests { margin: 6px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; overflow-wrap: anywhere; }
+ol.tests code, .review code { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+.pass { color: var(--accent-strong); font-weight: 700; }
+.fail { color: var(--warn-text); font-weight: 700; }
+details.review { padding: 4px 16px 12px; }
+details.review > summary { flex-wrap: wrap; }

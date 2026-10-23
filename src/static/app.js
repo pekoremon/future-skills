@@ -125,8 +125,12 @@ function pageHome() {
       <div class="card"><h3>Your skills</h3><p class="muted small">Rate the skills you have and pick the tools you use, or let AI read your CV.</p></div>
       <div class="card"><h3>Your matches</h3><p class="muted small">Ranked roles with the score split, skill gaps, trends and SDG links.</p></div>
     </div>
+    <div class="note stack" style="gap: 8px">
+      <p><strong>New: IT skills test.</strong> 14 questions, about 15–20 minutes. Find out which IT field you are ready for: software, cybersecurity, networking, data &amp; AI, cloud or web.</p>
+      <div class="row"><a class="btn primary" href="#/test">Take the IT skills test</a></div>
+    </div>
     <div class="row">
-      <a class="btn primary" href="#/quiz">Start with interests</a>
+      <a class="btn" href="#/quiz">Start with interests</a>
       <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
       <a class="btn ghost" href="#/trends">See the AI-trend data</a>
     </div>
@@ -688,6 +692,350 @@ async function pageTrends() {
   };
 }
 
+/* ---------- IT skills test ---------- */
+
+const STAGE_LABEL = { screen: "Quick check", deep: "In depth", practical: "Hands-on" };
+const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUN_TIMEOUT_MS = 8000;
+// Runs inside the Web Worker: loads Python once, then runs one question's tests per message.
+const PY_WORKER = `
+importScripts("${PYODIDE}pyodide.js");
+const ready = loadPyodide({ indexURL: "${PYODIDE}" });
+ready.then(() => postMessage({ ready: true }), (e) => postMessage({ ready: false, error: String(e) }));
+const HARNESS = \`
+import builtins, json
+_tests, _blocked = json.loads(TESTS_JSON), set(json.loads(BLOCKED_JSON))
+_real_import = builtins.__import__
+def _guard(name, *a, **k):
+    if name.split(".")[0] in _blocked:
+        raise ImportError(f"'{name}' is not allowed in this question")
+    return _real_import(name, *a, **k)
+_out = []
+builtins.__import__ = _guard
+try:
+    _ns = {}
+    try:
+        exec(SRC, _ns)
+        _fn = _ns.get(FN)
+        _setup = None if callable(_fn) else f"define a function called {FN}"
+    except Exception as e:
+        _setup = f"{type(e).__name__}: {e}"
+    for _t in _tests:
+        if _setup:
+            _out.append({"ok": False, "error": _setup}); continue
+        try:
+            _got = _fn(*json.loads(json.dumps(_t["args"])))
+            if "raises" in _t:
+                _out.append({"ok": False, "got": repr(_got)[:300], "error": "expected " + _t["raises"]})
+            else:
+                _out.append({"ok": json.loads(json.dumps(_got)) == _t["expected"], "got": repr(_got)[:300]})
+        except Exception as e:
+            _ok = "raises" in _t and type(e).__name__ == _t["raises"]
+            _out.append({"ok": _ok, "got": type(e).__name__, "error": None if _ok else f"{type(e).__name__}: {e}"})
+finally:
+    builtins.__import__ = _real_import
+json.dumps(_out)
+\`;
+onmessage = async (e) => {
+  const py = await ready;
+  try {
+    py.globals.set("SRC", e.data.code);
+    py.globals.set("FN", e.data.fn);
+    py.globals.set("TESTS_JSON", JSON.stringify(e.data.tests));
+    py.globals.set("BLOCKED_JSON", JSON.stringify(e.data.blocked || []));
+    postMessage({ ok: true, results: JSON.parse(py.runPython(HARNESS)) });
+  } catch (err) {
+    postMessage({ ok: false, error: String(err) });
+  }
+};`;
+
+let pyWorker = null;
+let pyReady = null;
+function startPython() {
+  pyWorker = new Worker(URL.createObjectURL(new Blob([PY_WORKER], { type: "text/javascript" })));
+  pyReady = new Promise((resolve, reject) => {
+    pyWorker.onmessage = (e) => (e.data.ready ? resolve() : reject(new Error(e.data.error)));
+    pyWorker.onerror = () => reject(new Error("Could not load Python in the browser. Check your internet connection."));
+  });
+  pyReady.catch(() => { pyWorker.terminate(); pyWorker = null; });
+}
+async function runPython(q, code) {
+  if (!pyWorker) startPython();
+  await pyReady;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      pyWorker.terminate();
+      pyWorker = null;  // the next run loads a fresh worker
+      resolve({ ok: false, error: `Stopped after ${RUN_TIMEOUT_MS / 1000} s. Is there an infinite loop?` });
+    }, RUN_TIMEOUT_MS);
+    pyWorker.onmessage = (e) => { clearTimeout(timer); resolve(e.data); };
+    pyWorker.postMessage({ code, fn: q.function, tests: q.tests, blocked: q.forbidden_imports });
+  });
+}
+
+// Show test values the way Python prints them (None, True), not as JSON.
+function pyRepr(v) {
+  if (v === null) return "None";
+  if (v === true) return "True";
+  if (v === false) return "False";
+  if (Array.isArray(v)) return `[${v.map(pyRepr).join(", ")}]`;
+  if (typeof v === "object") return `{${Object.entries(v).map(([k, x]) => `${JSON.stringify(k)}: ${pyRepr(x)}`).join(", ")}}`;
+  return typeof v === "string" ? JSON.stringify(v) : String(v);
+}
+
+const testInProgress = () => state.test && !state.test.result;
+const domainName = (id) => (state.test.domains.find((d) => d.id === id) || {}).name || id;
+
+async function startTest() {
+  const t = await api("/api/assessment/start");
+  state.test = { seed: t.seed, domains: t.domains, questions: t.questions, responses: {}, code: {}, runs: {},
+    deepDomains: null, result: null };
+  saveState();
+  location.hash = "#/test/1";
+}
+
+function pageTestIntro() {
+  const going = testInProgress();
+  const answered = going ? Object.keys(state.test.responses).length : 0;
+  render(`
+  <div class="quiz stack">
+    <p class="eyebrow">IT skills test</p>
+    <h1>Which IT field are you ready for?</h1>
+    <div class="row"><span class="chip">14 questions</span><span class="chip">About 15–20 minutes</span><span class="chip">6 IT fields</span></div>
+    <div class="card stack">
+      <div><h3>1 · Quick check</h3><p class="muted">One question from each field: software development, cybersecurity, networking, data &amp; AI, cloud &amp; systems, and web &amp; UX.</p></div>
+      <div><h3>2 · In depth</h3><p class="muted">Your 2 strongest fields get 3 harder questions and 1 hands-on task each: write code, a SQL query, or analyse logs.</p></div>
+      <div><h3>3 · Your result</h3><p class="muted">A readiness score per field, the matching jobs, the skills to work on, and an explanation for every answer.</p></div>
+    </div>
+    <p class="muted small">Code runs in your browser, in Python. The first coding question downloads Python (about 10 MB) once.</p>
+    <div class="stack">
+      ${going ? `<a class="btn primary" href="#/test/${Math.min(answered + 1, state.test.questions.length)}">Continue (${answered} answered)</a>` : ""}
+      ${state.test && state.test.result ? `<a class="btn primary" href="#/test/result">See your last result</a>` : ""}
+      <button class="btn${going || (state.test && state.test.result) ? "" : " primary"}" type="button" id="start">${state.test ? "Start a new test" : "Start the test"}</button>
+    </div>
+  </div>`);
+  document.getElementById("start").onclick = (e) => { e.target.disabled = true; startTest().catch(showError); };
+}
+
+function questionBody(q) {
+  const r = state.test.responses[q.id];
+  if (q.type === "mcq" || q.type === "multi") {
+    const on = (i) => (q.type === "mcq" ? r === i : Array.isArray(r) && r.includes(i));
+    return `${q.type === "multi" ? '<p class="muted small">Select all that apply.</p>' : ""}
+      <div class="options" role="group" aria-label="Answer options">${q.options.map((o, i) =>
+        `<button type="button" data-i="${i}" aria-pressed="${on(i)}">${esc(o)}</button>`).join("")}</div>`;
+  }
+  if (q.type === "numeric" || q.type === "text") {
+    return `<label class="stack" style="gap: 6px"><span class="muted small">Your answer</span>
+      <input class="search answer" id="answer" ${q.type === "numeric" ? 'type="number" step="any" inputmode="decimal"' : 'type="text" autocomplete="off" spellcheck="false"'} value="${esc(r ?? "")}"></label>`;
+  }
+  if (q.type === "code") {
+    const tests = q.tests.map((t) => `<li><code>${esc(q.function)}(${esc(t.args.map(pyRepr).join(", "))})</code> → <code>${esc("raises" in t ? `raises ${t.raises}` : pyRepr(t.expected))}</code></li>`).join("");
+    return `<details class="more"><summary>The ${q.tests.length} tests your function must pass</summary><ol class="tests">${tests}</ol></details>
+      ${q.forbidden_imports ? `<p class="muted small">Not allowed: <code>import ${esc(q.forbidden_imports.join(", "))}</code></p>` : ""}
+      <label class="stack" style="gap: 6px"><span class="muted small">Your Python code</span>
+      <textarea class="code-input" id="answer" rows="12" spellcheck="false" autocapitalize="off">${esc(state.test.code[q.id] ?? q.starter)}</textarea></label>
+      <div class="row"><button class="btn" type="button" id="run">Run tests</button><span class="muted small" id="run-status" role="status"></span></div>
+      <div id="run-out"></div>`;
+  }
+  return `<details class="more"><summary>Tables and data</summary><pre class="code">${esc(q.setup_sql)}</pre></details>
+    <label class="stack" style="gap: 6px"><span class="muted small">Your SQL query (SQLite)</span>
+    <textarea class="code-input" id="answer" rows="8" spellcheck="false" autocapitalize="off">${esc(r ?? "SELECT ")}</textarea></label>
+    <div class="row"><button class="btn" type="button" id="run">Run query</button><span class="muted small" id="run-status" role="status"></span></div>
+    <div id="run-out"></div>`;
+}
+
+function runResultHtml(q, run) {
+  if (!run) return "";
+  if (!run.ok) return `<div class="warn">${esc(run.error)}</div>`;
+  const passed = run.results.filter((x) => x.ok).length;
+  return `<div class="stack" style="gap: 6px"><p><strong>${passed} / ${run.results.length} tests passed</strong></p>
+    <ol class="tests">${run.results.map((x, i) => `<li class="${x.ok ? "pass" : "fail"}">${x.ok ? "Pass" : "Fail"}: <code>${esc(q.function)}(${esc(q.tests[i].args.map(pyRepr).join(", "))})</code>${x.ok ? "" : ` gave <code>${esc(x.got ?? "nothing")}</code>${x.error ? ` <span class="muted">(${esc(x.error)})</span>` : ""}`}</li>`).join("")}</ol></div>`;
+}
+
+function sqlResultHtml(r) {
+  return `<div class="table-wrap"><table><thead><tr>${r.columns.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+    <tbody>${r.rows.map((row) => `<tr>${row.map((v) => `<td>${esc(v === null ? "NULL" : v)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${r.columns.length}" class="muted">No rows</td></tr>`}</tbody></table></div>
+    ${r.truncated ? '<p class="muted small">Showing the first 50 rows.</p>' : ""}`;
+}
+
+async function runCode(q) {
+  const status = document.getElementById("run-status");
+  const code = state.test.code[q.id] ?? q.starter;
+  document.getElementById("run").disabled = true;
+  status.textContent = pyWorker ? "Running…" : "Loading Python (first time only)…";
+  let run;
+  try {
+    run = await runPython(q, code);
+  } catch (e) {
+    run = { ok: false, error: e.message };
+  }
+  state.test.runs[q.id] = { code, ...run };
+  const passed = run.ok ? run.results.filter((x) => x.ok).length : 0;
+  state.test.responses[q.id] = { passed, total: q.tests.length };
+  saveState();
+  if (location.hash === `#/test/${state.test.questions.indexOf(q) + 1}`) {
+    document.getElementById("run").disabled = false;
+    status.textContent = "";
+    document.getElementById("run-out").innerHTML = runResultHtml(q, run);
+  }
+}
+
+function wireAnswer(q) {
+  const save = (v) => { state.test.responses[q.id] = v; saveState(); };
+  app.querySelectorAll(".options button").forEach((b) => {
+    b.onclick = () => {
+      const i = Number(b.dataset.i);
+      if (q.type === "mcq") {
+        save(i);
+        app.querySelectorAll(".options button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      } else {
+        const now = new Set(state.test.responses[q.id] || []);
+        if (now.has(i)) now.delete(i); else now.add(i);
+        save([...now].sort((a, c) => a - c));
+        b.setAttribute("aria-pressed", now.has(i));
+      }
+    };
+  });
+  const input = document.getElementById("answer");
+  if (!input) return;
+  if (q.type === "numeric") input.oninput = () => (input.value === "" ? (delete state.test.responses[q.id], saveState()) : save(Number(input.value)));
+  if (q.type === "text") input.oninput = () => save(input.value);
+  if (q.type === "code" || q.type === "sql") {
+    input.onkeydown = (e) => {  // Tab indents instead of leaving the editor; Esc then Tab leaves
+      if (e.key !== "Tab" || e.shiftKey || input.dataset.escaped) return;
+      e.preventDefault();
+      input.setRangeText("    ", input.selectionStart, input.selectionEnd, "end");
+      input.dispatchEvent(new Event("input"));
+    };
+    input.onkeyup = (e) => { input.dataset.escaped = e.key === "Escape" ? "1" : ""; };
+  }
+  if (q.type === "code") {
+    input.oninput = () => { state.test.code[q.id] = input.value; saveState(); };
+    document.getElementById("run").onclick = () => runCode(q);
+    const last = state.test.runs[q.id];
+    if (last && last.code === input.value) document.getElementById("run-out").innerHTML = runResultHtml(q, last);
+  }
+  if (q.type === "sql") {
+    input.oninput = () => save(input.value);
+    document.getElementById("run").onclick = async () => {
+      const out = document.getElementById("run-out");
+      try {
+        out.innerHTML = sqlResultHtml(await api("/api/assessment/sql", { body: JSON.stringify({ id: q.id, sql: input.value }) }));
+      } catch (e) {
+        out.innerHTML = `<div class="warn">${esc(e.message)}</div>`;
+      }
+    };
+  }
+}
+
+async function nextFromItem(idx, button) {
+  const t = state.test;
+  const q = t.questions[idx];
+  button.disabled = true;
+  if (q.type === "code" && (!t.runs[q.id] || t.runs[q.id].code !== (t.code[q.id] ?? q.starter))) {
+    button.textContent = "Running your tests…";
+    await runCode(q);  // grade the latest code, not an older run
+  }
+  try {
+    if (idx + 1 < t.questions.length) {
+      location.hash = `#/test/${idx + 2}`;
+    } else if (!t.deepDomains) {
+      button.textContent = "Choosing your fields…";
+      const next = await api("/api/assessment/next", { body: JSON.stringify({ seed: t.seed, responses: t.responses }) });
+      t.deepDomains = next.domains;
+      t.questions = t.questions.concat(next.questions);
+      saveState();
+      location.hash = `#/test/${idx + 2}`;
+    } else {
+      button.textContent = "Scoring…";
+      t.result = await api("/api/assessment/result", { body: JSON.stringify({ seed: t.seed, responses: t.responses }) });
+      saveState();
+      location.hash = "#/test/result";
+    }
+  } catch (e) {
+    showError(e);
+  }
+}
+
+function pageTestItem(n) {
+  if (!testInProgress()) { location.hash = "#/test"; return; }
+  const t = state.test;
+  const idx = Math.min(Math.max(n, 1), t.questions.length) - 1;
+  const q = t.questions[idx];
+  const total = 6 + 8;  // screen items, then deep + practical items in 2 fields
+  const lastScreen = !t.deepDomains && idx === t.questions.length - 1;
+  render(`
+  <div class="quiz test stack">
+    <div class="row" style="justify-content: space-between">
+      <a class="btn ghost" href="${idx ? `#/test/${idx}` : "#/test"}" aria-label="Previous question">&larr; Back</a>
+      <span class="muted small">Question ${idx + 1} of ${total}</span>
+      <a class="btn ghost" href="#/test">Pause</a>
+    </div>
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / total) * 100)}%"></div></div>
+    ${idx === 6 && t.deepDomains ? `<p class="note">Your strongest fields so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
+    <div class="row"><span class="chip">${esc(domainName(q.domain))}</span><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
+    <h2 id="q-text">${esc(q.prompt)}</h2>
+    ${q.code ? `<pre class="code" aria-label="Code or log for this question">${esc(q.code)}</pre>` : ""}
+    ${questionBody(q)}
+    <div class="sticky-actions"><button class="btn primary" type="button" id="next" style="width: 100%">${idx + 1 === total ? "See my result" : lastScreen ? "Continue to in-depth questions" : "Next"}</button></div>
+  </div>`);
+  wireAnswer(q);
+  document.getElementById("next").onclick = (e) => nextFromItem(idx, e.currentTarget);
+}
+
+function answerText(i) {
+  const a = i.correct_answer;
+  if (a === null) return "Passes every test (see the explanation)";
+  if (Array.isArray(a)) return a.join(", ");
+  if (typeof a === "object") return `${a.columns.join(", ")}: ${a.rows.map((r) => r.join(" / ")).join("; ")}`;
+  return String(a);
+}
+
+function pageTestResult() {
+  const r = state.test && state.test.result;
+  if (!r) { location.hash = "#/test"; return; }
+  const deep = r.domains.filter((d) => d.tested_in_depth).sort((a, b) => b.readiness - a.readiness);
+  const best = deep[0];
+  const domainCard = (d) => `
+    <div class="card stack" style="gap: 10px">
+      <div class="row" style="justify-content: space-between"><h3>${esc(d.name)}</h3><span class="chip${d.level.min >= 75 ? "" : d.level.min >= 50 ? " plain" : " warn-chip"}">${esc(d.level.label)}</span></div>
+      <div class="row" style="align-items: baseline; gap: 6px"><span class="big">${d.readiness}</span><span class="muted">/ 100 readiness</span></div>
+      <div class="bar"><div class="on" style="width: ${d.readiness}%"></div></div>
+      <div><p class="muted small">Jobs in this field (O*NET):</p>
+        <ul class="quals small">${d.roles.map((x) => `<li><a href="https://www.onetonline.org/link/summary/${esc(x.onet_soc)}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join("")}</ul></div>
+    </div>`;
+  const screen = r.domains.map((d) => `<tr><td>${esc(d.name)}</td><td class="num">${d.screen_points} / ${d.screen_max}</td><td>${d.tested_in_depth ? "Tested in depth" : ""}</td></tr>`).join("");
+  const gaps = r.skills_to_improve.length
+    ? `<ul class="quals">${r.skills_to_improve.map((g) => `<li><strong>${esc(g.skill)}</strong> <span class="muted small">· ${esc(domainName(g.domain))}</span></li>`).join("")}</ul>`
+    : '<p class="muted">Nothing: every answer was right.</p>';
+  const review = r.items.map((i, n) => `
+    <details class="more card review">
+      <summary><span class="${i.correct ? "pass" : "fail"}">${i.correct ? "Right" : i.points > 0 ? "Partly right" : "Wrong"}</span>&nbsp;· Q${n + 1} · ${esc(i.skill)} <span class="muted small">&nbsp;${i.points} / ${i.max}</span></summary>
+      <div class="stack" style="gap: 8px">
+        <p>${esc(i.prompt)}</p>
+        ${i.answered ? "" : '<p class="muted small">Not answered.</p>'}
+        <p><strong>Answer:</strong> ${esc(answerText(i))}</p>
+        <p class="muted">${esc(i.explanation)}</p>
+        <p class="small">Source: ${i.refs.map((x) => `<a href="${safeUrl(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(" · ")}</p>
+      </div>
+    </details>`).join("");
+  render(`
+  <div class="stack">
+    <p class="eyebrow">IT skills test · Your result</p>
+    <h1>Your best fit right now: ${esc(best.name)}</h1>
+    <p class="muted">${esc(r.disclaimer)} Readiness counts only the in-depth and hands-on questions in that field.</p>
+    <div class="grid">${deep.map(domainCard).join("")}</div>
+    <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
+    <div class="stack" style="gap: 10px"><h2>Quick check across all 6 fields</h2>
+      <div class="table-wrap"><table><thead><tr><th>Field</th><th>Points</th><th></th></tr></thead><tbody>${screen}</tbody></table></div>
+      <p class="muted small">One question per field, so this is only a first signal.</p></div>
+    <div class="stack" style="gap: 10px"><h2>Review every answer</h2>${review}</div>
+    <div class="row"><button class="btn primary" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
+  </div>`);
+  document.getElementById("again").onclick = (e) => { e.target.disabled = true; startTest().catch(showError); };
+}
+
 /* ---------- router ---------- */
 
 async function route() {
@@ -699,7 +1047,10 @@ async function route() {
   });
   window.scrollTo(0, 0);
   try {
-    if (page === "quiz" && parts[1]) await pageQuizItem(Number(parts[1]) || 1);
+    if (page === "test" && parts[1] === "result") pageTestResult();
+    else if (page === "test" && parts[1]) pageTestItem(Number(parts[1]) || 1);
+    else if (page === "test") pageTestIntro();
+    else if (page === "quiz" && parts[1]) await pageQuizItem(Number(parts[1]) || 1);
     else if (page === "quiz") await pageQuizIntro();
     else if (page === "interests") await pageInterests();
     else if (page === "cv") await pageCV();

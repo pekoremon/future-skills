@@ -219,5 +219,97 @@ class TestItAssessment(unittest.TestCase):
         self.assertLess(ratio, 4.5)
 
 
+class TestAssessmentFlow(unittest.TestCase):
+    """The API flow: start -> next -> result, as the web page calls it."""
+
+    def setUp(self):
+        import sys
+        sys.path.insert(0, str(ROOT / "src"))
+        import main
+        self.main = main
+
+    def call(self, method, path, payload=None):
+        res = self.main.dispatch(method, path, b"" if payload is None else json.dumps(payload).encode())
+        return res.status, json.loads(res.body)
+
+    def right_answer(self, q, shown=None):
+        if q["type"] == "mcq" and shown:
+            return shown["options"].index(q["options"][q["answer"]])
+        if q["type"] == "code":
+            return {"passed": len(q["tests"]), "total": len(q["tests"])}
+        if q["type"] == "sql":
+            return SQL_ANSWERS[q["id"]]
+        return q["answer"]
+
+    def test_full_run_with_right_answers_scores_100(self):
+        bank = {q["id"]: q for q in BANK["questions"]}
+        status, start = self.call("GET", "/api/assessment/start")
+        self.assertEqual(status, 200)
+        self.assertEqual(len(start["questions"]), 6)
+        self.assertEqual({q["domain"] for q in start["questions"]}, {d["id"] for d in BANK["domains"]})
+        for q in start["questions"]:
+            self.assertNotIn("answer", q)
+            self.assertNotIn("explanation", q)
+        responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in start["questions"]}
+        status, nxt = self.call("POST", "/api/assessment/next", {"seed": start["seed"], "responses": responses})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(nxt["domains"]), 2)
+        self.assertEqual(len(nxt["questions"]), 8)
+        responses.update({q["id"]: self.right_answer(bank[q["id"]], q) for q in nxt["questions"]})
+        status, result = self.call("POST", "/api/assessment/result", {"seed": start["seed"], "responses": responses})
+        self.assertEqual(status, 200)
+        self.assertEqual(result["deep_domains"], nxt["domains"])
+        self.assertEqual(result["total_points"], result["total_max"])
+        self.assertEqual(result["skills_to_improve"], [])
+        for d in result["domains"]:
+            if d["tested_in_depth"]:
+                self.assertEqual(d["readiness"], 100)
+                self.assertEqual(d["level"]["label"], "Job-ready")
+
+    def test_strong_screen_domains_are_chosen(self):
+        _, start = self.call("GET", "/api/assessment/start")
+        bank = {q["id"]: q for q in BANK["questions"]}
+        picked = [q for q in start["questions"] if q["domain"] in ("networking", "web_ux")]
+        responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in picked}
+        _, nxt = self.call("POST", "/api/assessment/next", {"seed": start["seed"], "responses": responses})
+        self.assertEqual(sorted(nxt["domains"]), ["networking", "web_ux"])
+
+    def test_partial_credit(self):
+        from assessment import grade
+        q = next(q for q in BANK["questions"] if q["id"] == "CS-P2")
+        self.assertEqual(grade(q, q["answer"], 1)["points"], 4)
+        self.assertEqual(grade(q, q["answer"][:2], 1)["points"], 2)
+        self.assertEqual(grade(q, q["answer"][:2] + [0], 1)["points"], 1)
+        code = next(q for q in BANK["questions"] if q["id"] == "SD-P1")
+        self.assertEqual(grade(code, {"passed": 3, "total": 6}, 1)["points"], 2)
+        self.assertEqual(grade(code, {"passed": 9, "total": 6}, 1)["points"], 0)
+        text = next(q for q in BANK["questions"] if q["id"] == "NW-D1")
+        self.assertTrue(grade(text, " /26 ", 1)["correct"])
+
+    def test_always_picking_the_same_option_does_not_pay(self):
+        from assessment import grade, option_order
+        mcqs = [q for q in BANK["questions"] if q["type"] == "mcq"]
+        for seed in range(20):
+            for pick in range(3):
+                right = sum(grade(q, pick, seed)["correct"] for q in mcqs)
+                self.assertLess(right, len(mcqs) * 0.5, f"seed {seed}, always option {pick}")
+        q = mcqs[0]
+        self.assertEqual(sorted(option_order(7, q)), list(range(len(q["options"]))))
+        self.assertEqual(option_order(7, q), option_order(7, q))
+
+    def test_bad_requests(self):
+        self.assertEqual(self.call("POST", "/api/assessment/next", {"seed": "x"})[0], 400)
+        self.assertEqual(self.call("POST", "/api/assessment/result", {"seed": 1, "responses": {"ZZ-1": 0}})[0], 400)
+
+    def test_sql_runner_is_read_only(self):
+        for sql in ("DELETE FROM customers", "ATTACH 'x.db' AS x", "SELECT 1; SELECT 2",
+                    "WITH RECURSIVE c(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM c) SELECT COUNT(*) FROM c"):
+            with self.subTest(sql):
+                self.assertEqual(self.call("POST", "/api/assessment/sql", {"id": "DA-P2", "sql": sql})[0], 400)
+        status, out = self.call("POST", "/api/assessment/sql", {"id": "DA-P2", "sql": SQL_ANSWERS["DA-P2"]})
+        self.assertEqual(status, 200)
+        self.assertEqual(out["rows"], next(q for q in BANK["questions"] if q["id"] == "DA-P2")["expected_rows"])
+
+
 if __name__ == "__main__":
     unittest.main()
