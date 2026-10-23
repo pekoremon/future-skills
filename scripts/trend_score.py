@@ -1,6 +1,7 @@
 """Compute a 0-100 trend score per domain from data/trends.csv.
 
-Draft v0 by member A; A and B finalise the formula on day 2 afternoon.
+Written by member A (v0); weights confirmed by the team on 2026-10-23 (v1): both
+components count equally. scripts/matching.py SCENARIOS re-weight them for future scenarios.
 
 Two components, both read only from trends.csv (no numbers typed in here):
 
@@ -37,7 +38,7 @@ FIELDS = [
     "my_employment_gap_pp", "ai_paper_growth", "components_used", "missing",
     "input_trend_ids", "formula_version", "computed_date",
 ]
-FORMULA_VERSION = "v0-draft"
+FORMULA_VERSION = "v1"
 
 
 def num(v):

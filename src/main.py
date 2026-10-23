@@ -10,7 +10,8 @@ Endpoints (all JSON):
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
     GET  /api/profiles               fictional demo profiles
     POST /api/questionnaire/score    RIASEC answers (0-4) -> six totals (0-20) and a 3-letter code
-    POST /api/match                  student profile -> ranked, explained roles
+    POST /api/match                  student profile -> ranked, explained roles with a learning path
+    GET  /api/scenarios              future scenarios and the trend scores under each
     GET  /api/trends                 ?domain=  trend scores and the signals behind them
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
     GET  /api/trends/update          status of the last update job
@@ -217,10 +218,31 @@ def match():
     top = req.get("top", 10)
     if not isinstance(top, int) or top < 1:
         raise BadRequest("'top' must be a positive integer")
-    ranked = matching.rank_roles(profile, data)
+    scenario = req.get("scenario", "baseline")
+    if scenario not in matching.SCENARIOS:
+        raise BadRequest(f"'scenario' must be one of {list(matching.SCENARIOS)}")
+    hours = req.get("hours_per_week", matching.DEFAULT_HOURS_PER_WEEK)
+    if isinstance(hours, bool) or not isinstance(hours, (int, float)) or not 1 <= hours <= 40:
+        raise BadRequest("'hours_per_week' must be a number from 1 to 40")
+    profile = {**profile, "hours_per_week": hours}
+
+    ranked = matching.rank_roles(profile, data, scenario=scenario)
+    baseline_rank = {m["role_id"]: i + 1 for i, m in
+                     enumerate(matching.rank_roles(profile, data, scenario="baseline"))}
+    for i, m in enumerate(ranked):
+        m["rank"], m["baseline_rank"] = i + 1, baseline_rank[m["role_id"]]
     return jsonify(riasec=profile["riasec"], riasec_code=riasec_code(profile["riasec"]),
                    weights=matching.WEIGHTS, skill_split=matching.SKILL_SPLIT,
+                   scenario={"id": scenario, **matching.SCENARIOS[scenario],
+                             "trend_scores": matching.scenario_trend_scores(data, scenario)},
                    results=ranked[:top])
+
+
+@app.get("/api/scenarios")
+def scenarios():
+    data = matching.load_data()
+    return jsonify([{"id": k, **v, "trend_scores": matching.scenario_trend_scores(data, k)}
+                    for k, v in matching.SCENARIOS.items()])
 
 
 @app.get("/api/trends")

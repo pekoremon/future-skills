@@ -75,7 +75,7 @@ Rebuild with `python scripts/onet_extract.py` after downloading the O*NET CSVs l
 
 `entity_type` can also be `occupation` (a MASCO code, e.g. `masco_2512`), `occupation_group` (a MASCO major group, e.g. `masco_2`) or `population_group` (e.g. `youth_15_24`). Domain ids are `agriculture`, `finance`, `healthcare`, `generic_tech`, plus `overall` (Malaysia-wide baseline) and `services`. `value` is a number or `no data`; we never fill a gap with an estimate.
 
-This file is written by `scripts/update_trends.py`; edit `raw/dosm_manual.csv` instead. `scripts/trend_score.py` turns it into `trend_scores.csv` (one 0–100 score per domain, formula `v0-draft`).
+This file is written by `scripts/update_trends.py`; edit `raw/dosm_manual.csv` instead. `scripts/trend_score.py` turns it into `trend_scores.csv` (one 0–100 score per domain, formula `v1`).
 
 ## sdg_map.csv — at least one SDG target per role and per skill
 
@@ -89,17 +89,21 @@ This file is written by `scripts/update_trends.py`; edit `raw/dosm_manual.csv` i
 | link_strength | `direct` or `indirect` (team judgement) |
 | rationale | One sentence on why (team judgement, not UN text) |
 
-## courses.csv — 1–2 courses per skill
+## courses.csv — free courses for the most common gap skills
+
+One row per course × skill; a course that teaches several skills has one row per skill (`notes` says "Same course as …"). Only courses whose title, length and price were checked on the provider's own page or catalog are listed; a skill with no checked course is shown as such in the app, never filled with a guess.
 
 | Column | Meaning |
 |---|---|
-| course_id | Unique id |
+| course_id | Unique id, e.g. `C07` |
 | skill_id | Must exist in skills.csv |
 | title / provider / url | Course details |
-| duration_hours | Estimated hours |
+| duration_hours | Hours stated by the provider; empty when it states none |
 | cost_myr | Cost in RM (`0` for free) |
-| hrd_corp_claimable | `yes` / `no` / `unknown` |
+| hrd_corp_claimable | `yes` / `no` / `unknown` (all `unknown` until checked with HRD Corp) |
 | verified_date | Date someone opened the link and checked it (YYYY-MM-DD) |
+| level | Provider's level label |
+| notes | What the page said, caveats |
 
 ## certifications.csv — licences and certifications that prove a role's skills
 
