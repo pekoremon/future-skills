@@ -1,0 +1,8 @@
+subdomain_id,subfield_code,label_en,label_zh,arxiv_categories,dosm_entity,status
+software_engineering,SE,Software Engineering,软件工程,cs.SE,occupation/masco_2512,draft
+data_ai,DA,Data and AI,数据与 AI,cs.DB;cs.LG,,draft
+cybersecurity,CS,Cybersecurity,网络安全,cs.CR,,draft
+cloud_infra_networks,CI,"Cloud, Infrastructure and Networks",云端与基础设施 / 网络,cs.NI;cs.DC,,draft
+web_interface_design,WD,Web and Interface Design,Web 与界面设计,cs.HC,,draft
+it_management_analysis,IM,IT Management and Analysis,IT 管理与分析（项目管理、系统分析）,,,draft
+hardware_embedded,HW,Hardware and Embedded,硬件与嵌入式（可选）,cs.AR,,draft (optional)
