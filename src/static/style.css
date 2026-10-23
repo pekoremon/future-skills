@@ -134,6 +134,7 @@ select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1.5px s
 .sticky-actions { position: sticky; bottom: 0; padding: 12px 0; background: linear-gradient(to top, var(--bg) 70%, transparent); }
 
 /* results */
+.section-head { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
 .match { display: flex; flex-direction: column; gap: 12px; }
 .match-head { display: flex; gap: 14px; align-items: flex-start; }
 .score { font-size: 30px; font-weight: 800; line-height: 1; min-width: 64px; }

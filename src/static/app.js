@@ -299,6 +299,15 @@ function splitBar(m) {
 }
 const ORDER_PARTS = ["interest", "skill", "trend"];
 
+// Same order as rank_roles in scripts/matching.py: roles for the student's level first,
+// then roles needing more study, then licensed professions. Each section is ranked by score.
+const TIERS = [
+  ["Best matches for your level", ""],
+  ["Needs further study first", "These roles usually need a higher qualification than the one you selected, so they come after the roles above even when their score is higher."],
+  ["For reference: licensed professions", "These jobs usually need a professional licence or a different degree, so they are listed separately and not ranked with the roles above, even when their score is higher."],
+];
+const tierOf = (m) => (m.flags.includes("not_for_it_graduates") ? 2 : m.flags.includes("needs_extra_education") ? 1 : 0);
+
 function matchCard(m, rank) {
   const d = m.skill_detail;
   const flags = m.flags.map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
@@ -451,7 +460,14 @@ async function pageResults() {
   const noInterest = res.results[0] && res.results[0].flags.includes("interest_not_scored");
   let shown = 10;
   const draw = () => {
-    document.getElementById("list").innerHTML = res.results.slice(0, shown).map((m, i) => matchCard(m, i + 1)).join("");
+    let tier = -1;
+    let rank = 0;
+    document.getElementById("list").innerHTML = res.results.slice(0, shown).map((m) => {
+      const t = tierOf(m);
+      const head = t === tier ? "" : `<div class="section-head"><h2>${TIERS[t][0]}</h2>${TIERS[t][1] ? `<p class="small muted">${TIERS[t][1]}</p>` : ""}</div>`;
+      if (t !== tier) { tier = t; rank = 0; }
+      return head + matchCard(m, ++rank);
+    }).join("");
     document.getElementById("more").hidden = shown >= res.results.length;
     app.querySelectorAll("details.more").forEach((d) => d.addEventListener("toggle", () => d.open && loadRoleExtra(d.closest(".match"))));
     app.querySelectorAll("[data-explain]").forEach((b) => { b.onclick = () => explainRole(b); });
@@ -462,7 +478,7 @@ async function pageResults() {
     <h1>Roles ranked for you</h1>
     ${noInterest ? '<div class="warn">Interest fit is not included because you skipped the questionnaire. <a href="#/quiz">Answer it now</a> to update the ranking.</div>' : `<p class="muted">Your interest code: <strong>${esc(res.riasec_code)}</strong></p>`}
     <div class="card stack" style="gap: 8px">
-      <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles that need more study or a licence are listed later, never hidden.</p>
+      <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles that need more study or a licence are listed in their own sections further down, never hidden.</p>
       <div class="legend"><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
     ${scenarioCard}
