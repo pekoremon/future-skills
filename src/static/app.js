@@ -122,7 +122,7 @@ function pageHome() {
     <p class="muted">Future Skills matches you to tech + domain roles in agriculture, finance and healthcare, explains every score, shows the skills you still need, and links each role to the UN Sustainable Development Goals.</p>
     <div class="steps">
       <div class="card"><h3>Your interests</h3><p class="muted small">30 quick questions from the O*NET Mini Interest Profiler. Optional.</p></div>
-      <div class="card"><h3>Your skills</h3><p class="muted small">Rate the skills you have and pick the tools you use.</p></div>
+      <div class="card"><h3>Your skills</h3><p class="muted small">Rate the skills you have and pick the tools you use, or let AI read your CV.</p></div>
       <div class="card"><h3>Your matches</h3><p class="muted small">Ranked roles with the score split, skill gaps, trends and SDG links.</p></div>
     </div>
     <div class="row">
@@ -247,6 +247,7 @@ async function pageSkills() {
     <p class="eyebrow">Your skills</p>
     <h1>What can you already do?</h1>
     <p class="muted">Rate only what you know; anything left at “–” counts as not yet learned. Scale: 1 Basic · 2 Some · 3 Good · 4 Strong · 5 Expert.</p>
+    <p class="small"><a href="#/cv">Have a CV? Let AI read it</a> to summarise your skills and fill in your technologies.</p>
     <div class="card row">
       <label for="zone"><strong>Highest education (finished or about to finish)</strong></label>
       <select id="zone">${Object.entries(ZONES).map(([z, l]) => `<option value="${z}"${Number(z) === Number(state.zone) ? " selected" : ""}>${l}</option>`).join("")}</select>
@@ -292,6 +293,135 @@ async function pageSkills() {
   document.getElementById("go").onclick = () => { state.demo = null; saveState(); };
 }
 
+// The CV summary lives in memory only: it is never saved to sessionStorage.
+let cvResult = null;
+const CV_MAX_BYTES = 2_000_000;
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = PDFJS + "pdf.min.js";
+    s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js"; resolve(window.pdfjsLib); };
+    s.onerror = () => reject(new Error("could not load the PDF reader; try a .docx or .txt file"));
+    document.head.appendChild(s);
+  });
+}
+
+async function pdfText(file) {
+  const pdfjs = await loadPdfJs();
+  const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pages = [];
+  for (let i = 1; i <= Math.min(doc.numPages, 10); i++) {
+    const content = await (await doc.getPage(i)).getTextContent();
+    pages.push(content.items.map((it) => it.str + (it.hasEOL ? "\n" : " ")).join(""));
+  }
+  return pages.join("\n");
+}
+
+// PDF and text files are read here in the browser; a .docx goes to the server as base64.
+async function cvRequestBody(file) {
+  const name = file.name.toLowerCase();
+  if (file.size > CV_MAX_BYTES) throw new Error("the file is larger than 2 MB");
+  if (name.endsWith(".pdf")) return { text: await pdfText(file) };
+  if (name.endsWith(".txt")) return { text: await file.text() };
+  if (name.endsWith(".docx")) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return { docx_base64: btoa(bin) };
+  }
+  throw new Error("use a .pdf, .docx or .txt file (old .doc files cannot be read)");
+}
+
+function cvResultHtml(r) {
+  const label = r.source === "llm"
+    ? `Summary written by AI (${esc(r.model.split("/").pop())} on Fireworks AI) from your CV. It can make mistakes, so check it against your CV.`
+    : "AI summary not available right now, so this summary lists what our matcher found in your CV.";
+  const quals = r.qualifications.map((q) => `<li><strong>${esc(q.title)}</strong>${q.institution ? ` · ${esc(q.institution)}` : ""}${q.year ? ` · ${esc(q.year)}` : ""}</li>`).join("");
+  const zone = ZONES[r.education_job_zone];
+  return `
+    <section class="card stack" style="gap: 12px" aria-labelledby="cv-sum">
+      <h2 id="cv-sum">Summary</h2>
+      <p>${esc(r.summary)}</p>
+      <p class="small muted" title="${esc(r.reason || "")}">${label}</p>
+    </section>
+    <section class="card stack" style="gap: 10px">
+      <h2>Skills</h2>
+      ${r.skills.length ? `<div class="row" style="gap: 6px">${r.skills.map((s) => `<span class="chip plain">${esc(s)}</span>`).join("")}</div>` : '<p class="muted small">No skills found.</p>'}
+    </section>
+    <section class="card stack" style="gap: 10px">
+      <h2>Qualifications</h2>
+      ${quals ? `<ul class="quals">${quals}</ul>` : '<p class="muted small">No degree, diploma or certificate found.</p>'}
+    </section>
+    <section class="card stack" style="gap: 12px">
+      <h2>Use it for your matches</h2>
+      <p class="small muted">Technologies found by matching words in your CV against the app's list (O*NET In Demand technologies), not by AI. Untick anything that is wrong.</p>
+      ${r.technologies.length ? `<div class="check-list" id="cv-techs">${r.technologies.map((t) => `<label title="Matched “${esc(t.matched)}” in your CV"><input type="checkbox" value="${esc(t.skill_id)}" checked>${esc(t.skill_name)}</label>`).join("")}</div>` : '<p class="small">None of the tracked technologies were found.</p>'}
+      ${zone ? `<label class="row small"><input type="checkbox" id="cv-zone" checked> Set highest education to <strong>${esc(zone)}</strong></label>` : ""}
+      <div class="row"><button class="btn primary" type="button" id="cv-apply">Add to my skills</button><span class="small muted">You still rate the general skills yourself.</span></div>
+    </section>`;
+}
+
+async function pageCV() {
+  render(`
+  <div class="stack">
+    <p class="eyebrow">Optional step · Your CV</p>
+    <h1>Let AI read your CV</h1>
+    <p class="muted">Upload your CV to get a short summary of your skills and qualifications, and to fill in the technologies you use on the Skills page.</p>
+    <div class="drop" id="drop">
+      <label for="cv-file"><strong>Choose your CV</strong> <span class="muted small">PDF, Word (.docx) or text, up to 2 MB</span></label>
+      <input id="cv-file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+      <button class="btn ghost" type="button" id="cv-sample">Try a sample CV (fictional)</button>
+    </div>
+    <p class="small muted">Your CV is sent to our server and, when AI is on, to Fireworks AI to write the summary. It is not saved. Leave out your IC number, address and phone if you prefer.</p>
+    <div id="cv-status" role="status" aria-live="polite"></div>
+    <div id="cv-out" class="stack"></div>
+    <div class="row"><a class="btn" href="#/skills">Go to my skills</a></div>
+  </div>`);
+  const status = document.getElementById("cv-status");
+  const out = document.getElementById("cv-out");
+  const show = (r) => {
+    out.innerHTML = cvResultHtml(r);
+    document.getElementById("cv-apply").onclick = () => {
+      const picked = [...out.querySelectorAll("#cv-techs input:checked")].map((i) => i.value);
+      state.techs = [...new Set([...state.techs, ...picked])];
+      const z = document.getElementById("cv-zone");
+      if (z && z.checked) state.zone = r.education_job_zone;
+      state.demo = null;
+      saveState();
+      location.hash = "#/skills";
+    };
+  };
+  const run = async (getBody, what) => {
+    status.className = "small muted";
+    status.textContent = `Reading ${what}…`;
+    out.innerHTML = "";
+    try {
+      cvResult = await api("/api/cv/summary", { body: JSON.stringify(await getBody()) });
+      status.textContent = `Read ${cvResult.chars_read.toLocaleString()} characters from ${what}.`;
+      show(cvResult);
+    } catch (e) {
+      status.className = "warn";
+      status.textContent = `Could not read the CV: ${e.message}`;
+    }
+  };
+  const input = document.getElementById("cv-file");
+  input.onchange = () => input.files[0] && run(() => cvRequestBody(input.files[0]), input.files[0].name);
+  document.getElementById("cv-sample").onclick = () => run(async () => ({ text: await (await fetch("/static/sample_cv.txt")).text() }), "the sample CV");
+  const drop = document.getElementById("drop");
+  drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = (e) => {
+    e.preventDefault();
+    drop.classList.remove("over");
+    const f = e.dataTransfer.files[0];
+    if (f) run(() => cvRequestBody(f), f.name);
+  };
+  if (cvResult) show(cvResult);
+}
+
 function splitBar(m) {
   return `<div class="split" role="img" aria-label="${ORDER_PARTS.map((k) => `${PART_LABEL[k]} ${fmt(m.components[k].points)} points`).join(", ")}">
     ${ORDER_PARTS.map((k) => `<span class="k-${k}" style="width: ${m.components[k].points || 0}%"></span>`).join("")}
@@ -299,14 +429,8 @@ function splitBar(m) {
 }
 const ORDER_PARTS = ["interest", "skill", "trend"];
 
-// Same order as rank_roles in scripts/matching.py: roles for the student's level first,
-// then roles needing more study, then licensed professions. Each section is ranked by score.
-const TIERS = [
-  ["Best matches for your level", ""],
-  ["Needs further study first", "These roles usually need a higher qualification than the one you selected, so they come after the roles above even when their score is higher."],
-  ["For reference: licensed professions", "These jobs usually need a professional licence or a different degree, so they are listed separately and not ranked with the roles above, even when their score is higher."],
-];
-const tierOf = (m) => (m.flags.includes("not_for_it_graduates") ? 2 : m.flags.includes("needs_extra_education") ? 1 : 0);
+// Roles that need more study than the student's level, or a licence, are left out of the list.
+const isBestMatch = (m) => !m.flags.includes("not_for_it_graduates") && !m.flags.includes("needs_extra_education");
 
 function matchCard(m, rank) {
   const d = m.skill_detail;
@@ -458,38 +582,34 @@ async function pageResults() {
   const profiles = demo ? await cached("/api/profiles") : [];
   const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
   const noInterest = res.results[0] && res.results[0].flags.includes("interest_not_scored");
+  const best = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
   let shown = 10;
   const draw = () => {
-    let tier = -1;
-    let rank = 0;
-    document.getElementById("list").innerHTML = res.results.slice(0, shown).map((m) => {
-      const t = tierOf(m);
-      const head = t === tier ? "" : `<div class="section-head"><h2>${TIERS[t][0]}</h2>${TIERS[t][1] ? `<p class="small muted">${TIERS[t][1]}</p>` : ""}</div>`;
-      if (t !== tier) { tier = t; rank = 0; }
-      return head + matchCard(m, ++rank);
-    }).join("");
-    document.getElementById("more").hidden = shown >= res.results.length;
+    document.getElementById("list").innerHTML = best.length
+      ? best.slice(0, shown).map((m, i) => matchCard(m, i + 1)).join("")
+      : '<p class="muted">No roles match your education level yet. Try a higher education level on the skills page.</p>';
+    document.getElementById("more").hidden = shown >= best.length;
     app.querySelectorAll("details.more").forEach((d) => d.addEventListener("toggle", () => d.open && loadRoleExtra(d.closest(".match"))));
     app.querySelectorAll("[data-explain]").forEach((b) => { b.onclick = () => explainRole(b); });
   };
   render(`
   <div class="stack">
     <p class="eyebrow">Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
-    <h1>Roles ranked for you</h1>
+    <h1>Best matches for your level</h1>
     ${noInterest ? '<div class="warn">Interest fit is not included because you skipped the questionnaire. <a href="#/quiz">Answer it now</a> to update the ranking.</div>' : `<p class="muted">Your interest code: <strong>${esc(res.riasec_code)}</strong></p>`}
     <div class="card stack" style="gap: 8px">
-      <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles that need more study or a licence are listed in their own sections further down, never hidden.</p>
+      <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
       <div class="legend"><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
     ${scenarioCard}
     <div id="list" class="stack"></div>
-    <button class="btn" type="button" id="more">Show all ${res.results.length} roles</button>
+    <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
     <div class="row">
       ${demo ? '<a class="btn primary" href="#/quiz">Start with your own answers</a>' : '<a class="btn" href="#/skills">Change my skills</a>'}
       <a class="btn ghost" href="#/trends">How the trend score works</a>
     </div>
   </div>`);
-  document.getElementById("more").onclick = () => { shown = res.results.length; draw(); };
+  document.getElementById("more").onclick = () => { shown = best.length; draw(); };
   app.querySelectorAll("[data-scenario]").forEach((b) => {
     b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
   });
@@ -582,6 +702,7 @@ async function route() {
     if (page === "quiz" && parts[1]) await pageQuizItem(Number(parts[1]) || 1);
     else if (page === "quiz") await pageQuizIntro();
     else if (page === "interests") await pageInterests();
+    else if (page === "cv") await pageCV();
     else if (page === "skills") await pageSkills();
     else if (page === "results") await pageResults();
     else if (page === "trends") await pageTrends();
