@@ -1054,8 +1054,12 @@ function pageTestResult() {
     <p class="muted small">Readiness counts the in-depth and hands-on questions in that area.</p>
     <div class="grid">${deep.map(domainCard).join("")}</div>
     <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
+    <div class="note stack" style="gap: 8px">
+      <p><strong>Next: your recommended jobs.</strong> Your matches combine this test${quizDone() ? " with your interest answers" : ""} to rank 26 IT roles.</p>
+      <div class="row"><a class="btn primary" href="#/results">See my recommended jobs</a>${quizDone() ? "" : '<a class="btn" href="#/quiz">Add your interests first (8 min)</a>'}</div>
+    </div>
     <div class="stack" style="gap: 10px"><h2>Review every answer</h2>${review}</div>
-    <div class="row"><button class="btn primary" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
+    <div class="row"><a class="btn primary" href="#/results">See my recommended jobs</a><button class="btn" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
   </div>`);
   document.getElementById("again").onclick = (e) => { e.target.disabled = true; startTest().catch(showError); };
 }
