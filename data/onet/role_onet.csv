@@ -1,36 +1,27 @@
-role_id,role_name_en,group,onet_soc,onet_title,riasec_code_onet,score_R,score_I,score_A,score_S,score_E,score_C,job_zone,source_name,source_url,source_date
-R01,Computer Programmers,IT_CONTROL,15-1251.00,Computer Programmers,CI,3.37,5.1,2.51,1.98,2.09,5.92,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R02,Software Developers,IT_CONTROL,15-1252.00,Software Developers,IC,3.61,6.05,2.37,1.81,1.87,5.62,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R03,Web Developers,IT_CONTROL,15-1254.00,Web Developers,CI,2.98,5.01,3.13,2.22,2.96,5.03,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R04,Computer Systems Analysts,IT_CONTROL,15-1211.00,Computer Systems Analysts,IC,3.27,6.39,1.98,1.91,2.23,5.93,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R05,Computer User Support Specialists,IT_CONTROL,15-1232.00,Computer User Support Specialists,CRI,4.13,3.77,1.0,3.31,2.36,6.02,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R06,Precision Agriculture Technicians,R,19-4012.01,Precision Agriculture Technicians,RIC,6.46,5.4,1.23,1.39,2.11,4.95,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R07,Robotics Technicians,R,17-3024.01,Robotics Technicians,RCI,6.94,3.88,1.0,1.13,1.37,4.67,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R08,Computer Hardware Engineers,R,17-2061.00,Computer Hardware Engineers,RIC,5.69,5.56,1.83,1.82,1.98,5.37,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R09,Solar Photovoltaic Installers,R,47-2231.00,Solar Photovoltaic Installers,RC,7.0,2.65,1.39,1.19,1.73,4.08,2,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R10,Agricultural Engineers,R,17-2021.00,Agricultural Engineers,RI,6.65,6.29,2.19,1.73,2.31,3.77,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R11,Data Scientists,I,15-2051.00,Data Scientists,IC,2.17,6.98,2.61,1.66,1.71,5.39,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R12,Health Informatics Specialists,I,15-1211.01,Health Informatics Specialists,ICS,2.84,6.29,1.99,4.52,2.08,4.71,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R13,Penetration Testers,I,15-1299.04,Penetration Testers,ICR,3.91,5.19,1.31,1.99,2.1,5.18,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R14,Digital Forensics Analysts,I,15-1299.06,Digital Forensics Analysts,IC,3.2,6.11,1.69,1.65,2.71,6.03,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R15,Biostatisticians,I,15-2041.01,Biostatisticians,IC,2.43,7.0,2.8,3.11,1.98,4.4,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R16,Web and Digital Interface Designers,A,15-1255.00,Web and Digital Interface Designers,IAC,2.59,4.88,4.48,2.2,3.13,4.4,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R17,Video Game Designers,A,15-1255.01,Video Game Designers,AI,2.77,4.15,6.38,2.3,3.92,3.85,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R18,Graphic Designers,A,27-1024.00,Graphic Designers,AC,3.38,2.86,7.0,2.16,3.43,3.92,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R19,Special Effects Artists and Animators,A,27-1014.00,Special Effects Artists and Animators,AR,3.71,2.77,7.0,2.18,2.62,3.13,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R20,Sound Engineering Technicians,A,27-4014.00,Sound Engineering Technicians,RAC,5.14,2.68,4.45,1.69,2.16,4.22,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R21,Instructional Coordinators,S,25-9031.00,Instructional Coordinators,SEI,1.62,4.04,3.56,6.16,4.26,3.98,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R22,"Computer Science Teachers, Postsecondary",S,25-1021.00,"Computer Science Teachers, Postsecondary",SI,3.09,5.69,3.32,5.88,2.26,3.97,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R23,"Educational, Guidance, and Career Counselors",S,21-1012.00,"Educational, Guidance, and Career Counselors and Advisors",SCE,1.0,3.3,3.13,7.0,3.92,4.09,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R24,Registered Nurses,S,29-1141.00,Registered Nurses,SCI,3.46,4.71,1.34,5.57,2.38,4.75,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R25,Physical Therapists,S,29-1123.00,Physical Therapists,SIR,4.33,4.87,2.17,5.91,2.49,3.07,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R26,Information Technology Project Managers,E,15-1299.09,Information Technology Project Managers,ECI,1.73,3.87,1.77,2.67,5.91,5.31,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R27,Sales Engineers,E,41-9031.00,Sales Engineers,EC,3.38,3.58,1.76,2.82,5.78,4.51,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R28,Marketing Managers,E,11-2021.00,Marketing Managers,EC,1.0,2.9,2.45,2.82,7.0,4.7,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R29,Financial Managers,E,11-3031.00,Financial Managers,EC,1.36,2.46,1.59,3.04,7.0,5.56,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R30,Medical and Health Services Managers,E,11-9111.00,Medical and Health Services Managers,ECS,2.05,3.75,1.45,4.4,5.95,5.17,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R31,Information Security Analysts,C,15-1212.00,Information Security Analysts,CI,3.56,5.4,1.34,2.11,2.85,6.08,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R32,Financial Risk Specialists,C,13-2054.00,Financial Risk Specialists,CIE,1.67,4.96,1.31,2.48,4.92,5.36,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R33,Fraud Examiners,C,13-2099.04,"Fraud Examiners, Investigators and Analysts",CIE,2.01,4.67,1.22,1.95,4.57,5.62,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R34,Database Administrators,C,15-1242.00,Database Administrators,CI,2.83,4.83,1.2,2.29,2.94,6.61,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
-R35,Compliance Officers,C,13-1041.00,Compliance Officers,CE,2.51,3.07,1.0,2.97,4.08,6.33,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+role_id,role_name_en,subfield_code,onet_soc,onet_title,riasec_code_onet,score_R,score_I,score_A,score_S,score_E,score_C,job_zone,source_name,source_url,source_date
+IT01,Software Developers,SE,15-1252.00,Software Developers,IC,3.61,6.05,2.37,1.81,1.87,5.62,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT02,Computer Programmers,SE,15-1251.00,Computer Programmers,CI,3.37,5.1,2.51,1.98,2.09,5.92,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT03,Software Quality Assurance Analysts and Testers,SE,15-1253.00,Software Quality Assurance Analysts and Testers,ICR,3.8,5.76,1.69,1.53,1.57,5.67,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT04,Blockchain Engineers,SE,15-1299.07,Blockchain Engineers,CI,3.4,5.28,2.07,1.57,3.39,5.69,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT05,Data Scientists,DA,15-2051.00,Data Scientists,IC,2.17,6.98,2.61,1.66,1.71,5.39,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT06,Computer and Information Research Scientists,DA,15-1221.00,Computer and Information Research Scientists,IC,3.74,7.0,2.95,2.0,2.49,4.8,5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT07,Business Intelligence Analysts,DA,15-2051.01,Business Intelligence Analysts,CIE,1.24,5.41,1.93,1.85,4.42,5.79,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT08,Database Administrators,DA,15-1242.00,Database Administrators,CI,2.83,4.83,1.2,2.29,2.94,6.61,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT09,Database Architects,DA,15-1243.00,Database Architects,CI,2.63,5.63,2.16,1.91,2.68,6.12,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT10,Data Warehousing Specialists,DA,15-1243.01,Data Warehousing Specialists,CI,2.93,4.79,1.62,2.03,3.05,6.38,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT11,Information Security Analysts,CS,15-1212.00,Information Security Analysts,CI,3.56,5.4,1.34,2.11,2.85,6.08,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT12,Penetration Testers,CS,15-1299.04,Penetration Testers,ICR,3.91,5.19,1.31,1.99,2.1,5.18,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT13,Digital Forensics Analysts,CS,15-1299.06,Digital Forensics Analysts,IC,3.2,6.11,1.69,1.65,2.71,6.03,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT14,Information Security Engineers,CS,15-1299.05,Information Security Engineers,CIR,4.3,5.54,1.33,1.83,2.66,6.06,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT15,Network and Computer Systems Administrators,CI,15-1244.00,Network and Computer Systems Administrators,CRI,4.19,4.04,1.0,2.22,3.46,6.18,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT16,Computer Network Architects,CI,15-1241.00,Computer Network Architects,ICR,4.04,5.28,2.25,2.17,3.2,5.06,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT17,Computer Network Support Specialists,CI,15-1231.00,Computer Network Support Specialists,CIR,4.38,4.61,1.0,2.28,2.64,5.45,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT18,Computer User Support Specialists,CI,15-1232.00,Computer User Support Specialists,CRI,4.13,3.77,1.0,3.31,2.36,6.02,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT19,Computer Systems Engineers/Architects,CI,15-1299.08,Computer Systems Engineers/Architects,CIR,4.1,5.46,1.88,2.1,3.03,5.76,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT20,Web Developers,WD,15-1254.00,Web Developers,CI,2.98,5.01,3.13,2.22,2.96,5.03,3,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT21,Web and Digital Interface Designers,WD,15-1255.00,Web and Digital Interface Designers,IAC,2.59,4.88,4.48,2.2,3.13,4.4,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT22,Video Game Designers,WD,15-1255.01,Video Game Designers,AI,2.77,4.15,6.38,2.3,3.92,3.85,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT23,Web Administrators,WD,15-1299.01,Web Administrators,CIE,2.45,4.41,2.42,2.27,3.77,5.54,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT24,Computer Systems Analysts,IM,15-1211.00,Computer Systems Analysts,IC,3.27,6.39,1.98,1.91,2.23,5.93,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT25,Information Technology Project Managers,IM,15-1299.09,Information Technology Project Managers,ECI,1.73,3.87,1.77,2.67,5.91,5.31,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT26,Computer and Information Systems Managers,IM,11-3021.00,Computer and Information Systems Managers,CEI,2.68,4.49,1.47,2.35,5.09,5.94,4,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22

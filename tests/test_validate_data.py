@@ -35,11 +35,10 @@ class TestValidateData(unittest.TestCase):
             csv.writer(f).writerow([values.get(c, "") for c in header])
 
     def add_valid_role(self, **values: str) -> None:
-        self.add("roles.csv", **{"role_id": "R99", "group": "I", "priority": "6",
-                                 "role_name_en": "Agri Data Analyst", "riasec_type_assigned": "I",
-                                 "riasec_code_onet": "ICR", "onet_soc": "15-2051.00",
-                                 "masco_4digit_mycol": "2524", "is_mycol": "no",
-                                 "it_reachable_draft": "yes", **values})
+        self.add("roles.csv", **{"role_id": "R99", "subfield": "Data and AI", "subfield_code": "DA",
+                                 "role_name_en": "Data Scientists", "onet_soc": "15-2051.00",
+                                 "job_zone": "4", "masco_4digit_mycol": "2524", "is_mycol": "no",
+                                 **values})
 
     def test_repo_data_passes(self):
         self.assertEqual(validate(ROOT / "data"), [])
@@ -75,18 +74,18 @@ class TestValidateData(unittest.TestCase):
         self.assertTrue(any("unknown skill 'python'" in e for e in errors))
 
     def test_bad_role_codes_fail(self):
-        self.add_valid_role(riasec_code_onet="IIC", onet_soc="15-2051", masco_4digit_mycol="",
+        self.add_valid_role(subfield_code="HW", onet_soc="15-2051", masco_4digit_mycol="",
                             is_mycol="maybe")
         errors = validate(self.tmp)
-        self.assertTrue(any("'riasec_code_onet' = 'IIC'" in e for e in errors))
+        self.assertTrue(any("'subfield_code' = 'HW'" in e for e in errors))
         self.assertTrue(any("'onet_soc' = '15-2051'" in e for e in errors))
         self.assertTrue(any("'is_mycol' = 'maybe'" in e for e in errors))
 
     def test_bad_role_skill_values_fail(self):
-        self.add("role_skills.csv", role_id="R01", skill_id="SK001", importance="6", level="3",
+        self.add("role_skills.csv", role_id="IT01", skill_id="SK001", importance="6", level="3",
                  row_type="skill_knowledge")
-        self.add("role_skills.csv", role_id="R01", skill_id="SK002", row_type="skill_knowledge")
-        self.add("role_skills.csv", role_id="R01", skill_id="SK003", importance="3",
+        self.add("role_skills.csv", role_id="IT01", skill_id="SK002", row_type="skill_knowledge")
+        self.add("role_skills.csv", role_id="IT01", skill_id="SK003", importance="3",
                  row_type="in_demand_tech")
         errors = validate(self.tmp)
         self.assertTrue(any("'importance' = '6'" in e for e in errors))

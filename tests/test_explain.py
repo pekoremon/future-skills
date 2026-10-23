@@ -18,7 +18,8 @@ class TestExplain(unittest.TestCase):
     def setUpClass(cls):
         data = matching.load_data()
         profile = json.loads((ROOT / "data" / "sample_profiles.json").read_text(encoding="utf-8"))[0]
-        cls.match = next(m for m in matching.rank_roles(profile, data) if m["role_id"] == "R11")
+        cls.match = next(m for m in matching.rank_roles(matching.with_interest(profile), data)
+                         if m["role_id"] == "IT05")
         cls.facts = explain.build_facts(cls.match)
 
     def setUp(self):

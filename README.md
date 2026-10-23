@@ -80,7 +80,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── certifications.csv
 │   ├── sdg_map.csv
 │   ├── courses.csv
-│   ├── riasec_items.json    # 30 O*NET Mini-IP items (verbatim, CC BY-ND 4.0)
+│   ├── interest_items.json  # 36 team-written RIASEC items, 24 tagged with an IT area
 │   └── sample_profiles.json # Fictional demo profiles only
 ├── docs/                    # Screenshots, diagrams
 ├── raw/                     # Raw downloads (git-ignored; listed in SOURCES.md)

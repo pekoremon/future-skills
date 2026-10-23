@@ -10,6 +10,8 @@ const TYPES = {
   C: { name: "Conventional", desc: "Organising information and following clear procedures: administration, accounting, data, IT operations and finance." },
 };
 const ORDER = ["R", "I", "A", "S", "E", "C"];
+const AREA_NAMES = { software_dev: "Software Engineering", data_ai: "Data & AI", cybersecurity: "Cybersecurity",
+  cloud_infra: "Cloud, Infrastructure & Networking", web_ux: "Web & Interface Design", it_mgmt: "IT Management & Analysis" };
 const RATING = ["None", "Basic", "Some", "Good", "Strong", "Expert"];
 const ZONES = { 3: "Diploma", 4: "Bachelor's degree", 5: "Master's degree or higher" };
 const DOMAINS = { generic_tech: "ICT", agriculture: "Agriculture", finance: "Finance", healthcare: "Healthcare", overall: "Malaysia overall", services: "Services" };
@@ -17,41 +19,40 @@ const FLAGS = {
   needs_extra_education: "Needs further study",
   needs_extra_qualification: "Needs extra qualification",
   not_for_it_graduates: "Licensed profession, reference only",
-  no_domain_trend: "No domain trend data (neutral 50)",
-  interest_not_scored: "Interest not included",
+  no_trend_data: "No trend data (neutral 50)",
 };
-const PART_LABEL = { interest: "Interest fit", skill: "Skill fit", trend: "AI-era trend" };
+const QUIET_FLAGS = ["area_not_scored", "interest_not_scored"];  // explained once at the top of the page
+const PART_LABEL = { area: "IT area fit", interest: "Interest fit", skill: "Skill fit", trend: "AI-era trend" };
 const PART_NAMES = { my_demand: "Malaysian demand", ai_momentum: "AI momentum" };
 const domainText = (t) => String(t).replace(/\b(generic_tech|agriculture|finance|healthcare) domain\b/g, (_, d) => `${DOMAINS[d]} field`);
 const STORE_KEY = "future-skills-v1";
-// The 65 O*NET skills and knowledge areas, grouped so a student rates 22 groups instead.
+// The 51 O*NET skills and knowledge areas, grouped so a student rates 21 groups instead.
 // A group's rating is copied to every O*NET skill in it, so matching still runs per skill.
 const SKILL_GROUPS = {
   general: [
     ["Communication", "Reading, writing, listening and speaking", ["SK001", "SK002", "SK003", "SK004"]],
     ["Maths and science", "Using maths and scientific methods to solve problems", ["SK005", "SK006"]],
-    ["Problem solving", "Critical thinking, complex problems, judgement and decisions", ["SK007", "SK017", "SK029"]],
+    ["Problem solving", "Critical thinking, complex problems, judgement and decisions", ["SK007", "SK017", "SK027"]],
     ["Learning and teaching", "Picking up new things fast and teaching others", ["SK008", "SK009", "SK015"]],
     ["Working with people", "Reading people, coordinating with others, helping customers", ["SK011", "SK012", "SK016"]],
     ["Persuading and negotiating", "Changing minds and reaching agreements", ["SK013", "SK014"]],
-    ["Programming and design", "Writing code, designing technology, working out what users need", ["SK018", "SK019", "SK022"]],
-    ["Systems and quality", "Analysing and evaluating systems, monitoring performance, testing quality", ["SK010", "SK028", "SK030", "SK031"]],
-    ["Setting up and running equipment", "Choosing, installing, operating and watching machines or systems", ["SK020", "SK021", "SK023", "SK024"]],
-    ["Troubleshooting and repair", "Finding faults, maintaining and fixing equipment", ["SK025", "SK026", "SK027"]],
-    ["Managing time, money and people", "Planning time, budgets, materials and staff", ["SK032", "SK033", "SK034", "SK035"]],
+    ["Programming and design", "Writing code, designing technology, working out what users need", ["SK018", "SK019", "SK020"]],
+    ["Systems and quality", "Analysing and evaluating systems, monitoring performance, testing quality", ["SK010", "SK026", "SK028", "SK029"]],
+    ["Running and watching systems", "Operating systems and watching how they perform", ["SK021", "SK022"]],
+    ["Troubleshooting and repair", "Finding faults, maintaining and fixing equipment", ["SK023", "SK024", "SK025"]],
+    ["Managing time, money and people", "Planning time, budgets, materials and staff", ["SK030", "SK031", "SK032", "SK033"]],
   ],
   domain_knowledge: [
-    ["Business and management", "Running organisations, office administration, HR", ["SK036", "SK037", "SK041"]],
-    ["Finance and economics", "Accounting, banking, economics", ["SK038"]],
-    ["Sales and customer service", "Marketing, selling, serving customers", ["SK039", "SK040"]],
-    ["Computers and telecoms", "Hardware, software, networks, telecommunications", ["SK044", "SK064"]],
-    ["Engineering and manufacturing", "Engineering, mechanics, construction, production", ["SK042", "SK045", "SK047", "SK048"]],
-    ["Maths and physical sciences", "Mathematics, physics, chemistry", ["SK049", "SK050", "SK051"]],
-    ["Biology, food and agriculture", "Living things, crops, livestock, food production", ["SK043", "SK052"]],
-    ["Health and medicine", "Medicine, therapy, psychology", ["SK053", "SK056", "SK057"]],
-    ["Society and education", "Sociology, geography, philosophy, teaching", ["SK054", "SK055", "SK058", "SK061"]],
-    ["Language, media and design", "English, media, design, fine arts", ["SK046", "SK059", "SK060", "SK065"]],
-    ["Law and public safety", "Law, government, security", ["SK062", "SK063"]],
+    ["Business and management", "Running organisations, office administration, HR", ["SK034", "SK035", "SK039"]],
+    ["Finance and economics", "Accounting, banking, economics", ["SK036"]],
+    ["Sales and customer service", "Marketing, selling, serving customers", ["SK037", "SK038"]],
+    ["Computers and telecoms", "Hardware, software, networks, telecommunications", ["SK040", "SK050"]],
+    ["Engineering and mechanics", "Engineering, technology and machines", ["SK041", "SK043"]],
+    ["Mathematics", "Maths knowledge: algebra, statistics, calculus", ["SK044"]],
+    ["Psychology", "How people think, learn and behave", ["SK045"]],
+    ["Education and training", "Teaching and designing training", ["SK046"]],
+    ["Language, media and design", "English, media and design", ["SK042", "SK047", "SK051"]],
+    ["Law and public safety", "Law, government, security", ["SK048", "SK049"]],
   ],
 };
 // Older saved answers rated single skills; show the group at its highest member rating.
@@ -60,13 +61,16 @@ const groupRating = (ids) => Math.max(0, ...ids.map((id) => state.ratings[id] ||
 
 const app = document.getElementById("app");
 const cache = {};
+const QUIZ_ITEMS = 36;
 let state = loadState();
 
 function loadState() {
-  const base = { answers: Array(30).fill(null), quizSkipped: false, ratings: {}, techs: [], zone: 4, demo: null,
+  const base = { answers: Array(QUIZ_ITEMS).fill(null), quizSkipped: false, ratings: {}, techs: [], zone: 4, demo: null,
     scenario: "baseline", hoursPerWeek: 5 };
   try {
-    return Object.assign(base, JSON.parse(sessionStorage.getItem(STORE_KEY) || "{}"));
+    const saved = Object.assign(base, JSON.parse(sessionStorage.getItem(STORE_KEY) || "{}"));
+    if (saved.answers.length !== QUIZ_ITEMS) saved.answers = Array(QUIZ_ITEMS).fill(null);  // older 30-item questionnaire
+    return saved;
   } catch (e) {
     return base;
   }
@@ -102,14 +106,9 @@ function showError(e) {
   document.getElementById("retry").onclick = route;
 }
 
-function riasecTotals() {
-  return cached("/api/questionnaire").then((q) => {
-    const totals = Object.fromEntries(ORDER.map((k) => [k, 0]));
-    q.items.forEach((it, i) => { if (state.answers[i] !== null) totals[it.type] += state.answers[i]; });
-    return totals;
-  });
-}
-const topCode = (t) => ORDER.slice().sort((a, b) => t[b] - t[a] || ORDER.indexOf(a) - ORDER.indexOf(b)).slice(0, 3);
+const testDone = () => Boolean(state.test && state.test.result);
+
+const interestResult = () => api("/api/questionnaire/score", { body: JSON.stringify({ answers: state.answers }) });
 const quizDone = () => state.answers.every((a) => a !== null);
 
 /* ---------- pages ---------- */
@@ -117,11 +116,11 @@ const quizDone = () => state.answers.every((a) => a !== null);
 function pageHome() {
   render(`
   <div class="stack">
-    <p class="eyebrow">Future-ready careers for tech graduates</p>
-    <h1>AI is changing tech jobs. Find the roles where your tech skills and a domain still win.</h1>
-    <p class="muted">Future Skills matches you to tech + domain roles in agriculture, finance and healthcare, explains every score, shows the skills you still need, and links each role to the UN Sustainable Development Goals.</p>
+    <p class="eyebrow">Future-ready careers for IT students</p>
+    <h1>Find the part of IT that suits you, and the job to aim for.</h1>
+    <p class="muted">Future Skills combines an interest questionnaire, an IT skills test and your CV to show which of 6 IT areas fits you best, then ranks 26 IT roles, explains every score, shows the skills you still need, and links each role to the UN Sustainable Development Goals.</p>
     <div class="steps">
-      <div class="card"><h3>Your interests</h3><p class="muted small">30 quick questions from the O*NET Mini Interest Profiler. Optional.</p></div>
+      <div class="card"><h3>Your interests</h3><p class="muted small">36 quick statements about IT work you would enjoy. About 8 minutes.</p></div>
       <div class="card"><h3>Your skills</h3><p class="muted small">Rate the skills you have and pick the tools you use, or let AI read your CV.</p></div>
       <div class="card"><h3>Your matches</h3><p class="muted small">Ranked roles with the score split, skill gaps, trends and SDG links.</p></div>
     </div>
@@ -143,18 +142,18 @@ async function pageQuizIntro() {
   <div class="quiz stack">
     <p class="eyebrow">Optional step · Interests</p>
     <h1>What kind of work do you actually enjoy?</h1>
-    <div class="row"><span class="chip">30 items</span><span class="chip">Skip any time</span></div>
+    <div class="row"><span class="chip">36 items</span><span class="chip">About 8 minutes</span><span class="chip">Skip any time</span></div>
     <div class="card stack">
-      <div><h3>Why</h3><p class="muted">Finds the work types you like most, so you can see directions beyond a generic tech job.</p></div>
-      <div><h3>How it is used</h3><p class="muted">Interest is only 20% of the match score. It helps you explore; it never hides a role. The choice is yours.</p></div>
+      <div><h3>Why</h3><p class="muted">Finds the kind of IT work you enjoy most: building, analysing, designing, helping, leading or organising, and which of the 6 IT areas it points to.</p></div>
+      <div><h3>How it is used</h3><p class="muted">It is one of three views of you, next to the skills test and your CV. It helps you explore; it never hides a role.</p></div>
       <div><h3>Your data</h3><p class="muted">Answers stay in this browser tab and are only used to compute your matches.</p></div>
     </div>
-    <p class="muted small">Each item is a work activity. Say how much you would like doing it, not whether you can do it or what it pays.</p>
+    <p class="muted small">Each item starts with "I would enjoy...". Say how much you agree, based on what you would enjoy, not what you are already good at.</p>
     <div class="stack">
       <button class="btn primary" type="button" id="start">${state.answers.some((a) => a !== null) ? "Continue questionnaire" : "Start questionnaire"}</button>
       <button class="btn" type="button" id="skip">Skip for now</button>
     </div>
-    <p class="attribution">Items from the <a href="https://www.onetcenter.org/IP.html">O*NET Interest Profiler (Mini-IP)</a>, USDOL/ETA.</p>
+    <p class="attribution">Questions written by the team, based on Holland's RIASEC interest types as used by <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET</a>.</p>
   </div>`);
   document.getElementById("start").onclick = () => {
     const first = state.answers.indexOf(null);
@@ -177,10 +176,10 @@ async function pageQuizItem(n) {
       <a class="btn ghost" href="#/quiz">Pause</a>
     </div>
     <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${q.items.length}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / q.items.length) * 100)}%"></div></div>
-    <p class="muted small">How much would you like doing this work activity?</p>
+    <p class="muted small">${esc(q.stem)}</p>
     <div class="card item" id="item-text">${esc(item.text)}</div>
     <div class="options" role="group" aria-labelledby="item-text">${opts}</div>
-    <p class="attribution">${esc(q.attribution)} <a href="https://creativecommons.org/licenses/by-nd/4.0/">CC BY-ND 4.0</a>.</p>
+    <p class="attribution">${esc(q.attribution)}</p>
   </div>`);
   app.querySelectorAll(".options button").forEach((b) => {
     b.onclick = () => {
@@ -195,13 +194,17 @@ async function pageQuizItem(n) {
 
 async function pageInterests() {
   if (!quizDone()) { location.hash = "#/quiz"; return; }
-  const t = await riasecTotals();
-  const top = topCode(t);
-  const bars = ORDER.map((k) => `
+  const [r, areas] = await Promise.all([interestResult(), cached("/api/questionnaire")]);
+  const top = r.code.split("");
+  const bar = (label, value, max, on) => `
     <div class="stack" style="gap: 4px">
-      <div class="row" style="justify-content: space-between"><span${top.includes(k) ? ' style="font-weight:700"' : ' class="muted"'}>${k} · ${TYPES[k].name}</span><span class="muted">${t[k]} / 20</span></div>
-      <div class="bar"><div class="${top.includes(k) ? "on" : ""}" style="width: ${(t[k] / 20) * 100}%"></div></div>
-    </div>`).join("");
+      <div class="row" style="justify-content: space-between"><span${on ? ' style="font-weight:700"' : ' class="muted"'}>${label}</span><span class="muted">${fmt(value, 0)} / ${max}</span></div>
+      <div class="bar"><div class="${on ? "on" : ""}" style="width: ${(value / max) * 100}%"></div></div>
+    </div>`;
+  const types = ORDER.map((k) => bar(`${k} · ${TYPES[k].name}`, r.riasec[k], 30, top.includes(k))).join("");
+  const areaNames = Object.fromEntries((state.test && state.test.domains || []).map((d) => [d.id, d.name]));
+  const ranked = Object.entries(r.area_items).sort((a, b) => b[1] - a[1]);
+  const areaBars = ranked.map(([id, v], i) => bar(areaNames[id] || AREA_NAMES[id] || id, v, 100, i === 0)).join("");
   const cards = top.map((k) => `
     <div class="card row" style="align-items: flex-start; flex-wrap: nowrap">
       <span class="letter">${k}</span>
@@ -210,18 +213,21 @@ async function pageInterests() {
   render(`
   <div class="quiz stack">
     <p class="eyebrow">Your interest results</p>
-    <div><p class="muted small">Your interest code (Holland code)</p><div class="big" style="letter-spacing: 0.12em">${top.join("")}</div></div>
-    <div class="card stack" style="gap: 12px"><h3>Scores for the six interest types</h3>${bars}</div>
+    ${r.warnings.map((w) => `<div class="warn">${esc(w.text)}</div>`).join("")}
+    <div><p class="muted small">Your interest code (Holland code)</p><div class="big" style="letter-spacing: 0.12em">${esc(r.code)}</div></div>
+    <div class="card stack" style="gap: 12px"><h3>Which IT areas you would enjoy</h3><p class="muted small">From the 4 questions about each area (0–100).</p>${areaBars}</div>
+    <div class="card stack" style="gap: 12px"><h3>Scores for the six interest types</h3>${types}</div>
     <h2>Your three strongest interests</h2>
     ${cards}
-    <div class="note">This is a direction, not a verdict. Interests change with experience, and in your matches interest fit is only part of the score.</div>
+    <div class="note">This is a direction, not a verdict. Interests change with experience. In your matches they sit next to the skills test and your CV.</div>
     <div class="stack">
-      <a class="btn primary" href="#/skills">Next: your skills</a>
+      <a class="btn primary" href="#/test">Next: the IT skills test</a>
+      <a class="btn" href="#/results">See my matches</a>
       <button class="btn" type="button" id="redo">Answer again</button>
     </div>
-    <p class="attribution">Scoring: <a href="https://www.onetcenter.org/dl_files/Mini-IP.pdf">Rounds et al. (2016), O*NET Mini Interest Profiler technical report</a>. Type descriptions written by the team, based on <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET Career Interest Types</a>.</p>
+    <p class="attribution">${esc(areas.attribution)} Type descriptions written by the team, based on <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET Career Interest Types</a>.</p>
   </div>`);
-  document.getElementById("redo").onclick = () => { state.answers = Array(30).fill(null); saveState(); location.hash = "#/quiz/1"; };
+  document.getElementById("redo").onclick = () => { state.answers = Array(QUIZ_ITEMS).fill(null); saveState(); location.hash = "#/quiz/1"; };
 }
 
 async function pageSkills() {
@@ -431,14 +437,14 @@ function splitBar(m) {
     ${ORDER_PARTS.map((k) => `<span class="k-${k}" style="width: ${m.components[k].points || 0}%"></span>`).join("")}
   </div>`;
 }
-const ORDER_PARTS = ["interest", "skill", "trend"];
+const ORDER_PARTS = ["area", "interest", "skill", "trend"];
 
 // Roles that need more study than the student's level, or a licence, are left out of the list.
 const isBestMatch = (m) => !m.flags.includes("not_for_it_graduates") && !m.flags.includes("needs_extra_education");
 
 function matchCard(m, rank) {
   const d = m.skill_detail;
-  const flags = m.flags.map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
+  const flags = m.flags.filter((f) => !QUIET_FLAGS.includes(f)).map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
   const sdg = m.sdg.map((s) => `<span class="chip" title="${esc(s.rationale)}">SDG ${esc(s.target)} · ${esc(s.goal_name)}</span>`).join("");
   const gaps = d.gaps.slice(0, 6).map((g) => `
     <div class="gap-row">
@@ -459,7 +465,7 @@ function matchCard(m, rank) {
       <div class="stack" style="gap: 6px; flex: 1">
         <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)}</h3>
         <div class="row" style="gap: 6px">
-          <span class="chip plain">${esc(DOMAINS[m.domain] || "Other field")}</span>
+          <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
           ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : m.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
           ${flags}
         </div>
@@ -475,7 +481,7 @@ function matchCard(m, rank) {
           <div class="explain-out" aria-live="polite" hidden></div>
         </div>
         <ul style="margin: 0; padding-left: 18px">${parts}</ul>
-        <p class="small muted">${esc(m.explain.interest)}. ${esc(domainText(m.explain.trend))}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
+        <p class="small muted">${esc(m.explain.area)}. ${esc(m.explain.interest)}. ${esc(domainText(m.explain.trend))}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
         ${gaps ? `<div><h3>Biggest skill gaps</h3>${gaps}</div>` : '<p class="note">You meet the level O*NET lists for every rated skill of this role.</p>'}
         ${d.tech_missing.length ? `<div class="stack" style="gap: 8px"><h3>Technologies to learn</h3><div class="row" style="gap: 6px">${d.tech_missing.map((t) => `<span class="chip plain">${esc(t.skill_name)}</span>`).join("")}</div></div>` : ""}
         ${d.tech_used.length ? `<p class="small muted">You already use: ${d.tech_used.map((t) => esc(t.skill_name)).join(", ")}</p>` : ""}
@@ -552,20 +558,20 @@ async function loadRoleExtra(card) {
 
 async function pageResults() {
   const demo = state.demo;
-  if (!demo && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
+  if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
     render(`<div class="stack"><h1>No answers yet</h1><p class="muted">Answer the interest questions or rate your skills first, or try the fictional demo student.</p>
       <div class="row"><a class="btn primary" href="#/quiz">Start</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
     document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); pageResults(); };
     return;
   }
-  render('<p class="muted" role="status">Scoring 35 roles…</p>');
+  render('<p class="muted" role="status">Scoring IT roles…</p>');
   let body;
   const options = { top: 35, scenario: state.scenario, hours_per_week: Number(state.hoursPerWeek) };
   if (demo) {
     body = { profile_id: demo, ...options };
   } else {
-    const totals = quizDone() ? await riasecTotals() : Object.fromEntries(ORDER.map((k) => [k, 0]));
-    body = { riasec: totals, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
+    const test = testDone() ? { seed: state.test.seed, responses: state.test.responses } : undefined;
+    body = { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
   }
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
   lastMatchBody = body;
@@ -585,7 +591,7 @@ async function pageResults() {
     </section>`;
   const profiles = demo ? await cached("/api/profiles") : [];
   const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
-  const noInterest = res.results[0] && res.results[0].flags.includes("interest_not_scored");
+  const noArea = !res.sources_used.length;
   const best = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
   let shown = 10;
   const draw = () => {
@@ -600,10 +606,10 @@ async function pageResults() {
   <div class="stack">
     <p class="eyebrow">Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
     <h1>Best matches for your level</h1>
-    ${noInterest ? '<div class="warn">Interest fit is not included because you skipped the questionnaire. <a href="#/quiz">Answer it now</a> to update the ranking.</div>' : `<p class="muted">Your interest code: <strong>${esc(res.riasec_code)}</strong></p>`}
+    ${noArea ? '<div class="warn">IT area fit is not included because you have not taken the skills test. <a href="#/test">Take it now</a> to update the ranking.</div>' : `<div class="card stack" style="gap: 6px"><h2>Your IT areas</h2>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div>`}
     <div class="card stack" style="gap: 8px">
-      <p class="small">Match score = ${Math.round(res.weights.interest * 100)}% interest fit + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
-      <div class="legend"><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
+      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role's field. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
+      <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
     ${scenarioCard}
     <div id="list" class="stack"></div>

@@ -27,11 +27,8 @@ SOURCE_NAME = "O*NET 31.0 Database"
 SOURCE_URL = "https://www.onetcenter.org/database.html"
 SOURCE_DATE = "2026-10-22"
 
-# Roles whose name in roles.csv is not an exact O*NET title.
-SOC_OVERRIDES = {
-    "R23": "21-1012.00",  # Educational, Guidance, and Career Counselors and Advisors
-    "R33": "13-2099.04",  # Fraud Examiners, Investigators and Analysts
-}
+# Roles whose name in roles.csv is not an exact O*NET title and that have no onet_soc.
+SOC_OVERRIDES = {}
 
 RIASEC = ["R", "I", "A", "S", "E", "C"]
 RIASEC_ELEMENTS = {"1.B.1.a": "R", "1.B.1.b": "I", "1.B.1.c": "A",
@@ -108,7 +105,7 @@ def main() -> None:
         code = "".join(RIASEC[high[soc][e] - 1] for e in HIGH_POINTS if high[soc].get(e))
         role_rows.append({
             "role_id": rid, "role_name_en": by_id[rid]["role_name_en"],
-            "group": by_id[rid]["group"], "onet_soc": soc, "onet_title": soc_title[soc],
+            "subfield_code": by_id[rid]["subfield_code"], "onet_soc": soc, "onet_title": soc_title[soc],
             "riasec_code_onet": code,
             **{f"score_{k}": scores[soc].get(k, "") for k in RIASEC},
             "job_zone": job_zone.get(soc, ""), **src,

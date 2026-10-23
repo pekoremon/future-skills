@@ -6,7 +6,7 @@ Endpoints (all JSON):
     GET  /                           the web app (src/static/)
     GET  /api                        list of endpoints
     GET  /api/health
-    GET  /api/questionnaire          the 30 Mini-IP items, answer scale and attribution
+    GET  /api/questionnaire          the 36 interest items (RIASEC type + IT area), scale and attribution
     GET  /api/assessment/start       IT skills test: a seed, the 6 screen questions and the rules
     POST /api/assessment/next        seed + screen answers -> the 2 strongest domains and 8 questions
     POST /api/assessment/sql         question id + SQL -> the rows it returns (read-only SQLite)
@@ -15,8 +15,8 @@ Endpoints (all JSON):
     GET  /api/roles
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
     GET  /api/profiles               fictional demo profiles
-    POST /api/questionnaire/score    RIASEC answers (0-4) -> six totals (0-20) and a 3-letter code
-    POST /api/match                  student profile -> ranked, explained roles with a learning path
+    POST /api/questionnaire/score    36 answers (1-5) -> RIASEC totals, code, IT-area scores, warnings
+    POST /api/match                  test/preferences/CV -> IT area fit, then ranked roles with a learning path
     POST /api/explain                same body as /api/match + role_id -> LLM explanation (or fallback)
     GET  /api/explain/status         whether the LLM is configured, and which model
     POST /api/cv/summary             {"text"} or {"docx_base64"} -> CV summary, skills, qualifications
@@ -51,10 +51,9 @@ sys.path.insert(0, str(SCRIPTS))
 import assessment  # noqa: E402  (scripts/ is added to the path above)
 import cv_reader  # noqa: E402
 import explain  # noqa: E402
+import interest  # noqa: E402
 import matching  # noqa: E402
 
-RIASEC = matching.RIASEC
-LIKERT = range(0, 5)  # Mini-IP answers: 0 = strongly dislike ... 4 = strongly like
 UPDATE_TIMEOUT_S = 600
 MAX_BODY = 4_000_000  # room for a base64 .docx CV
 
@@ -148,21 +147,11 @@ def body(request: Request) -> dict:
     return data
 
 
-def score_answers(answers) -> dict:
-    """Sum questionnaire answers per RIASEC type."""
-    if not isinstance(answers, list) or not answers:
-        raise BadRequest("'answers' must be a non-empty list of {type, value}")
-    totals = dict.fromkeys(RIASEC, 0)
-    for i, a in enumerate(answers):
-        t, v = (a.get("type"), a.get("value")) if isinstance(a, dict) else (None, None)
-        if t not in totals or isinstance(v, bool) or v not in LIKERT:
-            raise BadRequest(f"answers[{i}]: type must be one of {RIASEC} and value 0-4")
-        totals[t] += v
-    return totals
-
-
-def riasec_code(totals: dict) -> str:
-    return "".join(sorted(RIASEC, key=lambda k: -totals[k])[:3])
+def interest_result(answers) -> dict:
+    try:
+        return interest.score(answers)
+    except interest.InterestError as e:
+        raise BadRequest(str(e)) from e
 
 
 def build_profile(data: dict, skills: dict) -> dict:
@@ -172,16 +161,27 @@ def build_profile(data: dict, skills: dict) -> dict:
         found = next((p for p in profiles if p["profile_id"] == data["profile_id"]), None)
         if found is None:
             raise BadRequest(f"unknown profile_id '{data['profile_id']}'")
-        return found
+        return matching.with_interest(found)
 
-    if "answers" in data:
-        riasec = score_answers(data["answers"])
-    elif isinstance(data.get("riasec"), dict):
-        riasec = data["riasec"]
-        if not all(isinstance(riasec.get(k), (int, float)) for k in RIASEC):
-            raise BadRequest(f"'riasec' needs a number for each of {RIASEC}")
-    else:
-        raise BadRequest("send 'answers', 'riasec' or 'profile_id'")
+    areas = {a["id"] for a in matching.load_areas()}
+    per_area = {}
+    for key in ("test_areas", "preferences", "cv_areas"):
+        given = data.get(key)
+        if given is None:
+            continue
+        if not isinstance(given, dict) or not set(given) <= areas or not all(
+                isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 100
+                for v in given.values()):
+            raise BadRequest(f"'{key}' must map IT area ids {sorted(areas)} to numbers 0-100")
+        per_area[key] = given
+    if data.get("interest_answers") is not None:
+        per_area["interest"] = interest_result(data["interest_answers"])
+    if "test" in data:
+        seed, responses = assessment_input(data["test"])
+        try:
+            per_area["test_areas"] = matching.test_area_scores(assessment.report(seed, responses))
+        except (assessment.AssessmentError, KeyError, ValueError) as e:
+            raise BadRequest(f"'test': {e}") from e
 
     levels = {}
     for key, convert in (("skills", float), ("skill_ratings", matching.rating_to_level)):
@@ -208,7 +208,7 @@ def build_profile(data: dict, skills: dict) -> dict:
     if zone not in range(1, 6):
         raise BadRequest("'education_job_zone' must be 1-5")
     return {"profile_id": "request", "name": "You", "education_job_zone": zone,
-            "riasec": riasec, "skills": levels, "technologies": techs}
+            **per_area, "skills": levels, "technologies": techs}
 
 
 @route("GET", "/")
@@ -229,12 +229,13 @@ def health(request):
 
 @route("GET", "/api/questionnaire")
 def questionnaire(request):
-    return jsonify(json.loads((DATA / "riasec_items.json").read_text(encoding="utf-8")))
+    return jsonify(interest.load_items())
 
 
-def assessment_input(request) -> tuple[int, dict]:
-    """Seed and answers from an assessment request, with every question id checked."""
-    data = body(request)
+def assessment_input(data) -> tuple[int, dict]:
+    """Seed and answers from an assessment request body, with every question id checked."""
+    if not isinstance(data, dict):
+        raise BadRequest("send a JSON object with 'seed' and 'responses'")
     seed, responses = data.get("seed"), data.get("responses", {})
     if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed < 2 ** 31:
         raise BadRequest("'seed' must be the integer from /api/assessment/start")
@@ -257,7 +258,7 @@ def assessment_start(request):
 
 @route("POST", "/api/assessment/next")
 def assessment_next(request):
-    seed, responses = assessment_input(request)
+    seed, responses = assessment_input(body(request))
     domains = assessment.top_domains(seed, responses)
     return jsonify(domains=domains,
                    questions=[assessment.public(q, seed) for q in assessment.deep_questions(seed, domains)])
@@ -277,7 +278,7 @@ def assessment_sql(request):
 
 @route("POST", "/api/assessment/result")
 def assessment_result(request):
-    return jsonify(assessment.report(*assessment_input(request)))
+    return jsonify(assessment.report(*assessment_input(body(request))))
 
 
 @route("GET", "/api/skills")
@@ -291,10 +292,9 @@ def skills(request):
 
 @route("GET", "/api/roles")
 def roles(request):
-    keep = ["role_id", "group", "role_name_en", "riasec_code_onet", "job_zone", "is_mycol",
-            "it_reachable_draft", "onet_soc", "masco_4digit_mycol"]
-    return jsonify([{**{k: r[k] for k in keep}, "domain": matching.ROLE_DOMAIN.get(r["role_id"])}
-                    for r in read_csv("roles.csv")])
+    keep = ["role_id", "role_name_en", "subfield", "it_area", "riasec_code_onet", "job_zone",
+            "is_mycol", "onet_soc", "masco_4digit_mycol"]
+    return jsonify([{k: r[k] for k in keep} for r in matching.it_roles(matching.load_data())])
 
 
 @route("GET", "/api/roles/<role_id>")
@@ -312,8 +312,8 @@ def role_detail(request, role_id: str):
             rated.append({**item, "importance": float(r["importance"]),
                           "level": float(r["level"]) if r["level"] else None})
     rated.sort(key=lambda s: -s["importance"])
-    domain = matching.ROLE_DOMAIN.get(role_id)
-    return jsonify(role=role, domain=domain, trend_score=data["trend_scores"].get(domain),
+    trend, _, has_trend = matching.role_trend(role, data["trend_scores"])
+    return jsonify(role=role, it_area=role["it_area"], trend_score=trend if has_trend else None,
                    skills=rated, technologies=techs, sdg=data["sdg"].get(("role", role_id), []),
                    certifications=[c for c in read_csv("certifications.csv")
                                    if c["role_id"] == role_id])
@@ -326,8 +326,7 @@ def profiles(request):
 
 @route("POST", "/api/questionnaire/score")
 def questionnaire_score(request):
-    totals = score_answers(body(request).get("answers"))
-    return jsonify(riasec=totals, code=riasec_code(totals))
+    return jsonify(interest_result(body(request).get("answers")))
 
 
 def match_options(req: dict, data: dict) -> tuple[dict, str]:
@@ -351,13 +350,14 @@ def match(request):
         raise BadRequest("'top' must be a positive integer")
     profile, scenario = match_options(req, data)
 
-    ranked = matching.rank_roles(profile, data, scenario=scenario)
+    result = matching.match_student(profile, data, scenario=scenario)
+    ranked = result.pop("roles")
     baseline_rank = {m["role_id"]: i + 1 for i, m in
                      enumerate(matching.rank_roles(profile, data, scenario="baseline"))}
     for i, m in enumerate(ranked):
         m["rank"], m["baseline_rank"] = i + 1, baseline_rank[m["role_id"]]
-    return jsonify(riasec=profile["riasec"], riasec_code=riasec_code(profile["riasec"]),
-                   weights=matching.WEIGHTS, skill_split=matching.SKILL_SPLIT,
+    return jsonify(**result, weights=matching.WEIGHTS, area_weights=matching.AREA_WEIGHTS,
+                   skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
                              "trend_scores": matching.scenario_trend_scores(data, scenario)},
                    results=ranked[:top])
