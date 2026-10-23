@@ -20,13 +20,13 @@ The health endpoint is `GET /api/health`. Data refreshes use public external sou
 
 ## Publishing dependency settings
 
-Publishing skips Replit's automatic package-install step via `[packager.features] enabledForHosting = false`. The explicit deployment build command installs `requirements.txt` with `PIP_USER=false` and a project-local `--target`. This avoids the automatic installer that continued to fail despite environment overrides.
+Publishing skips Replit's automatic package-install step with `[packager.features] enabledForHosting = false`, because that step runs `pip install --user` and fails where user site-packages are disabled.
 
-Shared environment variables also retain the same pip defaults for development:
+The deployment build then creates a project virtualenv and installs `requirements.txt` into it: `unset PIP_TARGET PIP_USER; python -m venv .venv && .venv/bin/pip install --no-user -r requirements.txt`. The deployment runs `.venv/bin/python src/main.py`. The `unset` matters: the shared `PIP_TARGET` below would otherwise send packages to `.pythonlibs` instead of the venv.
+
+Shared environment variables keep pip working in the workspace (the Run button):
 
 - `PIP_USER=false`
 - `PIP_TARGET=.pythonlibs/lib/python3.12/site-packages`
 
-If the Python runtime version changes, update both the deployment build command's target path and `PIP_TARGET` to match. Neither production-only nor shared environment overrides alone resolved the automatic install failure.
-
-The exact configured build command passed a dry run with user site-packages disabled and a conflicting inherited `PIP_USER=true`; its inline override took precedence. A new publish is required to confirm that the automatic install is skipped and the explicit build completes.
+Do not use "Fix with Agent" to change `.replit` without checking the result into GitHub: merges that replace the whole file have dropped these settings before.
