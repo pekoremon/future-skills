@@ -5,8 +5,11 @@ entrypoint = "src/main.py"
 [nix]
 channel = "stable-25_05"
 
+[packager.features]
+enabledForHosting = false
+
 [deployment]
-build = ["pip", "install", "-r", "requirements.txt"]
+build = ["env", "PIP_USER=false", "python", "-m", "pip", "install", "--target", ".pythonlibs/lib/python3.12/site-packages", "--upgrade", "-r", "requirements.txt"]
 run = ["python", "src/main.py"]
 deploymentTarget = "cloudrun"
 

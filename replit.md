@@ -20,11 +20,13 @@ The health endpoint is `GET /api/health`. Data refreshes use public external sou
 
 ## Publishing dependency settings
 
-Shared environment variables (not production-only):
+Publishing skips Replit's automatic package-install step via `[packager.features] enabledForHosting = false`. The explicit deployment build command installs `requirements.txt` with `PIP_USER=false` and a project-local `--target`. This avoids the automatic installer that continued to fail despite environment overrides.
+
+Shared environment variables also retain the same pip defaults for development:
 
 - `PIP_USER=false`
 - `PIP_TARGET=.pythonlibs/lib/python3.12/site-packages`
 
-These configure pip to write into the project's Python dependency folder rather than attempting a disabled user-site install or writing to the immutable system Python. Keep them shared: a publish with these settings scoped only to production still failed during automatic package installation. If the Python runtime version changes, update the target path to match.
+If the Python runtime version changes, update both the deployment build command's target path and `PIP_TARGET` to match. Neither production-only nor shared environment overrides alone resolved the automatic install failure.
 
-Verification uses a pip install dry run with user site-packages disabled and checks Flask imports plus the root and health routes. A new publish is required to verify the deployment itself; local success does not prove the publishing service uses the same environment.
+The exact configured build command passed a dry run with user site-packages disabled and a conflicting inherited `PIP_USER=true`; its inline override took precedence. A new publish is required to confirm that the automatic install is skipped and the explicit build completes.
