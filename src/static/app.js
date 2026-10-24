@@ -1088,9 +1088,53 @@ function hexagonChart(items, caption) {
     ${rings}${spokes}<polygon class="hex-shape" points="${shape}"/>${dots}${labels}</svg>`;
 }
 
-function pageTestResult() {
-  const r = state.test && state.test.result;
+/* Share link for a test result: the seed and answers, base64url-encoded in the hash. Whoever
+   opens it gets the result re-graded by the server; nothing is stored, and the hash never
+   reaches the server. */
+function shareToken(t) {
+  const bytes = new TextEncoder().encode(JSON.stringify({ s: t.seed, r: t.responses }));
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function readShareToken(token) {
+  const b64 = token.replace(/-/g, "+").replace(/_/g, "/");
+  const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))));
+  return { seed: data.s, responses: data.r };
+}
+
+async function shareResult(button) {
+  const url = `${location.origin}${location.pathname}#/shared/${shareToken(state.test)}`;
+  const box = document.getElementById("share-box");
+  box.hidden = false;
+  box.querySelector("input").value = url;
+  try {
+    if (navigator.share) { await navigator.share({ title: "My IT skills test result", url }); return; }
+    await navigator.clipboard.writeText(url);
+    button.textContent = "Link copied";
+  } catch (e) {
+    box.querySelector("input").select();  // share sheet closed or clipboard blocked: the link is in the box
+  }
+}
+
+async function pageSharedResult(token) {
+  render('<p class="muted">Loading the shared result…</p>');
+  let r;
+  try {
+    r = await api("/api/assessment/result", { body: JSON.stringify(readShareToken(token)) });
+  } catch (e) {
+    render(`<div class="stack"><h1>This share link does not work</h1>
+      <p class="muted">It may be cut off, or made with an older version of the test.</p>
+      <div class="row"><a class="btn primary" href="#/test">Take the IT skills test</a></div></div>`);
+    return;
+  }
+  pageTestResult(r);
+}
+
+/* The student's own result, or with `sharedResult` a read-only view of someone else's. */
+function pageTestResult(sharedResult = null) {
+  const isShared = Boolean(sharedResult);
+  const r = sharedResult || (state.test && state.test.result);
   if (!r) { location.hash = "#/test"; return; }
+  const nameOf = (id) => (r.domains.find((d) => d.id === id) || {}).name || id;
   const areaScore = (d) => d.area_score ?? d.readiness;  // results saved before area_score existed
   const deep = r.domains.filter((d) => d.tested_in_depth).sort((a, b) => areaScore(b) - areaScore(a) || b.readiness - a.readiness);
   const best = r.domains.find((d) => d.id === r.recommended);
@@ -1108,10 +1152,29 @@ function pageTestResult() {
     "Quick-check score in each IT area");
   // Areas whose quick-check score looks as high as the best area's but were held back (not tested in depth)
   const held = r.domains.filter((d) => !d.tested_in_depth && d.area_score !== undefined && d.profile > d.area_score);
-  const heldNote = held.length && best.area_score !== undefined ? `<p class="note small">${esc(held.map((d) => d.name).join(" and "))} also scored ${held.map((d) => d.profile).join(" and ")} in the quick check, but ${held.length > 1 ? "were" : "was"} not tested in depth, so ${held.length > 1 ? "their area scores are" : "its area score is"} held at ${held[0].area_score}, the lower of your top 2. Your strongest area is the one with the highest area score: ${esc(best.name)} (${best.area_score}).</p>` : "";
+  const heldNote = held.length && best.area_score !== undefined ? `<p class="note small">${esc(held.map((d) => d.name).join(" and "))} also scored ${held.map((d) => d.profile).join(" and ")} in the quick check, but ${held.length > 1 ? "were" : "was"} not tested in depth, so ${held.length > 1 ? "their area scores are" : "its area score is"} held at ${held[0].area_score}, the lower of the top 2. The strongest area is the one with the highest area score: ${esc(best.name)} (${best.area_score}).</p>` : "";
   const gaps = r.skills_to_improve.length
-    ? `<ul class="quals">${r.skills_to_improve.map((g) => `<li><strong>${esc(g.skill)}</strong> <span class="muted small">· ${esc(domainName(g.domain))}</span></li>`).join("")}</ul>`
+    ? `<ul class="quals">${r.skills_to_improve.map((g) => `<li><strong>${esc(g.skill)}</strong> <span class="muted small">· ${esc(nameOf(g.domain))}</span></li>`).join("")}</ul>`
     : '<p class="muted">Nothing: every answer was right.</p>';
+  if (isShared) {
+    render(`
+  <div class="stack">
+    <p class="eyebrow">Shared IT skills test result</p>
+    <h1>Strongest IT area: ${esc(best.name)}</h1>
+    <p class="muted">Someone shared their Future Skills test result with you. ${esc(r.disclaimer)}</p>
+    <div class="card stack" style="gap: 12px"><h2>Their IT profile</h2>
+      <p class="muted small">Quick-check score in each area (0–100): the same number of questions per area. Their top 2 (bold, with a large dot) were then tested in depth.</p>
+      ${profile}${heldNote}</div>
+    <h2>Their top 2, tested in depth</h2>
+    <div class="grid">${deep.map(domainCard).join("")}</div>
+    <div class="card stack" style="gap: 10px"><h2>Skills they are working on</h2>${gaps}</div>
+    <div class="note stack" style="gap: 8px">
+      <p><strong>Which part of IT suits you?</strong> 24 questions in 6 IT areas, about 25 minutes, free.</p>
+      <div class="row"><a class="btn primary" href="#/test">Take the IT skills test</a><a class="btn ghost" href="#/">What is Future Skills?</a></div>
+    </div>
+  </div>`);
+    return;
+  }
   const review = r.items.map((i, n) => `
     <details class="more card review">
       <summary><span class="${i.correct ? "pass" : "fail"}">${i.correct ? "Right" : i.points > 0 ? "Partly right" : "Wrong"}</span>&nbsp;· Q${n + 1} · ${esc(i.skill)} <span class="muted small">&nbsp;${i.points} / ${i.max}</span></summary>
@@ -1129,6 +1192,11 @@ function pageTestResult() {
     <p class="eyebrow">Step 2 of 4 · IT skills test result</p>
     <h1>Your strongest IT area: ${esc(best.name)}</h1>
     <p class="muted">${esc(r.disclaimer)}</p>
+    <div class="row"><button class="btn" type="button" id="share">Share my result</button></div>
+    <div class="card stack" id="share-box" style="gap: 6px" hidden>
+      <label class="small muted" for="share-url">Anyone with this link sees your IT profile, top 2 areas and skills to work on, but not your answers. Nothing is saved on our server.</label>
+      <input class="search" id="share-url" type="text" readonly>
+    </div>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
       <p class="muted small">Quick-check score in each area (0–100): the same number of questions per area, so you can compare them. Your top 2 (bold, with a large dot) were then tested in depth.</p>
       ${profile}${heldNote}</div>
@@ -1144,6 +1212,8 @@ function pageTestResult() {
     <div class="row"><a class="btn primary" href="#/skills">Next: step 3, my skills</a><button class="btn" type="button" id="again">Take a new test</button><a class="btn ghost" href="#/">Home</a></div>
   </div>`);
   document.getElementById("again").onclick = (e) => { e.target.disabled = true; startTest().catch(showError); };
+  document.getElementById("share").onclick = (e) => shareResult(e.target);
+  document.getElementById("share-url").onfocus = (e) => e.target.select();
 }
 
 /* ---------- learning path page ---------- */
@@ -1241,7 +1311,8 @@ async function route() {
   });
   window.scrollTo(0, 0);
   try {
-    if (page === "test" && parts[1] === "result") pageTestResult();
+    if (page === "shared" && parts[1]) await pageSharedResult(parts[1]);
+    else if (page === "test" && parts[1] === "result") pageTestResult();
     else if (page === "test" && parts[1]) pageTestItem(Number(parts[1]) || 1);
     else if (page === "test") pageTestIntro();
     else if (page === "quiz" && parts[1]) await pageQuizItem(Number(parts[1]) || 1);
