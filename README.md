@@ -33,7 +33,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 
 ### Problem
 
-[2–4 sentences: who is affected and why it matters.]
+A Malaysian IT student about to graduate has to pick one part of IT (software, data and AI, cybersecurity, cloud and networking, web and interface design, or IT management) while AI changes which of those jobs are needed, and mostly picks by guesswork. AI is spreading faster than training: 56% of Malaysian professionals use AI tools at work but only 26% have had formal training (Hays Asia Salary Guide 2025), and MOSTI expects more than 600,000 workers to need reskilling within three to five years (both quoted in the Domain 1 brief). Generic career tests do not look at Malaysian demand or at how fast AI is entering each field, and course lists do not say which skills matter for which job. A wrong choice costs a graduate months of learning for a role they do not fit or that the market needs less.
 
 ### Solution
 
@@ -170,7 +170,11 @@ python -m unittest discover tests
 
 ## How We Use Replit (Required)
 
-[Development / hosting / secrets — fill in.]
+- **Hosting.** The live demo, https://future-skills.replit.app, is a Replit Deployment (`deploymentTarget = "cloudrun"` in `.replit`) that runs `python src/main.py`. The app uses only the Python standard library, so there is no build step and nothing to install.
+- **Development and preview.** The **Run** button starts the `Start application` workflow (`PORT=5000 python src/main.py`), and we test each change in Replit's Preview before publishing. The repository is synced with GitHub: we pull the latest `main` into Replit, check it in Preview, then publish.
+- **Secrets.** `FIREWORKS_API_KEY` (and optionally `FIREWORKS_MODEL`) are kept in Replit Secrets and never committed; `.env.example` lists them. Without the key the app still works and shows a rule-based explanation instead of the AI one.
+- **Live data refresh.** On the deployed app, the "Update data" button on the Trends page runs `scripts/update_trends.py` on Replit: it fetches OpenDOSM (and optionally arXiv) and recomputes the signals and scores. Data written this way lasts until the deployment restarts; the committed CSVs are the baseline.
+- **Replit Agent.** Used for deployment settings only (the `.replit` workflows and publishing). We check every change it makes to `.replit` into GitHub. See `replit.md` for why the repo has `pyproject.toml` and `uv.lock` but no `requirements.txt`.
 
 📄 Proof of use: `submission/SDC2026_TeamName_Replit_POU.pdf`
 
@@ -181,11 +185,24 @@ python -m unittest discover tests
 
 ## Challenges & Learnings
 
-- [ ]
+- **Malaysia has almost no role-level demand data for IT.** DOSM publishes by industry and by major occupation group, and every IT role sits in the same ICT industry. Only Software Developers has its own job-ad series. We use the official MyCOL 2024/2025 critical-occupations list for each role, show DOSM industry figures as context only, and show "no data" instead of estimating a number.
+- **Small, messy series.** DOSM online job ads jump at a series break in 2025 Q3; for some quarters DOSM names only the top 5 occupations, so we can only store an upper bound (a censored value); in 2026 Q2 about half the ads had no industry. Each signal therefore carries a confidence and its reasons, and windows never cross a break.
+- **Growth that is not what it looks like.** AI papers on arXiv grew in most IT areas, but all papers grew faster, so AI's share fell. We flag these signals as a "composition effect" instead of reading them as AI entering the field faster.
+- **Interest tests hardly separate IT areas.** The O*NET RIASEC profiles of software, data, security and networking roles correlate 0.85–0.98, so we added area-specific interest questions and an IT skills test with hands-on tasks.
+- **Keeping GenAI honest.** The model only words an explanation of numbers our code computed; a reply with any number not in its input is rejected and a rule-based text is shown instead.
+- **Publishing on Replit.** Publishing failed in Replit's package step until we removed every dependency and declared an empty Python project (`pyproject.toml`, `uv.lock`).
+- **Working as three people on one repo.** Two of us once wired the same trend layer into the app in parallel. We now branch from the latest `main`, run the tests and the data validator, and merge small changes often.
 
 ## Future Improvements
 
-- [ ]
+- **Real trends, not snapshots.** Add the next DOSM Job Market Insights quarter (2026 Q3) and future MyCOL editions, so demand signals compare several periods instead of one status.
+- **Rising and declining skills.** Derive skill-level signals (for example, skills named in job ads over time), not only area- and role-level ones.
+- **Calibrate the trend score** with the team: a single medium-confidence signal can currently move a part to 100.
+- **Employer and HR view:** a skills-gap heatmap and reskilling plan for a whole team.
+- **Bahasa Malaysia and Chinese** versions of the interface (the IT areas already have Chinese names in the data).
+- **More HRD Corp-claimable programmes,** checked against HRD Corp's own records, not only provider pages.
+- **Progress tracking** along the learning path, and keeping refreshed trend data across deployment restarts.
+- **A fairness check:** the app collects no age, gender or background, and a test could show that recommendations depend only on interests, skills and the CV.
 
 ## Team
 
