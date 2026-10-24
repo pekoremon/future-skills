@@ -15,8 +15,8 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | Team Name | Hands Off Our Rights |
 | Team Domain | Domain 1 — Aiversecity Future-Ready Workforce |
 | SDG Track (1–17) | SDG 4 — Quality Education (targets 4.3, 4.4); SDG 8 — Decent Work (targets 8.2, 8.5) |
-| Team Leader | [Hong Zhi Yang] |
-| University | [Universiti Tunku Abdul Rahman] |
+| Team Leader | Hong Zhi Yang |
+| University | Universiti Tunku Abdul Rahman |
 | Number of Members | 3 |
 
 ## Links
@@ -40,7 +40,7 @@ A Malaysian IT student about to graduate has to pick one part of IT (software, d
 The core pipeline:
 
 ```
-trend data → domain outlook → role matching (skills + RIASEC interests + trends) → reskilling pathway → SDG contribution
+student (interests + IT skills test + CV + skill ratings) → best-fit IT area → role matching (area fit + interest + skills + AI-era trend from MyCOL, DOSM and arXiv) → three future scenarios → reskilling pathway → SDG contribution
 ```
 
 Every number shown to the user carries its source and date. The system never invents jobs, courses or statistics, and the student makes the final decision.
@@ -52,9 +52,9 @@ Domain 1 requires all six:
 1. **Skills profile intake** — 36-item IT interest questionnaire (RIASEC + IT area), a 24-item IT skills test graded in the browser, CV reading, plus 1–5 skill ratings and technologies
 2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
 3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), then an explainable role score and skills gap
-4. **Personalised reskilling pathway** — ordered plan with estimated time, free / low-cost courses
-5. **SDG mapping** — every role and skill tagged to at least one SDG target
-6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads)
+4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults
+5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to
+6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads); each role shows its rank range across them, and the app says scores are estimates, not predictions. When the "Update data" job brings new trend data, the jobs page shows which recommendations moved
 
 Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
@@ -208,9 +208,9 @@ python -m unittest discover tests
 
 | Name | Role | GitHub |
 |---|---|---|
-| [MEMBER A] | Trend data | @username |
-| [MEMBER B] | Roles, skills, SDG mapping | @username |
-| [MEMBER C] | Courses, repo | @username |
+| Hong Zhi Yang (team leader) | Trend data (MyCOL, DOSM, arXiv signals) | [@zhiyang19015-stack](https://github.com/zhiyang19015-stack) |
+| [NAME] | Roles, skills, SDG mapping | [@cherylloveslemonade](https://github.com/cherylloveslemonade) |
+| [NAME] | App, matching, courses, repo | [@pekoremon](https://github.com/pekoremon) |
 
 ## Submission Checklist
 
