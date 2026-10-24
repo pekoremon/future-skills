@@ -172,6 +172,18 @@ class TestItAssessment(unittest.TestCase):
                 self.assertTrue(q["onet_skill_ids"])
                 self.assertTrue(set(q["onet_skill_ids"]) <= known)
 
+    def test_skill_ids_point_at_the_right_skills(self):
+        """Catches ids left stale when skills.csv is renumbered: tags must be O*NET skills or
+        knowledge, and every code question tests Programming."""
+        with (ROOT / "data" / "skills.csv").open(encoding="utf-8-sig", newline="") as f:
+            skills = {row["skill_id"]: row for row in csv.DictReader(f)}
+        for q in BANK["questions"]:
+            with self.subTest(q["id"]):
+                names = {skills[s]["skill_name"] for s in q["onet_skill_ids"]}
+                self.assertTrue(all(skills[s]["skill_type"] != "technology" for s in q["onet_skill_ids"]))
+                if q["type"] == "code":
+                    self.assertIn("Programming", names)
+
     def test_domains_cite_onet_codes(self):
         for d in BANK["domains"]:
             for soc in d["onet_soc"]:

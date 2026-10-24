@@ -155,7 +155,7 @@
       "difficulty": 2,
       "skill": "Language semantics (mutable defaults)",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 60,
       "prompt": "What does this program print?",
@@ -184,7 +184,7 @@
       "difficulty": 2,
       "skill": "Algorithmic complexity",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK017"
       ],
       "time_s": 60,
@@ -212,7 +212,7 @@
       "difficulty": 2,
       "skill": "Floating-point numbers",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK005"
       ],
       "time_s": 45,
@@ -242,7 +242,7 @@
       "difficulty": 2,
       "skill": "References and mutability",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 45,
       "prompt": "What does this print?",
@@ -271,7 +271,7 @@
       "difficulty": 2,
       "skill": "Unit testing",
       "onet_skill_ids": [
-        "SK028"
+        "SK026"
       ],
       "time_s": 60,
       "prompt": "A unit test for checkout() calls the real payment gateway and fails whenever the network is slow. What is the best fix?",
@@ -298,7 +298,7 @@
       "difficulty": 3,
       "skill": "Closures and late binding",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 90,
       "prompt": "What does this program print?",
@@ -327,8 +327,8 @@
       "difficulty": 3,
       "skill": "Version control and secret handling",
       "onet_skill_ids": [
-        "SK022",
-        "SK028"
+        "SK020",
+        "SK026"
       ],
       "time_s": 90,
       "prompt": "You committed a database password to a feature branch and already pushed it to the shared remote. What is the correct FIRST step?",
@@ -356,7 +356,7 @@
       "skill": "Software design principles",
       "onet_skill_ids": [
         "SK019",
-        "SK030"
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "A ReportExporter class has an if/elif chain on format (\"pdf\", \"xlsx\", ...). Every new format means editing and re-testing this class. Which principle does this most directly break?",
@@ -383,7 +383,7 @@
       "difficulty": 3,
       "skill": "Test design (boundary cases)",
       "onet_skill_ids": [
-        "SK028"
+        "SK026"
       ],
       "time_s": 90,
       "prompt": "is_leap(year) should follow the Gregorian rule: divisible by 4, except centuries, unless divisible by 400. Which set of test years is most likely to catch a wrong implementation?",
@@ -410,7 +410,7 @@
       "difficulty": 2,
       "skill": "Algorithmic complexity",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK005"
       ],
       "time_s": 90,
@@ -433,8 +433,8 @@
       "difficulty": 3,
       "skill": "Concurrency",
       "onet_skill_ids": [
-        "SK022",
-        "SK030"
+        "SK020",
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "Two threads each run `counter += 1` 100,000 times on a shared global, with no lock. What can you say about the final value?",
@@ -461,7 +461,7 @@
       "difficulty": 3,
       "skill": "Problem solving in code",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK017"
       ],
       "time_s": 360,
@@ -624,7 +624,7 @@
       "difficulty": 3,
       "skill": "Data structures (stack)",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK017"
       ],
       "time_s": 300,
@@ -691,8 +691,8 @@
       "difficulty": 2,
       "skill": "SQL aggregation",
       "onet_skill_ids": [
-        "SK022",
-        "SK044"
+        "SK020",
+        "SK040"
       ],
       "time_s": 60,
       "prompt": "Table orders(customer_id, amount). Which query lists customers whose total spend is above 1000?",
@@ -774,8 +774,8 @@
       "difficulty": 2,
       "skill": "Database design (normalisation)",
       "onet_skill_ids": [
-        "SK044",
-        "SK030"
+        "SK040",
+        "SK028"
       ],
       "time_s": 60,
       "prompt": "An orders table repeats each customer's full address in every order row. A customer moves house. What problem does this design cause?",
@@ -853,7 +853,7 @@
       "skill": "Data leakage",
       "onet_skill_ids": [
         "SK007",
-        "SK030"
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "A churn model predicts whether a customer will leave next month. It reaches 98% AUC in testing but fails in production. Which input feature is the most likely cause?",
@@ -908,7 +908,7 @@
       "difficulty": 3,
       "skill": "SQL joins",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 90,
       "prompt": "Which query returns customers who have NEVER placed an order?",
@@ -935,7 +935,7 @@
       "difficulty": 3,
       "skill": "SQL NULL handling",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK005"
       ],
       "time_s": 90,
@@ -958,7 +958,7 @@
       "difficulty": 2,
       "skill": "Applied generative AI",
       "onet_skill_ids": [
-        "SK030",
+        "SK028",
         "SK019"
       ],
       "time_s": 60,
@@ -986,7 +986,7 @@
       "difficulty": 3,
       "skill": "Data wrangling in code",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK018"
       ],
       "time_s": 360,
@@ -1122,7 +1122,7 @@
       "difficulty": 3,
       "skill": "SQL querying",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK018"
       ],
       "time_s": 360,
@@ -1163,8 +1163,8 @@
       "difficulty": 2,
       "skill": "Injection prevention",
       "onet_skill_ids": [
-        "SK022",
-        "SK044"
+        "SK020",
+        "SK040"
       ],
       "time_s": 60,
       "prompt": "A login check builds its SQL like this. What is the right fix?",
@@ -1197,7 +1197,7 @@
       "difficulty": 2,
       "skill": "Password storage",
       "onet_skill_ids": [
-        "SK044"
+        "SK040"
       ],
       "time_s": 60,
       "prompt": "How should a new web app store user passwords?",
@@ -1251,7 +1251,7 @@
       "difficulty": 2,
       "skill": "Authentication (MFA)",
       "onet_skill_ids": [
-        "SK044"
+        "SK040"
       ],
       "time_s": 45,
       "prompt": "What does multi-factor authentication (MFA) protect against best?",
@@ -1278,8 +1278,8 @@
       "difficulty": 2,
       "skill": "Transport security (HTTPS)",
       "onet_skill_ids": [
-        "SK044",
-        "SK064"
+        "SK040",
+        "SK050"
       ],
       "time_s": 45,
       "prompt": "A website shows the HTTPS padlock. What does that tell you?",
@@ -1306,7 +1306,7 @@
       "difficulty": 3,
       "skill": "Log analysis",
       "onet_skill_ids": [
-        "SK026",
+        "SK024",
         "SK018"
       ],
       "time_s": 120,
@@ -1340,7 +1340,7 @@
       "difficulty": 3,
       "skill": "Cross-site scripting (XSS)",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 90,
       "prompt": "A comment box shows comments with the code below. A user posts <img src=x onerror=alert(document.cookie)>. What is the best fix?",
@@ -1400,7 +1400,7 @@
       "difficulty": 3,
       "skill": "Authentication tokens (JWT)",
       "onet_skill_ids": [
-        "SK044"
+        "SK040"
       ],
       "time_s": 90,
       "prompt": "An API accepts a JWT whose header says {\"alg\": \"none\"} and has an empty signature. What is the impact and fix?",
@@ -1427,7 +1427,7 @@
       "difficulty": 3,
       "skill": "Incident response",
       "onet_skill_ids": [
-        "SK026",
+        "SK024",
         "SK007"
       ],
       "time_s": 90,
@@ -1455,8 +1455,8 @@
       "difficulty": 2,
       "skill": "Access control",
       "onet_skill_ids": [
-        "SK022",
-        "SK030"
+        "SK020",
+        "SK028"
       ],
       "time_s": 60,
       "prompt": "GET /api/invoices/1043 shows your invoice. Changing it to /api/invoices/1044 shows another customer's invoice. What is this, and what fixes it?",
@@ -1487,8 +1487,8 @@
       "difficulty": 3,
       "skill": "Cross-site request forgery (CSRF)",
       "onet_skill_ids": [
-        "SK022",
-        "SK044"
+        "SK020",
+        "SK040"
       ],
       "time_s": 90,
       "prompt": "A bank moves money with GET /transfer?to=ACC&amount=500, authenticated only by the session cookie. An attacker's page contains <img src=\"https://bank.example/transfer?to=EVIL&amount=500\">. What is this, and what fixes it?",
@@ -1515,8 +1515,8 @@
       "difficulty": 3,
       "skill": "Attack surface review",
       "onet_skill_ids": [
-        "SK026",
-        "SK064"
+        "SK024",
+        "SK050"
       ],
       "time_s": 90,
       "prompt": "A port scan of your public web server shows this. Which finding is the most urgent?",
@@ -1545,8 +1545,8 @@
       "difficulty": 3,
       "skill": "Network traffic analysis",
       "onet_skill_ids": [
-        "SK026",
-        "SK064"
+        "SK024",
+        "SK050"
       ],
       "time_s": 90,
       "prompt": "In a Wireshark capture on the campus Wi-Fi you can read this request in plain text. What is the root problem and fix?",
@@ -1575,8 +1575,8 @@
       "difficulty": 3,
       "skill": "Log analysis automation",
       "onet_skill_ids": [
-        "SK022",
-        "SK026"
+        "SK020",
+        "SK024"
       ],
       "time_s": 420,
       "prompt": "Write find_bruteforce(lines, threshold). lines are sshd log lines. Count the lines containing \"Failed password\" per source IP; the IP is the word after the LAST \" from \" in the line (a username can itself be \"from\"). Return the IPs with at least threshold failures, sorted by count (highest first), then by IP as a string (ascending).",
@@ -1660,7 +1660,7 @@
       "difficulty": 3,
       "skill": "Web attack detection",
       "onet_skill_ids": [
-        "SK026",
+        "SK024",
         "SK018"
       ],
       "time_s": 240,
@@ -1699,8 +1699,8 @@
       "difficulty": 3,
       "skill": "Password auditing",
       "onet_skill_ids": [
-        "SK022",
-        "SK044"
+        "SK020",
+        "SK040"
       ],
       "time_s": 360,
       "prompt": "Write find_weak_passwords(hashes, wordlist). hashes maps username -> the unsalted SHA-256 hex digest of the password. Return the usernames whose password is in wordlist, sorted A-Z. (hashlib is allowed.) This is why real systems use salted, slow hashes.",
@@ -1805,7 +1805,7 @@
       "difficulty": 2,
       "skill": "Linux permissions",
       "onet_skill_ids": [
-        "SK044"
+        "SK040"
       ],
       "time_s": 60,
       "prompt": "After `chmod 640 secrets.env`, who can do what?",
@@ -1832,7 +1832,7 @@
       "difficulty": 2,
       "skill": "Scalability",
       "onet_skill_ids": [
-        "SK030",
+        "SK028",
         "SK019"
       ],
       "time_s": 60,
@@ -1860,8 +1860,8 @@
       "difficulty": 2,
       "skill": "Cloud service models",
       "onet_skill_ids": [
-        "SK030",
-        "SK044"
+        "SK028",
+        "SK040"
       ],
       "time_s": 45,
       "prompt": "You rent a virtual machine in the cloud and must install and patch its operating system yourself. Which service model is this?",
@@ -1888,7 +1888,7 @@
       "difficulty": 2,
       "skill": "IPv4 subnetting",
       "onet_skill_ids": [
-        "SK064",
+        "SK050",
         "SK005"
       ],
       "time_s": 60,
@@ -1911,8 +1911,8 @@
       "difficulty": 2,
       "skill": "Network troubleshooting",
       "onet_skill_ids": [
-        "SK026",
-        "SK064"
+        "SK024",
+        "SK050"
       ],
       "time_s": 60,
       "prompt": "A user can ping 1.1.1.1 but no website opens by name (for example, www.mohe.gov.my). What is the most likely cause?",
@@ -1939,7 +1939,7 @@
       "difficulty": 3,
       "skill": "Containers",
       "onet_skill_ids": [
-        "SK030"
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "With this Dockerfile, every small code change reinstalls all dependencies and the build takes 5 minutes. What fixes it?",
@@ -1968,7 +1968,7 @@
       "difficulty": 2,
       "skill": "Job scheduling",
       "onet_skill_ids": [
-        "SK044"
+        "SK040"
       ],
       "time_s": 60,
       "prompt": "When does the cron entry `30 2 * * 1 /opt/backup.sh` run?",
@@ -1996,7 +1996,7 @@
       "skill": "Reliability (SLA)",
       "onet_skill_ids": [
         "SK005",
-        "SK030"
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "A service promises 99.9% availability over a 30-day month. How many minutes of downtime does that allow?",
@@ -2018,7 +2018,7 @@
       "difficulty": 2,
       "skill": "Identity and access management",
       "onet_skill_ids": [
-        "SK030"
+        "SK028"
       ],
       "time_s": 60,
       "prompt": "A CI pipeline only needs to upload build files to one storage bucket. Which permission should its credentials get?",
@@ -2045,8 +2045,8 @@
       "difficulty": 3,
       "skill": "Linux troubleshooting",
       "onet_skill_ids": [
-        "SK026",
-        "SK044"
+        "SK024",
+        "SK040"
       ],
       "time_s": 120,
       "prompt": "`df -h` shows / at 100%, but `du -sh /*` adds up to only 60% of the disk. You already deleted a 20 GB log file. What is the most likely explanation?",
@@ -2073,7 +2073,7 @@
       "difficulty": 3,
       "skill": "Backup and disaster recovery",
       "onet_skill_ids": [
-        "SK030",
+        "SK028",
         "SK019"
       ],
       "time_s": 90,
@@ -2101,7 +2101,7 @@
       "difficulty": 3,
       "skill": "IPv4 subnetting",
       "onet_skill_ids": [
-        "SK064",
+        "SK050",
         "SK005"
       ],
       "time_s": 120,
@@ -2127,7 +2127,7 @@
       "difficulty": 3,
       "skill": "IPv4 subnetting",
       "onet_skill_ids": [
-        "SK064",
+        "SK050",
         "SK005"
       ],
       "time_s": 90,
@@ -2155,8 +2155,8 @@
       "difficulty": 3,
       "skill": "Network troubleshooting (OSI layers)",
       "onet_skill_ids": [
-        "SK026",
-        "SK064"
+        "SK024",
+        "SK050"
       ],
       "time_s": 90,
       "prompt": "A new PC has a link light and the correct static IP, mask and gateway, but cannot ping the gateway. `arp -a` shows the gateway entry as incomplete. Where is the fault most likely?",
@@ -2183,7 +2183,7 @@
       "difficulty": 2,
       "skill": "Transport protocols",
       "onet_skill_ids": [
-        "SK064"
+        "SK050"
       ],
       "time_s": 60,
       "prompt": "Why do voice and video calls usually run over UDP rather than TCP?",
@@ -2210,8 +2210,8 @@
       "difficulty": 3,
       "skill": "Network security",
       "onet_skill_ids": [
-        "SK064",
-        "SK026"
+        "SK050",
+        "SK024"
       ],
       "time_s": 90,
       "prompt": "A web server's connection table is full. The firewall shows thousands of SYN packets from many source addresses, with no matching final ACK. What is this?",
@@ -2238,8 +2238,8 @@
       "difficulty": 3,
       "skill": "Routing",
       "onet_skill_ids": [
-        "SK064",
-        "SK030"
+        "SK050",
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "A router has these routes. Which next hop does it use for a packet to 10.1.3.7?",
@@ -2268,8 +2268,8 @@
       "difficulty": 3,
       "skill": "Ops automation (parsing)",
       "onet_skill_ids": [
-        "SK022",
-        "SK026"
+        "SK020",
+        "SK024"
       ],
       "time_s": 360,
       "prompt": "Write find_full_disks(df_text, threshold). df_text is the output of `df -h` (a header line, then one line per filesystem). Return the mount points whose Use% is at least threshold, sorted by Use% (highest first), then mount point (A-Z). A mount point can contain spaces.",
@@ -2334,7 +2334,7 @@
       "difficulty": 3,
       "skill": "Reliability (SLA) in code",
       "onet_skill_ids": [
-        "SK022",
+        "SK020",
         "SK005"
       ],
       "time_s": 360,
@@ -2438,8 +2438,8 @@
       "difficulty": 3,
       "skill": "Subnet calculation in code",
       "onet_skill_ids": [
-        "SK022",
-        "SK064"
+        "SK020",
+        "SK050"
       ],
       "time_s": 360,
       "prompt": "Write network_address(ip, prefix) without the ipaddress module. ip is a dotted IPv4 string and prefix is 0-32. Return the network address as a dotted string.",
@@ -2501,7 +2501,7 @@
       "difficulty": 3,
       "skill": "Network design (VLSM)",
       "onet_skill_ids": [
-        "SK064",
+        "SK050",
         "SK019"
       ],
       "time_s": 300,
@@ -2526,7 +2526,7 @@
       "difficulty": 2,
       "skill": "CSS specificity",
       "onet_skill_ids": [
-        "SK046"
+        "SK042"
       ],
       "time_s": 60,
       "prompt": "What colour is the heading?",
@@ -2555,7 +2555,7 @@
       "difficulty": 2,
       "skill": "Accessibility",
       "onet_skill_ids": [
-        "SK046"
+        "SK042"
       ],
       "time_s": 60,
       "prompt": "What is the best fix for this delete control?",
@@ -2588,7 +2588,7 @@
       "difficulty": 2,
       "skill": "Semantic HTML",
       "onet_skill_ids": [
-        "SK046"
+        "SK042"
       ],
       "time_s": 45,
       "prompt": "Which element should wrap a site's main menu links?",
@@ -2615,7 +2615,7 @@
       "difficulty": 2,
       "skill": "Responsive design",
       "onet_skill_ids": [
-        "SK046"
+        "SK042"
       ],
       "time_s": 60,
       "prompt": "On phones your responsive site shows the tiny, zoomed-out desktop layout, even though the CSS has media queries. What is most likely missing?",
@@ -2642,7 +2642,7 @@
       "difficulty": 2,
       "skill": "Form usability",
       "onet_skill_ids": [
-        "SK046",
+        "SK042",
         "SK018"
       ],
       "time_s": 45,
@@ -2670,7 +2670,7 @@
       "difficulty": 3,
       "skill": "JavaScript event loop",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 90,
       "prompt": "In what order are the letters logged?",
@@ -2699,8 +2699,8 @@
       "difficulty": 2,
       "skill": "HTTP APIs",
       "onet_skill_ids": [
-        "SK022",
-        "SK044"
+        "SK020",
+        "SK040"
       ],
       "time_s": 60,
       "prompt": "A logged-in user calls DELETE /api/users/7 but is not an admin. Which status code should the API return?",
@@ -2727,8 +2727,8 @@
       "difficulty": 3,
       "skill": "Web security (CORS)",
       "onet_skill_ids": [
-        "SK022",
-        "SK044"
+        "SK020",
+        "SK040"
       ],
       "time_s": 90,
       "prompt": "A React app at http://localhost:3000 calls fetch('http://localhost:8000/api'). The browser console shows a CORS error. Where is the fix?",
@@ -2755,7 +2755,7 @@
       "difficulty": 2,
       "skill": "Web performance",
       "onet_skill_ids": [
-        "SK030"
+        "SK028"
       ],
       "time_s": 60,
       "prompt": "Largest Contentful Paint is 6 s on mobile. The largest element is a 4 MB, 4000 px wide hero photo. What helps most?",
@@ -2782,7 +2782,7 @@
       "difficulty": 2,
       "skill": "User-centred design",
       "onet_skill_ids": [
-        "SK046",
+        "SK042",
         "SK018"
       ],
       "time_s": 60,
@@ -2810,7 +2810,7 @@
       "difficulty": 2,
       "skill": "Accessibility",
       "onet_skill_ids": [
-        "SK046"
+        "SK042"
       ],
       "time_s": 60,
       "prompt": "What is the minimum contrast ratio WCAG 2.2 level AA requires for normal-size body text?",
@@ -2837,7 +2837,7 @@
       "difficulty": 3,
       "skill": "Back-end logic for UI",
       "onet_skill_ids": [
-        "SK022"
+        "SK020"
       ],
       "time_s": 360,
       "prompt": "Write paginate(items, page, per_page). page starts at 1. Return a dict with keys items (that page's slice), page, total_pages, has_prev, has_next. Raise ValueError if per_page < 1 or page < 1, or if page > total_pages when there is at least one item. An empty list has total_pages 0 and page 1 is allowed.",
@@ -2987,8 +2987,8 @@
       "difficulty": 3,
       "skill": "Accessibility audit",
       "onet_skill_ids": [
-        "SK046",
-        "SK028"
+        "SK042",
+        "SK026"
       ],
       "time_s": 240,
       "prompt": "Select EVERY line that fails WCAG 2.2 level AA.",
@@ -3024,7 +3024,7 @@
       "difficulty": 2,
       "skill": "Agile roles (Scrum)",
       "onet_skill_ids": [
-        "SK036",
+        "SK034",
         "SK012"
       ],
       "time_s": 45,
@@ -3052,7 +3052,7 @@
       "difficulty": 2,
       "skill": "Requirements analysis",
       "onet_skill_ids": [
-        "SK030",
+        "SK028",
         "SK018"
       ],
       "time_s": 45,
@@ -3080,8 +3080,8 @@
       "difficulty": 2,
       "skill": "Scope management",
       "onet_skill_ids": [
-        "SK036",
-        "SK032"
+        "SK034",
+        "SK030"
       ],
       "time_s": 60,
       "prompt": "Halfway through a fixed-price project, the client keeps asking for \"small\" extra features but the deadline and budget stay the same. What is this, and what should the project manager do?",
@@ -3108,8 +3108,8 @@
       "difficulty": 2,
       "skill": "Project scheduling",
       "onet_skill_ids": [
-        "SK032",
-        "SK030"
+        "SK030",
+        "SK028"
       ],
       "time_s": 45,
       "prompt": "Which tool shows task dependencies and lets you find the critical path?",
@@ -3164,7 +3164,7 @@
       "difficulty": 3,
       "skill": "Earned value (cost)",
       "onet_skill_ids": [
-        "SK033",
+        "SK031",
         "SK005"
       ],
       "time_s": 90,
@@ -3187,7 +3187,7 @@
       "difficulty": 3,
       "skill": "Earned value (status)",
       "onet_skill_ids": [
-        "SK033",
+        "SK031",
         "SK005"
       ],
       "time_s": 90,
@@ -3215,8 +3215,8 @@
       "difficulty": 2,
       "skill": "Risk management",
       "onet_skill_ids": [
-        "SK036",
-        "SK035"
+        "SK034",
+        "SK033"
       ],
       "time_s": 60,
       "prompt": "The only developer who knows the payment module might leave mid-project (medium probability, high impact). Which response is best?",
@@ -3243,8 +3243,8 @@
       "difficulty": 3,
       "skill": "Delivery approach (agile vs waterfall)",
       "onet_skill_ids": [
-        "SK036",
-        "SK030"
+        "SK034",
+        "SK028"
       ],
       "time_s": 90,
       "prompt": "Which project suits a predictive (waterfall) approach best?",
@@ -3271,8 +3271,8 @@
       "difficulty": 3,
       "skill": "Data modelling (ERD)",
       "onet_skill_ids": [
-        "SK030",
-        "SK044"
+        "SK028",
+        "SK040"
       ],
       "time_s": 90,
       "prompt": "A student can enrol in many courses and a course has many students. How do you model this in a relational database?",
@@ -3299,7 +3299,7 @@
       "difficulty": 2,
       "skill": "Agile forecasting",
       "onet_skill_ids": [
-        "SK032",
+        "SK030",
         "SK005"
       ],
       "time_s": 90,
@@ -3322,8 +3322,8 @@
       "difficulty": 3,
       "skill": "Critical path analysis",
       "onet_skill_ids": [
-        "SK032",
-        "SK030"
+        "SK030",
+        "SK028"
       ],
       "time_s": 300,
       "prompt": "What is the shortest possible duration of this project, in days?",
@@ -3347,7 +3347,7 @@
       "difficulty": 3,
       "skill": "Requirements classification",
       "onet_skill_ids": [
-        "SK030",
+        "SK028",
         "SK018"
       ],
       "time_s": 240,
