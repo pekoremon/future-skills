@@ -1034,10 +1034,24 @@ function answerText(i) {
   return String(a);
 }
 
+/* Label lines of at most `max` characters; "&" starts a line, never ends one. */
+function wrapLabel(label, max) {
+  const words = label.split(" ").reduce((acc, w) => (acc.length && acc[acc.length - 1] === "&" ? [...acc.slice(0, -1), `& ${w}`] : [...acc, w]), []);
+  return words.reduce((lines, w) => {
+    const last = lines[lines.length - 1];
+    if (last && `${last} ${w}`.length <= max) lines[lines.length - 1] = `${last} ${w}`;
+    else lines.push(w);
+    return lines;
+  }, []);
+}
+
 /* Hexagon (radar) chart of six 0-100 scores, first item at the top, then clockwise.
-   items: [{ label, value, on }]; `on` items get a filled dot and a bold label. */
+   items: [{ label, value, on }]; `on` items get a filled dot and a bold label.
+   On a phone the chart is drawn smaller inside a narrower box, so the labels stay readable. */
 function hexagonChart(items, caption) {
-  const cx = 210, cy = 160, R = 100, n = items.length;
+  const compact = window.innerWidth < 560;
+  const W = compact ? 330 : 420, H = compact ? 300 : 330, cx = W / 2, cy = compact ? 148 : 160, R = compact ? 70 : 100;
+  const n = items.length, wrap = compact ? 15 : 20, lh = compact ? 16 : 14;  // lh: label line height (font + 2)
   const at = (i, r) => {
     const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
@@ -1048,14 +1062,15 @@ function hexagonChart(items, caption) {
   const shape = items.map((d, i) => at(i, (R * Math.max(0, Math.min(100, d.value))) / 100).map((v) => v.toFixed(1)).join(",")).join(" ");
   const dots = items.map((d, i) => { const [x, y] = at(i, (R * Math.max(0, Math.min(100, d.value))) / 100); return `<circle class="hex-dot${d.on ? " on" : ""}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${d.on ? 5 : 3.5}"/>`; }).join("");
   const labels = items.map((d, i) => {
-    const [x, y] = at(i, R + 18);
+    const [x, y] = at(i, R + (compact ? 12 : 18));
     const anchor = Math.abs(x - cx) < 1 ? "middle" : x > cx ? "start" : "end";
-    const lines = d.label.length > 16 ? d.label.split(/(?<=,) | (?=&)/) : [d.label];  // long names on 2-3 lines
-    const top = y < cy - 1 ? y - (lines.length - 1) * 14 - 6 : y > cy + 1 ? y + 12 : y - ((lines.length - 1) * 14) / 2 + 4;
-    return `<text class="hex-label${d.on ? " on" : ""}" x="${x.toFixed(1)}" y="${top.toFixed(1)}" text-anchor="${anchor}">${lines.map((l, k) => `<tspan x="${x.toFixed(1)}" dy="${k ? 14 : 0}">${esc(l)}</tspan>`).join("")}<tspan class="hex-value" x="${x.toFixed(1)}" dy="14">${fmt(d.value, 0)}</tspan></text>`;
+    const lines = wrapLabel(d.label, wrap);  // long names on 2-3 lines
+    const top = anchor === "middle" && y < cy ? y - lines.length * lh - 2  // top label: its value sits clear of a 100 dot
+      : y < cy - 1 ? y - (lines.length - 1) * lh - 6 : y > cy + 1 ? y + lh - 2 : y - ((lines.length - 1) * lh) / 2 + 4;
+    return `<text class="hex-label${d.on ? " on" : ""}" x="${x.toFixed(1)}" y="${top.toFixed(1)}" text-anchor="${anchor}">${lines.map((l, k) => `<tspan x="${x.toFixed(1)}" dy="${k ? lh : 0}">${esc(l)}</tspan>`).join("")}<tspan class="hex-value" x="${x.toFixed(1)}" dy="${lh}">${fmt(d.value, 0)}</tspan></text>`;
   }).join("");
   const summary = items.map((d) => `${d.label} ${fmt(d.value, 0)}`).join(", ");
-  return `<svg class="hex" viewBox="0 0 420 330" role="img" aria-label="${esc(caption)}: ${esc(summary)} out of 100">
+  return `<svg class="hex${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(caption)}: ${esc(summary)} out of 100">
     ${rings}${spokes}<polygon class="hex-shape" points="${shape}"/>${dots}${labels}</svg>`;
 }
 
@@ -1077,6 +1092,9 @@ function pageTestResult() {
   // Bank order, not sorted, so the hexagon keeps the same shape from one attempt to the next.
   const profile = hexagonChart(r.domains.map((d) => ({ label: d.name, value: d.profile, on: d.tested_in_depth })),
     "Quick-check score in each IT area");
+  // Areas whose quick-check score looks as high as the best area's but were held back (not tested in depth)
+  const held = r.domains.filter((d) => !d.tested_in_depth && d.area_score !== undefined && d.profile > d.area_score);
+  const heldNote = held.length && best.area_score !== undefined ? `<p class="note small">${esc(held.map((d) => d.name).join(" and "))} also scored ${held.map((d) => d.profile).join(" and ")} in the quick check, but ${held.length > 1 ? "were" : "was"} not tested in depth, so ${held.length > 1 ? "their area scores are" : "its area score is"} held at ${held[0].area_score}, the lower of your top 2. Your strongest area is the one with the highest area score: ${esc(best.name)} (${best.area_score}).</p>` : "";
   const gaps = r.skills_to_improve.length
     ? `<ul class="quals">${r.skills_to_improve.map((g) => `<li><strong>${esc(g.skill)}</strong> <span class="muted small">· ${esc(domainName(g.domain))}</span></li>`).join("")}</ul>`
     : '<p class="muted">Nothing: every answer was right.</p>';
@@ -1099,7 +1117,7 @@ function pageTestResult() {
     <p class="muted">${esc(r.disclaimer)}</p>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
       <p class="muted small">Quick-check score in each area (0–100): the same number of questions per area, so you can compare them. Your top 2 (bold, with a large dot) were then tested in depth.</p>
-      ${profile}</div>
+      ${profile}${heldNote}</div>
     <h2>Your top 2, tested in depth</h2>
     <p class="muted small">Readiness counts the in-depth and hands-on questions in that area. Your strongest area has the highest area score; an area seen only in the quick check is never ranked above these two, here or on your jobs page. Right answers also count as skills in your job matches.</p>
     <div class="grid">${deep.map(domainCard).join("")}</div>

@@ -119,6 +119,7 @@ main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; outline: none;
 .hex-dot.on { fill: var(--accent); }
 .hex-label { fill: var(--muted); font-size: 12px; }
 .hex-label.on { fill: var(--text); font-weight: 700; }
+.hex.compact .hex-label { font-size: 14px; }
 .hex-value { fill: var(--text); font-weight: 700; }
 .letter { width: 32px; height: 32px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 
