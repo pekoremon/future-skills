@@ -1262,7 +1262,7 @@ function pageTestResult(sharedResult = null) {
     <p class="muted">${esc(r.disclaimer)}</p>
     <div class="row"><button class="btn" type="button" id="share">Share my result</button></div>
     <div class="card stack" id="share-box" style="gap: 6px" hidden>
-      <label class="small muted" for="share-url">Anyone with this link sees your IT profile, top 2 areas and skills to work on, but not your answers. Nothing is saved on our server.</label>
+      <label class="small muted" for="share-url">Anyone with this link sees your IT profile, top 2 areas and skills to work on; the page does not show your answers, but the link itself carries them (that is how the result is rebuilt), so share it only with people you choose. Nothing is saved on our server.</label>
       <input class="search" id="share-url" type="text" readonly>
     </div>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
