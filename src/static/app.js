@@ -1273,7 +1273,7 @@ function wrapLabel(label, max) {
   }, []);
 }
 
-/* Hexagon (radar) chart of six 0-100 scores, first item at the top, then clockwise.
+/* Radar chart of 3-6 0-100 scores (one corner each), first item at the top, then clockwise.
    items: [{ label, value, on }]; `on` items get a filled dot and a bold label.
    On a phone the chart is drawn smaller inside a narrower box, so the labels stay readable. */
 function hexagonChart(items, caption) {
@@ -1364,10 +1364,10 @@ function pageTestResult(sharedResult = null) {
     </div>`;
   const tested = r.domains.filter((d) => d.tested !== false);  // results from before areas were chosen tested all 6
   const untested = r.domains.filter((d) => d.tested === false);
-  // Bank order, not sorted, so the hexagon keeps the same shape from one attempt to the next.
-  // Fewer than 6 areas tested: bars, so an untested area is never drawn as a 0.
-  const profile = (tested.length === 6
-    ? hexagonChart(tested.map((d) => ({ label: d.name, value: d.profile, on: d.tested_in_depth })), "Quick-check score in each IT area")
+  // Bank order, not sorted, so the chart keeps the same shape from one attempt to the next.
+  // One corner per tested area (3 = triangle ... 6 = hexagon); an untested area is never drawn as a 0.
+  const profile = (tested.length >= 3
+    ? hexagonChart(tested.map((d) => ({ label: d.name, value: d.profile, on: d.tested_in_depth })), `Quick-check score in each of your ${tested.length} tested IT areas`)
     : tested.map((d) => `<div class="stack" style="gap: 4px">
         <div class="row" style="justify-content: space-between"><span${d.tested_in_depth ? ' style="font-weight:700"' : ' class="muted"'}>${esc(d.name)}</span><span class="muted">${d.profile} / 100</span></div>
         <div class="bar"><div class="${d.tested_in_depth ? "on" : ""}" style="width: ${d.profile}%"></div></div></div>`).join(""))
