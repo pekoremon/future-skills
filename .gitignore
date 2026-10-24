@@ -10,6 +10,13 @@ venv/
 # Large raw downloads (DOSM PDFs, O*NET ZIP) stay local; record them in SOURCES.md
 raw/*
 !raw/README.md
+# The two inputs scripts/update_trends.py reads, so "Update data" works on Replit
+!raw/dosm/
+raw/dosm/*
+!raw/dosm/jmi_data_2026q2.xlsx
+!raw/mycol/
+raw/mycol/*
+!raw/mycol/mycol_2024_2025.csv
 
 # OS / Editor
 .DS_Store

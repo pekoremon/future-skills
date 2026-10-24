@@ -40,6 +40,11 @@ class TestValidateData(unittest.TestCase):
                                  "job_zone": "4", "masco_4digit_mycol": "2524", "is_mycol": "no",
                                  **values})
 
+    def test_update_job_inputs_are_in_the_repo(self):
+        # "Update data" on Replit can only re-read what the repository ships.
+        for path in ("raw/dosm_manual.csv", "raw/dosm/jmi_data_2026q2.xlsx", "raw/mycol/mycol_2024_2025.csv"):
+            self.assertTrue((ROOT / path).is_file(), path)
+
     def test_repo_data_passes(self):
         self.assertEqual(validate(ROOT / "data"), [])
 
