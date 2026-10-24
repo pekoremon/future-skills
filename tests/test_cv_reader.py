@@ -47,6 +47,11 @@ class TestFindTechnologies(unittest.TestCase):
         self.assertEqual(names("JavaScript"), ["JavaScript"])
         self.assertEqual(names("GitHub"), ["GitHub"])
 
+    def test_vendor_or_plain_word_alone_is_not_a_tool(self):
+        self.assertEqual(names("Google Data Analytics Professional Certificate"), [])
+        self.assertEqual(names("Skills: Adobe Photoshop"), ["Adobe Photoshop"])  # not Adobe XD too
+        self.assertEqual(sorted(names("Google Analytics, Adobe XD")), ["Adobe XD", "Google Analytics"])
+
 
 class TestSummarise(unittest.TestCase):
     def test_education_zone(self):

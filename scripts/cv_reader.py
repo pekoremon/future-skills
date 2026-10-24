@@ -56,7 +56,8 @@ ALIASES = {"Go": ["Golang"], "Oracle Java": ["Java"], "Node.js": ["NodeJS"],
            "IBM SPSS Statistics": ["SPSS"], "Transact-SQL": ["T-SQL"], "Splunk Enterprise": ["Splunk"]}
 CASE_SENSITIVE = {"C", "R", "Go", "SAS"}
 SKIP_TERMS = {"Go", "Access", "Word", "Spark", "Windows", "Office", "Outlook", "Database", "Oracle",
-              "Atlassian", "BI", "Microsoft Power", "The MathWorks"}
+              "Atlassian", "BI", "Microsoft Power", "The MathWorks",
+              "Analytics", "Adobe"}  # "Google Data Analytics" is a certificate; "Adobe" alone is any Adobe tool
 
 EDUCATION = [  # (job zone, pattern); the highest found wins
     (5, r"\b(master'?s?|m\.?sc|mba|m\.?eng|ph\.?d|doctor(ate)? of)\b"),
