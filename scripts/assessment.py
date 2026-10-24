@@ -25,6 +25,9 @@ AREA_SPLIT = {"screen": 0.4, "deep": 0.6}  # area score of an area tested in dep
 STAGE_LEVEL = {"screen": 3.0, "deep": 4.0, "practical": 5.0}
 SQL_MAX_STEPS = 2_000_000  # SQLite VM steps before a query is stopped
 SQL_MAX_ROWS = 50
+# Longest string or blob a query may build. Without it one step such as randomblob(1e9)
+# makes the server allocate up to 1 GB; no test answer needs more than a few KB.
+SQL_MAX_LENGTH = 1_000_000
 SQLITE_RECURSIVE = 33  # authorizer code for WITH RECURSIVE; not exported by the sqlite3 module
 SQL_ALLOWED = {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION, SQLITE_RECURSIVE}
 
@@ -110,6 +113,7 @@ def run_sql(q: dict, sql: str) -> dict:
     db = sqlite3.connect(":memory:")
     try:
         db.executescript(q["setup_sql"])
+        db.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, SQL_MAX_LENGTH)
         db.set_authorizer(lambda action, *_: sqlite3.SQLITE_OK if action in SQL_ALLOWED else sqlite3.SQLITE_DENY)
         db.set_progress_handler(lambda: 1, SQL_MAX_STEPS)  # non-zero aborts the query
         cur = db.execute(sql.strip().rstrip(";"))
@@ -119,7 +123,8 @@ def run_sql(q: dict, sql: str) -> dict:
         return {"columns": [d[0] for d in cur.description], "rows": rows[:SQL_MAX_ROWS],
                 "truncated": len(rows) > SQL_MAX_ROWS}
     except sqlite3.Error as e:
-        message = "the query took too long" if "interrupted" in str(e) else str(e)
+        message = ("the query took too long" if "interrupted" in str(e)
+                   else "the query builds a value that is too large" if "too big" in str(e) else str(e))
         raise AssessmentError(f"SQL error: {message}") from None
     finally:
         db.close()

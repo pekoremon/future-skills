@@ -263,6 +263,17 @@ class TestAssessmentFlow(unittest.TestCase):
         res = self.main.dispatch(method, path, b"" if payload is None else json.dumps(payload).encode())
         return res.status, json.loads(res.body)
 
+    def test_sql_runner_refuses_huge_values(self):
+        sql_q = next(q for q in BANK["questions"] if q["type"] == "sql")
+        for bad in ("SELECT length(randomblob(200000000))", "SELECT length(zeroblob(500000000))",
+                    "SELECT length(replace(hex(randomblob(400000)), 'A', 'AAAAAAAA'))"):
+            status, body = self.call("POST", "/api/assessment/sql", {"id": sql_q["id"], "sql": bad})
+            self.assertEqual(status, 400, bad)
+            self.assertIn("too large", body["error"])
+        status, body = self.call("POST", "/api/assessment/sql", {"id": sql_q["id"], "sql": SQL_ANSWERS[sql_q["id"]]})
+        self.assertEqual(status, 200)
+        self.assertEqual(body["rows"], sql_q["expected_rows"][:50])
+
     def right_answer(self, q, shown=None):
         if q["type"] == "mcq" and shown:
             return shown["options"].index(q["options"][q["answer"]])
