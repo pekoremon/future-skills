@@ -30,6 +30,33 @@ class TestExplain(unittest.TestCase):
         self.assertEqual(self.facts["match_score"], self.match["total"])
         self.assertLessEqual(len(self.facts["learning_path"]), 3)
 
+    def test_trend_direction_in_words(self):
+        # Data Scientists: Malaysian demand above 50 (on MyCOL), AI momentum exactly 50 (flat arXiv growth)
+        self.assertEqual(self.match["trend_parts"], {"demand": 100.0, "ai": 50.0})
+        self.assertEqual(self.facts["trend_direction"], {"malaysian_demand": "positive", "ai_momentum": "neutral"})
+        self.assertEqual([explain.direction(v) for v in (None, 20, 50, 80)],
+                         ["no data", "negative", "neutral", "positive"])
+        self.assertIn("AI momentum neutral", explain.fallback_text(self.facts))
+        self.assertIn("never call it rising", explain.SYSTEM_PROMPT)
+        self.assertIn("Do not predict the future", explain.SYSTEM_PROMPT)
+
+    def test_predictions_are_found(self):
+        for text in ("Opportunities in this field are likely to keep growing.",
+                     "Demand will continue to rise.", "Jobs here keep growing.",
+                     "This field is expected to grow in the coming years.", "A future-proof career."):
+            self.assertTrue(explain.predictions(text), text)
+        for text in ("This course will help you learn Python.", "You can grow your SQL skills.",
+                     "The trend score describes recent data and is an estimate."):
+            self.assertFalse(explain.predictions(text), text)
+
+    def test_llm_reply_that_predicts_is_rejected(self):
+        reply = "AI momentum is rising, so opportunities are likely to keep growing."
+        with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "test"}), \
+                mock.patch.object(explain, "_call_llm", return_value=reply):
+            r = explain.explain(self.match)
+        self.assertEqual(r["source"], "fallback")
+        self.assertIn("predicted the future", r["reason"])
+
     def test_unknown_numbers(self):
         score = self.facts["match_score"]
         self.assertEqual(explain.unknown_numbers(f"You score {score} of 100 by 2030.", self.facts), [])

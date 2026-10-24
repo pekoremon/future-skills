@@ -508,6 +508,8 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict, fits: 
                                  profile.get("hours_per_week", DEFAULT_HOURS_PER_WEEK)),
         "job_zone": int(role["job_zone"]),
         "is_mycol": role["is_mycol"],
+        # the two measured parts behind the trend score (None = no data), for explanations
+        "trend_parts": (data["trend_parts"].get(rid) or data["trend_parts"].get(role["it_area"])) if has_trend else None,
         "flags": flags,
         "sdg": data["sdg"].get(("role", rid), []),
     }
