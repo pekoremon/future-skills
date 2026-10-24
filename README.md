@@ -26,7 +26,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | GitHub Repository | https://github.com/pekoremon/future-skills |
 | Replit Project | https://future-skills.replit.app (published from Replit) |
 | Live Demo | https://future-skills.replit.app |
-| Slide Deck | [Google Slides](https://docs.google.com/presentation/d/1hReSAJHEzKrGUgbUnfaGru_ef3XI_pa9/edit?usp=sharing) |
+| Slide Deck | [Pitch deck (Google Drive)](https://drive.google.com/file/d/1hReSAJHEzKrGUgbUnfaGru_ef3XI_pa9/view?usp=sharing) |
 | Demo Video | [YOUTUBE URL] |
 
 ## Overview
