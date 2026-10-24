@@ -2,16 +2,17 @@
   {
     "profile_id": "P01",
     "name": "Aiman (fictional)",
-    "note": "Fictional final-year Computer Science student for the demo; not a real person; area scores are invented demo values.",
+    "note": "Fictional final-year Computer Science student for the demo; not a real person; area scores are invented demo values; the skills test checked only the 3 areas the CV and interests point to.",
     "education_job_zone": 4,
     "test_areas": {
       "software_dev": 67,
       "data_ai": 82,
-      "cybersecurity": 33,
-      "cloud_infra": 50,
-      "web_ux": 33,
-      "it_mgmt": 48
+      "cybersecurity": 33
     },
+    "test_in_depth": [
+      "data_ai",
+      "software_dev"
+    ],
     "interest_answers": [
       3,
       5,
@@ -94,16 +95,17 @@
   {
     "profile_id": "P02",
     "name": "Mei Ling (fictional)",
-    "note": "Fictional final-year IT student who likes design and helping people; not a real person; area scores are invented demo values.",
+    "note": "Fictional final-year IT student who likes design and helping people; not a real person; area scores are invented demo values; the skills test checked only the 3 areas the CV and interests point to.",
     "education_job_zone": 4,
     "test_areas": {
-      "software_dev": 33,
       "data_ai": 40,
-      "cybersecurity": 33,
-      "cloud_infra": 33,
       "web_ux": 80,
       "it_mgmt": 62
     },
+    "test_in_depth": [
+      "web_ux",
+      "it_mgmt"
+    ],
     "interest_answers": [
       1,
       2,

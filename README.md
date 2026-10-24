@@ -40,7 +40,7 @@ A Malaysian IT student about to graduate has to pick one part of IT (software, d
 The core pipeline:
 
 ```
-student (interests + IT skills test + CV + skill ratings) → best-fit IT area → role matching (area fit + interest + skills + AI-era trend from MyCOL, DOSM and arXiv) → three future scenarios → reskilling pathway → SDG contribution
+student (CV or skill ratings → interests → skills test focused on the areas they point to) → IT areas grouped by interest × skill → role matching (area fit + interest + skills + AI-era trend from MyCOL, DOSM and arXiv) → three future scenarios → reskilling pathway → SDG contribution
 ```
 
 Every number shown to the user carries its source and date. The system never invents jobs, courses or statistics, and the student makes the final decision.
@@ -49,9 +49,9 @@ Every number shown to the user carries its source and date. The system never inv
 
 Domain 1 requires all six:
 
-1. **Skills profile intake** — 36-item IT interest questionnaire (RIASEC + IT area), a 24-item IT skills test graded in the browser, CV reading (an AI summary, and evidence per IT area: the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off), plus 1–5 skill ratings and technologies
+1. **Skills profile intake** — in this order: CV (optional; or rate your skills instead), a 36-item IT interest questionnaire (RIASEC + IT area), then a focused IT skills test graded in the browser that checks only the 3–6 IT areas the CV and interests point to (15–24 questions, and the page says why these areas), CV reading (an AI summary, and evidence per IT area: the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off), plus 1–5 skill ratings and technologies
 2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
-3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), then an explainable role score and skills gap
+3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), results grouped by interest × skill ("Best fit for you" first, then "You can do this, but it may not excite you"; "Want to get there?" areas shown with their biggest gaps and learning paths, not recommended), then an explainable role score and skills gap
 4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults
 5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to
 6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads); each role shows its rank range across them, and the app says scores are estimates, not predictions. When the "Update data" job brings new trend data, the jobs page shows which recommendations moved
@@ -138,7 +138,7 @@ python src/main.py
 | GET | `/api` | List of endpoints |
 | GET | `/api/health` | Health check |
 | GET | `/api/questionnaire` | The 36 interest items (RIASEC type + IT area), answer scale and attribution |
-| GET / POST | `/api/assessment/start`, `/next`, `/sql`, `/result` | IT skills test: questions, the 2 strongest areas, read-only SQL runs, graded report |
+| GET / POST | `/api/assessment/plan`, `/start`, `/next`, `/sql`, `/result` | IT skills test: which 3–6 areas to test (from CV + interests) and why, questions for those areas (`areas` travels with the seed), the 2 strongest areas, read-only SQL runs, graded report |
 | GET | `/api/skills?type=` | Skills for the intake form (`general`, `domain_knowledge`, `technology`) |
 | GET | `/api/roles`, `/api/roles/<role_id>` | Roles; one role's skills, technologies, SDG targets and certifications |
 | GET | `/api/profiles` | Fictional demo profiles |

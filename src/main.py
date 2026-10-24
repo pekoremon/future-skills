@@ -7,10 +7,11 @@ Endpoints (all JSON):
     GET  /api                        list of endpoints
     GET  /api/health
     GET  /api/questionnaire          the 36 interest items (RIASEC type + IT area), scale and attribution
-    GET  /api/assessment/start       IT skills test: a seed, the 6 screen questions and the rules
-    POST /api/assessment/next        seed + screen answers -> the 2 strongest domains and 8 questions
+    POST /api/assessment/plan        CV evidence/tools + interest answers -> the 3-6 IT areas to test, and why
+    GET  /api/assessment/start       ?areas=a,b,c  IT skills test: a seed, the screen questions and the rules
+    POST /api/assessment/next        seed + areas + screen answers -> the 2 strongest areas and their questions
     POST /api/assessment/sql         question id + SQL -> the rows it returns (read-only SQLite)
-    POST /api/assessment/result      seed + all answers -> graded answers and domain readiness
+    POST /api/assessment/result      seed + areas + all answers -> graded answers and area readiness
     GET  /api/skills                 ?type=general|domain_knowledge|technology
     GET  /api/roles
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
@@ -182,9 +183,9 @@ def build_profile(data: dict, skills: dict) -> dict:
     if data.get("interest_answers") is not None:
         per_area["interest"] = interest_result(data["interest_answers"])
     if "test" in data:
-        seed, responses = assessment_input(data["test"])
+        seed, responses, tested = assessment_input(data["test"])
         try:
-            report = assessment.report(seed, responses)
+            report = assessment.report(seed, responses, tested)
         except (assessment.AssessmentError, KeyError, ValueError) as e:
             raise BadRequest(f"'test': {e}") from e
         per_area["test_areas"] = matching.test_area_scores(report)
@@ -241,10 +242,18 @@ def questionnaire(request):
     return jsonify(interest.load_items())
 
 
-def assessment_input(data) -> tuple[int, dict]:
-    """Seed and answers from an assessment request body, with every question id checked."""
+def tested_areas(areas) -> list:
+    try:
+        return assessment.tested_areas(areas)
+    except assessment.AssessmentError as e:
+        raise BadRequest(str(e)) from None
+
+
+def assessment_input(data) -> tuple[int, dict, list]:
+    """Seed, answers and tested areas from an assessment request body, every id checked.
+    No 'areas' means all 6 (the full test, and share links made before areas existed)."""
     if not isinstance(data, dict):
-        raise BadRequest("send a JSON object with 'seed' and 'responses'")
+        raise BadRequest("send a JSON object with 'seed', 'areas' and 'responses'")
     seed, responses = data.get("seed"), data.get("responses", {})
     if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed < 2 ** 31:
         raise BadRequest("'seed' must be the integer from /api/assessment/start")
@@ -253,22 +262,48 @@ def assessment_input(data) -> tuple[int, dict]:
     unknown = set(responses) - set(assessment.questions_by_id())
     if unknown:
         raise BadRequest(f"unknown question id(s): {', '.join(sorted(unknown))}")
-    return seed, responses
+    return seed, responses, tested_areas(data.get("areas"))
+
+
+@route("POST", "/api/assessment/plan")
+def assessment_plan(request):
+    """The areas the focused test checks: what the CV shows plus the top interests."""
+    data, req = matching.load_data(), body(request)
+    cv = req.get("cv_areas")
+    areas = {a["id"] for a in data["areas"]}
+    if cv is not None and (not isinstance(cv, dict) or not set(cv) <= areas or not all(
+            isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 100 for v in cv.values())):
+        raise BadRequest(f"'cv_areas' must map IT area ids {sorted(areas)} to numbers 0-100")
+    techs = req.get("technologies", [])
+    if not isinstance(techs, list) or any(data["skills"].get(t, {}).get("skill_type") != "technology" for t in techs):
+        raise BadRequest("'technologies' must be a list of technology skill_ids")
+    cv_scores, _ = cv_and_tools(cv, techs, data)
+    prefs = None
+    if req.get("interest_answers") is not None:
+        scored = interest_result(req["interest_answers"])
+        if scored["usable"]:
+            prefs, _ = matching.interest_preferences(scored, matching.it_roles(data))
+    plan = assessment.choose_areas(cv_scores, prefs)
+    return jsonify(**plan, **assessment.test_size(plan["areas"]), cv_scores=cv_scores, interest_scores=prefs,
+                   cv_min_score=assessment.CV_MIN_SCORE, min_areas=assessment.MIN_AREAS,
+                   max_areas=assessment.MAX_AREAS)
 
 
 @route("GET", "/api/assessment/start")
 def assessment_start(request):
     bank = assessment.load_bank()
+    given = request.args.get("areas")
+    tested = tested_areas(given.split(",") if given is not None else None)
     seed = random.randrange(2 ** 31)
-    return jsonify(seed=seed, name=bank["name"], disclaimer=bank["disclaimer"],
-                   selection=bank["selection"], domains=bank["domains"],
-                   questions=[assessment.public(q, seed) for q in assessment.screen_questions(seed)])
+    return jsonify(seed=seed, areas=tested, **assessment.test_size(tested), name=bank["name"],
+                   disclaimer=bank["disclaimer"], selection=bank["selection"], domains=bank["domains"],
+                   questions=[assessment.public(q, seed) for q in assessment.screen_questions(seed, tested)])
 
 
 @route("POST", "/api/assessment/next")
 def assessment_next(request):
-    seed, responses = assessment_input(body(request))
-    domains = assessment.top_domains(seed, responses)
+    seed, responses, tested = assessment_input(body(request))
+    domains = assessment.top_domains(seed, responses, tested)
     return jsonify(domains=domains,
                    questions=[assessment.public(q, seed) for q in assessment.deep_questions(seed, domains)])
 

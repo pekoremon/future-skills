@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -6,9 +7,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import interest
-from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, cv_area_scores, interest_score, it_roles, learning_path,
-                      load_data, match_student, rank_roles, rating_to_level, role_area, role_trend,
-                      scenario_trend_scores, skill_score, test_area_scores)
+from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, area_groups, cv_area_scores, interest_score, it_roles,
+                      learning_path, load_data, match_student, rank_roles, rating_to_level, role_area, role_trend,
+                      scenario_trend_scores, skill_score, test_area_scores, with_interest)
 
 SKILLS = {"S1": {"skill_name": "One"}, "S2": {"skill_name": "Two"}, "T1": {"skill_name": "Tech"},
           "S3": {"skill_name": "Three"}}
@@ -57,6 +58,48 @@ class TestAreaFit(unittest.TestCase):
         self.assertIsNone(fit["best"])
         self.assertEqual(fit["insights"], [])
         self.assertTrue(all(a["fit"] is None for a in fit["areas"]))
+
+
+class TestAreaGroups(unittest.TestCase):
+    AREAS6 = [{"id": i, "name": i.upper(), "name_zh": "", "description": ""} for i in "abcdef"]
+
+    def groups(self, profile):
+        return {a["id"]: a for a in area_groups(area_fit(profile, self.AREAS6), [])["areas"]}
+
+    def test_interest_by_skill(self):
+        g = self.groups({"preferences": {"a": 90, "b": 80, "c": 70, "d": 10, "e": 5, "f": 1},
+                         "test_areas": {"a": 90, "d": 80, "c": 10},
+                         "cv_areas": {"e": 60, "b": 5}})
+        # skill: a 90, d 80, e 60 (CV only), b 5, c 10; f has no skill evidence
+        self.assertEqual(g["a"]["group"], "best_fit")
+        self.assertEqual(g["d"]["group"], "can_do")
+        self.assertEqual(g["e"]["group"], "can_do")
+        self.assertEqual(g["b"]["group"], "grow_into")
+        self.assertEqual(g["c"]["group"], "grow_into")
+        self.assertEqual(g["f"]["group"], "other")
+        self.assertIsNone(g["f"]["skill"])  # never filled
+        self.assertIn("top 3", g["b"]["why"])
+        self.assertEqual(g["b"]["gaps"], [])
+        self.assertEqual(g["a"]["skill"], 90.0)
+
+    def test_skill_combines_test_and_cv_with_the_area_weights(self):
+        g = self.groups({"preferences": dict.fromkeys("abcdef", 50), "test_areas": {"a": 100, "b": 0, "c": 0},
+                         "cv_areas": {"a": 0}})
+        self.assertAlmostEqual(g["a"]["skill"], round(100 * 0.45 / 0.70, 1))
+
+    def test_one_side_missing(self):
+        only_interest = area_groups(area_fit({"preferences": {"a": 90, "b": 80, "c": 70, "d": 1}}, self.AREAS6), [])
+        self.assertEqual(only_interest["mode"], "interest_only")
+        self.assertEqual({a["id"] for a in only_interest["areas"] if a["group"] == "best_fit"}, {"a", "b", "c"})
+        self.assertEqual(area_groups(area_fit({}, self.AREAS6), [])["mode"], "none")
+
+    def test_sample_profile_has_every_shown_group(self):
+        result = match_student(with_interest(json.loads((ROOT / "data" / "sample_profiles.json")
+                                                        .read_text(encoding="utf-8"))[0]))
+        groups = {a["group"] for a in result["groups"]["areas"]}
+        self.assertLessEqual({"best_fit", "can_do", "grow_into"}, groups)
+        grow = next(a for a in result["groups"]["areas"] if a["group"] == "grow_into")
+        self.assertTrue(grow["gaps"] and grow["roles"])
 
 
 class TestMatching(unittest.TestCase):

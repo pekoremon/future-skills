@@ -231,3 +231,4 @@ details.review > summary { flex-wrap: wrap; }
 .learn-skill + .learn-skill { border-top: 1px solid var(--line); padding-top: 10px; }
 .learn-skill h3 { margin: 0; }
 .learn-link { align-self: flex-start; }
+.group-head { margin-top: 8px; }

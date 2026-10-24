@@ -6,10 +6,11 @@ Two steps, so the student first sees *which part of IT* fits them, then the role
 
     area_fit = 0.45 x test + 0.30 x preference + 0.25 x CV evidence     (each part 0-100)
 
-   - test: the IT skills test's area_score (scripts/assessment.py). Every area gets 3
-     quick-check items; the 2 areas tested in depth combine quick check and deep items, and
-     an area seen only in the quick check may not score above them. On a tie, an area
-     tested in depth ranks first, so this page and the test result agree.
+   - test: the IT skills test's area_score (scripts/assessment.py). The test checks 3-6
+     areas (what the CV shows plus the top interests); each gets 3 quick-check items, the 2
+     tested in depth combine quick check and deep items, and an area seen only in the quick
+     check may not score above them. An area not tested has no test part. On a tie, an
+     area tested in depth ranks first, so this page and the test result agree.
    - preference: from the interest questionnaire (scripts/interest.py),
          preference = 0.6 x the area's 4 questions + 0.4 x interest fit of the area's roles
      RIASEC alone hardly separates software, data, security and networking (their O*NET
@@ -39,6 +40,16 @@ Two steps, so the student first sees *which part of IT* fits them, then the role
    - trend: the 0-100 trend score for the role (data/trend_scores.csv, looked up by role_id,
      then IT area, then the DOSM ICT sector generic_tech), or its value under a future
      scenario (SCENARIOS). A role with no trend data gets a neutral 50 and a flag.
+
+3. Groups (area_groups), interest x skill per area, to put the roles in order:
+     interest = the area's preference part; skill = the test and CV parts, weighted 45:25
+     as in area fit. "High" = among the student's GROUP_TOP areas on that score (above 0).
+   - best_fit: high interest and high skill; its roles are listed first.
+   - can_do: high skill, lower interest; its roles are listed after.
+   - grow_into: high interest, lower skill; not recommended, shown with its biggest gaps.
+   - other: neither; not shown.
+   With interests but no skill evidence (or the reverse) the top areas of the one score
+   are best_fit and the page says what was not checked.
 
 All weights are team design choices, not data (see SOURCES.md, "Choices and limits").
 
@@ -82,6 +93,8 @@ NEUTRAL_TREND = 50.0
 SECTOR_TREND = "generic_tech"  # DOSM "Information & communication" sector, the last trend lookup
 DEFAULT_JOB_ZONE = 4  # bachelor's degree, the usual level of a graduating student
 CLEAR_LEAD = 10  # area-fit points the best area needs over the next one to be called clear
+GROUP_TOP = 3  # "high" interest or skill: among the student's top 3 areas on it (team choice)
+GROUP_GAPS = 5  # biggest skill gaps shown for an area the student wants to grow into
 RIASEC = ["R", "I", "A", "S", "E", "C"]
 SUBFIELD_AREA = {"SE": "software_dev", "DA": "data_ai", "CS": "cybersecurity",
                  "CI": "cloud_infra", "WD": "web_ux", "IM": "it_mgmt"}  # roles.csv subfield_code
@@ -259,9 +272,10 @@ def rating_to_level(rating: float) -> float:
 
 
 def test_area_scores(report: dict) -> dict:
-    """0-100 test score per area from an assessment.report() result: its area_score, so the
-    test result page and the matches always agree on the best area."""
-    return {d["id"]: d["area_score"] for d in report["domains"]}
+    """0-100 test score per tested area from an assessment.report() result: its area_score,
+    so the test result page and the matches always agree on the best area. Areas the test
+    did not check get no score."""
+    return {d["id"]: d["area_score"] for d in report["domains"] if d.get("tested", True)}
 
 
 def weighted(parts: dict, weights: dict) -> tuple[float | None, dict]:
@@ -409,6 +423,67 @@ def area_fit(profile: dict, areas: list[dict], roles: list[dict] | None = None) 
             "insights": insights}
 
 
+def area_groups(fit: dict, roles: list[dict]) -> dict:
+    """Sort the areas into best_fit / can_do / grow_into / other by interest x skill.
+
+    fit is area_fit()'s result; roles are the ranked role matches (for grow_into's gaps).
+    """
+    rows = fit["areas"]
+    order = [r["id"] for r in rows]
+    interest = {r["id"]: r["parts"]["preference"]["score"] for r in rows
+                if r["parts"]["preference"]["score"] is not None}
+    skill, skill_why = {}, {}
+    for r in rows:
+        parts = {k: r["parts"][k]["score"] for k in ("test", "cv")}
+        value, _ = weighted(parts, AREA_WEIGHTS)
+        if value is not None:
+            skill[r["id"]] = value
+            skill_why[r["id"]] = ", ".join(f"{AREA_SOURCE_LABEL[k]} {v:g}" for k, v in parts.items() if v is not None)
+
+    def ranks(scores):
+        ranked = sorted(scores, key=lambda a: (-scores[a], order.index(a)))
+        return {a: i + 1 for i, a in enumerate(ranked)}, {a for a in ranked[:GROUP_TOP] if scores[a] > 0}
+
+    i_rank, i_high = ranks(interest)
+    s_rank, s_high = ranks(skill)
+    mode = "both" if interest and skill else "interest_only" if interest else "skill_only" if skill else "none"
+
+    def said(scores, rank, label, a):
+        if a not in scores:
+            return f"{label} not checked"
+        return f"{label} {scores[a]:g} (#{rank[a]} of {len(scores)})"
+
+    out = []
+    for r in rows:
+        a = r["id"]
+        hi_i, hi_s = a in i_high, a in s_high
+        if mode == "both":
+            group = ("best_fit" if hi_i and hi_s else "can_do" if hi_s else "grow_into" if hi_i else "other")
+        else:
+            group = "best_fit" if (hi_i if mode == "interest_only" else hi_s) else "other"
+        i_text, s_text = said(interest, i_rank, "interest", a), said(skill, s_rank, "skill", a)
+        top = f"top {GROUP_TOP}"
+        why = {"best_fit": f"Your {i_text} and {s_text} are both in your {top}." if mode == "both"
+               else f"Your {i_text if mode == 'interest_only' else s_text} is in your {top}.",
+               "can_do": f"Your {s_text} is in your {top}, but your {i_text} is not.",
+               "grow_into": f"Your {i_text} is in your {top}, but your {s_text} is not.",
+               "other": f"Neither your {i_text} nor your {s_text} is in your {top}."}[group]
+        row = {"id": a, "name": r["name"], "group": group, "interest": interest.get(a),
+               "interest_rank": i_rank.get(a), "skill": skill.get(a), "skill_rank": s_rank.get(a),
+               "skill_explain": skill_why.get(a, ""), "why": why}
+        if group == "grow_into":
+            mine = [m for m in roles if m["it_area"] == a]
+            gaps = {}
+            for m in mine[:GROUP_TOP]:  # the area's best-matching roles
+                for g in m["skill_detail"]["gaps"]:
+                    if g["gap_points"] > gaps.get(g["skill_id"], {}).get("gap_points", -1):
+                        gaps[g["skill_id"]] = g
+            row["gaps"] = sorted(gaps.values(), key=lambda g: -g["gap_points"])[:GROUP_GAPS]
+            row["roles"] = [{"role_id": m["role_id"], "role_name": m["role_name"]} for m in mine]
+        out.append(row)
+    return {"mode": mode, "top": GROUP_TOP, "areas": out}
+
+
 def skill_score(profile: dict, rows: list[dict], skills: dict) -> dict:
     have = {k: float(v) for k, v in profile.get("skills", {}).items()}
     techs = set(profile.get("technologies", []))
@@ -553,7 +628,7 @@ def match_student(profile: dict, data: dict | None = None, scenario: str = "base
     for a in fit["areas"]:
         a["role_count"] = counts.get(a["id"], 0)
         a["top_roles"] = [m["role_id"] for m in roles if m["it_area"] == a["id"]][:3]
-    return {**fit, "roles": roles}
+    return {**fit, "groups": area_groups(fit, roles), "roles": roles}
 
 
 def main() -> int:
@@ -584,6 +659,8 @@ def main() -> int:
               + ("" if a["role_count"] else "  (no roles yet)"))
     for i in result["insights"]:
         print(f"  * {i['text']}")
+    for g in result["groups"]["areas"]:
+        print(f"  {g['group']:<9} {g['name']}: {g['why']}")
     print(f"\nTop {args.top} roles")
     for m in result["roles"]:
         c = m["components"]

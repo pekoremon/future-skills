@@ -246,7 +246,15 @@ def check_profiles(path: Path) -> list[str]:
         return [f"{path.name}: invalid JSON ({e})"]
     if not isinstance(profiles, list):
         return [f"{path.name}: must be a JSON list of profiles"]
-    return []
+    errors = []
+    for p in profiles:
+        # The skills test checks 3-6 areas; untested areas have no test score (scripts/assessment.py).
+        tested = p.get("test_areas")
+        if tested is not None and not 3 <= len(tested) <= 6:
+            errors.append(f"{path.name}: {p.get('profile_id')}: test_areas must cover 3-6 tested areas")
+        if not set(p.get("test_in_depth", [])) <= set(tested or {}):
+            errors.append(f"{path.name}: {p.get('profile_id')}: test_in_depth must be tested areas")
+    return errors
 
 
 def validate(data_dir: Path = DATA_DIR) -> list[str]:

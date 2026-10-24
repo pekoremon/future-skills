@@ -11,7 +11,7 @@
     "deep_domains": 2,
     "deep_per_domain": 2,
     "practical_per_domain": 1,
-    "note": "Stage 1: 3 random quick-check items in each of the 6 areas (18), giving every area the same chance. Stage 2: in the 2 areas with the most quick-check points (ties broken by the seed), 2 deep items and 1 hands-on item each (6). 24 items, about 25 minutes."
+    "note": "Stage 1: 3 random quick-check items in each tested area (3-6 areas chosen from the CV and interests; all 6 when neither is given), giving every tested area the same chance. Stage 2: in the 2 tested areas with the most quick-check points (ties broken by the seed), 2 deep items and 1 hands-on item each (6). 15 items for 3 areas, 24 for 6."
   },
   "scoring": {
     "points": {

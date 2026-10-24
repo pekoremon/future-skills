@@ -374,6 +374,88 @@ class TestAssessmentFlow(unittest.TestCase):
         self.assertEqual(self.call("POST", "/api/assessment/next", {"seed": "x"})[0], 400)
         self.assertEqual(self.call("POST", "/api/assessment/result", {"seed": 1, "responses": {"ZZ-1": 0}})[0], 400)
 
+    def test_focused_test_asks_only_the_chosen_areas(self):
+        bank = {q["id"]: q for q in BANK["questions"]}
+        areas = ["web_ux", "data_ai", "it_mgmt"]
+        status, start = self.call("GET", "/api/assessment/start?areas=" + ",".join(areas))
+        self.assertEqual(status, 200)
+        self.assertEqual(start["areas"], ["data_ai", "web_ux", "it_mgmt"])  # bank order
+        self.assertEqual(start["question_count"], 15)
+        self.assertEqual({q["domain"] for q in start["questions"]}, set(areas))
+        self.assertEqual(len(start["questions"]), 9)
+        responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in start["questions"]}
+        req = {"seed": start["seed"], "areas": start["areas"], "responses": responses}
+        _, nxt = self.call("POST", "/api/assessment/next", req)
+        self.assertLessEqual(set(nxt["domains"]), set(areas))
+        responses.update({q["id"]: self.right_answer(bank[q["id"]], q) for q in nxt["questions"]})
+        status, result = self.call("POST", "/api/assessment/result", {**req, "responses": responses})
+        self.assertEqual(status, 200)
+        self.assertEqual(result["total_points"], result["total_max"])
+        self.assertEqual(len(result["items"]), 15)
+        for d in result["domains"]:
+            self.assertEqual(d["tested"], d["id"] in areas)
+            if not d["tested"]:  # never filled in
+                self.assertNotIn("area_score", d)
+                self.assertNotIn("profile", d)
+        from matching import test_area_scores
+        from assessment import report
+        self.assertEqual(set(test_area_scores(report(start["seed"], responses, areas))), set(areas))
+        # The match re-grades the same test, so its test part covers only these areas too.
+        status, match = self.call("POST", "/api/match", {"test": {**req, "responses": responses}, "top": 1})
+        self.assertEqual(status, 200)
+        scored = {a["id"] for a in match["areas"] if a["parts"]["test"]["score"] is not None}
+        self.assertEqual(scored, set(areas))
+
+    def test_no_areas_means_the_full_test(self):
+        """Old requests and share links have no areas: they were the 6-area test."""
+        _, start = self.call("GET", "/api/assessment/start")
+        self.assertEqual(len(start["areas"]), 6)
+        from assessment import report
+        self.assertEqual(report(start["seed"], {})["areas"], [d["id"] for d in BANK["domains"]])
+
+    def test_area_list_is_checked_everywhere(self):
+        for bad in (["data_ai", "web_ux"], ["data_ai", "web_ux", "x"], ["data_ai", "data_ai", "web_ux"],
+                    "data_ai", [1, 2, 3]):
+            with self.subTest(bad):
+                req = {"seed": 1, "areas": bad, "responses": {}}
+                self.assertEqual(self.call("POST", "/api/assessment/next", req)[0], 400)
+                self.assertEqual(self.call("POST", "/api/assessment/result", req)[0], 400)
+                self.assertEqual(self.call("POST", "/api/match", {"test": req})[0], 400)
+        self.assertEqual(self.call("GET", "/api/assessment/start?areas=data_ai,web_ux")[0], 400)
+
+    def test_choose_areas(self):
+        from assessment import choose_areas
+        everything = [d["id"] for d in BANK["domains"]]
+        self.assertEqual(choose_areas(None, None)["areas"], everything)
+        prefs = {"software_dev": 10, "data_ai": 80, "cybersecurity": 0, "cloud_infra": 1, "web_ux": 70, "it_mgmt": 5}
+        plan = choose_areas(None, prefs)
+        self.assertEqual(plan["from_interest"], ["data_ai", "web_ux", "software_dev"])
+        self.assertEqual(plan["areas"], ["software_dev", "data_ai", "web_ux"])
+        # CV areas at 50+ (at most 3, highest first) are added to the top 3 interests: up to 6.
+        cv = {"cybersecurity": 90, "cloud_infra": 60, "it_mgmt": 55, "web_ux": 99, "software_dev": 49}
+        plan = choose_areas(cv, prefs)
+        self.assertEqual(plan["from_cv"], ["web_ux", "cybersecurity", "cloud_infra"])
+        self.assertEqual(len(plan["areas"]), 5)
+        self.assertNotIn("it_mgmt", plan["areas"])
+        # Fewer than 3: fill up so at least 3 areas are compared.
+        plan = choose_areas({"data_ai": 70, "web_ux": 20}, None)
+        self.assertEqual(plan["from_cv"], ["data_ai"])
+        self.assertEqual(plan["filled"], ["web_ux", "software_dev"])
+
+    def test_plan_endpoint(self):
+        items = json.loads((ROOT / "data" / "interest_items.json").read_text(encoding="utf-8"))["items"]
+        answers = [5 if i["area"] == "cybersecurity" else 2 for i in items]
+        status, plan = self.call("POST", "/api/assessment/plan", {"interest_answers": answers,
+                                                                  "cv_areas": {"data_ai": 80}})
+        self.assertEqual(status, 200)
+        self.assertEqual(plan["from_cv"], ["data_ai"])
+        self.assertEqual(plan["from_interest"][0], "cybersecurity")
+        self.assertTrue(3 <= len(plan["areas"]) <= 6)
+        self.assertGreater(plan["minutes"], 0)
+        _, empty = self.call("POST", "/api/assessment/plan", {})
+        self.assertEqual(len(empty["areas"]), 6)
+        self.assertEqual(self.call("POST", "/api/assessment/plan", {"cv_areas": {"data_ai": 101}})[0], 400)
+
     def test_sql_runner_is_read_only(self):
         for sql in ("DELETE FROM customers", "ATTACH 'x.db' AS x", "SELECT 1; SELECT 2",
                     "WITH RECURSIVE c(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM c) SELECT COUNT(*) FROM c"):

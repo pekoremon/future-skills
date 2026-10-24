@@ -1,8 +1,14 @@
 """IT domain readiness assessment: pick questions, grade answers, build the report.
 
-The question bank is data/it_assessment.json. A student answers the same number of
-quick-check (screen) items in each of the 6 IT areas, which ranks all areas against each
-other, then deep and practical items in the 2 areas they scored best on.
+The question bank is data/it_assessment.json. A student is tested in 3 to 6 of the 6 IT
+areas (choose_areas: what their CV shows and their top interests). They answer the same
+number of quick-check (screen) items in each tested area, which ranks those areas against
+each other, then deep and practical items in the 2 tested areas they scored best on. An area
+that was not tested gets no test score at all, never a filled-in one.
+
+Every call takes the tested area list next to the seed, because the seed alone no longer
+decides which questions were asked. No list means all 6 areas (the full test, and share
+links made before areas were chosen).
 
 Code questions run in the student's browser (Pyodide), so the server only receives how
 many tests passed. SQL questions run here, in a throwaway in-memory SQLite database that
@@ -30,6 +36,12 @@ SQL_MAX_ROWS = 50
 SQL_MAX_LENGTH = 1_000_000
 SQLITE_RECURSIVE = 33  # authorizer code for WITH RECURSIVE; not exported by the sqlite3 module
 SQL_ALLOWED = {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION, SQLITE_RECURSIVE}
+
+# Which areas the focused test checks (team choices; SOURCES.md, "Choices and limits").
+MIN_AREAS, MAX_AREAS = 3, 6
+CV_MIN_SCORE = 50  # CV evidence (0-100) from which "your CV shows this area"
+CV_MAX_AREAS = 3   # at most this many areas picked because of the CV, highest first
+INTEREST_AREAS = 3  # the top interest areas are always tested
 
 _bank = None
 
@@ -72,22 +84,88 @@ def _pick(stage: str, domain: str, n: int, rng: random.Random) -> list:
     return rng.sample(pool, n)
 
 
-def screen_questions(seed: int) -> list:
-    """Stage 1: the same number of screen items per domain, in a seed-dependent order."""
+def tested_areas(areas=None) -> list:
+    """The tested area ids in bank order, so the same set always gives the same questions.
+
+    None means all areas. Otherwise a list of 3-6 distinct area ids, or AssessmentError.
+    """
+    ids = [d["id"] for d in load_bank()["domains"]]
+    if areas is None:
+        return ids
+    if not isinstance(areas, list) or not all(isinstance(a, str) for a in areas):
+        raise AssessmentError(f"'areas' must be a list of IT area ids {ids}")
+    unknown = sorted(set(areas) - set(ids))
+    if unknown:
+        raise AssessmentError(f"unknown IT area id(s): {', '.join(unknown)}")
+    if len(set(areas)) != len(areas):
+        raise AssessmentError("'areas' lists an area twice")
+    if not MIN_AREAS <= len(areas) <= MAX_AREAS:
+        raise AssessmentError(f"'areas' must name {MIN_AREAS} to {MAX_AREAS} IT areas")
+    return [a for a in ids if a in areas]
+
+
+def choose_areas(cv: dict | None, interest: dict | None) -> dict:
+    """Which areas to test: CV areas scoring at least CV_MIN_SCORE (at most CV_MAX_AREAS,
+    highest first) plus the INTEREST_AREAS top interest areas. Fewer than MIN_AREAS: add the
+    next-highest interest areas, then the next-highest CV areas, then bank order. With no CV
+    and no interests nothing points anywhere, so all areas are tested.
+
+    cv and interest map area id -> 0-100 (CV evidence; preference from the questionnaire).
+    Ties go to the area listed first in the bank.
+    """
+    ids = [d["id"] for d in load_bank()["domains"]]
+    cv, interest = cv or {}, interest or {}
+
+    def ranked(scores):
+        return sorted((a for a in ids if a in scores), key=lambda a: (-scores[a], ids.index(a)))
+
+    if not cv and not interest:
+        return {"areas": ids, "from_cv": [], "from_interest": [], "filled": []}
+    from_cv = [a for a in ranked(cv) if cv[a] >= CV_MIN_SCORE][:CV_MAX_AREAS]
+    from_interest = ranked(interest)[:INTEREST_AREAS]
+    chosen = from_cv + [a for a in from_interest if a not in from_cv]
+    filled = []
+    for a in ranked(interest)[INTEREST_AREAS:] + ranked(cv) + ids:
+        if len(chosen) + len(filled) >= MIN_AREAS:
+            break
+        if a not in chosen and a not in filled:
+            filled.append(a)
+    return {"areas": tested_areas(chosen + filled), "from_cv": from_cv,
+            "from_interest": from_interest, "filled": filled}
+
+
+def test_size(areas: list) -> dict:
+    """How many questions the test asks for these areas, and about how many minutes, from the
+    mean time_s of each stage's items in those areas (the deep areas are not known yet)."""
+    bank, sel = load_bank(), load_bank()["selection"]
+
+    def mean_time(stage):
+        times = [q["time_s"] for q in bank["questions"] if q["stage"] == stage and q["domain"] in areas]
+        return sum(times) / len(times)
+
+    screen = sel["screen_per_domain"] * len(areas)
+    deep = sel["deep_domains"] * (sel["deep_per_domain"] + sel["practical_per_domain"])
+    seconds = (screen * mean_time("screen") + sel["deep_domains"] * (
+        sel["deep_per_domain"] * mean_time("deep") + sel["practical_per_domain"] * mean_time("practical")))
+    return {"question_count": screen + deep, "minutes": round(seconds / 60)}
+
+
+def screen_questions(seed: int, areas: list | None = None) -> list:
+    """Stage 1: the same number of screen items per tested area, in a seed-dependent order."""
     rng = random.Random(seed)
-    sel = load_bank()["selection"]
-    picked = [q for d in load_bank()["domains"] for q in _pick("screen", d["id"], sel["screen_per_domain"], rng)]
+    sel, tested = load_bank()["selection"], tested_areas(areas)
+    picked = [q for d in tested for q in _pick("screen", d, sel["screen_per_domain"], rng)]
     rng.shuffle(picked)
     return picked
 
 
-def top_domains(seed: int, responses: dict) -> list:
-    """The domains with the most screen points; ties are broken by the seed."""
+def top_domains(seed: int, responses: dict, areas: list | None = None) -> list:
+    """The tested areas with the most screen points; ties are broken by the seed."""
     by_id = questions_by_id()
-    points = {d["id"]: 0.0 for d in load_bank()["domains"]}
+    points = {d: 0.0 for d in tested_areas(areas)}
     for qid, response in responses.items():
         q = by_id[qid]
-        if q["stage"] == "screen":
+        if q["stage"] == "screen" and q["domain"] in points:
             points[q["domain"]] += grade(q, response, seed)["points"]
     order = list(points)
     random.Random(seed).shuffle(order)
@@ -198,11 +276,12 @@ def skill_levels(report: dict) -> dict:
     return levels
 
 
-def report(seed: int, responses: dict) -> dict:
-    """Grade every answer and score each domain."""
-    bank, by_id = load_bank(), questions_by_id()
-    deep = top_domains(seed, {k: v for k, v in responses.items() if by_id[k]["stage"] == "screen"})
-    asked = screen_questions(seed) + deep_questions(seed, deep)
+def report(seed: int, responses: dict, areas: list | None = None) -> dict:
+    """Grade every answer and score each tested area. Untested areas are listed with
+    tested False and no scores."""
+    bank, by_id, tested = load_bank(), questions_by_id(), tested_areas(areas)
+    deep = top_domains(seed, {k: v for k, v in responses.items() if by_id[k]["stage"] == "screen"}, tested)
+    asked = screen_questions(seed, tested) + deep_questions(seed, deep)
 
     items, earned, possible = [], {}, {}
     for q in asked:
@@ -217,30 +296,33 @@ def report(seed: int, responses: dict) -> dict:
 
     domains = []
     for d in bank["domains"]:
-        screen_points, screen_max = earned.get((d["id"], "screen"), 0), possible[(d["id"], "screen")]
-        row = {"id": d["id"], "name": d["name"], "name_zh": d["name_zh"],
-               "screen_points": screen_points, "screen_max": screen_max,
-               "profile": round(100 * screen_points / screen_max), "tested_in_depth": d["id"] in deep,
+        row = {"id": d["id"], "name": d["name"], "name_zh": d["name_zh"], "tested": d["id"] in tested,
+               "tested_in_depth": d["id"] in deep,
                "roles": [{"onet_soc": s, "title": t} for s, t in zip(d["onet_soc"], d["onet_titles"])]}
+        domains.append(row)
+        if not row["tested"]:
+            continue
+        screen_points, screen_max = earned.get((d["id"], "screen"), 0), possible[(d["id"], "screen")]
+        row.update(screen_points=screen_points, screen_max=screen_max,
+                   profile=round(100 * screen_points / screen_max))
         if d["id"] in deep:
             score = round(100 * earned[(d["id"], "deep")] / possible[(d["id"], "deep")])
             row.update(readiness=score, level=level_for(score))
-        domains.append(row)
 
-    # One score per area to compare all 6, used here and by matching. An area seen only in
-    # the quick check may not overtake the areas tested in depth: it scored no higher there,
-    # and 3 easy items say less than 3 harder ones.
+    # One score per tested area to compare them, used here and by matching. An area seen
+    # only in the quick check may not overtake the areas tested in depth: it scored no higher
+    # there, and 3 easy items say less than 3 harder ones.
     for d in domains:
         if d["tested_in_depth"]:
             d["area_score"] = round(AREA_SPLIT["screen"] * d["profile"] + AREA_SPLIT["deep"] * d["readiness"], 1)
     floor = min(d["area_score"] for d in domains if d["tested_in_depth"])
     for d in domains:
-        if not d["tested_in_depth"]:
+        if d["tested"] and not d["tested_in_depth"]:
             d["area_score"] = float(min(d["profile"], floor))
     best = max((d for d in domains if d["tested_in_depth"]),
                key=lambda d: (d["area_score"], d["readiness"], d["profile"]))
     gaps = [{"skill": i["skill"], "domain": i["domain"], "id": i["id"]} for i in items if not i["correct"]]
-    return {"seed": seed, "deep_domains": deep, "recommended": best["id"], "domains": domains,
+    return {"seed": seed, "areas": tested, "deep_domains": deep, "recommended": best["id"], "domains": domains,
             "skills_to_improve": gaps, "items": items,
             "total_points": round(sum(i["points"] for i in items), 2),
             "total_max": sum(i["max"] for i in items), "disclaimer": bank["disclaimer"]}
