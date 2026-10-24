@@ -31,6 +31,7 @@ Run locally: python src/main.py   (PORT sets the port, default 8080)
 """
 
 import csv
+import hashlib
 import json
 import mimetypes
 import os
@@ -346,6 +347,21 @@ def match_options(req: dict, data: dict) -> tuple[dict, str]:
     return {**profile, "hours_per_week": hours}, scenario
 
 
+def trend_data_version() -> dict:
+    """Which trend data the scores used: a short hash of the trend files and the date computed.
+
+    The page keeps the last ranking with this version, so when the "Update data" job writes
+    new trend data it can show the student what changed (automatic re-planning).
+    """
+    h = hashlib.sha256()
+    for name in ("trend_scores.csv", "trend_signals.csv"):
+        path = DATA / name
+        if path.exists():
+            h.update(path.read_bytes())
+    dates = [r["computed_date"] for r in read_csv("trend_scores.csv") if r.get("computed_date")]
+    return {"id": h.hexdigest()[:12], "computed_date": max(dates, default=None)}
+
+
 @route("POST", "/api/match")
 def match(request):
     data = matching.load_data()
@@ -374,7 +390,7 @@ def match(request):
                    skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
                              "trend_scores": matching.scenario_trend_scores(data, scenario)},
-                   results=ranked[:top])
+                   trend_data=trend_data_version(), results=ranked[:top])
 
 
 @route("POST", "/api/explain")

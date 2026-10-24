@@ -589,6 +589,30 @@ async function loadRoleExtra(card) {
   }
 }
 
+/* Automatic re-planning: keep the last ranking for the same answers and scenario, with the
+   trend data it used. When the "Update data" job writes new trend data, say what moved. */
+const PLAN_KEY = "future-skills-last-plan";
+function replanNote(body, res) {
+  const { scenario, top, hours_per_week, ...answers } = body;
+  const who = JSON.stringify(answers) + "|" + scenario;
+  const best = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
+  const now = { who, data: res.trend_data, roles: Object.fromEntries(best.map((m, i) => [m.role_id, { rank: i + 1, name: m.role_name, total: m.total, trend: m.components.trend.score }])) };
+  let before = null;
+  try { before = JSON.parse(sessionStorage.getItem(PLAN_KEY) || "null"); } catch (e) { /* storage off */ }
+  try { sessionStorage.setItem(PLAN_KEY, JSON.stringify(now)); } catch (e) { /* storage off */ }
+  if (!before || before.who !== who || !before.data || !now.data || before.data.id === now.data.id) return "";
+  const moved = Object.entries(now.roles).filter(([id, r]) => before.roles[id] && (before.roles[id].rank !== r.rank || before.roles[id].trend !== r.trend))
+    .sort((a, b) => a[1].rank - b[1].rank).slice(0, 8);
+  const rows = moved.map(([id, r]) => {
+    const was = before.roles[id], up = was.rank - r.rank;
+    return `<li><strong>${esc(r.name)}</strong>: rank ${was.rank} → ${r.rank}${up ? ` (${up > 0 ? "▲" : "▼"} ${Math.abs(up)})` : ""}${was.trend !== r.trend ? `, trend ${fmt(was.trend)} → ${fmt(r.trend)}` : ""}</li>`;
+  }).join("");
+  return `<section class="note stack" style="gap: 6px" aria-live="polite">
+    <p><strong>Your plan was re-checked with new trend data</strong> (computed ${esc(now.data.computed_date || "")}).</p>
+    ${moved.length ? `<ul class="small" style="margin: 0; padding-left: 18px">${rows}</ul><p class="small muted">Learning paths below now follow the new ranking.</p>` : '<p class="small">Nothing in your ranking changed.</p>'}
+  </section>`;
+}
+
 async function pageResults() {
   const demo = state.demo;
   if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
@@ -608,6 +632,7 @@ async function pageResults() {
   }
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
   lastMatchBody = body;
+  const replan = replanNote(body, res);
   const sc = res.scenario;
   const scenarioCard = `
     <section class="card stack" style="gap: 10px" aria-labelledby="sc-title">
@@ -646,6 +671,7 @@ async function pageResults() {
       <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
       <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
+    ${replan}
     ${scenarioCard}
     <div id="list" class="stack"></div>
     <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
@@ -715,7 +741,7 @@ async function pageTrends() {
   app.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => { trendTab = b.dataset.tab; pageTrends().catch(showError); }; });
   const btn = document.getElementById("update");
   const show = (s) => {
-    const label = { idle: "", running: "Updating…", done: `Updated ${s.finished ? new Date(s.finished).toLocaleString() : ""}`, failed: "Update failed; previous data kept." };
+    const label = { idle: "", running: "Updating…", done: `Updated ${s.finished ? new Date(s.finished).toLocaleString() : ""}. Your jobs page will re-check your plan with the new data.`, failed: "Update failed; previous data kept." };
     document.getElementById("upd-status").textContent = s.status in label ? label[s.status] : s.status;
     btn.disabled = s.status === "running";
     const log = document.getElementById("log");

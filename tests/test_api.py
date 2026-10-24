@@ -158,6 +158,8 @@ class TestApi(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.json["results"]), 1)
         self.assertEqual(r.json["scenario"]["id"], "baseline")
+        self.assertRegex(r.json["trend_data"]["id"], r"^[0-9a-f]{12}$")
+        self.assertTrue(r.json["trend_data"]["computed_date"])
         self.assertIn("pathway", r.json["results"][0])
 
     def test_match_scenario_and_hours(self):
