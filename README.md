@@ -24,7 +24,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | Resource | Link |
 |---|---|
 | GitHub Repository | https://github.com/pekoremon/future-skills |
-| Replit Project | [REPLIT PROJECT URL] |
+| Replit Project | https://future-skills.replit.app (published from Replit) |
 | Live Demo | https://future-skills.replit.app |
 | Slide Deck | [SLIDES URL] |
 | Demo Video | [YOUTUBE URL] |
@@ -210,8 +210,8 @@ python -m unittest discover tests
 | Name | Role | GitHub |
 |---|---|---|
 | Hong Zhi Yang (team leader) | Trend data (MyCOL, DOSM, arXiv signals) | [@zhiyang19015-stack](https://github.com/zhiyang19015-stack) |
-| [NAME] | Roles, skills, SDG mapping | [@cherylloveslemonade](https://github.com/cherylloveslemonade) |
-| [NAME] | App, matching, courses, repo | [@pekoremon](https://github.com/pekoremon) |
+| Ng Tian Ni | Roles, skills, SDG mapping | [@cherylloveslemonade](https://github.com/cherylloveslemonade) |
+| Phon Kar Lok | App, matching, courses, repo | [@pekoremon](https://github.com/pekoremon) |
 
 ## Submission Checklist
 
