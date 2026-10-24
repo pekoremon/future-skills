@@ -492,6 +492,7 @@ function matchCard(m, rank) {
     </div>
     ${splitBar(m)}
     <div class="row" style="gap: 6px">${sdg}</div>
+    <a class="btn primary learn-link" href="#/learn/${esc(m.role_id)}">How to get there: learning path &rarr;</a>
     <details class="more">
       <summary>Why this score, and what to learn</summary>
       <div class="stack" style="gap: 14px">
@@ -505,6 +506,7 @@ function matchCard(m, rank) {
         ${d.tech_missing.length ? `<div class="stack" style="gap: 8px"><h3>Technologies to learn</h3><div class="row" style="gap: 6px">${d.tech_missing.map((t) => `<span class="chip plain">${esc(t.skill_name)}</span>`).join("")}</div></div>` : ""}
         ${d.tech_used.length ? `<p class="small muted">You already use: ${d.tech_used.map((t) => esc(t.skill_name)).join(", ")}</p>` : ""}
         ${pathHtml(m.pathway)}
+        <a class="btn" href="#/learn/${esc(m.role_id)}">See the full learning path, with videos</a>
         <div class="role-extra small muted">Loading role details…</div>
         ${m.sdg.map((s) => `<p class="small"><strong>SDG ${esc(s.target)}</strong> (${esc(s.link_strength)} link): ${esc(s.rationale)}</p>`).join("")}
       </div>
@@ -1087,6 +1089,64 @@ function pageTestResult() {
   document.getElementById("again").onclick = (e) => { e.target.disabled = true; startTest().catch(showError); };
 }
 
+/* ---------- learning path page ---------- */
+
+const FORMAT_LABEL = { video: "▶ YouTube video", playlist: "▶ YouTube playlist", course: "Free course" };
+
+function resourceHtml(r) {
+  const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr === 0 || r.cost_myr === null ? "Free" : `RM ${fmt(r.cost_myr, 0)}`, r.level ? esc(r.level) : ""].filter(Boolean);
+  return `<li class="res">
+    <span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>
+    <a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
+    <span class="muted small">${facts.join(" · ")}${r.notes ? ` · ${esc(r.notes)}` : ""}</span>
+  </li>`;
+}
+
+async function pageLearn(roleId) {
+  render('<p class="muted" role="status">Building the learning path…</p>');
+  const personal = Boolean(lastMatchBody);
+  const p = personal
+    ? await api("/api/learn", { body: JSON.stringify({ ...lastMatchBody, role_id: roleId }) })
+    : await api(`/api/learn/${encodeURIComponent(roleId)}`);
+  const stage = (n, title, hint, body) => `
+    <section class="card stack learn-stage" style="gap: 10px">
+      <h2><span class="stage-num" aria-hidden="true">${n}</span>${esc(title)}</h2>
+      ${hint ? `<p class="muted small">${hint}</p>` : ""}
+      ${body}
+    </section>`;
+  const list = (rs) => rs.length ? `<ul class="res-list">${rs.map(resourceHtml).join("")}</ul>` : '<p class="muted small">No checked free resource in our list yet.</p>';
+  const skills = p.skills.map((s) => `
+    <div class="stack learn-skill" style="gap: 6px">
+      <h3>${esc(s.skill_name)} <span class="muted small">· ${s.kind === "technology" ? "technology" : "skill"}${s.your_level !== undefined ? ` · you ${fmt(s.your_level)} → needed ${fmt(s.level_needed)} (O*NET 0–7)` : ""}</span></h3>
+      ${list(s.resources)}
+    </div>`).join("");
+  const certs = p.certifications.length
+    ? `<ul class="res-list">${p.certifications.map((c) => `<li class="res"><span class="chip plain res-kind">Certification</span>
+        <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
+        <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""} · ${esc(c.how_to_get)}</span></li>`).join("")}</ul>`
+    : '<p class="muted small">No certification listed for this role yet. A portfolio of the projects from the courses above is the best proof.</p>';
+  const time = p.total_hours ? `About <strong>${fmt(p.total_hours)} hours</strong> of free material, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.resources_without_hours ? `, plus ${p.resources_without_hours} self-paced course${p.resources_without_hours > 1 ? "s" : ""}` : ""}.` : "";
+  render(`
+  <div class="stack">
+    <a class="btn ghost" href="#/results" style="align-self: flex-start">&larr; Back to my jobs</a>
+    <p class="eyebrow">Learning path${p.personal ? " · built on your skill gaps" : ""}</p>
+    <h1>${esc(p.role.name)}: how to get there</h1>
+    <div class="row" style="gap: 6px">
+      <span class="chip plain">${esc(p.role.area_name || "IT")}</span>
+      ${p.role.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : p.role.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
+      <a class="chip plain" href="https://www.onetonline.org/link/summary/${esc(p.role.onet_soc)}" target="_blank" rel="noopener">What the job involves (O*NET)</a>
+    </div>
+    <div class="note">${time} Everything here is free. We opened every link and checked its title, channel and length; videos open on YouTube in a new tab.</div>
+    ${stage(1, p.stages[0].title, "Start here: the basics every student in this area needs.", list(p.stages[0].resources))}
+    ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "Courses aimed at this exact job.", list(p.stages[1].resources)) : ""}
+    ${stage(p.stages[1].resources.length ? 3 : 2, p.personal ? "Close your skill gaps" : "Skills and tools this job uses",
+      p.personal ? "Your biggest gaps for this role, with where to learn each one." : "From O*NET, tools first. Take the steps on the home page to see only the ones you are missing.",
+      skills + (p.skills_not_shown ? `<p class="muted small">Plus ${p.skills_not_shown} more skill${p.skills_not_shown > 1 ? "s" : ""} without a free resource in our list yet.</p>` : ""))}
+    ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "A recognised certificate or a portfolio shows employers what you can do.", certs)}
+    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a></div>
+  </div>`);
+}
+
 /* ---------- router ---------- */
 
 async function route() {
@@ -1108,6 +1168,7 @@ async function route() {
     else if (page === "skills") await pageSkills();
     else if (page === "results") await pageResults();
     else if (page === "trends") await pageTrends();
+    else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
     else pageHome();
   } catch (e) {
     showError(e);

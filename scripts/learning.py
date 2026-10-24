@@ -1,0 +1,105 @@
+"""Learning path page for one role: where to learn it, in order, with links.
+
+Stages, in order:
+  1. Foundations    free resources for the role's IT area (and for every IT student)
+  2. For this role  resources made for this exact role (e.g. QA testing, blockchain)
+  3. Skills to build the role's skills and In Demand technologies, biggest first, each with
+                    its free resources (data/learning_resources.csv) and courses
+                    (data/courses.csv). With a student profile the list is that student's
+                    gaps from matching.py; without one it is the role's own list.
+  4. Prove it       certifications for the role (data/certifications.csv)
+
+Every link was opened and checked on its verified_date. A skill with no checked resource
+says so instead of suggesting one we have not seen.
+"""
+
+import matching
+
+MAX_SKILLS = 10   # skills listed in stage 3; the rest are counted
+MAX_PER_SKILL = 3
+
+
+def targets(resource: dict) -> list[tuple[str, str]]:
+    return [tuple(t.split(":", 1)) for t in resource["targets"].split(";") if ":" in t]
+
+
+def item(r: dict) -> dict:
+    return {"id": r.get("resource_id") or r.get("course_id"), "title": r["title"], "provider": r["provider"],
+            "format": r.get("format") or "course", "url": r["url"],
+            "hours": matching.number(r["duration_hours"]) if r.get("duration_hours") else None,
+            "cost_myr": matching.number(r["cost_myr"]) if r.get("cost_myr") else None,
+            "level": r.get("level", ""), "verified_date": r["verified_date"],
+            # notes in courses.csv are for the team ("Same course as C07"), so only resources show theirs
+            "notes": r.get("notes", "") if "targets" in r else ""}
+
+
+def skill_rows(role: dict, data: dict, match: dict | None) -> tuple[list[dict], int]:
+    """Skills to build, biggest gap (or importance) first, then technologies."""
+    if match:
+        d = match["skill_detail"]
+        rated = [{"skill_id": g["skill_id"], "skill_name": g["skill_name"], "kind": "skill",
+                  "your_level": g["your_level"], "level_needed": g["level_needed"]}
+                 for g in d["gaps"] if g["level_needed"] - g["your_level"] >= matching.MIN_PATH_GAP]
+        techs = [{"skill_id": t["skill_id"], "skill_name": t["skill_name"], "kind": "technology"}
+                 for t in d["tech_missing"]]
+    else:
+        rows = data["role_skills"].get(role["role_id"], [])
+        name = lambda sid: data["skills"][sid]["skill_name"]
+        rated = [{"skill_id": r["skill_id"], "skill_name": name(r["skill_id"]), "kind": "skill",
+                  "level_needed": matching.number(r["level"]) if r["level"] else None}
+                 for r in sorted((r for r in rows if r["row_type"] == "skill_knowledge"),
+                                 key=lambda r: -float(r["importance"]))]
+        techs = [{"skill_id": r["skill_id"], "skill_name": name(r["skill_id"]), "kind": "technology"}
+                 for r in rows if r["row_type"] == "in_demand_tech"]
+    # technologies, then skills, that have something to learn from come first, so the page
+    # leads with links; within each group the biggest gap (or importance) stays first
+    every = rated + techs
+    linked = lambda group: [s for s in group if data["courses"].get(s["skill_id"])]
+    rest = [s for s in every if not data["courses"].get(s["skill_id"])]
+    shown = (linked(techs) + linked(rated) + rest)[:MAX_SKILLS]
+    for s in shown:
+        s["resources"] = [item(c) for c in data["courses"].get(s["skill_id"], [])][:MAX_PER_SKILL]
+    return shown, len(every) - len(shown)
+
+
+def page(role_id: str, data: dict | None = None, match: dict | None = None,
+         hours_per_week: float = matching.DEFAULT_HOURS_PER_WEEK) -> dict | None:
+    data = data or matching.load_data()
+    role = next((r for r in data["roles"] if r["role_id"] == role_id), None)
+    if role is None:
+        return None
+    area = next((a for a in data["areas"] if a["id"] == role["it_area"]), None)
+    foundations, for_role = [], []
+    for r in data["resources"]:
+        t = targets(r)
+        if ("role", role_id) in t:
+            for_role.append(item(r))
+        elif ("area", role["it_area"]) in t or ("area", "all") in t:
+            foundations.append(item(r))
+    skills, more = skill_rows(role, data, match)
+    certs = [c for c in matching.read_csv("certifications.csv") if c["role_id"] == role_id]
+
+    seen, hours, untimed = set(), 0.0, 0
+    for r in foundations + for_role + [x for s in skills for x in s["resources"]]:
+        if r["url"] in seen:
+            continue
+        seen.add(r["url"])
+        if r["hours"]:
+            hours += r["hours"]
+        else:
+            untimed += 1
+    return {
+        "role": {"role_id": role_id, "name": role["role_name_en"], "it_area": role["it_area"],
+                 "area_name": area["name"] if area else None, "job_zone": int(role["job_zone"]),
+                 "is_mycol": role["is_mycol"], "onet_soc": role["onet_soc"]},
+        "personal": match is not None,
+        "stages": [
+            {"id": "foundations", "title": f"Foundations for {area['name'] if area else 'IT'}", "resources": foundations},
+            {"id": "role", "title": f"Made for {role['role_name_en']}", "resources": for_role},
+        ],
+        "skills": skills, "skills_not_shown": more,
+        "certifications": certs,
+        "total_hours": round(hours, 1), "resources_without_hours": untimed,
+        "hours_per_week": hours_per_week,
+        "weeks": round(hours / hours_per_week, 1) if hours_per_week else None,
+    }

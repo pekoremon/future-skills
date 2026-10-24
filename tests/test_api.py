@@ -125,6 +125,15 @@ class TestApi(unittest.TestCase):
         self.assertEqual(r.json["sources_used"], ["preference"])
         self.assertIsNotNone(r.json["results"][0]["components"]["interest"]["score"])
 
+    def test_learning_path_page(self):
+        r = self.client.get("/api/learn/IT11").json
+        self.assertEqual(r["role"]["name"], "Information Security Analysts")
+        self.assertFalse(r["personal"])
+        self.assertEqual(self.client.get("/api/learn/R99").status_code, 404)
+        mine = self.client.post("/api/learn", json={"profile_id": "P01", "role_id": "IT11"})
+        self.assertTrue(mine.json["personal"])
+        self.assertEqual(self.client.post("/api/learn", json={"profile_id": "P01", "role_id": "R99"}).status_code, 400)
+
     def test_match_regrades_the_skills_test(self):
         seed = self.client.get("/api/assessment/start").json["seed"]
         r = self.client.post("/api/match", json={"test": {"seed": seed, "responses": {}}})

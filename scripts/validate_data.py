@@ -60,6 +60,13 @@ TABLES = {
     },
 }
 
+TABLES["learning_resources.csv"] = {
+    "columns": ["resource_id", "targets", "title", "provider", "format", "url", "duration_hours",
+                "cost_myr", "level", "language", "verified_date", "notes"],
+    "required": ["resource_id", "targets", "title", "provider", "format", "url", "cost_myr",
+                 "verified_date"],
+}
+
 ALLOWED = {
     ("roles.csv", "subfield_code"): {"SE", "DA", "CS", "CI", "WD", "IM"},  # the 6 IT areas
     ("roles.csv", "job_zone"): {"1", "2", "3", "4", "5"},
@@ -82,9 +89,11 @@ ALLOWED = {
     ("certifications.csv", "required_to_practise_my"): {"yes", "no", ""},
     ("certifications.csv", "cost_currency"): {"MYR", "USD", ""},
     ("certifications.csv", "hrd_corp_claimable"): {"yes", "no", "unknown", ""},
+    ("learning_resources.csv", "format"): {"video", "playlist", "course"},
+    ("learning_resources.csv", "level"): {"beginner", "intermediate", "advanced", ""},
 }
 
-ID_COLUMN = {"roles.csv": "role_id", "skills.csv": "skill_id",
+ID_COLUMN = {"roles.csv": "role_id", "skills.csv": "skill_id", "learning_resources.csv": "resource_id",
              "trends.csv": "trend_id", "courses.csv": "course_id",
              "certifications.csv": "cert_id"}
 
@@ -102,6 +111,9 @@ PATTERNS = {
     ("roles.csv", "masco_4digit_mycol"): (re.compile(r"^\d{4}$"), "a 4-digit MASCO code"),
     ("certifications.csv", "cost_amount"): (re.compile(r"^\d+(\.\d{1,2})?$"), "a number like 480 or 5660.40"),
     ("certifications.csv", "url"): (re.compile(r"^https?://"), "an http(s) link"),
+    ("learning_resources.csv", "url"): (re.compile(r"^https://"), "an https link"),
+    ("learning_resources.csv", "duration_hours"): (re.compile(r"^\d+(\.\d+)?$"), "a number of hours"),
+    ("learning_resources.csv", "cost_myr"): (re.compile(r"^\d+(\.\d+)?$"), "a number (0 = free)"),
 }
 
 
@@ -208,6 +220,17 @@ def check_references(tables: dict[str, list[dict]]) -> list[str]:
         ref("courses.csv", i, "skill", row.get("skill_id", ""))
     for i, row in enumerate(tables.get("certifications.csv", []), start=2):
         ref("certifications.csv", i, "role", row.get("role_id", ""))
+    areas = {"all", "software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux", "it_mgmt"}
+    for i, row in enumerate(tables.get("learning_resources.csv", []), start=2):
+        for target in filter(None, row.get("targets", "").split(";")):
+            kind, _, value = target.partition(":")
+            if kind == "area":
+                if value not in areas:
+                    errors.append(f"learning_resources.csv line {i}: unknown area '{value}'")
+            elif kind in ("role", "skill"):
+                ref("learning_resources.csv", i, kind, value)
+            else:
+                errors.append(f"learning_resources.csv line {i}: target '{target}' must be area:, role: or skill:")
     for table in ("trends.csv", "sdg_map.csv"):
         for i, row in enumerate(tables.get(table, []), start=2):
             kind = row.get("entity_type", "")

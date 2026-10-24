@@ -127,6 +127,15 @@ def load_data() -> dict:
     courses = {}
     for r in read_csv("courses.csv"):
         courses.setdefault(r["skill_id"], []).append(r)
+    resources = read_csv("learning_resources.csv")
+    for r in resources:  # free videos and courses also close skill gaps in the learning path
+        for target in r["targets"].split(";"):
+            kind, _, sid = target.partition(":")
+            if kind == "skill":
+                courses.setdefault(sid, []).append(
+                    {"course_id": r["resource_id"], "title": r["title"], "provider": r["provider"],
+                     "url": r["url"], "duration_hours": r["duration_hours"], "cost_myr": r["cost_myr"],
+                     "hrd_corp_claimable": "", "verified_date": r["verified_date"], "format": r["format"]})
     areas = load_areas()
     soc_area = {soc: a["id"] for a in areas for soc in a["onet_soc"]}
     onet = {r["role_id"]: r for r in read_csv("onet/role_onet.csv")}
@@ -145,6 +154,7 @@ def load_data() -> dict:
         "trend_parts": {trend_key(r): {"demand": number(r["my_demand_score"]),
                                        "ai": number(r["ai_momentum_score"])} for r in trends},
         "courses": courses,
+        "resources": resources,
         "sdg": sdg,
     }
 
@@ -191,7 +201,8 @@ def learning_path(skill: dict, courses: dict, hours_per_week: float = DEFAULT_HO
             step = {"course_id": c["course_id"], "title": c["title"], "provider": c["provider"],
                     "url": c["url"], "hours": number(c["duration_hours"]) if c["duration_hours"] else None,
                     "cost_myr": number(c["cost_myr"]), "hrd_corp_claimable": c["hrd_corp_claimable"],
-                    "verified_date": c["verified_date"], "skills": [name]}
+                    "verified_date": c["verified_date"], "format": c.get("format", "course"),
+                    "skills": [name]}
             seen[c["url"]] = step
             steps.append(step)
     hours = sum(s["hours"] for s in steps if s["hours"])

@@ -18,6 +18,8 @@ Endpoints (all JSON):
     POST /api/questionnaire/score    36 answers (1-5) -> RIASEC totals, code, IT-area scores, warnings
     POST /api/match                  test/preferences/CV -> IT area fit, then ranked roles with a learning path
     POST /api/explain                same body as /api/match + role_id -> LLM explanation (or fallback)
+    GET  /api/learn/<role_id>        learning path page for a role: free resources by stage, with links
+    POST /api/learn                  same body as /api/match + role_id -> the same, built on the student's gaps
     GET  /api/explain/status         whether the LLM is configured, and which model
     POST /api/cv/summary             {"text"} or {"docx_base64"} -> CV summary, skills, qualifications
     GET  /api/scenarios              future scenarios and the trend scores under each
@@ -52,6 +54,7 @@ import assessment  # noqa: E402  (scripts/ is added to the path above)
 import cv_reader  # noqa: E402
 import explain  # noqa: E402
 import interest  # noqa: E402
+import learning  # noqa: E402
 import matching  # noqa: E402
 
 UPDATE_TIMEOUT_S = 600
@@ -378,6 +381,26 @@ def explain_match(request):
     if found is None:
         raise BadRequest(f"unknown role_id '{role_id}'")
     return jsonify(role_id=role_id, **explain.explain(found))
+
+
+@route("GET", "/api/learn/<role_id>")
+def learn_role(request, role_id: str):
+    found = learning.page(role_id)
+    return jsonify(found) if found else not_found(None)
+
+
+@route("POST", "/api/learn")
+def learn_for_student(request):
+    """The learning path built on this student's own skill gaps for one role."""
+    data = matching.load_data()
+    req = body(request)
+    profile, scenario = match_options(req, data)
+    role_id = req.get("role_id")
+    found = next((m for m in matching.rank_roles(profile, data, scenario=scenario)
+                  if m["role_id"] == role_id), None)
+    if found is None:
+        raise BadRequest(f"unknown role_id '{role_id}'")
+    return jsonify(learning.page(role_id, data, found, profile["hours_per_week"]))
 
 
 @route("GET", "/api/explain/status")

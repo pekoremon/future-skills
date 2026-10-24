@@ -206,3 +206,14 @@ details.review > summary { flex-wrap: wrap; }
 .journey li[aria-current="step"] a { border-color: var(--accent); color: var(--text); font-weight: 700; background: var(--accent-soft); }
 @media (max-width: 480px) { .journey a { flex-direction: column; justify-content: center; text-align: center; font-size: 12px; padding: 6px 4px; } }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Learning path page */
+.learn-stage h2 { display: flex; align-items: center; gap: 10px; }
+.stage-num { flex: none; display: inline-flex; width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: var(--on-accent); align-items: center; justify-content: center; font-size: 16px; }
+.res-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.res { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.res a { font-weight: 600; overflow-wrap: anywhere; }
+.res-kind { justify-self: start; font-size: 12px; }
+.learn-skill + .learn-skill { border-top: 1px solid var(--line); padding-top: 10px; }
+.learn-skill h3 { margin: 0; }
+.learn-link { align-self: flex-start; }

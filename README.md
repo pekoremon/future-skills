@@ -83,6 +83,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── certifications.csv
 │   ├── sdg_map.csv
 │   ├── courses.csv
+│   ├── learning_resources.csv # 39 free videos and courses, each link checked
 │   ├── interest_items.json  # 36 team-written RIASEC items, 24 tagged with an IT area
 │   └── sample_profiles.json # Fictional demo profiles only
 ├── docs/                    # Screenshots, diagrams
@@ -93,6 +94,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── interest.py          # Score the interest questionnaire
 │   ├── assessment.py        # IT skills test: pick, grade, report
 │   ├── matching.py          # IT area fit, then explainable role score + skills gap
+│   ├── learning.py          # Learning path page per role
 │   ├── update_trends.py     # Refresh trends.csv, then trend_signals.py ("Update data" button)
 │   ├── trend_signals.py     # Direction + confidence per signal
 │   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
@@ -143,6 +145,7 @@ python src/main.py
 | POST | `/api/questionnaire/score` | `{"answers": [36 numbers 1–5]}` → RIASEC totals (6–30), code, IT-area scores (0–100), warnings |
 | POST | `/api/match` | `{"interest_answers": [...36], "test": {"seed", "responses"}, "cv_areas": {...}, "skill_ratings": {"SK020": 4}, "technologies": ["SK145"], "education_job_zone": 4, "scenario": "baseline", "hours_per_week": 5, "top": 10}` (every part optional) or `{"profile_id": "P01", ...}` → IT area fit with insights, then ranked roles with score breakdown, gaps, learning path, SDG and the rank under current trends |
 | POST | `/api/explain` | Same body as `/api/match` plus `role_id` → a plain-language explanation (`source`: `llm` or `fallback`) |
+| GET / POST | `/api/learn/<role_id>`, `/api/learn` | Learning path page for a role (POST: same body as `/api/match` plus `role_id`, built on the student's gaps) |
 | GET | `/api/explain/status` | Whether the LLM is configured, and which model |
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
