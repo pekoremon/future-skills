@@ -92,6 +92,90 @@ class TestSummarise(unittest.TestCase):
         self.assertIn("3.95", r["reason"])
 
 
+AREA_IDS = {a["id"] for a in matching.load_areas()}
+INTERN = "Cleaned 3 years of crop yield records in Python and SQL and built a Power BI dashboard"
+PROJECT = "Clinic queue tracker: a React and Node.js web app with a PostgreSQL database"
+LLM_REPLY = {"summary": "You are a final-year student with a CGPA of 3.62.", "skills": ["Python"],
+             "qualifications": [],
+             "evidence": [{"area": "data_ai", "kind": "internship", "quote": INTERN},
+                          {"area": "web_ux", "kind": "personal_project", "quote": PROJECT},
+                          {"area": "cybersecurity", "kind": "work", "quote": "Led the bank's penetration testing team"}]}
+
+
+class TestEvidence(unittest.TestCase):
+    def test_quote_must_be_in_cv(self):
+        items = [{"area": "data_ai", "kind": "internship", "quote": "  CLEANED 3 years of crop\n yield records  "},
+                 {"area": "data_ai", "kind": "internship", "quote": "Cleaned 5 years of crop yield records"},
+                 {"area": "data_ai", "kind": "internship", "quote": "Built a machine learning model for clinics"}]
+        kept, dropped = cv_reader.checked_evidence(items, SAMPLE, AREA_IDS)
+        self.assertEqual([e["quote"] for e in kept], ["CLEANED 3 years of crop\n yield records"])
+        self.assertEqual(dropped, 2)
+
+    def test_area_kind_length_and_repeats_checked(self):
+        items = [{"area": "gardening", "kind": "internship", "quote": INTERN},
+                 {"area": "data_ai", "kind": "hobby", "quote": INTERN},
+                 {"area": "data_ai", "kind": "coursework", "quote": "Python"},
+                 {"area": "data_ai", "kind": "internship", "quote": INTERN},
+                 {"area": "data_ai", "kind": "internship", "quote": INTERN.upper()},
+                 {"area": "software_dev", "kind": "internship", "quote": INTERN}]
+        kept, dropped = cv_reader.checked_evidence(items, SAMPLE, AREA_IDS)
+        self.assertEqual([(e["area"], e["points"]) for e in kept], [("data_ai", 35), ("software_dev", 35)])
+        self.assertEqual(dropped, 4)
+
+    def test_points_and_cap(self):
+        p = cv_reader.EVIDENCE_POINTS
+        self.assertLess(p["coursework"], p["personal_project"])
+        self.assertEqual(p["personal_project"], p["competition"])
+        self.assertEqual(p["competition"], p["certification"])
+        self.assertLess(p["certification"], p["internship"])
+        self.assertEqual(p["internship"], p["work"])
+        ev = [{"area": "data_ai", "kind": k, "points": p[k]} for k in ("coursework", "certification", "internship")]
+        scores, why = cv_reader.evidence_area_scores(ev, sorted(AREA_IDS))
+        self.assertEqual(scores["data_ai"], 10 + 20 + 35)
+        self.assertEqual(scores["web_ux"], 0)
+        self.assertIn("3 CV evidence items", why["data_ai"])
+        many = [{"area": "data_ai", "kind": "work", "points": p["work"]}] * 5
+        self.assertEqual(cv_reader.evidence_area_scores(many, ["data_ai"])[0]["data_ai"], cv_reader.EVIDENCE_CAP)
+
+    @mock.patch.object(cv_reader.explain, "api_key", return_value="")
+    def test_fallback_scores_from_technologies(self, _):
+        r = cv_reader.summarise({"text": SAMPLE}, SKILLS)
+        self.assertEqual(r["cv_areas_method"], "technologies")
+        self.assertEqual(r["evidence"], [])
+        data = matching.load_data()
+        expected, _ = matching.cv_area_scores([t["skill_id"] for t in r["technologies"]], data)
+        self.assertEqual(r["cv_areas"], expected)
+        self.assertEqual(max(r["cv_areas"], key=r["cv_areas"].get), "data_ai")
+
+    @mock.patch.object(cv_reader.explain, "api_key", return_value="")
+    def test_no_technologies_no_scores(self, _):
+        r = cv_reader.summarise({"text": "Final-year student. Enjoys hiking and reading. " * 3}, SKILLS)
+        self.assertEqual(r["cv_areas"], {})
+        self.assertIsNone(r["cv_areas_method"])
+
+    @mock.patch.object(cv_reader.explain, "api_key", return_value="test-key")
+    def test_llm_evidence_scored_by_our_code(self, _):
+        with mock.patch.object(cv_reader, "_call_llm", return_value=json.loads(json.dumps(LLM_REPLY))):
+            r = cv_reader.summarise({"text": SAMPLE}, SKILLS)
+        self.assertEqual(r["source"], "llm")
+        self.assertEqual(r["cv_areas_method"], "llm_evidence")
+        self.assertEqual(r["evidence_dropped"], 1)  # the invented penetration testing job
+        self.assertEqual(r["cv_areas"], {"software_dev": 0, "data_ai": 35, "cybersecurity": 0,
+                                         "cloud_infra": 0, "web_ux": 20, "it_mgmt": 0})
+
+    @mock.patch.object(cv_reader.explain, "api_key", return_value="test-key")
+    def test_llm_with_no_true_quote_falls_back_to_technologies(self, _):
+        reply = {**LLM_REPLY, "evidence": [LLM_REPLY["evidence"][2]]}
+        with mock.patch.object(cv_reader, "_call_llm", return_value=reply):
+            r = cv_reader.summarise({"text": SAMPLE}, SKILLS)
+        self.assertEqual(r["source"], "llm")
+        self.assertEqual(r["cv_areas_method"], "technologies")
+        self.assertEqual(r["evidence"], [])
+        with mock.patch.object(cv_reader, "_call_llm", side_effect=TimeoutError):
+            r = cv_reader.summarise({"text": SAMPLE}, SKILLS)
+        self.assertEqual((r["source"], r["cv_areas_method"]), ("fallback", "technologies"))
+
+
 class TestCvApi(unittest.TestCase):
     def post(self, payload):
         res = main.dispatch("POST", "/api/cv/summary", json.dumps(payload).encode())
@@ -106,6 +190,32 @@ class TestCvApi(unittest.TestCase):
         status, data = self.post({"docx_base64": docx})
         self.assertEqual(status, 200)
         self.assertIn("SK145", [t["skill_id"] for t in data["technologies"]])
+
+    @mock.patch.object(cv_reader.explain, "api_key", return_value="test-key")
+    def test_cv_areas_returned_and_used_by_match(self, _):
+        with mock.patch.object(cv_reader, "_call_llm", return_value=json.loads(json.dumps(LLM_REPLY))):
+            status, data = self.post({"text": SAMPLE})
+        self.assertEqual(status, 200)
+        self.assertEqual(data["cv_areas"]["data_ai"], 35)
+        self.assertEqual([e["area"] for e in data["evidence"]], ["data_ai", "web_ux"])
+        res = main.dispatch("POST", "/api/match", json.dumps({"cv_areas": data["cv_areas"], "top": 3}).encode())
+        match = json.loads(res.body)
+        self.assertEqual(res.status, 200)
+        self.assertEqual(match["sources_used"], ["cv"])
+        self.assertEqual(match["best"], "data_ai")
+        area = next(a for a in match["areas"] if a["id"] == "data_ai")
+        self.assertEqual(area["parts"]["cv"]["score"], 35)
+        self.assertIn("from your CV", area["explain"])
+
+    def test_tools_raise_cv_evidence_never_lower_it(self):
+        data = matching.load_data()
+        tools, _ = matching.cv_area_scores(["SK145"], data)
+        merged, why = main.cv_and_tools({"web_ux": 70, "data_ai": 0}, ["SK145"], data)
+        self.assertEqual(merged["web_ux"], max(70, tools["web_ux"]))
+        self.assertEqual(merged["data_ai"], tools["data_ai"])
+        self.assertIn("most-listed tools", why["data_ai"])
+        self.assertEqual(main.cv_and_tools(None, [], data), ({}, {}))
+
 
     def test_bad_requests(self):
         self.assertEqual(self.post({})[0], 400)

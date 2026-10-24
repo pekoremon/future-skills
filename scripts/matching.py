@@ -20,7 +20,8 @@ Two steps, so the student first sees *which part of IT* fits them, then the role
          cv = 100 x sum of share(tool) over the top tools used / sum of share(tool) over the top tools
      share(tool) = the part of the area's roles that list it (O*NET), so a tool every role
      in the area needs counts most, and each area is measured against the same number of
-     tools however long its list (cv_area_scores).
+     tools however long its list (cv_area_scores). A CV read with the LLM gives evidence
+     scores instead (scripts/cv_reader.py); the web API keeps the higher of the two per area.
    A part the student skipped is left out and the other weights are scaled up, never filled.
 
 2. Role score, for every role in data/roles.csv (its subfield_code gives the IT area):

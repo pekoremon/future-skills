@@ -196,6 +196,8 @@ ol.path .step a { font-weight: 600; }
 .check-list label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 999px; cursor: pointer; font-size: 14px; }
 .check-list label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
 ul.quals { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+ul.evidence { margin: 2px 0 6px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+ul.evidence .chip { margin-right: 6px; }
 
 /* IT skills test */
 .quiz.test { max-width: 760px; }

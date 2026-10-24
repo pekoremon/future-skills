@@ -64,7 +64,7 @@ const QUIZ_ITEMS = 36;
 let state = loadState();
 
 function loadState() {
-  const base = { answers: Array(QUIZ_ITEMS).fill(null), quizSkipped: false, ratings: {}, techs: [], zone: 4, demo: null,
+  const base = { answers: Array(QUIZ_ITEMS).fill(null), quizSkipped: false, ratings: {}, techs: [], zone: 4, demo: null, cvAreas: null,
     scenario: "baseline", hoursPerWeek: 5 };
   try {
     const saved = Object.assign(base, JSON.parse(sessionStorage.getItem(STORE_KEY) || "{}"));
@@ -109,7 +109,7 @@ const testDone = () => Boolean(state.test && state.test.result);
 
 const interestResult = () => api("/api/questionnaire/score", { body: JSON.stringify({ answers: state.answers }) });
 const quizDone = () => state.answers.every((a) => a !== null);
-const skillsDone = () => Object.keys(state.ratings).length > 0 || state.techs.length > 0;
+const skillsDone = () => Object.keys(state.ratings).length > 0 || state.techs.length > 0 || Boolean(state.cvAreas);
 
 // The guided path: every step page shows where the student is and links to the next step.
 const JOURNEY = [
@@ -321,8 +321,10 @@ async function pageSkills() {
   document.getElementById("go").onclick = () => { state.demo = null; saveState(); };
 }
 
-// The CV summary lives in memory only: it is never saved to sessionStorage.
+// The CV summary lives in memory only: it is never saved to sessionStorage. Only the
+// 0-100 evidence score per IT area (state.cvAreas) is kept, for /api/match.
 let cvResult = null;
+const cvAreasOf = (r) => (Object.keys(r.cv_areas || {}).length ? { scores: r.cv_areas, method: r.cv_areas_method } : null);
 const CV_MAX_BYTES = 2_000_000;
 const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
 
@@ -389,6 +391,38 @@ function cvResultHtml(r) {
       ${r.technologies.length ? `<div class="check-list" id="cv-techs">${r.technologies.map((t) => `<label title="Matched “${esc(t.matched)}” in your CV"><input type="checkbox" value="${esc(t.skill_id)}" checked>${esc(t.skill_name)}</label>`).join("")}</div>` : '<p class="small">None of the tracked technologies were found.</p>'}
       ${zone ? `<label class="row small"><input type="checkbox" id="cv-zone" checked> Set highest education to <strong>${esc(zone)}</strong></label>` : ""}
       <div class="row"><button class="btn primary" type="button" id="cv-apply">Add to my skills</button><span class="small muted">You still rate the general skills yourself.</span></div>
+    </section>
+    ${cvEvidenceHtml(r)}`;
+}
+
+// Evidence per IT area: the scores the matches use as "CV and tools", and the CV lines behind them.
+function cvEvidenceHtml(r) {
+  const areas = Object.entries(r.cv_areas || {}).sort((a, b) => b[1] - a[1]);
+  if (!areas.length) {
+    return `<section class="card stack" style="gap: 10px"><h2>Evidence per IT area</h2>
+      <p class="muted small">No evidence found: AI could not read it right now and none of the tracked technologies are in your CV. Your matches use your test and questionnaire instead.</p></section>`;
+  }
+  const p = r.evidence_points;
+  const how = r.cv_areas_method === "llm_evidence"
+    ? `AI picked these lines from your CV and said which IT area each shows. Our code kept only quotes that really are in your CV${r.evidence_dropped ? ` (${r.evidence_dropped} not found, so left out)` : ""} and scored them itself: coursework ${p.coursework} points; a personal project, competition or certification ${p.personal_project}; an internship or job ${p.internship}; up to 100 per area. These points are the team's choice.`
+    : `${r.source === "llm" ? "AI found no lines it could quote from your CV" : "AI is not available right now"}, so these scores come from the technologies your CV names: how many of the tools that each area's roles list most often (O*NET) you use.`;
+  const kind = (k) => k.replace("_", " ");
+  const rows = areas.map(([id, v], i) => {
+    const quotes = (r.evidence || []).filter((e) => e.area === id);
+    return `<div class="stack" style="gap: 4px">
+      <div class="row" style="justify-content: space-between"><span${i === 0 && v > 0 ? ' style="font-weight:700"' : ' class="muted"'}>${esc(AREA_NAMES[id] || id)}</span><span class="muted">${fmt(v, 0)} / 100</span></div>
+      <div class="bar"><div class="${i === 0 && v > 0 ? "on" : ""}" style="width: ${v}%"></div></div>
+      ${quotes.length ? `<ul class="evidence">${quotes.map((e) => `<li><span class="chip plain">${esc(kind(e.kind))} +${e.points}</span> “${esc(e.quote)}”</li>`).join("")}</ul>`
+        : `<p class="small muted">${esc((r.cv_areas_why || {})[id] || "")}</p>`}
+    </div>`;
+  }).join("");
+  return `<section class="card stack" style="gap: 12px" aria-labelledby="cv-ev">
+      <h2 id="cv-ev">Evidence per IT area</h2>
+      <p class="small muted">${how}</p>
+      ${rows}
+      <div class="row small">${state.cvAreas
+        ? 'Your matches use these scores as your CV evidence.<button class="btn ghost" type="button" id="cv-use" data-use="">Do not use them</button>'
+        : 'Not used in your matches.<button class="btn ghost" type="button" id="cv-use" data-use="1">Use them</button>'}</div>
     </section>`;
 }
 
@@ -413,6 +447,8 @@ async function pageCV() {
   const out = document.getElementById("cv-out");
   const show = (r) => {
     out.innerHTML = cvResultHtml(r);
+    const use = document.getElementById("cv-use");
+    if (use) use.onclick = () => { state.cvAreas = use.dataset.use ? cvAreasOf(r) : null; saveState(); show(r); };
     document.getElementById("cv-apply").onclick = () => {
       const picked = [...out.querySelectorAll("#cv-techs input:checked")].map((i) => i.value);
       state.techs = [...new Set([...state.techs, ...picked])];
@@ -427,9 +463,15 @@ async function pageCV() {
     status.className = "small muted";
     status.textContent = `Reading ${what}…`;
     out.innerHTML = "";
+    cvResult = null;
+    state.cvAreas = null;  // a new CV replaces the old evidence, even if reading it fails
+    saveState();
     try {
       cvResult = await api("/api/cv/summary", { body: JSON.stringify(await getBody()) });
       status.textContent = `Read ${cvResult.chars_read.toLocaleString()} characters from ${what}.`;
+      state.cvAreas = cvAreasOf(cvResult);
+      if (state.cvAreas) state.demo = null;
+      saveState();
       show(cvResult);
     } catch (e) {
       status.className = "warn";
@@ -615,7 +657,7 @@ function replanNote(body, res) {
 
 async function pageResults() {
   const demo = state.demo;
-  if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !Object.keys(state.ratings).length) {
+  if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !skillsDone()) {
     render(`<div class="stack">${stepBar("results")}<h1>No answers yet</h1><p class="muted">Do at least one of steps 1 to 3 first, or try the fictional demo student.</p>
       <div class="row"><a class="btn primary" href="#/quiz">Start: step 1, interests</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
     document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); pageResults(); };
@@ -628,7 +670,7 @@ async function pageResults() {
     body = { profile_id: demo, ...options };
   } else {
     const test = testDone() ? { seed: state.test.seed, responses: state.test.responses } : undefined;
-    body = { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, education_job_zone: Number(state.zone), ...options };
+    body = { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, education_job_zone: Number(state.zone), ...options };
   }
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
   lastMatchBody = body;
