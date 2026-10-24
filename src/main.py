@@ -21,7 +21,8 @@ Endpoints (all JSON):
     GET  /api/learn/<role_id>        learning path page for a role: free resources by stage, with links
     POST /api/learn                  same body as /api/match + role_id -> the same, built on the student's gaps
     GET  /api/explain/status         whether the LLM is configured, and which model
-    POST /api/cv/summary             {"text"} or {"docx_base64"} -> CV summary, skills, qualifications
+    POST /api/cv/summary             {"text"} or {"docx_base64"} -> CV summary, skills, qualifications,
+                                     evidence per IT area (cv_areas, to send to /api/match)
     GET  /api/scenarios              future scenarios and the trend scores under each
     GET  /api/trends                 ?area=  trend scores, the signals behind them and the inputs
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
@@ -335,10 +336,27 @@ def questionnaire_score(request):
     return jsonify(interest_result(body(request).get("answers")))
 
 
+def cv_and_tools(cv_areas: dict | None, technologies: list[str], data: dict) -> tuple[dict, dict]:
+    """The "CV and tools" part of area fit: per area, the higher of the CV evidence scores the
+    page sent (cv_areas from /api/cv/summary) and the score of the tools the student uses (from
+    the CV or the Skills page). Both describe the same experience, so the stronger one counts,
+    never their sum, and a score the page sent is never lowered."""
+    tools, tools_why = matching.cv_area_scores(technologies, data) if technologies else ({}, {})
+    if not cv_areas:
+        return tools, tools_why
+    merged, why = dict(cv_areas), {a: "from your CV evidence" for a in cv_areas}
+    for a, v in tools.items():
+        if v > merged.get(a, -1):
+            merged[a], why[a] = v, tools_why[a]
+    return merged, why
+
+
 def match_options(req: dict, data: dict) -> tuple[dict, str]:
     """Profile (with study hours) and scenario from a /api/match or /api/explain request."""
     profile = build_profile(req, data["skills"])
-    if not profile.get("cv_areas") and profile.get("technologies"):  # tools from the CV or Skills page
+    if profile["profile_id"] == "request":  # sample profiles keep their fictional cv_areas as written
+        profile["cv_areas"], profile["cv_why"] = cv_and_tools(profile.get("cv_areas"), profile["technologies"], data)
+    elif not profile.get("cv_areas") and profile.get("technologies"):
         profile["cv_areas"], profile["cv_why"] = matching.cv_area_scores(profile["technologies"], data)
     scenario = req.get("scenario", "baseline")
     if scenario not in matching.SCENARIOS:
@@ -444,8 +462,9 @@ def explain_status(request):
 @route("POST", "/api/cv/summary")
 def cv_summary(request):
     """Summarise an uploaded CV. The CV is used for this request only, never stored."""
+    data = matching.load_data()
     try:
-        return jsonify(cv_reader.summarise(body(request), matching.load_data()["skills"]))
+        return jsonify(cv_reader.summarise(body(request), data["skills"], data))
     except cv_reader.CVError as e:
         raise BadRequest(str(e)) from None
 

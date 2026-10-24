@@ -49,7 +49,7 @@ Every number shown to the user carries its source and date. The system never inv
 
 Domain 1 requires all six:
 
-1. **Skills profile intake** — 36-item IT interest questionnaire (RIASEC + IT area), a 24-item IT skills test graded in the browser, CV reading, plus 1–5 skill ratings and technologies
+1. **Skills profile intake** — 36-item IT interest questionnaire (RIASEC + IT area), a 24-item IT skills test graded in the browser, CV reading (an AI summary, and evidence per IT area: the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off), plus 1–5 skill ratings and technologies
 2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
 3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), then an explainable role score and skills gap
 4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults
@@ -147,6 +147,7 @@ python src/main.py
 | POST | `/api/explain` | Same body as `/api/match` plus `role_id` → a plain-language explanation (`source`: `llm` or `fallback`) |
 | GET / POST | `/api/learn/<role_id>`, `/api/learn` | Learning path page for a role (POST: same body as `/api/match` plus `role_id`, built on the student's gaps) |
 | GET | `/api/explain/status` | Whether the LLM is configured, and which model |
+| POST | `/api/cv/summary` | `{"text"}` or `{"docx_base64"}` → summary, skills, qualifications, technologies found, evidence items with quotes, and `cv_areas` (0–100 per IT area, to send to `/api/match`) with `cv_areas_method` (`llm_evidence` or `technologies`). The CV is not stored |
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~2 min) / check its status |
@@ -180,7 +181,7 @@ python -m unittest discover tests
 
 ## AI Disclosure
 
-- **In the product:** `gpt-oss-120b` (open-weight model, Apache 2.0) served by **Fireworks AI** (team's own paid account), used for two features only: the "Explain this for me" text (`scripts/explain.py`), which receives one match's computed facts and no personal data, and the CV summary (`scripts/cv_reader.py`), which receives the CV text the student uploads. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
+- **In the product:** `gpt-oss-120b` (open-weight model, Apache 2.0) served by **Fireworks AI** (team's own paid account), used for two features only: the "Explain this for me" text (`scripts/explain.py`), which receives one match's computed facts and no personal data, and the CV summary (`scripts/cv_reader.py`), which receives the CV text the student uploads. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. CV evidence items are kept only when their quote is really in the CV, and our code, not the model, turns them into area scores. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
 - **In development:** Claude Code (Anthropic) for writing and testing code, data checks, source research and documentation drafts (major); ChatGPT (OpenAI) for discussion only, not code (minor); Replit Agent for deployment settings (minor). The team set the direction, IT areas, questionnaire items and weights, and reviewed every change with automated tests, the data validator and manual checks in the browser.
 
 ## Challenges & Learnings
