@@ -177,7 +177,7 @@ python -m unittest discover tests
 - **Live data refresh.** On the deployed app, the "Update data" button on the Trends page runs `scripts/update_trends.py` on Replit: it fetches OpenDOSM (and optionally arXiv) and recomputes the signals and scores. Data written this way lasts until the deployment restarts; the committed CSVs are the baseline.
 - **Replit Agent.** Used for deployment settings only (the `.replit` workflows and publishing). We check every change it makes to `.replit` into GitHub. See `replit.md` for why the repo has `pyproject.toml` and `uv.lock` but no `requirements.txt`.
 
-📄 Proof of use: [`submission/SDC2026_HandsOffOurRights_Replit_POU.pdf`](submission/SDC2026_HandsOffOurRights_Replit_POU.pdf)
+📄 Proof of use: [`submission/SDC2026_HandsOffOurRights_Replit.pdf`](submission/SDC2026_HandsOffOurRights_Replit.pdf)
 
 ## AI Disclosure
 
