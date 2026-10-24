@@ -182,11 +182,13 @@ def build_profile(data: dict, skills: dict) -> dict:
     if "test" in data:
         seed, responses = assessment_input(data["test"])
         try:
-            per_area["test_areas"] = matching.test_area_scores(assessment.report(seed, responses))
+            report = assessment.report(seed, responses)
         except (assessment.AssessmentError, KeyError, ValueError) as e:
             raise BadRequest(f"'test': {e}") from e
+        per_area["test_areas"] = matching.test_area_scores(report)
+        per_area["test_in_depth"] = report["deep_domains"]
 
-    levels = {}
+    levels = dict(assessment.skill_levels(report)) if "test" in data else {}  # ratings below may raise them
     for key, convert in (("skills", float), ("skill_ratings", matching.rating_to_level)):
         given = data.get(key, {})
         if not isinstance(given, dict):
@@ -196,7 +198,7 @@ def build_profile(data: dict, skills: dict) -> dict:
                 raise BadRequest(f"unknown skill_id '{sid}'")
             if not isinstance(value, (int, float)):
                 raise BadRequest(f"'{key}.{sid}' must be a number")
-            levels[sid] = convert(value)
+            levels[sid] = max(levels.get(sid, 0.0), convert(value))
     if any(not 0 <= v <= 7 for v in levels.values()):
         raise BadRequest("skill levels must be 0-7 ('skill_ratings' must be 0-5)")
 

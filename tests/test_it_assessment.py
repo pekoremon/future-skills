@@ -307,6 +307,35 @@ class TestAssessmentFlow(unittest.TestCase):
         _, nxt = self.call("POST", "/api/assessment/next", {"seed": start["seed"], "responses": responses})
         self.assertEqual(sorted(nxt["domains"]), ["cybersecurity", "it_mgmt"])
 
+    def test_quick_check_only_area_never_beats_the_in_depth_areas(self):
+        """Right on every quick check in 3 areas, wrong on every deep item: the area seen
+        only in the quick check must not become the best area here or on the matches page."""
+        from assessment import report
+        from matching import area_fit, load_areas, test_area_scores
+        bank = {q["id"]: q for q in BANK["questions"]}
+        good = {"software_dev", "data_ai", "web_ux"}
+        _, start = self.call("GET", "/api/assessment/start")
+        responses = {q["id"]: self.right_answer(bank[q["id"]], q)
+                     for q in start["questions"] if q["domain"] in good}
+        result = report(start["seed"], responses)  # deep items left unanswered = wrong
+        scores = {d["id"]: d["area_score"] for d in result["domains"]}
+        self.assertIn(result["recommended"], result["deep_domains"])
+        floor = min(scores[d] for d in result["deep_domains"])
+        self.assertTrue(all(v <= floor for k, v in scores.items() if k not in result["deep_domains"]))
+        fit = area_fit({"test_areas": test_area_scores(result), "test_in_depth": result["deep_domains"]},
+                       load_areas())
+        self.assertEqual(fit["best"], result["recommended"])
+
+    def test_right_answers_become_skill_levels(self):
+        from assessment import STAGE_LEVEL, report, skill_levels
+        q = next(q for q in BANK["questions"] if q["id"] == "NW-D1")  # deep, all-or-nothing
+        fake = {"items": [{"id": q["id"], "stage": q["stage"], "points": 2, "max": 2}]}
+        self.assertEqual(skill_levels(fake), {s: STAGE_LEVEL["deep"] for s in q["onet_skill_ids"]})
+        fake["items"][0]["points"] = 0
+        self.assertEqual(skill_levels(fake), {})
+        _, start = self.call("GET", "/api/assessment/start")
+        self.assertEqual(skill_levels(report(start["seed"], {})), {})
+
     def test_partial_credit(self):
         from assessment import grade
         q = next(q for q in BANK["questions"] if q["id"] == "CS-P2")

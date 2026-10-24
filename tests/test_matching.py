@@ -22,10 +22,15 @@ AREAS = [{"id": i, "name": i.title(), "name_zh": "", "description": ""} for i in
 
 
 class TestAreaFit(unittest.TestCase):
-    def test_test_area_scores_weights_deep_items(self):
-        report = {"domains": [{"id": "a", "profile": 67, "tested_in_depth": True, "readiness": 100},
-                              {"id": "b", "profile": 33, "tested_in_depth": False}]}
-        self.assertEqual(test_area_scores(report), {"a": round(0.4 * 67 + 0.6 * 100, 1), "b": 33.0})
+    def test_test_area_scores_use_the_report_area_score(self):
+        report = {"domains": [{"id": "a", "profile": 67, "tested_in_depth": True, "readiness": 100,
+                               "area_score": 86.8},
+                              {"id": "b", "profile": 33, "tested_in_depth": False, "area_score": 33.0}]}
+        self.assertEqual(test_area_scores(report), {"a": 86.8, "b": 33.0})
+
+    def test_tie_goes_to_the_area_tested_in_depth(self):
+        fit = area_fit({"test_areas": {"a": 40, "b": 40, "c": 0}, "test_in_depth": ["b", "c"]}, AREAS)
+        self.assertEqual(fit["best"], "b")
 
     def test_all_sources_use_the_area_weights(self):
         fit = area_fit({"test_areas": {"a": 100, "b": 0, "c": 0}, "preferences": {"a": 0, "b": 100, "c": 0},

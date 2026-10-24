@@ -6,8 +6,10 @@ Two steps, so the student first sees *which part of IT* fits them, then the role
 
     area_fit = 0.45 x test + 0.30 x preference + 0.25 x CV evidence     (each part 0-100)
 
-   - test: the IT skills test. Every area gets 3 quick-check items, so every area has a
-     score; the 2 areas tested in depth combine quick check and deep items (TEST_SPLIT).
+   - test: the IT skills test's area_score (scripts/assessment.py). Every area gets 3
+     quick-check items; the 2 areas tested in depth combine quick check and deep items, and
+     an area seen only in the quick check may not score above them. On a tie, an area
+     tested in depth ranks first, so this page and the test result agree.
    - preference: from the interest questionnaire (scripts/interest.py),
          preference = 0.6 x the area's 4 questions + 0.4 x interest fit of the area's roles
      RIASEC alone hardly separates software, data, security and networking (their O*NET
@@ -41,6 +43,7 @@ are ranked after the others and flagged, never hidden.
 Student profile (data/sample_profiles.json; fictional people only):
     {"profile_id": "P01", "name": "...", "education_job_zone": 4,
      "test_areas": {"software_dev": 72, ...},   # 0-100 per area (test_area_scores)
+     "test_in_depth": ["software_dev", ...],    # areas the test asked deep items in
      "interest": {...},                         # scripts/interest.py score() result
      "preferences": {"software_dev": 80, ...},  # 0-100 per area, instead of "interest"
      "cv_areas": {"software_dev": 60, ...},     # 0-100 per area
@@ -65,7 +68,6 @@ DATA = ROOT / "data"
 
 AREA_WEIGHTS = {"test": 0.45, "preference": 0.30, "cv": 0.25}
 AREA_SOURCE_LABEL = {"test": "skills test", "preference": "preferences", "cv": "CV evidence"}
-TEST_SPLIT = {"screen": 0.4, "deep": 0.6}  # areas tested in depth: quick check vs deep items
 PREFERENCE_SPLIT = {"items": 0.6, "riasec": 0.4}
 WEIGHTS = {"area": 0.4, "interest": 0.1, "skill": 0.3, "trend": 0.2}
 SKILL_SPLIT = {"rated": 0.7, "tech": 0.3}
@@ -218,13 +220,9 @@ def rating_to_level(rating: float) -> float:
 
 
 def test_area_scores(report: dict) -> dict:
-    """0-100 test score per area from an assessment.report() result.
-
-    Every area has its quick-check profile; the 2 areas tested in depth also have deep and
-    hands-on items, which carry more weight because they are harder and more numerous.
-    """
-    return {d["id"]: round(TEST_SPLIT["screen"] * d["profile"] + TEST_SPLIT["deep"] * d["readiness"], 1)
-            if d["tested_in_depth"] else float(d["profile"]) for d in report["domains"]}
+    """0-100 test score per area from an assessment.report() result: its area_score, so the
+    test result page and the matches always agree on the best area."""
+    return {d["id"]: d["area_score"] for d in report["domains"]}
 
 
 def weighted(parts: dict, weights: dict) -> tuple[float | None, dict]:
@@ -308,7 +306,8 @@ def area_fit(profile: dict, areas: list[dict], roles: list[dict] | None = None) 
                      "parts": {k: {"score": parts[k], "weight": AREA_WEIGHTS[k], "points": points[k]}
                                for k in AREA_WEIGHTS},
                      "explain": ", ".join(given) if given else "No answers for this area yet"})
-    rows.sort(key=lambda r: -(r["fit"] if r["fit"] is not None else -1))
+    in_depth = set(profile.get("test_in_depth", []))
+    rows.sort(key=lambda r: (-(r["fit"] if r["fit"] is not None else -1), r["id"] not in in_depth))
 
     used = [k for k, s in sources.items() if s]
     tops = {k: top_area(sources[k]) for k in used}

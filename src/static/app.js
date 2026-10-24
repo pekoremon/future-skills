@@ -1037,13 +1037,15 @@ function answerText(i) {
 function pageTestResult() {
   const r = state.test && state.test.result;
   if (!r) { location.hash = "#/test"; return; }
-  const deep = r.domains.filter((d) => d.tested_in_depth).sort((a, b) => b.readiness - a.readiness || b.profile - a.profile);
+  const areaScore = (d) => d.area_score ?? d.readiness;  // results saved before area_score existed
+  const deep = r.domains.filter((d) => d.tested_in_depth).sort((a, b) => areaScore(b) - areaScore(a) || b.readiness - a.readiness);
   const best = r.domains.find((d) => d.id === r.recommended);
   const domainCard = (d) => `
     <div class="card stack" style="gap: 10px">
       <div class="row" style="justify-content: space-between"><h3>${esc(d.name)}</h3><span class="chip${d.level.min >= 75 ? "" : d.level.min >= 50 ? " plain" : " warn-chip"}">${esc(d.level.label)}</span></div>
       <div class="row" style="align-items: baseline; gap: 6px"><span class="big">${d.readiness}</span><span class="muted">/ 100 readiness</span></div>
       <div class="bar"><div class="on" style="width: ${d.readiness}%"></div></div>
+      ${d.area_score === undefined ? "" : `<p class="small">Area score <strong>${d.area_score}</strong> <span class="muted">= 40% quick check (${d.profile}) + 60% readiness (${d.readiness})</span></p>`}
       <div><p class="muted small">Jobs in this area (O*NET):</p>
         <ul class="quals small">${d.roles.map((x) => `<li><a href="https://www.onetonline.org/link/summary/${esc(x.onet_soc)}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join("")}</ul></div>
     </div>`;
@@ -1076,7 +1078,7 @@ function pageTestResult() {
       <p class="muted small">Quick-check score in each area: the same number of questions per area, so you can compare them. Your top 2 (highlighted) were then tested in depth.</p>
       ${profile}</div>
     <h2>Your top 2, tested in depth</h2>
-    <p class="muted small">Readiness counts the in-depth and hands-on questions in that area.</p>
+    <p class="muted small">Readiness counts the in-depth and hands-on questions in that area. Your strongest area has the highest area score; an area seen only in the quick check is never ranked above these two, here or on your jobs page. Right answers also count as skills in your job matches.</p>
     <div class="grid">${deep.map(domainCard).join("")}</div>
     <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
     <div class="note stack" style="gap: 8px">

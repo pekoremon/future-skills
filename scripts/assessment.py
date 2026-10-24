@@ -18,6 +18,11 @@ BANK_PATH = Path(__file__).resolve().parent.parent / "data" / "it_assessment.jso
 
 # Fields that give the answer away; the student only sees them in the report.
 HIDDEN = ("answer", "accept", "tolerance", "explanation", "expected_rows", "ordered", "refs")
+AREA_SPLIT = {"screen": 0.4, "deep": 0.6}  # area score of an area tested in depth (team choice)
+# O*NET level (0-7) a fully right answer shows in the skills an item is tagged with. Team
+# choice, read off O*NET's level anchors: a quick check is basic use, a hands-on task
+# applied work. A part-right answer shows that level x the share of points earned.
+STAGE_LEVEL = {"screen": 3.0, "deep": 4.0, "practical": 5.0}
 SQL_MAX_STEPS = 2_000_000  # SQLite VM steps before a query is stopped
 SQL_MAX_ROWS = 50
 SQLITE_RECURSIVE = 33  # authorizer code for WITH RECURSIVE; not exported by the sqlite3 module
@@ -173,6 +178,21 @@ def level_for(score: float) -> dict:
     return next(lv for lv in load_bank()["scoring"]["levels"] if score >= lv["min"])
 
 
+def skill_levels(report: dict) -> dict:
+    """O*NET level (0-7) per skill_id shown by the test: the best item tagged with it.
+
+    Wrong answers lower nothing, because one missed item is weak evidence against a skill.
+    """
+    by_id, levels = questions_by_id(), {}
+    for item in report["items"]:
+        if not item["points"]:
+            continue
+        shown = round(STAGE_LEVEL[item["stage"]] * item["points"] / item["max"], 2)
+        for sid in by_id[item["id"]]["onet_skill_ids"]:
+            levels[sid] = max(levels.get(sid, 0.0), shown)
+    return levels
+
+
 def report(seed: int, responses: dict) -> dict:
     """Grade every answer and score each domain."""
     bank, by_id = load_bank(), questions_by_id()
@@ -202,7 +222,18 @@ def report(seed: int, responses: dict) -> dict:
             row.update(readiness=score, level=level_for(score))
         domains.append(row)
 
-    best = max((d for d in domains if d["tested_in_depth"]), key=lambda d: (d["readiness"], d["profile"]))
+    # One score per area to compare all 6, used here and by matching. An area seen only in
+    # the quick check may not overtake the areas tested in depth: it scored no higher there,
+    # and 3 easy items say less than 3 harder ones.
+    for d in domains:
+        if d["tested_in_depth"]:
+            d["area_score"] = round(AREA_SPLIT["screen"] * d["profile"] + AREA_SPLIT["deep"] * d["readiness"], 1)
+    floor = min(d["area_score"] for d in domains if d["tested_in_depth"])
+    for d in domains:
+        if not d["tested_in_depth"]:
+            d["area_score"] = float(min(d["profile"], floor))
+    best = max((d for d in domains if d["tested_in_depth"]),
+               key=lambda d: (d["area_score"], d["readiness"], d["profile"]))
     gaps = [{"skill": i["skill"], "domain": i["domain"], "id": i["id"]} for i in items if not i["correct"]]
     return {"seed": seed, "deep_domains": deep, "recommended": best["id"], "domains": domains,
             "skills_to_improve": gaps, "items": items,

@@ -139,6 +139,12 @@ class TestApi(unittest.TestCase):
         r = self.client.post("/api/match", json={"test": {"seed": seed, "responses": {}}})
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json["sources_used"], ["test"])
+        self.assertTrue(all(m["components"]["skill"]["score"] == 0 for m in r.json["results"]))
+        a = main.assessment  # right quick-check answers show skills, so skill fit rises above 0
+        right = {q["id"]: a.option_order(seed, q).index(q["answer"])
+                 for q in a.screen_questions(seed) if q["type"] == "mcq"}
+        r = self.client.post("/api/match", json={"test": {"seed": seed, "responses": right}, "top": 30})
+        self.assertTrue(all(m["components"]["skill"]["score"] > 0 for m in r.json["results"]))
         bad = self.client.post("/api/match", json={"test": {"seed": "x"}})
         self.assertEqual(bad.status_code, 400)
 
