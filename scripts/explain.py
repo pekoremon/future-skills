@@ -30,13 +30,15 @@ You get the facts for one student and one role as JSON inside <facts> tags. The 
 
 Write 4 to 5 sentences in plain English, speaking to the student as "you":
 1. Why the role fits or does not fit them, using the IT area fit, interest and skill parts.
-2. What the field's AI-era trend score means for them.
+2. What the AI-era trend score means for them, using trend_direction.
 3. The first concrete step: the first course in the learning path, if there is one, or else the biggest skill gap.
 4. What the role's SDG target means in everyday terms.
 
 Rules:
 - Use only the facts given. Do not add salaries, job counts, percentages, course names, companies or any other fact that is not in the JSON.
 - Every number you write must appear exactly as it does in the facts. If you are unsure of a number, leave it out.
+- Describe the trend only with the words in trend_direction. "positive" means above the neutral 50: recent data points up, or the role is on Malaysia's critical-occupations list. "neutral" means exactly 50: flat or no clear signal; never call it rising, growing or strong. "negative" means below 50. "no data" means it was not measured.
+- Do not predict the future. Never say that demand, jobs or opportunities will grow, keep growing, are likely to or are expected to. The trend score describes recent data and is an estimate; say so.
 - Be honest: if a part of the score is low, say so kindly.
 - No headings, lists or markdown. Plain sentences only."""
 
@@ -81,6 +83,8 @@ def build_facts(match: dict) -> dict:
         "interest_fit": c["interest"]["score"],
         "skill_fit": c["skill"]["score"],
         "trend_score": c["trend"]["score"],
+        "trend_direction": {"malaysian_demand": direction((match.get("trend_parts") or {}).get("demand")),
+                            "ai_momentum": direction((match.get("trend_parts") or {}).get("ai"))},
         "area_note": match["explain"]["area"],
         "interest_note": match["explain"]["interest"],
         "trend_note": match["explain"]["trend"],
@@ -99,6 +103,23 @@ def build_facts(match: dict) -> dict:
 
 
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
+# Claims about the future; the trend layer only describes recent data, so a reply making one is rejected.
+PREDICTION = re.compile(
+    r"\b(?:will|won't|is going to|are going to|likely to|unlikely to|expected to|set to|bound to|poised to)"
+    r"\s+(?:\w+\s+){0,2}?(?:grow|rise|increase|expand|boom|stay|remain|keep|continue|decline|fall|shrink|drop|be in)\b"
+    r"|\bkeep(?:s)? (?:growing|rising|increasing)\b|\bin the (?:coming|next) (?:years|decade)\b|\bfuture[- ]proof",
+    re.IGNORECASE)
+
+
+def direction(score: float | None) -> str:
+    """A trend part in words: above, at or below the neutral 50, or not measured."""
+    if score is None:
+        return "no data"
+    return "positive" if score > 50 else "negative" if score < 50 else "neutral"
+
+
+def predictions(text: str) -> list[str]:
+    return [m.group(0) for m in PREDICTION.finditer(text)]
 
 
 def _normalise(n: str) -> str:
@@ -116,7 +137,9 @@ def fallback_text(facts: dict) -> str:
     """A plain explanation written from the facts, used whenever the LLM is not."""
     parts = [f"{facts['role']} scores {facts['match_score']} out of 100 for you: {facts['it_area']} area fit "
              f"{facts['area_fit'] if facts['area_fit'] is not None else 'not scored'}, "
-             f"skill fit {facts['skill_fit']} and AI-era trend {facts['trend_score']}."]
+             f"skill fit {facts['skill_fit']} and AI-era trend {facts['trend_score']} "
+             f"(Malaysian demand {facts['trend_direction']['malaysian_demand']}, AI momentum "
+             f"{facts['trend_direction']['ai_momentum']}; an estimate from recent data, not a prediction)."]
     if facts["learning_path"]:
         first = facts["learning_path"][0]
         hours = f" ({first['hours']} hours)" if first["hours"] else ""
@@ -168,10 +191,13 @@ def explain(match: dict) -> dict:
     try:
         text = _call_llm(facts)
         bad = unknown_numbers(text, facts)
+        future = predictions(text)
         if not text:
             result["reason"] = "empty reply"
         elif bad:
             result["reason"] = f"reply had numbers not in the facts: {', '.join(bad[:5])}"
+        elif future:
+            result["reason"] = f"reply predicted the future: {future[0]!r}"
         elif len(text) > MAX_REPLY_CHARS:
             result["reason"] = "reply too long"
         else:
