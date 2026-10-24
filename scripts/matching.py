@@ -180,19 +180,46 @@ def scenario_trend_scores(data: dict, scenario: str) -> dict:
     return scores
 
 
+def is_free(course: dict) -> bool:
+    return not course.get("cost_myr") or number(course["cost_myr"]) == 0
+
+
+def hrd_corp_options(skills: list[tuple[str, str]], courses: dict) -> list[dict]:
+    """Paid courses whose provider page says HRD Corp claimable, for the given (skill_id, name).
+
+    They are kept out of the free path: only an employer registered with HRD Corp can claim
+    the fee, so they are shown as an option for working adults, each listed once.
+    """
+    seen = {}
+    for sid, name in skills:
+        for c in courses.get(sid, []):
+            if is_free(c) or c.get("hrd_corp_claimable") != "yes":
+                continue
+            if c["url"] in seen:
+                seen[c["url"]]["skills"].append(name)
+                if seen[c["url"]]["notes"].startswith("Same course as"):  # keep the row that describes it
+                    seen[c["url"]]["notes"] = c.get("notes", "")
+                continue
+            seen[c["url"]] = {"course_id": c["course_id"], "title": c["title"], "provider": c["provider"],
+                              "url": c["url"], "cost_myr": number(c["cost_myr"]), "notes": c.get("notes", ""),
+                              "verified_date": c["verified_date"], "skills": [name]}
+    return list(seen.values())
+
+
 def learning_path(skill: dict, courses: dict, hours_per_week: float = DEFAULT_HOURS_PER_WEEK) -> dict:
     """Order the gaps (biggest first, then missing technologies) and attach free courses.
 
     Rated gaps under MIN_PATH_GAP level points are close enough and get no step.
-    A course that covers several gap skills is listed once. Gaps with no verified course
-    are returned separately so the page can say so instead of inventing one.
+    A course that covers several gap skills is listed once. Gaps with no verified free course
+    are returned separately so the page can say so instead of inventing one. Paid courses
+    that HRD Corp can fund are listed apart (hrd_corp_options), never in the free plan.
     """
     steps, no_course, seen = [], [], {}
     gaps = [(g["skill_id"], g["skill_name"]) for g in skill["gaps"]
             if g["level_needed"] - g["your_level"] >= MIN_PATH_GAP] + \
            [(t["skill_id"], t["skill_name"]) for t in skill["tech_missing"]]
     for sid, name in gaps:
-        options = courses.get(sid, [])
+        options = [c for c in courses.get(sid, []) if is_free(c)]
         if not options:
             no_course.append({"skill_id": sid, "skill_name": name})
             continue
@@ -211,7 +238,8 @@ def learning_path(skill: dict, courses: dict, hours_per_week: float = DEFAULT_HO
     return {"steps": steps, "total_hours": round(hours, 1), "hours_per_week": hours_per_week,
             "weeks": round(hours / hours_per_week, 1) if hours_per_week else None,
             "steps_without_hours": sum(1 for s in steps if not s["hours"]),
-            "gaps_without_course": no_course}
+            "gaps_without_course": no_course,
+            "hrd_corp_options": hrd_corp_options(gaps, courses)}
 
 
 def rating_to_level(rating: float) -> float:

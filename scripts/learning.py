@@ -9,6 +9,12 @@ Stages, in order:
                     gaps from matching.py; without one it is the role's own list.
   4. Prove it       certifications for the role (data/certifications.csv)
 
+Every stage is free. Paid courses whose provider says they are HRD Corp claimable are
+listed apart, for working adults whose employer can claim the fee (matching.hrd_corp_options).
+
+The page also sums up the SDG targets the path contributes to: the role's own targets and
+those of every skill in stage 3 (data/sdg_map.csv), with the team's rationale for each link.
+
 Every link was opened and checked on its verified_date. A skill with no checked resource
 says so instead of suggesting one we have not seen.
 """
@@ -54,12 +60,32 @@ def skill_rows(role: dict, data: dict, match: dict | None) -> tuple[list[dict], 
     # technologies, then skills, that have something to learn from come first, so the page
     # leads with links; within each group the biggest gap (or importance) stays first
     every = rated + techs
-    linked = lambda group: [s for s in group if data["courses"].get(s["skill_id"])]
-    rest = [s for s in every if not data["courses"].get(s["skill_id"])]
+    free = lambda s: [c for c in data["courses"].get(s["skill_id"], []) if matching.is_free(c)]  # noqa: E731
+    linked = lambda group: [s for s in group if free(s)]  # noqa: E731
+    rest = [s for s in every if not free(s)]
     shown = (linked(techs) + linked(rated) + rest)[:MAX_SKILLS]
     for s in shown:
-        s["resources"] = [item(c) for c in data["courses"].get(s["skill_id"], [])][:MAX_PER_SKILL]
-    return shown, len(every) - len(shown)
+        s["resources"] = [item(c) for c in free(s)][:MAX_PER_SKILL]
+    hrd = matching.hrd_corp_options([(s["skill_id"], s["skill_name"]) for s in every], data["courses"])
+    return shown, len(every) - len(shown), hrd
+
+
+def sdg_summary(role_id: str, skills: list[dict], sdg: dict) -> list[dict]:
+    """SDG targets of the role and of the skills on its path, the role's own targets first."""
+    targets = {}
+
+    def entry(s):
+        return targets.setdefault(s["target"], {"target": s["target"], "goal_name": s["goal_name"],
+                                               "role": None, "skills": []})
+
+    for s in sdg.get(("role", role_id), []):
+        entry(s)["role"] = {"link_strength": s["link_strength"], "rationale": s["rationale"]}
+    for k in skills:
+        for s in sdg.get(("skill", k["skill_id"]), []):
+            entry(s)["skills"].append({"skill_id": k["skill_id"], "skill_name": k["skill_name"],
+                                       "link_strength": s["link_strength"], "rationale": s["rationale"]})
+    goal = lambda t: tuple((0, int(x), "") if x.isdigit() else (1, 0, x) for x in t.split("."))  # 9.5 before 9.b  # noqa: E731
+    return sorted(targets.values(), key=lambda t: (t["role"] is None, -len(t["skills"]), goal(t["target"])))
 
 
 def page(role_id: str, data: dict | None = None, match: dict | None = None,
@@ -76,7 +102,9 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
             for_role.append(item(r))
         elif ("area", role["it_area"]) in t or ("area", "all") in t:
             foundations.append(item(r))
-    skills, more = skill_rows(role, data, match)
+    skills, more, hrd = skill_rows(role, data, match)
+    for s in skills:
+        s["sdg"] = [{"target": x["target"], "goal_name": x["goal_name"]} for x in data["sdg"].get(("skill", s["skill_id"]), [])]
     certs = [c for c in matching.read_csv("certifications.csv") if c["role_id"] == role_id]
 
     seen, hours, untimed = set(), 0.0, 0
@@ -99,6 +127,8 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
         ],
         "skills": skills, "skills_not_shown": more,
         "certifications": certs,
+        "hrd_corp_options": hrd,
+        "sdg": sdg_summary(role_id, skills, data["sdg"]),
         "total_hours": round(hours, 1), "resources_without_hours": untimed,
         "hours_per_week": hours_per_week,
         "weeks": round(hours / hours_per_week, 1) if hours_per_week else None,

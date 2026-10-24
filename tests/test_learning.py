@@ -23,6 +23,28 @@ class TestLearning(unittest.TestCase):
             self.assertTrue(all(r["url"].startswith("https://") for r in links))
             self.assertLessEqual(len(p["skills"]), learning.MAX_SKILLS)
 
+    def test_path_lists_its_sdg_targets(self):
+        for role in self.data["roles"]:
+            p = learning.page(role["role_id"], self.data)
+            own = {s["target"] for s in self.data["sdg"].get(("role", role["role_id"]), [])}
+            self.assertEqual({t["target"] for t in p["sdg"] if t["role"]}, own)
+            self.assertTrue(own, role["role_id"])  # every role is tagged to at least one SDG
+            skill_ids = {s["skill_id"] for s in p["skills"]}
+            self.assertTrue(all(k["skill_id"] in skill_ids for t in p["sdg"] for k in t["skills"]))
+            self.assertEqual([bool(t["role"]) for t in p["sdg"]], sorted((bool(t["role"]) for t in p["sdg"]), reverse=True))
+
+    def test_paid_hrd_corp_courses_stay_out_of_the_free_plan(self):
+        paid = {c["url"] for cs in self.data["courses"].values() for c in cs if not matching.is_free(c)}
+        self.assertTrue(paid)
+        for role in self.data["roles"]:
+            p = learning.page(role["role_id"], self.data)
+            free = [r for st in p["stages"] for r in st["resources"]] + [r for s in p["skills"] for r in s["resources"]]
+            self.assertFalse(paid & {r["url"] for r in free}, role["role_id"])
+            self.assertTrue(all(c["url"] in paid and c["cost_myr"] > 0 for c in p["hrd_corp_options"]))
+            self.assertEqual(len({c["url"] for c in p["hrd_corp_options"]}), len(p["hrd_corp_options"]))
+        cloud = learning.page("IT15", self.data)
+        self.assertTrue(any("AWS" in c["title"] for c in cloud["hrd_corp_options"]))
+
     def test_role_specific_resources(self):
         game = learning.page("IT22", self.data)
         self.assertTrue(any("Unity" in r["title"] for r in game["stages"][1]["resources"]))

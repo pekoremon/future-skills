@@ -167,6 +167,8 @@ class TestApi(unittest.TestCase):
         first = r.json["results"][0]
         self.assertEqual(first["rank"], 1)
         self.assertIn("baseline_rank", first)
+        self.assertEqual(set(first["scenario_ranks"]), {"baseline", "fast_ai", "local_demand"})
+        self.assertTrue(all(n >= 1 for n in first["scenario_ranks"].values()))
         self.assertEqual(first["pathway"]["hours_per_week"], 10)
         bad = self.client.post("/api/match", json={"profile_id": "P01", "scenario": "doom"})
         self.assertEqual(bad.status_code, 400)

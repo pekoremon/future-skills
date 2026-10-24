@@ -486,6 +486,7 @@ function matchCard(m, rank) {
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
           ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : m.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
+          ${rangeBadge(m)}
           ${flags}
         </div>
       </div>
@@ -514,6 +515,16 @@ function matchCard(m, rank) {
   </article>`;
 }
 
+// How much the rank depends on the scenario: the same rank in all three, or a range.
+function rangeBadge(m) {
+  const r = m.scenario_ranks && Object.values(m.scenario_ranks);
+  if (!r || !r.length) return "";
+  const lo = Math.min(...r), hi = Math.max(...r);
+  return lo === hi
+    ? `<span class="chip plain" title="The rank does not change between the three future scenarios">Same rank in all 3 scenarios</span>`
+    : `<span class="chip plain" title="Rank under each future scenario: ${Object.entries(m.scenario_ranks).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ")}">#${lo}–${hi} across 3 scenarios</span>`;
+}
+
 function moveBadge(m) {
   if (state.scenario === "baseline" || !m.baseline_rank || m.baseline_rank === m.rank) return "";
   const up = m.baseline_rank - m.rank;
@@ -535,6 +546,7 @@ function pathHtml(p) {
     <h3>Your learning path</h3>
     ${p.steps.length ? `<p class="small">${time} Ordered by the biggest gap first; all free.</p><ol class="path">${steps}</ol>` : ""}
     ${p.gaps_without_course.length ? `<p class="small muted">No verified free course in our list yet for: ${p.gaps_without_course.map((g) => esc(g.skill_name)).join(", ")}.</p>` : ""}
+    ${p.hrd_corp_options && p.hrd_corp_options.length ? `<p class="small muted">Working already? ${p.hrd_corp_options.length} paid course${p.hrd_corp_options.length > 1 ? "s" : ""} your employer can claim under HRD Corp ${p.hrd_corp_options.length > 1 ? "are" : "is"} on the full learning path page.</p>` : ""}
   </div>`;
 }
 
@@ -604,6 +616,7 @@ async function pageResults() {
         ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === sc.id}">${esc(s.name)}</button>`).join("")}
       </div>
       <p class="small">${esc(sc.description)}</p>
+      <div class="note small"><strong>These are estimates, not predictions.</strong> Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.</div>
       <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Area scores:
         ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.</p>
       <label class="row small">Study time per week
@@ -676,6 +689,7 @@ async function pageTrends() {
   <div class="stack">
     <p class="eyebrow">AI-era trend signals</p>
     <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
+    <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.</div>
     <p class="muted">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
     <div class="grid">${scoreCards}</div>
     <div class="card stack" style="gap: 8px">
@@ -1161,6 +1175,7 @@ async function pageLearn(roleId) {
   const skills = p.skills.map((s) => `
     <div class="stack learn-skill" style="gap: 6px">
       <h3>${esc(s.skill_name)} <span class="muted small">· ${s.kind === "technology" ? "technology" : "skill"}${s.your_level !== undefined ? ` · you ${fmt(s.your_level)} → needed ${fmt(s.level_needed)} (O*NET 0–7)` : ""}</span></h3>
+      ${s.sdg && s.sdg.length ? `<div class="row" style="gap: 6px">${s.sdg.map((x) => `<span class="chip plain small" title="${esc(x.goal_name)}">SDG ${esc(x.target)}</span>`).join("")}</div>` : ""}
       ${list(s.resources)}
     </div>`).join("");
   const certs = p.certifications.length
@@ -1168,6 +1183,29 @@ async function pageLearn(roleId) {
         <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
         <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""} · ${esc(c.how_to_get)}</span></li>`).join("")}</ul>`
     : '<p class="muted small">No certification listed for this role yet. A portfolio of the projects from the courses above is the best proof.</p>';
+  const sdgRows = p.sdg.map((t) => `
+    <div class="stack sdg-row" style="gap: 4px">
+      <p><strong>SDG ${esc(t.target)}</strong> · ${esc(t.goal_name)}</p>
+      ${t.role ? `<p class="small">This job (${esc(t.role.link_strength)} link): ${esc(t.role.rationale)}</p>` : ""}
+      ${t.skills.length ? `<p class="small muted">${t.role ? "Also built by" : "Built by"} ${t.skills.length} skill${t.skills.length > 1 ? "s" : ""} on this path: ${t.skills.map((k) => `<span title="${esc(k.link_strength)} link: ${esc(k.rationale)}">${esc(k.skill_name)}</span>`).join(", ")}</p>` : ""}
+    </div>`).join("");
+  const sdgCard = p.sdg.length ? `
+    <section class="card stack" style="gap: 10px" aria-labelledby="sdg-title">
+      <h2 id="sdg-title">What this path contributes to</h2>
+      <p class="muted small">The UN Sustainable Development Goal targets this job serves, and the skills on this path that build them. The links are the team's judgement (data/sdg_map.csv), not UN text; hover a skill to see why.</p>
+      ${sdgRows}
+    </section>` : "";
+  const hrd = p.hrd_corp_options.length ? `
+    <section class="card stack" style="gap: 10px" aria-labelledby="hrd-title">
+      <h2 id="hrd-title">Working already? Courses your employer can claim</h2>
+      <p class="muted small">Paid courses whose provider page says they are claimable under HRD Corp. Only an employer registered and paying the HRD Corp levy can claim, and it must apply before the course starts. Check with the provider and your HR first. Not part of the free plan above or its hours.</p>
+      <ul class="res-list">${p.hrd_corp_options.map((c) => `<li class="res">
+        <span class="chip res-kind">HRD Corp claimable</span>
+        <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>
+        <span class="muted small">${esc(c.provider)} · RM ${fmt(c.cost_myr, 0)} · for ${c.skills.map(esc).join(", ")} · checked ${esc(c.verified_date)}</span>
+        ${c.notes && !/^Same course as/.test(c.notes) ? `<span class="small muted">${esc(c.notes)}</span>` : ""}
+      </li>`).join("")}</ul>
+    </section>` : "";
   const time = p.total_hours ? `About <strong>${fmt(p.total_hours)} hours</strong> of free material, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.resources_without_hours ? `, plus ${p.resources_without_hours} self-paced course${p.resources_without_hours > 1 ? "s" : ""}` : ""}.` : "";
   render(`
   <div class="stack">
@@ -1186,6 +1224,8 @@ async function pageLearn(roleId) {
       p.personal ? "Your biggest gaps for this role, with where to learn each one." : "From O*NET, tools first. Take the steps on the home page to see only the ones you are missing.",
       skills + (p.skills_not_shown ? `<p class="muted small">Plus ${p.skills_not_shown} more skill${p.skills_not_shown > 1 ? "s" : ""} without a free resource in our list yet.</p>` : ""))}
     ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "A recognised certificate or a portfolio shows employers what you can do.", certs)}
+    ${hrd}
+    ${sdgCard}
     <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a></div>
   </div>`);
 }

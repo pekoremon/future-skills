@@ -112,6 +112,8 @@ main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; outline: none;
 .bar { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
 .bar > div { height: 100%; border-radius: 999px; background: var(--bar-muted); }
 .bar > div.on { background: var(--accent); }
+.sdg-row { border-top: 1px solid var(--line); padding-top: 10px; }
+.sdg-row p { margin: 0; }
 .hex { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; overflow: visible; }
 .hex-ring { fill: none; stroke: var(--line); stroke-width: 1; }
 .hex-shape { fill: var(--accent); fill-opacity: 0.18; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }

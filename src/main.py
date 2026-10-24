@@ -357,10 +357,19 @@ def match(request):
 
     result = matching.match_student(profile, data, scenario=scenario)
     ranked = result.pop("roles")
+    # The role's rank in every scenario, so the page can show how much it depends on the
+    # assumptions. Counted among the roles the page lists (not above the student's level).
+    listed = lambda m: not {"needs_extra_education", "not_for_it_graduates"} & set(m["flags"])  # noqa: E731
+    ranks = {}
+    for name in matching.SCENARIOS:
+        order = [m["role_id"] for m in matching.rank_roles(profile, data, scenario=name) if listed(m)]
+        for i, rid in enumerate(order):
+            ranks.setdefault(rid, {})[name] = i + 1
     baseline_rank = {m["role_id"]: i + 1 for i, m in
                      enumerate(matching.rank_roles(profile, data, scenario="baseline"))}
     for i, m in enumerate(ranked):
         m["rank"], m["baseline_rank"] = i + 1, baseline_rank[m["role_id"]]
+        m["scenario_ranks"] = ranks.get(m["role_id"])  # None for a role the page does not list
     return jsonify(**result, weights=matching.WEIGHTS, area_weights=matching.AREA_WEIGHTS,
                    skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
