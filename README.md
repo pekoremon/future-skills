@@ -176,8 +176,8 @@ python -m unittest discover tests
 
 ## AI Disclosure
 
-- **In the product:** `gpt-oss-120b` (open-weight model, Apache 2.0) served by **Fireworks AI**, used only for the "Explain this for me" text (`scripts/explain.py`). It receives one match's computed facts, never personal data; the match scores, skill gaps, trends and courses are computed by our own code, not by the model. The model can be changed with the `FIREWORKS_MODEL` secret.
-- **In development:** [TO FILL: AI tools the team used, e.g. Claude for code, data research and documents; Replit Agent for deployment configuration.]
+- **In the product:** `gpt-oss-120b` (open-weight model, Apache 2.0) served by **Fireworks AI** (team's own paid account), used for two features only: the "Explain this for me" text (`scripts/explain.py`), which receives one match's computed facts and no personal data, and the CV summary (`scripts/cv_reader.py`), which receives the CV text the student uploads. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
+- **In development:** Claude Code (Anthropic) for writing and testing code, data checks, source research and documentation drafts (major); ChatGPT (OpenAI) for discussion only, not code (minor); Replit Agent for deployment settings (minor). The team set the direction, IT areas, questionnaire items and weights, and reviewed every change with automated tests, the data validator and manual checks in the browser.
 
 ## Challenges & Learnings
 
