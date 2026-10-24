@@ -27,7 +27,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | Replit Project | https://future-skills.replit.app (published from Replit) |
 | Live Demo | https://future-skills.replit.app |
 | Slide Deck | [Pitch deck (Google Drive)](https://drive.google.com/file/d/1ZcFFKKtm1UjylE6r0XQ_gE3tUY09VYbC/view?usp=sharing) |
-| Demo Video | [YOUTUBE URL] |
+| Demo Video | https://youtu.be/QdBmTyO73JM |
 
 ## Overview
 
@@ -215,17 +215,17 @@ python -m unittest discover tests
 
 ## Submission Checklist
 
-- [ ] Team name, domain and SDG track filled in
-- [ ] Slide deck link added
-- [ ] Demo video link added (5–7 min)
-- [ ] Replit used, with proof of use in `submission/`
-- [ ] Preliminary submission completed (`SDC2026_TeamName_Preliminary.pdf`)
-- [ ] Technology declaration completed (`SDC2026_TeamName_TechDeclaration.pdf`)
-- [ ] Submission files renamed with your team name
-- [ ] Committee GitHub accounts added as collaborators
-- [ ] Repository set to public before the deadline
-- [ ] "How to Run" steps verified
-- [ ] No API keys or secrets committed
+- [x] Team name, domain and SDG track filled in
+- [x] Slide deck link added
+- [x] Demo video link added (5–7 min)
+- [x] Replit used, with proof of use in `submission/`
+- [x] Preliminary submission completed (`SDC2026_TeamName_Preliminary.pdf`)
+- [x] Technology declaration completed (`SDC2026_TeamName_TechDeclaration.pdf`)
+- [x] Submission files renamed with your team name
+- [x] Committee GitHub accounts: not required (committee announcement); repository is public
+- [x] Repository set to public before the deadline
+- [x] "How to Run" steps verified
+- [x] No API keys or secrets committed
 
 ## License
 
