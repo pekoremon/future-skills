@@ -43,9 +43,12 @@ class TestExplain(unittest.TestCase):
     def test_predictions_are_found(self):
         for text in ("Opportunities in this field are likely to keep growing.",
                      "Demand will continue to rise.", "Jobs here keep growing.",
-                     "This field is expected to grow in the coming years.", "A future-proof career."):
+                     "This field is expected to grow in the coming years.", "A future-proof career.",
+                     # a live reply, 2026-10-24
+                     "Programmers are in strong demand now and will likely become even more important as AI tools evolve."):
             self.assertTrue(explain.predictions(text), text)
         for text in ("This course will help you learn Python.", "You can grow your SQL skills.",
+                     "You will become more confident with SQL after this course.",
                      "The trend score describes recent data and is an estimate."):
             self.assertFalse(explain.predictions(text), text)
 

@@ -108,6 +108,9 @@ NUMBER = re.compile(r"\d+(?:\.\d+)?")
 PREDICTION = re.compile(
     r"\b(?:will|won't|is going to|are going to|likely to|unlikely to|expected to|set to|bound to|poised to)"
     r"\s+(?:\w+\s+){0,2}?(?:grow|rise|increase|expand|boom|stay|remain|keep|continue|decline|fall|shrink|drop|be in)\b"
+    r"|\b(?:will|likely to|expected to|set to)\s+(?:\w+\s+){0,2}?become\s+(?:even\s+)?(?:more|less|increasingly)\s+"
+    r"(?:important|valuable|needed|in demand|sought|common|scarce|relevant)"
+    r"|\bas AI(?: tools)? (?:evolves?|advances?|improves?|spreads?|grows?)\b"
     r"|\bkeep(?:s)? (?:growing|rising|increasing)\b|\bin the (?:coming|next) (?:years|decade)\b|\bfuture[- ]proof",
     re.IGNORECASE)
 
