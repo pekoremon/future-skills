@@ -44,7 +44,8 @@ def skill_rows(role: dict, data: dict, match: dict | None) -> tuple[list[dict], 
     if match:
         d = match["skill_detail"]
         rated = [{"skill_id": g["skill_id"], "skill_name": g["skill_name"], "kind": "skill",
-                  "your_level": g["your_level"], "level_needed": g["level_needed"]}
+                  "your_level": g["your_level"], "level_needed": g["level_needed"],
+                  "rated": g.get("rated", True)}
                  for g in d["gaps"] if g["level_needed"] - g["your_level"] >= matching.MIN_PATH_GAP]
         techs = [{"skill_id": t["skill_id"], "skill_name": t["skill_name"], "kind": "technology"}
                  for t in d["tech_missing"]]
@@ -58,12 +59,16 @@ def skill_rows(role: dict, data: dict, match: dict | None) -> tuple[list[dict], 
         techs = [{"skill_id": r["skill_id"], "skill_name": name(r["skill_id"]), "kind": "technology"}
                  for r in rows if r["row_type"] == "in_demand_tech"]
     # technologies, then skills, that have something to learn from come first, so the page
-    # leads with links; within each group the biggest gap (or importance) stays first
-    every = rated + techs
+    # leads with links; within each group the biggest gap (or importance) stays first.
+    # Skills the student has not rated (counted as 0) come after all of those, so general
+    # skills nobody asked about do not crowd out the technical gaps (see matching.learning_path)
+    unrated = [s for s in rated if s.get("rated") is False]
+    rated = [s for s in rated if s.get("rated") is not False]
+    every = rated + techs + unrated
     free = lambda s: [c for c in data["courses"].get(s["skill_id"], []) if matching.is_free(c)]  # noqa: E731
     linked = lambda group: [s for s in group if free(s)]  # noqa: E731
-    rest = [s for s in every if not free(s)]
-    shown = (linked(techs) + linked(rated) + rest)[:MAX_SKILLS]
+    rest = lambda group: [s for s in group if not free(s)]  # noqa: E731
+    shown = (linked(techs) + linked(rated) + rest(techs + rated) + linked(unrated) + rest(unrated))[:MAX_SKILLS]
     for s in shown:
         s["resources"] = [item(c) for c in free(s)][:MAX_PER_SKILL]
     hrd = matching.hrd_corp_options([(s["skill_id"], s["skill_name"]) for s in every], data["courses"])

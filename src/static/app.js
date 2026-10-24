@@ -1270,7 +1270,7 @@ async function pageLearn(roleId) {
   const list = (rs) => rs.length ? `<ul class="res-list">${rs.map(resourceHtml).join("")}</ul>` : '<p class="muted small">No checked free resource in our list yet.</p>';
   const skills = p.skills.map((s) => `
     <div class="stack learn-skill" style="gap: 6px">
-      <h3>${esc(s.skill_name)} <span class="muted small">· ${s.kind === "technology" ? "technology" : "skill"}${s.your_level !== undefined ? ` · you ${fmt(s.your_level)} → needed ${fmt(s.level_needed)} (O*NET 0–7)` : ""}</span></h3>
+      <h3>${esc(s.skill_name)} <span class="muted small">· ${s.kind === "technology" ? "technology" : "skill"}${s.your_level !== undefined ? (s.rated === false ? ` · not rated yet · needed ${fmt(s.level_needed)} (O*NET 0–7)` : ` · you ${fmt(s.your_level)} → needed ${fmt(s.level_needed)} (O*NET 0–7)`) : ""}</span></h3>
       ${s.sdg && s.sdg.length ? `<div class="row" style="gap: 6px">${s.sdg.map((x) => `<span class="chip plain small" title="${esc(x.goal_name)}">SDG ${esc(x.target)}</span>`).join("")}</div>` : ""}
       ${list(s.resources)}
     </div>`).join("");
@@ -1317,7 +1317,7 @@ async function pageLearn(roleId) {
     ${stage(1, p.stages[0].title, "Start here: the basics every student in this area needs.", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "Courses aimed at this exact job.", list(p.stages[1].resources)) : ""}
     ${stage(p.stages[1].resources.length ? 3 : 2, p.personal ? "Close your skill gaps" : "Skills and tools this job uses",
-      p.personal ? "Your biggest gaps for this role, with where to learn each one." : "From O*NET, tools first. Take the steps on the home page to see only the ones you are missing.",
+      p.personal ? "Your biggest gaps for this role, with where to learn each one. Skills you have not rated yet come last; <a href=\"#/skills\">rate them</a> to see your real gaps." : "From O*NET, tools first. Take the steps on the home page to see only the ones you are missing.",
       skills + (p.skills_not_shown ? `<p class="muted small">Plus ${p.skills_not_shown} more skill${p.skills_not_shown > 1 ? "s" : ""} without a free resource in our list yet.</p>` : ""))}
     ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "A recognised certificate or a portfolio shows employers what you can do.", certs)}
     ${hrd}

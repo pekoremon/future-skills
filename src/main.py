@@ -338,6 +338,8 @@ def questionnaire_score(request):
 def match_options(req: dict, data: dict) -> tuple[dict, str]:
     """Profile (with study hours) and scenario from a /api/match or /api/explain request."""
     profile = build_profile(req, data["skills"])
+    if not profile.get("cv_areas") and profile.get("technologies"):  # tools from the CV or Skills page
+        profile["cv_areas"], profile["cv_why"] = matching.cv_area_scores(profile["technologies"], data)
     scenario = req.get("scenario", "baseline")
     if scenario not in matching.SCENARIOS:
         raise BadRequest(f"'scenario' must be one of {list(matching.SCENARIOS)}")

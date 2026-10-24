@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import interest
-from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, interest_score, it_roles, learning_path,
+from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, cv_area_scores, interest_score, it_roles, learning_path,
                       load_data, match_student, rank_roles, rating_to_level, role_area, role_trend,
                       scenario_trend_scores, skill_score, test_area_scores)
 
@@ -181,6 +181,28 @@ class TestMatching(unittest.TestCase):
         self.assertEqual(path["steps"][0]["skills"], ["One", "Two"])
         self.assertEqual((path["total_hours"], path["weeks"]), (4.0, 2.0))
         self.assertEqual([g["skill_id"] for g in path["gaps_without_course"]], ["T9"])
+
+    def test_unrated_gaps_come_after_rated_gaps_and_tools(self):
+        course = lambda sid: [{"course_id": f"C{sid}", "title": sid, "provider": "P", "url": f"https://x/{sid}",  # noqa: E731
+                               "duration_hours": "1", "cost_myr": "0", "hrd_corp_claimable": "",
+                               "verified_date": "2026-10-24"}]
+        courses = {s: course(s) for s in ("U1", "R1", "T1")}
+        skill = {"gaps": [{"skill_id": "U1", "skill_name": "Unrated", "level_needed": 5, "your_level": 0, "rated": False},
+                          {"skill_id": "R1", "skill_name": "Rated", "level_needed": 4, "your_level": 2, "rated": True}],
+                 "tech_missing": [{"skill_id": "T1", "skill_name": "Tool"}]}
+        self.assertEqual([s["title"] for s in learning_path(skill, courses)["steps"]], ["R1", "T1", "U1"])
+
+    def test_tools_give_area_evidence(self):
+        self.assertEqual(cv_area_scores([], self.data), ({}, {}))
+        everything = [s for s, r in self.data["skills"].items() if r["skill_type"] == "technology"]
+        scores, why = cv_area_scores(everything, self.data)
+        self.assertEqual(set(scores.values()), {100.0})  # every top tool used
+        data_tools = ["SK145", "SK170"]  # Python, SQL: listed by every Data & AI role
+        self.assertEqual({self.data["skills"][s]["skill_name"] for s in data_tools},
+                         {"Python", "Structured query language SQL"})
+        scores, why = cv_area_scores(data_tools, self.data)
+        self.assertEqual(max(scores, key=scores.get), "data_ai")
+        self.assertIn("2 of its 10", why["data_ai"])
 
     def test_every_course_skill_exists(self):
         for sid in self.data["courses"]:

@@ -85,7 +85,8 @@ def build_facts(match: dict) -> dict:
         "interest_note": match["explain"]["interest"],
         "trend_note": match["explain"]["trend"],
         "biggest_gaps": [{"skill": g["skill_name"], "your_level": g["your_level"],
-                          "level_needed": g["level_needed"]} for g in d["gaps"][:3]],
+                          "level_needed": g["level_needed"]}  # rated gaps first, as in the learning path
+                         for g in sorted(d["gaps"], key=lambda g: not g.get("rated", True))[:3]],
         "technologies_to_learn": [t["skill_name"] for t in d["tech_missing"][:4]],
         "learning_path": [{"course": s["title"], "provider": s["provider"], "hours": s["hours"],
                            "covers": s["skills"]} for s in p["steps"][:3]],

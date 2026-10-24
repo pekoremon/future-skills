@@ -117,6 +117,15 @@ class TestApi(unittest.TestCase):
         self.assertIn("area", first["components"])
         self.assertIn("skill_detail", first)
 
+    def test_technologies_count_as_cv_evidence(self):
+        r = self.client.post("/api/match", json={"technologies": ["SK145", "SK170"], "top": 3})
+        self.assertEqual(r.json["sources_used"], ["cv"])
+        self.assertEqual(r.json["best"], "data_ai")
+        data = next(a for a in r.json["areas"] if a["id"] == "data_ai")
+        self.assertIn("most-listed tools", data["explain"])
+        given = self.client.post("/api/match", json={"technologies": ["SK145"], "cv_areas": {"web_ux": 70}})
+        self.assertEqual(given.json["best"], "web_ux")  # scores sent by the client are kept
+
     def test_match_from_interest_answers(self):
         items = self.client.get("/api/questionnaire").json["items"]
         answers = [5 if i["type"] in "IC" else 2 for i in items]

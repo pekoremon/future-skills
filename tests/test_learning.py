@@ -63,6 +63,15 @@ class TestLearning(unittest.TestCase):
         self.assertTrue(all("your_level" in s for s in p["skills"] if s["kind"] == "skill"))
         self.assertEqual(p["weeks"], round(p["total_hours"] / 10, 1))
 
+    def test_unrated_skills_come_last(self):
+        tools = [r["skill_id"] for r in self.data["role_skills"]["IT02"] if r["row_type"] == "in_demand_tech"]
+        profile = {"skills": {"SK020": 2.0}, "technologies": tools}  # rated Programming only; has every tool
+        match = next(m for m in matching.rank_roles(profile, self.data) if m["role_id"] == "IT02")
+        skills = [s for s in learning.page("IT02", self.data, match)["skills"] if s["kind"] == "skill"]
+        flags = [s["rated"] for s in skills]
+        self.assertEqual(flags, sorted(flags, reverse=True))  # every rated skill before any unrated one
+        self.assertEqual(skills[0]["skill_name"], "Programming")
+
     def test_skill_resources_feed_the_job_card_path(self):
         self.assertTrue(any(c["course_id"].startswith("L") for c in self.data["courses"]["SK059"]))  # AWS
 

@@ -15,7 +15,12 @@ Two steps, so the student first sees *which part of IT* fits them, then the role
      RIASEC alone hardly separates software, data, security and networking (their O*NET
      interest profiles correlate 0.85-0.98), so the area questions carry more weight.
      A student may also send preference scores directly.
-   - CV evidence: projects, internships and certificates in the CV, scored 0-100 per area.
+   - CV and tools: the In Demand technologies the student uses (found in the CV or ticked
+     on the Skills page), against the CV_TOP_TOOLS tools the area's roles list most:
+         cv = 100 x sum of share(tool) over the top tools used / sum of share(tool) over the top tools
+     share(tool) = the part of the area's roles that list it (O*NET), so a tool every role
+     in the area needs counts most, and each area is measured against the same number of
+     tools however long its list (cv_area_scores).
    A part the student skipped is left out and the other weights are scaled up, never filled.
 
 2. Role score, for every role in data/roles.csv (its subfield_code gives the IT area):
@@ -46,7 +51,7 @@ Student profile (data/sample_profiles.json; fictional people only):
      "test_in_depth": ["software_dev", ...],    # areas the test asked deep items in
      "interest": {...},                         # scripts/interest.py score() result
      "preferences": {"software_dev": 80, ...},  # 0-100 per area, instead of "interest"
-     "cv_areas": {"software_dev": 60, ...},     # 0-100 per area
+     "cv_areas": {"software_dev": 60, ...},     # 0-100 per area (else from technologies)
      "skills": {"SK007": 4.0, ...},             # skill_id -> O*NET level 0-7
      "technologies": ["SK130", ...]}            # skill_ids of technologies used
 Every part is optional.
@@ -67,7 +72,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
 AREA_WEIGHTS = {"test": 0.45, "preference": 0.30, "cv": 0.25}
-AREA_SOURCE_LABEL = {"test": "skills test", "preference": "preferences", "cv": "CV evidence"}
+AREA_SOURCE_LABEL = {"test": "skills test", "preference": "preferences", "cv": "CV and tools"}
+CV_TOP_TOOLS = 10  # each area's tool evidence is measured against its 10 most-listed tools
 PREFERENCE_SPLIT = {"items": 0.6, "riasec": 0.4}
 WEIGHTS = {"area": 0.4, "interest": 0.1, "skill": 0.3, "trend": 0.2}
 SKILL_SPLIT = {"rated": 0.7, "tech": 0.3}
@@ -207,7 +213,10 @@ def hrd_corp_options(skills: list[tuple[str, str]], courses: dict) -> list[dict]
 
 
 def learning_path(skill: dict, courses: dict, hours_per_week: float = DEFAULT_HOURS_PER_WEEK) -> dict:
-    """Order the gaps (biggest first, then missing technologies) and attach free courses.
+    """Order the gaps and attach free courses: gaps in skills the student rated or showed in
+    the skills test (biggest first), then missing technologies, then skills the student has
+    not rated yet. An unrated skill counts as 0, so it always looks like a big gap; putting
+    those last keeps general skills nobody asked about from crowding out the technical ones.
 
     Rated gaps under MIN_PATH_GAP level points are close enough and get no step.
     A course that covers several gap skills is listed once. Gaps with no verified free course
@@ -215,9 +224,10 @@ def learning_path(skill: dict, courses: dict, hours_per_week: float = DEFAULT_HO
     that HRD Corp can fund are listed apart (hrd_corp_options), never in the free plan.
     """
     steps, no_course, seen = [], [], {}
-    gaps = [(g["skill_id"], g["skill_name"]) for g in skill["gaps"]
-            if g["level_needed"] - g["your_level"] >= MIN_PATH_GAP] + \
-           [(t["skill_id"], t["skill_name"]) for t in skill["tech_missing"]]
+    real = [g for g in skill["gaps"] if g["level_needed"] - g["your_level"] >= MIN_PATH_GAP]
+    gaps = [(g["skill_id"], g["skill_name"]) for g in real if g.get("rated", True)] + \
+           [(t["skill_id"], t["skill_name"]) for t in skill["tech_missing"]] + \
+           [(g["skill_id"], g["skill_name"]) for g in real if not g.get("rated", True)]
     for sid, name in gaps:
         options = [c for c in courses.get(sid, []) if is_free(c)]
         if not options:
@@ -307,6 +317,35 @@ def interest_preferences(interest: dict, roles: list[dict]) -> tuple[dict, dict]
     return prefs, why
 
 
+def cv_area_scores(technologies: list[str], data: dict) -> tuple[dict, dict]:
+    """0-100 per area from the technologies the student uses, and which top tools matched.
+
+    Each tool counts by the share of the area's roles that list it as In Demand (O*NET),
+    against the area's CV_TOP_TOOLS most-listed tools, so short and long tool lists compare
+    fairly. No technologies gives no scores: the part is left out, not set to 0.
+    """
+    used = set(technologies)
+    if not used:
+        return {}, {}
+    scores, why = {}, {}
+    for area in data["areas"]:
+        roles = [r for r in it_roles(data) if r["it_area"] == area["id"]]
+        counts = {}
+        for r in roles:
+            for row in data["role_skills"].get(r["role_id"], []):
+                if row["row_type"] == "in_demand_tech":
+                    counts[row["skill_id"]] = counts.get(row["skill_id"], 0) + 1
+        if not counts:
+            continue
+        top = sorted(counts, key=lambda s: (-counts[s], data["skills"][s]["skill_name"]))[:CV_TOP_TOOLS]
+        top_share = sum(counts[s] for s in top)
+        scores[area["id"]] = round(100 * sum(counts[s] for s in top if s in used) / top_share, 1)
+        hits = [data["skills"][s]["skill_name"] for s in top if s in used]
+        why[area["id"]] = (f"you use {len(hits)} of its {len(top)} most-listed tools"
+                           + (f": {', '.join(hits[:4])}{'…' if len(hits) > 4 else ''}" if hits else ""))
+    return scores, why
+
+
 def area_fit(profile: dict, areas: list[dict], roles: list[dict] | None = None) -> dict:
     """Score the 6 IT areas from test, preferences and CV, and say what the sources agree on."""
     interest = profile.get("interest")
@@ -326,8 +365,8 @@ def area_fit(profile: dict, areas: list[dict], roles: list[dict] | None = None) 
         parts = {k: None if s is None or s.get(a["id"]) is None else float(s[a["id"]])
                  for k, s in sources.items()}
         fit, points = weighted(parts, AREA_WEIGHTS)
-        given = [f"{AREA_SOURCE_LABEL[k]} {v:g}" + (f" ({pref_why[a['id']]})"
-                                                     if k == "preference" and a["id"] in pref_why else "")
+        why = {"preference": pref_why, "cv": profile.get("cv_why", {})}
+        given = [f"{AREA_SOURCE_LABEL[k]} {v:g}" + (f" ({why[k][a['id']]})" if a["id"] in why.get(k, {}) else "")
                  for k, v in parts.items() if v is not None]
         rows.append({"id": a["id"], "name": a["name"], "name_zh": a["name_zh"],
                      "description": a["description"], "fit": fit,
@@ -388,7 +427,8 @@ def skill_score(profile: dict, rows: list[dict], skills: dict) -> dict:
         got += imp * cover
         total += imp
         item = {"skill_id": r["skill_id"], "skill_name": name, "importance": imp,
-                "level_needed": need, "your_level": user}
+                "level_needed": need, "your_level": user,
+                "rated": r["skill_id"] in have}  # False: not rated or shown in the test, counted as 0
         if cover < 1:
             gaps.append({**item, "gap_points": round(imp * (1 - cover), 2)})
         else:
