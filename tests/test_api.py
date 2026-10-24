@@ -185,6 +185,19 @@ class TestApi(unittest.TestCase):
         self.assertEqual(bad.status_code, 400)
         self.assertEqual(len(self.client.get("/api/scenarios").json), 3)
 
+    def test_match_rejects_out_of_range_ratings(self):
+        for body in ({"skill_ratings": {"SK020": 9}}, {"skill_ratings": {"SK020": -3}},
+                     {"skill_ratings": {"SK020": True}}, {"skills": {"SK020": 8}}, {"skills": {"SK020": -1}}):
+            r = self.client.post("/api/match", json=body)
+            self.assertEqual(r.status_code, 400, body)
+        self.assertEqual(self.client.post("/api/match", json={"skill_ratings": {"SK020": 5}}).status_code, 200)
+        self.assertEqual(self.client.post("/api/match", json={"skills": {"SK020": 7}}).status_code, 200)
+
+    def test_missing_role_id_is_named(self):
+        for path in ("/api/explain", "/api/learn"):
+            r = self.client.post(path, json={})
+            self.assertEqual((r.status_code, r.json["error"]), (400, "'role_id' is required"), path)
+
     def test_match_rejects_unknown_ids(self):
         r = self.client.post("/api/match", json={"skills": {"SK999": 3}})
         self.assertEqual(r.status_code, 400)

@@ -191,18 +191,20 @@ def build_profile(data: dict, skills: dict) -> dict:
         per_area["test_in_depth"] = report["deep_domains"]
 
     levels = dict(assessment.skill_levels(report)) if "test" in data else {}  # ratings below may raise them
-    for key, convert in (("skills", float), ("skill_ratings", matching.rating_to_level)):
+    # O*NET levels are 0-7; self-ratings 0-5 (the page sends 1-5). Out of range is refused,
+    # not clamped, so a bad request never turns into a silent 0 or top score.
+    for key, convert, hi in (("skills", float, 7), ("skill_ratings", matching.rating_to_level, 5)):
         given = data.get(key, {})
         if not isinstance(given, dict):
             raise BadRequest(f"'{key}' must be an object of skill_id -> number")
         for sid, value in given.items():
             if sid not in skills:
                 raise BadRequest(f"unknown skill_id '{sid}'")
-            if not isinstance(value, (int, float)):
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise BadRequest(f"'{key}.{sid}' must be a number")
+            if not 0 <= value <= hi:
+                raise BadRequest(f"'{key}.{sid}' must be 0-{hi}")
             levels[sid] = max(levels.get(sid, 0.0), convert(value))
-    if any(not 0 <= v <= 7 for v in levels.values()):
-        raise BadRequest("skill levels must be 0-7 ('skill_ratings' must be 0-5)")
 
     techs = data.get("technologies", [])
     if not isinstance(techs, list):
@@ -426,7 +428,7 @@ def explain_match(request):
     found = next((m for m in matching.rank_roles(profile, data, scenario=scenario)
                   if m["role_id"] == role_id), None)
     if found is None:
-        raise BadRequest(f"unknown role_id '{role_id}'")
+        raise BadRequest("'role_id' is required" if not role_id else f"unknown role_id '{role_id}'")
     return jsonify(role_id=role_id, **explain.explain(found))
 
 
@@ -446,7 +448,7 @@ def learn_for_student(request):
     found = next((m for m in matching.rank_roles(profile, data, scenario=scenario)
                   if m["role_id"] == role_id), None)
     if found is None:
-        raise BadRequest(f"unknown role_id '{role_id}'")
+        raise BadRequest("'role_id' is required" if not role_id else f"unknown role_id '{role_id}'")
     return jsonify(learning.page(role_id, data, found, profile["hours_per_week"]))
 
 
