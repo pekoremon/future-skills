@@ -722,7 +722,7 @@ async function pageResults() {
   if (demo) {
     body = { profile_id: demo, ...options };
   } else {
-    const test = testDone() ? { seed: state.test.seed, responses: state.test.responses } : undefined;
+    const test = testDone() ? gradedTest(state.test) : undefined;
     body = { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, education_job_zone: Number(state.zone), ...options };
   }
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
@@ -779,6 +779,7 @@ async function pageResults() {
     <p class="eyebrow">${demo ? "" : "Step 4 of 4 · "}Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
     <h1>Best matches for your level</h1>
     ${groupsHtml(g)}
+    ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     ${g.mode === "none" ? "" : `<details class="group"><summary><span>How your IT areas were scored</span></summary><div class="group-body stack" style="gap: 6px">${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div></details>`}
     <div class="card stack" style="gap: 8px">
       <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
@@ -798,6 +799,7 @@ async function pageResults() {
     b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
   });
   document.getElementById("hpw").onchange = (e) => { state.hoursPerWeek = Number(e.target.value); saveState(); pageResults().catch(showError); };
+  wireMoreAreas("#/results");
   draw();
 }
 
@@ -975,10 +977,49 @@ function pyRepr(v) {
 // Tests saved by an older version of this page (no selection) are dropped.
 if (state.test && !state.test.selection) state.test = null;
 if (state.test && !state.test.areas) state.test.areas = state.test.domains.map((d) => d.id);  // saved before areas were chosen: the full test
-const testInProgress = () => state.test && !state.test.result;
+// extending: answering the quick checks of areas added after the result; the old result
+// stays in use until the new one is graded.
+const testInProgress = () => state.test && (!state.test.result || state.test.extending);
 // Question counts come from the bank's selection rules, so changing them needs no code change.
 const screenCount = (t) => t.selection.screen_per_domain * t.areas.length;
-const testLength = (t) => screenCount(t) + t.selection.deep_domains * (t.selection.deep_per_domain + t.selection.practical_per_domain);
+const testLength = (t) => screenCount(t) + t.selection.deep_domains * (t.selection.deep_per_domain + t.selection.practical_per_domain)
+  + t.selection.screen_per_domain * (t.added || []).length;
+// The test as last graded: only added areas whose answers were scored count in matches and links.
+const gradedTest = (t) => ({ seed: t.seed, areas: t.areas, added: (t.result && t.result.added) || [], responses: t.responses });
+
+/* "Want to test your other IT areas?": the areas the focused test left out, each with its own
+   quick check. Earlier answers and the in-depth areas stay as they are. */
+function moreAreasHtml(r) {
+  const left = (r ? r.domains : []).filter((d) => d.tested === false);
+  if (!left.length) return "";
+  const total = left.reduce((s, d) => s + (d.quick_check_minutes || 0), 0);
+  return `<section class="card stack" style="gap: 10px" aria-labelledby="more-title">
+    <h2 id="more-title">Want to test your other IT areas?</h2>
+    <p class="small muted">Your test left out ${left.length === 1 ? "this area" : `these ${left.length} areas`}. Add a ${state.test.selection.screen_per_domain}-question quick check for any of them: your earlier answers stay, and your result groups are worked out again with the new scores.</p>
+    ${left.map((d) => `<div class="row" style="justify-content: space-between"><span>${esc(d.name)}</span><button class="btn" type="button" data-more="${esc(d.id)}">Test this area too (about ${d.quick_check_minutes} min)</button></div>`).join("")}
+    ${left.length > 1 ? `<button class="btn primary" type="button" data-more="${esc(left.map((d) => d.id).join(","))}">Test all remaining areas (about ${total} min)</button>` : ""}
+  </section>`;
+}
+
+async function addAreas(ids, returnTo) {
+  const t = state.test;
+  const added = [...new Set([...(t.result.added || []), ...ids])];
+  const more = await api("/api/assessment/more", { body: JSON.stringify({ seed: t.seed, areas: t.areas, added }) });
+  const have = new Set(t.questions.map((q) => q.id));
+  t.questions = t.questions.concat(more.questions.filter((q) => !have.has(q.id)));
+  t.added = more.added;
+  t.extending = true;
+  t.returnTo = returnTo;
+  saveState();
+  const first = t.questions.findIndex((q) => ids.includes(q.domain) && !(q.id in t.responses));
+  location.hash = `#/test/${(first === -1 ? t.questions.length - 1 : first) + 1}`;
+}
+
+function wireMoreAreas(returnTo) {
+  app.querySelectorAll("[data-more]").forEach((b) => {
+    b.onclick = () => { b.disabled = true; addAreas(b.dataset.more.split(","), returnTo).catch(showError); };
+  });
+}
 const domainName = (id) => (state.test.domains.find((d) => d.id === id) || {}).name || id;
 const nameList = (ids) => { const n = ids.map((id) => AREA_NAMES[id] || id); return n.length > 1 ? `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}` : n.join(""); };
 
@@ -1011,6 +1052,8 @@ function planText(p) {
 async function pageTestIntro() {
   const going = testInProgress();
   const answered = going ? Object.keys(state.test.responses).length : 0;
+  const open = going ? state.test.questions.findIndex((q) => !(q.id in state.test.responses)) : -1;
+  const nextOpen = going ? (open === -1 ? state.test.questions.length - 1 : open) : 0;
   const plan = await testPlan();
   const missing = [!skillsDone() && '<a href="#/cv">add your CV</a>', !quizDone() && '<a href="#/quiz">answer the interest questions</a>'].filter(Boolean);
   const others = Object.keys(AREA_NAMES).filter((id) => !plan.areas.includes(id));
@@ -1032,7 +1075,7 @@ async function pageTestIntro() {
     </div>
     <p class="muted small">Code runs in your browser, in Python. The first coding question downloads Python (about 10 MB) once.</p>
     <div class="stack">
-      ${going ? `<a class="btn primary" href="#/test/${Math.min(answered + 1, state.test.questions.length)}">Continue (${answered} answered)</a>` : ""}
+      ${going ? `<a class="btn primary" href="#/test/${nextOpen + 1}">Continue (${answered} answered)</a>` : ""}
       ${state.test && state.test.result ? `<a class="btn primary" href="#/test/result">See your last result</a>` : ""}
       <button class="btn${going || (state.test && state.test.result) ? "" : " primary"}" type="button" id="start">${state.test ? "Start a new test" : "Start the test"}</button>
       <a class="btn ghost" href="#/results">Skip to step 4, my jobs</a>
@@ -1173,9 +1216,11 @@ async function nextFromItem(idx, button) {
       location.hash = `#/test/${idx + 2}`;
     } else {
       button.textContent = "Scoring…";
-      t.result = await api("/api/assessment/result", { body: JSON.stringify({ seed: t.seed, areas: t.areas, responses: t.responses }) });
+      t.result = await api("/api/assessment/result", { body: JSON.stringify({ seed: t.seed, areas: t.areas, added: t.added || [], responses: t.responses }) });
+      const back = t.extending && t.returnTo;
+      t.extending = false;
       saveState();
-      location.hash = "#/test/result";
+      location.hash = back || "#/test/result";
     }
   } catch (e) {
     showError(e);
@@ -1197,6 +1242,7 @@ function pageTestItem(n) {
       <a class="btn ghost" href="#/test">Pause</a>
     </div>
     <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / total) * 100)}%"></div></div>
+    ${(t.added || []).includes(q.domain) && !(t.added || []).includes((t.questions[idx - 1] || {}).domain) ? `<p class="note">Extra quick check: <strong>${esc(nameList(t.added.filter((a) => !(t.result && (t.result.added || []).includes(a)))))}</strong>. Your earlier answers stay as they are.</p>` : ""}
     ${idx === screenCount(t) && t.deepDomains ? `<p class="note">Your strongest areas so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
     <div class="row"><span class="chip">${esc(domainName(q.domain))}</span><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
     <h2 id="q-text">${esc(q.prompt)}</h2>
@@ -1260,13 +1306,14 @@ function hexagonChart(items, caption) {
    hash. Whoever opens it gets the result re-graded by the server; nothing is stored, and the
    hash never reaches the server. Links made before areas were chosen have no areas: all 6. */
 function shareToken(t) {
-  const bytes = new TextEncoder().encode(JSON.stringify({ s: t.seed, a: t.areas, r: t.responses }));
+  const g = gradedTest(t);
+  const bytes = new TextEncoder().encode(JSON.stringify({ s: g.seed, a: g.areas, x: g.added, r: g.responses }));
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 function readShareToken(token) {
   const b64 = token.replace(/-/g, "+").replace(/_/g, "/");
   const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))));
-  return { seed: data.s, areas: data.a, responses: data.r };
+  return { seed: data.s, areas: data.a, added: data.x, responses: data.r };
 }
 
 async function shareResult(button) {
@@ -1379,6 +1426,7 @@ function pageTestResult(sharedResult = null) {
     <p class="muted small">Readiness counts the in-depth and hands-on questions in that area. Your strongest area has the highest area score; an area seen only in the quick check is never ranked above these two, here or on your jobs page. Right answers also count as skills in your job matches.</p>
     <div class="grid">${deep.map(domainCard).join("")}</div>
     <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
+    ${moreAreasHtml(r)}
     <div class="note stack" style="gap: 8px">
       <p><strong>Next: step 4, your jobs.</strong> Your areas grouped by what you enjoy and what you can do, with ranked roles and the skills you still need.</p>
       <div class="row"><a class="btn primary" href="#/results">Next: step 4, my jobs</a>${skillsDone() ? "" : '<a class="btn ghost" href="#/cv">Add your CV (1 min)</a>'}${quizDone() ? "" : '<a class="btn ghost" href="#/quiz">Do step 2, interests (8 min)</a>'}</div>
@@ -1387,6 +1435,7 @@ function pageTestResult(sharedResult = null) {
     <div class="row"><a class="btn primary" href="#/results">Next: step 4, my jobs</a><a class="btn" href="#/test">Take a new test</a><a class="btn ghost" href="#/">Home</a></div>
   </div>`);
   document.getElementById("share").onclick = (e) => shareResult(e.target);
+  wireMoreAreas("#/test/result");
   document.getElementById("share-url").onfocus = (e) => e.target.select();
 }
 

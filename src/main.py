@@ -10,8 +10,9 @@ Endpoints (all JSON):
     POST /api/assessment/plan        CV evidence/tools + interest answers -> the 3-6 IT areas to test, and why
     GET  /api/assessment/start       ?areas=a,b,c  IT skills test: a seed, the screen questions and the rules
     POST /api/assessment/next        seed + areas + screen answers -> the 2 strongest areas and their questions
+    POST /api/assessment/more        seed + areas + added areas -> quick-check questions for the added areas
     POST /api/assessment/sql         question id + SQL -> the rows it returns (read-only SQLite)
-    POST /api/assessment/result      seed + areas + all answers -> graded answers and area readiness
+    POST /api/assessment/result      seed + areas (+ added) + all answers -> graded answers and area readiness
     GET  /api/skills                 ?type=general|domain_knowledge|technology
     GET  /api/roles
     GET  /api/roles/<role_id>        role detail: skills, technologies, SDG, certifications
@@ -183,9 +184,9 @@ def build_profile(data: dict, skills: dict) -> dict:
     if data.get("interest_answers") is not None:
         per_area["interest"] = interest_result(data["interest_answers"])
     if "test" in data:
-        seed, responses, tested = assessment_input(data["test"])
+        seed, responses, tested, added = assessment_input(data["test"])
         try:
-            report = assessment.report(seed, responses, tested)
+            report = assessment.report(seed, responses, tested, added)
         except (assessment.AssessmentError, KeyError, ValueError) as e:
             raise BadRequest(f"'test': {e}") from e
         per_area["test_areas"] = matching.test_area_scores(report)
@@ -249,9 +250,10 @@ def tested_areas(areas) -> list:
         raise BadRequest(str(e)) from None
 
 
-def assessment_input(data) -> tuple[int, dict, list]:
-    """Seed, answers and tested areas from an assessment request body, every id checked.
-    No 'areas' means all 6 (the full test, and share links made before areas existed)."""
+def assessment_input(data) -> tuple[int, dict, list, list]:
+    """Seed, answers, tested areas and areas added later from an assessment request body,
+    every id checked. No 'areas' means all 6 (the full test, and share links made before
+    areas existed); no 'added' means none."""
     if not isinstance(data, dict):
         raise BadRequest("send a JSON object with 'seed', 'areas' and 'responses'")
     seed, responses = data.get("seed"), data.get("responses", {})
@@ -262,7 +264,11 @@ def assessment_input(data) -> tuple[int, dict, list]:
     unknown = set(responses) - set(assessment.questions_by_id())
     if unknown:
         raise BadRequest(f"unknown question id(s): {', '.join(sorted(unknown))}")
-    return seed, responses, tested_areas(data.get("areas"))
+    tested = tested_areas(data.get("areas"))
+    try:
+        return seed, responses, tested, assessment.added_areas(tested, data.get("added"))
+    except assessment.AssessmentError as e:
+        raise BadRequest(str(e)) from None
 
 
 @route("POST", "/api/assessment/plan")
@@ -302,10 +308,21 @@ def assessment_start(request):
 
 @route("POST", "/api/assessment/next")
 def assessment_next(request):
-    seed, responses, tested = assessment_input(body(request))
+    seed, responses, tested, _ = assessment_input(body(request))
     domains = assessment.top_domains(seed, responses, tested)
     return jsonify(domains=domains,
                    questions=[assessment.public(q, seed) for q in assessment.deep_questions(seed, domains)])
+
+
+@route("POST", "/api/assessment/more")
+def assessment_more(request):
+    """'Test your other areas': the quick-check questions of the areas in 'added' (all of
+    them, so the page can add the ones it has not asked yet). Earlier questions never change."""
+    seed, _, tested, added = assessment_input(body(request))
+    if not added:
+        raise BadRequest("'added' must name at least one IT area that was not tested")
+    return jsonify(areas=tested, added=added,
+                   questions=[assessment.public(q, seed) for q in assessment.added_questions(seed, added)])
 
 
 @route("POST", "/api/assessment/sql")

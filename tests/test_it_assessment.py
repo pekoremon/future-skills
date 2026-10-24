@@ -406,6 +406,52 @@ class TestAssessmentFlow(unittest.TestCase):
         scored = {a["id"] for a in match["areas"] if a["parts"]["test"]["score"] is not None}
         self.assertEqual(scored, set(areas))
 
+    def test_adding_the_other_areas_later(self):
+        """'Test your other areas': same seed, earlier questions and in-depth areas unchanged,
+        only the added areas' quick checks are asked, and the match uses their scores."""
+        from assessment import report
+        bank = {q["id"]: q for q in BANK["questions"]}
+        areas = ["data_ai", "web_ux", "it_mgmt"]
+        _, start = self.call("GET", "/api/assessment/start?areas=" + ",".join(areas))
+        responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in start["questions"]}
+        req = {"seed": start["seed"], "areas": areas, "responses": responses}
+        _, nxt = self.call("POST", "/api/assessment/next", req)
+        responses.update({q["id"]: 0 for q in nxt["questions"]})
+        before = report(start["seed"], responses, areas)
+
+        status, more = self.call("POST", "/api/assessment/more", {**req, "added": ["cybersecurity"]})
+        self.assertEqual(status, 200)
+        self.assertEqual({q["domain"] for q in more["questions"]}, {"cybersecurity"})
+        self.assertEqual(len(more["questions"]), BANK["selection"]["screen_per_domain"])
+        _, both = self.call("POST", "/api/assessment/more", {**req, "added": ["software_dev", "cybersecurity"]})
+        self.assertLessEqual({q["id"] for q in more["questions"]}, {q["id"] for q in both["questions"]})  # same items
+
+        responses.update({q["id"]: self.right_answer(bank[q["id"]], q) for q in both["questions"]})
+        added = {**req, "responses": responses, "added": ["software_dev", "cybersecurity"]}
+        status, after = self.call("POST", "/api/assessment/result", added)
+        self.assertEqual(status, 200)
+        self.assertEqual(after["deep_domains"], before["deep_domains"])  # the deep stage is not re-run
+        old = {i["id"]: i["points"] for i in before["items"]}
+        self.assertTrue(all(i["points"] == old[i["id"]] for i in after["items"] if i["id"] in old))
+        self.assertEqual(len(after["items"]), len(before["items"]) + 6)
+        by_id = {d["id"]: d for d in after["domains"]}
+        self.assertTrue(by_id["cybersecurity"]["tested"] and by_id["cybersecurity"]["added"])
+        self.assertEqual(by_id["cybersecurity"]["profile"], 100)
+        self.assertFalse(by_id["cloud_infra"]["tested"])
+        self.assertIn("quick_check_minutes", by_id["cloud_infra"])
+
+        _, m0 = self.call("POST", "/api/match", {"test": req | {"responses": responses}, "top": 1})
+        _, m1 = self.call("POST", "/api/match", {"test": added, "top": 1})
+        skill = lambda m, a: next(x for x in m["groups"]["areas"] if x["id"] == a)["skill"]  # noqa: E731
+        self.assertIsNone(skill(m0, "cybersecurity"))
+        self.assertIsNotNone(skill(m1, "cybersecurity"))
+
+        for bad in (["data_ai"], ["cybersecurity", "cybersecurity"], ["zz"], "cybersecurity"):
+            with self.subTest(bad):
+                self.assertEqual(self.call("POST", "/api/assessment/result", {**req, "added": bad})[0], 400)
+                self.assertEqual(self.call("POST", "/api/match", {"test": {**req, "added": bad}})[0], 400)
+        self.assertEqual(self.call("POST", "/api/assessment/more", {**req, "added": []})[0], 400)
+
     def test_no_areas_means_the_full_test(self):
         """Old requests and share links have no areas: they were the 6-area test."""
         _, start = self.call("GET", "/api/assessment/start")

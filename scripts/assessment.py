@@ -8,7 +8,8 @@ that was not tested gets no test score at all, never a filled-in one.
 
 Every call takes the tested area list next to the seed, because the seed alone no longer
 decides which questions were asked. No list means all 6 areas (the full test, and share
-links made before areas were chosen).
+links made before areas were chosen). Afterwards the student may add untested areas
+("added"): each gets the same quick check, while the areas tested in depth stay as they were.
 
 Code questions run in the student's browser (Pyodide), so the server only receives how
 many tests passed. SQL questions run here, in a throwaway in-memory SQLite database that
@@ -159,6 +160,36 @@ def screen_questions(seed: int, areas: list | None = None) -> list:
     return picked
 
 
+def added_areas(areas: list, added=None) -> list:
+    """Areas the student chose to test after the focused test ("test your other areas"), in
+    bank order: distinct area ids that were not in the focused test. None means none."""
+    if added is None:
+        return []
+    ids = [d["id"] for d in load_bank()["domains"]]
+    if not isinstance(added, list) or not all(isinstance(a, str) for a in added):
+        raise AssessmentError(f"'added' must be a list of IT area ids {ids}")
+    unknown = sorted(set(added) - set(ids))
+    if unknown:
+        raise AssessmentError(f"unknown IT area id(s) in 'added': {', '.join(unknown)}")
+    if len(set(added)) != len(added) or set(added) & set(areas):
+        raise AssessmentError("'added' must list areas that are not tested yet, each once")
+    return [a for a in ids if a in added]
+
+
+def added_questions(seed: int, added: list) -> list:
+    """Quick-check items for areas added after the focused test. Each area has its own random
+    stream, so adding areas one at a time or together asks the same items, and the focused
+    test's own items (screen_questions) never change."""
+    n = load_bank()["selection"]["screen_per_domain"]
+    return [q for d in added for q in _pick("screen", d, n, random.Random(f"{seed}:added:{d}"))]
+
+
+def area_minutes(area: str) -> int:
+    """About how long an added area's quick check takes, from its items' mean time_s."""
+    times = [q["time_s"] for q in load_bank()["questions"] if q["stage"] == "screen" and q["domain"] == area]
+    return max(1, round(load_bank()["selection"]["screen_per_domain"] * sum(times) / len(times) / 60))
+
+
 def top_domains(seed: int, responses: dict, areas: list | None = None) -> list:
     """The tested areas with the most screen points; ties are broken by the seed."""
     by_id = questions_by_id()
@@ -276,12 +307,18 @@ def skill_levels(report: dict) -> dict:
     return levels
 
 
-def report(seed: int, responses: dict, areas: list | None = None) -> dict:
+def report(seed: int, responses: dict, areas: list | None = None, added: list | None = None) -> dict:
     """Grade every answer and score each tested area. Untested areas are listed with
-    tested False and no scores."""
-    bank, by_id, tested = load_bank(), questions_by_id(), tested_areas(areas)
-    deep = top_domains(seed, {k: v for k, v in responses.items() if by_id[k]["stage"] == "screen"}, tested)
-    asked = screen_questions(seed, tested) + deep_questions(seed, deep)
+    tested False and no scores.
+
+    added: areas tested afterwards with a quick check only. They never change which areas
+    were tested in depth (that stays with the focused areas), so earlier answers keep counting.
+    """
+    bank, by_id, focus = load_bank(), questions_by_id(), tested_areas(areas)
+    extra = added_areas(focus, added)
+    tested = focus + extra
+    deep = top_domains(seed, {k: v for k, v in responses.items() if by_id[k]["stage"] == "screen"}, focus)
+    asked = screen_questions(seed, focus) + deep_questions(seed, deep) + added_questions(seed, extra)
 
     items, earned, possible = [], {}, {}
     for q in asked:
@@ -301,7 +338,9 @@ def report(seed: int, responses: dict, areas: list | None = None) -> dict:
                "roles": [{"onet_soc": s, "title": t} for s, t in zip(d["onet_soc"], d["onet_titles"])]}
         domains.append(row)
         if not row["tested"]:
+            row["quick_check_minutes"] = area_minutes(d["id"])  # for "test this area too"
             continue
+        row["added"] = d["id"] in extra
         screen_points, screen_max = earned.get((d["id"], "screen"), 0), possible[(d["id"], "screen")]
         row.update(screen_points=screen_points, screen_max=screen_max,
                    profile=round(100 * screen_points / screen_max))
@@ -322,7 +361,7 @@ def report(seed: int, responses: dict, areas: list | None = None) -> dict:
     best = max((d for d in domains if d["tested_in_depth"]),
                key=lambda d: (d["area_score"], d["readiness"], d["profile"]))
     gaps = [{"skill": i["skill"], "domain": i["domain"], "id": i["id"]} for i in items if not i["correct"]]
-    return {"seed": seed, "areas": tested, "deep_domains": deep, "recommended": best["id"], "domains": domains,
+    return {"seed": seed, "areas": focus, "added": extra, "deep_domains": deep, "recommended": best["id"], "domains": domains,
             "skills_to_improve": gaps, "items": items,
             "total_points": round(sum(i["points"] for i in items), 2),
             "total_max": sum(i["max"] for i in items), "disclaimer": bank["disclaimer"]}
