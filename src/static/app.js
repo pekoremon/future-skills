@@ -1034,6 +1034,31 @@ function answerText(i) {
   return String(a);
 }
 
+/* Hexagon (radar) chart of six 0-100 scores, first item at the top, then clockwise.
+   items: [{ label, value, on }]; `on` items get a filled dot and a bold label. */
+function hexagonChart(items, caption) {
+  const cx = 210, cy = 160, R = 100, n = items.length;
+  const at = (i, r) => {
+    const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  };
+  const poly = (r) => items.map((_, i) => at(i, r).map((v) => v.toFixed(1)).join(",")).join(" ");
+  const rings = [25, 50, 75, 100].map((p) => `<polygon class="hex-ring" points="${poly((R * p) / 100)}"/>`).join("");
+  const spokes = items.map((_, i) => { const [x, y] = at(i, R); return `<line class="hex-ring" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join("");
+  const shape = items.map((d, i) => at(i, (R * Math.max(0, Math.min(100, d.value))) / 100).map((v) => v.toFixed(1)).join(",")).join(" ");
+  const dots = items.map((d, i) => { const [x, y] = at(i, (R * Math.max(0, Math.min(100, d.value))) / 100); return `<circle class="hex-dot${d.on ? " on" : ""}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${d.on ? 5 : 3.5}"/>`; }).join("");
+  const labels = items.map((d, i) => {
+    const [x, y] = at(i, R + 18);
+    const anchor = Math.abs(x - cx) < 1 ? "middle" : x > cx ? "start" : "end";
+    const lines = d.label.length > 16 ? d.label.split(/(?<=,) | (?=&)/) : [d.label];  // long names on 2-3 lines
+    const top = y < cy - 1 ? y - (lines.length - 1) * 14 - 6 : y > cy + 1 ? y + 12 : y - ((lines.length - 1) * 14) / 2 + 4;
+    return `<text class="hex-label${d.on ? " on" : ""}" x="${x.toFixed(1)}" y="${top.toFixed(1)}" text-anchor="${anchor}">${lines.map((l, k) => `<tspan x="${x.toFixed(1)}" dy="${k ? 14 : 0}">${esc(l)}</tspan>`).join("")}<tspan class="hex-value" x="${x.toFixed(1)}" dy="14">${fmt(d.value, 0)}</tspan></text>`;
+  }).join("");
+  const summary = items.map((d) => `${d.label} ${fmt(d.value, 0)}`).join(", ");
+  return `<svg class="hex" viewBox="0 0 420 330" role="img" aria-label="${esc(caption)}: ${esc(summary)} out of 100">
+    ${rings}${spokes}<polygon class="hex-shape" points="${shape}"/>${dots}${labels}</svg>`;
+}
+
 function pageTestResult() {
   const r = state.test && state.test.result;
   if (!r) { location.hash = "#/test"; return; }
@@ -1049,11 +1074,9 @@ function pageTestResult() {
       <div><p class="muted small">Jobs in this area (O*NET):</p>
         <ul class="quals small">${d.roles.map((x) => `<li><a href="https://www.onetonline.org/link/summary/${esc(x.onet_soc)}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join("")}</ul></div>
     </div>`;
-  const profile = r.domains.slice().sort((a, b) => b.profile - a.profile).map((d) => `
-    <div class="stack" style="gap: 4px">
-      <div class="row" style="justify-content: space-between"><span${d.tested_in_depth ? ' style="font-weight:700"' : ""}>${esc(d.name)} <span class="muted small">${esc(d.name_zh)}</span></span><span class="muted">${d.profile} / 100</span></div>
-      <div class="bar"><div class="${d.tested_in_depth ? "on" : ""}" style="width: ${d.profile}%"></div></div>
-    </div>`).join("");
+  // Bank order, not sorted, so the hexagon keeps the same shape from one attempt to the next.
+  const profile = hexagonChart(r.domains.map((d) => ({ label: d.name, value: d.profile, on: d.tested_in_depth })),
+    "Quick-check score in each IT area");
   const gaps = r.skills_to_improve.length
     ? `<ul class="quals">${r.skills_to_improve.map((g) => `<li><strong>${esc(g.skill)}</strong> <span class="muted small">· ${esc(domainName(g.domain))}</span></li>`).join("")}</ul>`
     : '<p class="muted">Nothing: every answer was right.</p>';
@@ -1075,7 +1098,7 @@ function pageTestResult() {
     <h1>Your strongest IT area: ${esc(best.name)}</h1>
     <p class="muted">${esc(r.disclaimer)}</p>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
-      <p class="muted small">Quick-check score in each area: the same number of questions per area, so you can compare them. Your top 2 (highlighted) were then tested in depth.</p>
+      <p class="muted small">Quick-check score in each area (0–100): the same number of questions per area, so you can compare them. Your top 2 (bold, with a large dot) were then tested in depth.</p>
       ${profile}</div>
     <h2>Your top 2, tested in depth</h2>
     <p class="muted small">Readiness counts the in-depth and hands-on questions in that area. Your strongest area has the highest area score; an area seen only in the quick check is never ranked above these two, here or on your jobs page. Right answers also count as skills in your job matches.</p>

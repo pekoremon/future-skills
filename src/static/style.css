@@ -112,6 +112,14 @@ main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; outline: none;
 .bar { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
 .bar > div { height: 100%; border-radius: 999px; background: var(--bar-muted); }
 .bar > div.on { background: var(--accent); }
+.hex { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; overflow: visible; }
+.hex-ring { fill: none; stroke: var(--line); stroke-width: 1; }
+.hex-shape { fill: var(--accent); fill-opacity: 0.18; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.hex-dot { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.hex-dot.on { fill: var(--accent); }
+.hex-label { fill: var(--muted); font-size: 12px; }
+.hex-label.on { fill: var(--text); font-weight: 700; }
+.hex-value { fill: var(--text); font-weight: 700; }
 .letter { width: 32px; height: 32px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 
 /* skills */
