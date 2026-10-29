@@ -80,6 +80,8 @@ function saveState() {
 
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "#");
+// Area and role names in the interface language (i18n.js); English if it did not load.
+const nameIn = (s) => (window.trName ? window.trName(s) : s);
 const fmt = (n, d = 1) => (n === null || n === undefined || n === "" ? "–" : Number(n).toFixed(d));
 
 async function api(path, opts) {
@@ -143,6 +145,7 @@ function pageHome() {
       <div class="card"><h3>Your jobs</h3><p class="muted small">Grouped by what you enjoy and what you can do: ranked roles, the skills you still need and free courses.</p></div>
     </div>
     <p class="muted small">Every step is optional and you can go back any time; the more you do, the better the result.</p>
+    <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
     <div class="row">
       <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
       <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
@@ -1089,7 +1092,7 @@ function questionBody(q) {
   if (q.type === "mcq" || q.type === "multi") {
     const on = (i) => (q.type === "mcq" ? r === i : Array.isArray(r) && r.includes(i));
     return `${q.type === "multi" ? '<p class="muted small">Select all that apply.</p>' : ""}
-      <div class="options" role="group" aria-label="Answer options">${q.options.map((o, i) =>
+      <div class="options" role="group" aria-label="Answer options" data-no-i18n>${q.options.map((o, i) =>
         `<button type="button" data-i="${i}" aria-pressed="${on(i)}">${esc(o)}</button>`).join("")}</div>`;
   }
   if (q.type === "numeric" || q.type === "text") {
@@ -1245,7 +1248,7 @@ function pageTestItem(n) {
     ${(t.added || []).includes(q.domain) && !(t.added || []).includes((t.questions[idx - 1] || {}).domain) ? `<p class="note">Extra quick check: <strong>${esc(nameList(t.added.filter((a) => !(t.result && (t.result.added || []).includes(a)))))}</strong>. Your earlier answers stay as they are.</p>` : ""}
     ${idx === screenCount(t) && t.deepDomains ? `<p class="note">Your strongest areas so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
     <div class="row"><span class="chip">${esc(domainName(q.domain))}</span><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
-    <h2 id="q-text">${esc(q.prompt)}</h2>
+    <h2 id="q-text" data-no-i18n>${esc(q.prompt)}</h2>
     ${q.code ? `<pre class="code" aria-label="Code or log for this question">${esc(q.code)}</pre>` : ""}
     ${questionBody(q)}
     <div class="sticky-actions"><button class="btn primary" type="button" id="next" style="width: 100%">${idx + 1 === total ? "See my result" : lastScreen ? "Continue to in-depth questions" : "Next"}</button></div>
@@ -1292,12 +1295,12 @@ function hexagonChart(items, caption) {
   const labels = items.map((d, i) => {
     const [x, y] = at(i, R + (compact ? 12 : 18));
     const anchor = Math.abs(x - cx) < 1 ? "middle" : x > cx ? "start" : "end";
-    const lines = wrapLabel(d.label, wrap);  // long names on 2-3 lines
+    const lines = wrapLabel(nameIn(d.label), wrap);  // long names on 2-3 lines
     const top = anchor === "middle" && y < cy ? y - lines.length * lh - 2  // top label: its value sits clear of a 100 dot
       : y < cy - 1 ? y - (lines.length - 1) * lh - 6 : y > cy + 1 ? y + lh - 2 : y - ((lines.length - 1) * lh) / 2 + 4;
     return `<text class="hex-label${d.on ? " on" : ""}" x="${x.toFixed(1)}" y="${top.toFixed(1)}" text-anchor="${anchor}">${lines.map((l, k) => `<tspan x="${x.toFixed(1)}" dy="${k ? lh : 0}">${esc(l)}</tspan>`).join("")}<tspan class="hex-value" x="${x.toFixed(1)}" dy="${lh}">${fmt(d.value, 0)}</tspan></text>`;
   }).join("");
-  const summary = items.map((d) => `${d.label} ${fmt(d.value, 0)}`).join(", ");
+  const summary = items.map((d) => `${nameIn(d.label)} ${fmt(d.value, 0)}`).join(", ");
   return `<svg class="hex${compact ? " compact" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(caption)}: ${esc(summary)} out of 100">
     ${rings}${spokes}<polygon class="hex-shape" points="${shape}"/>${dots}${labels}</svg>`;
 }
@@ -1401,10 +1404,10 @@ function pageTestResult(sharedResult = null) {
     <details class="more card review">
       <summary><span class="${i.correct ? "pass" : "fail"}">${i.correct ? "Right" : i.points > 0 ? "Partly right" : "Wrong"}</span>&nbsp;· Q${n + 1} · ${esc(i.skill)} <span class="muted small">&nbsp;${i.points} / ${i.max}</span></summary>
       <div class="stack" style="gap: 8px">
-        <p>${esc(i.prompt)}</p>
+        <p data-no-i18n>${esc(i.prompt)}</p>
         ${i.answered ? "" : '<p class="muted small">Not answered.</p>'}
-        <p><strong>Answer:</strong> ${esc(answerText(i))}</p>
-        <p class="muted">${esc(i.explanation)}</p>
+        <p><strong>Answer:</strong> <span data-no-i18n>${esc(answerText(i))}</span></p>
+        <p class="muted" data-no-i18n>${esc(i.explanation)}</p>
         <p class="small">Source: ${i.refs.map((x) => `<a href="${safeUrl(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(" · ")}</p>
       </div>
     </details>`).join("");
