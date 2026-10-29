@@ -509,6 +509,26 @@ const ORDER_PARTS = ["area", "interest", "skill", "trend"];
 // Roles that need more study than the student's level, or a licence, are left out of the list.
 const isBestMatch = (m) => !m.flags.includes("not_for_it_graduates") && !m.flags.includes("needs_extra_education");
 
+// The list the Matches page shows: best-fit areas' roles first, then can-do areas'; each keeps
+// the score order. With no area scores at all every role is listed, as before.
+function listedRoles(results, g) {
+  const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
+  const eligible = results.filter(isBestMatch).sort((x, y) => y.total - x.total);
+  return g.mode === "none" ? eligible : ["best_fit", "can_do"].flatMap((name) => eligible.filter((m) => groupOf[m.it_area] === name));
+}
+
+const hasAnswers = () => Boolean(state.demo) || testDone() || quizDone() || state.quizSkipped || skillsDone();
+
+// The /api/match request for the student's answers (or a demo student), with the page options
+// and the changed trend data of a what-if, if one is on.
+function matchBody(demo = state.demo) {
+  const options = { top: 35, scenario: state.scenario, hours_per_week: Number(state.hoursPerWeek) };
+  if (state.trendChanges) options.trend_changes = state.trendChanges;
+  if (demo) return { profile_id: demo, ...options };
+  const test = testDone() ? gradedTest(state.test) : undefined;
+  return { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, education_job_zone: Number(state.zone), ...options };
+}
+
 function matchCard(m, rank) {
   const d = m.skill_detail;
   const flags = m.flags.filter((f) => !QUIET_FLAGS.includes(f)).map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
@@ -641,7 +661,7 @@ async function loadRoleExtra(card) {
    trend data it used. When the "Update data" job writes new trend data, say what moved. */
 const PLAN_KEY = "future-skills-last-plan";
 function replanNote(body, res) {
-  const { scenario, top, hours_per_week, ...answers } = body;
+  const { scenario, top, hours_per_week, trend_changes, ...answers } = body;
   const who = JSON.stringify(answers) + "|" + scenario;
   const best = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
   const now = { who, data: res.trend_data, roles: Object.fromEntries(best.map((m, i) => [m.role_id, { rank: i + 1, name: m.role_name, total: m.total, trend: m.components.trend.score }])) };
@@ -655,8 +675,11 @@ function replanNote(body, res) {
     const was = before.roles[id], up = was.rank - r.rank;
     return `<li><strong>${esc(r.name)}</strong>: rank ${was.rank} → ${r.rank}${up ? ` (${up > 0 ? "▲" : "▼"} ${Math.abs(up)})` : ""}${was.trend !== r.trend ? `, trend ${fmt(was.trend)} → ${fmt(r.trend)}` : ""}</li>`;
   }).join("");
+  const head = now.data.what_if ? "<strong>Your plan was re-checked with the changed trend data</strong>"
+    : before.data.what_if ? "<strong>Your plan was re-checked with the real trend data</strong>"
+      : `<strong>Your plan was re-checked with new trend data</strong> (computed ${esc(now.data.computed_date || "")}).`;
   return `<section class="note stack" style="gap: 6px" aria-live="polite">
-    <p><strong>Your plan was re-checked with new trend data</strong> (computed ${esc(now.data.computed_date || "")}).</p>
+    <p>${head}</p>
     ${moved.length ? `<ul class="small" style="margin: 0; padding-left: 18px">${rows}</ul><p class="small muted">Learning paths below now follow the new ranking.</p>` : '<p class="small">Nothing in your ranking changed.</p>'}
   </section>`;
 }
@@ -713,21 +736,14 @@ function groupsHtml(g) {
 
 async function pageResults() {
   const demo = state.demo;
-  if (!demo && !testDone() && !quizDone() && !state.quizSkipped && !skillsDone()) {
+  if (!hasAnswers()) {
     render(`<div class="stack">${stepBar("results")}<h1>No answers yet</h1><p class="muted">Do at least one of steps 1 to 3 first, or try the fictional demo student.</p>
       <div class="row"><a class="btn primary" href="#/cv">Start: step 1, your CV</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
     document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); pageResults(); };
     return;
   }
   render('<p class="muted" role="status">Scoring IT roles…</p>');
-  let body;
-  const options = { top: 35, scenario: state.scenario, hours_per_week: Number(state.hoursPerWeek) };
-  if (demo) {
-    body = { profile_id: demo, ...options };
-  } else {
-    const test = testDone() ? gradedTest(state.test) : undefined;
-    body = { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, education_job_zone: Number(state.zone), ...options };
-  }
+  const body = matchBody();
   const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
   lastMatchBody = body;
   const replan = replanNote(body, res);
@@ -745,16 +761,18 @@ async function pageResults() {
       <label class="row small">Study time per week
         <select id="hpw">${[3, 5, 10, 15, 20].map((h) => `<option value="${h}"${h === Number(state.hoursPerWeek) ? " selected" : ""}>${h} hours</option>`).join("")}</select>
       </label>
+      <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
     </section>`;
+  const whatIfBanner = state.trendChanges ? `
+    <section class="warn stack" style="gap: 8px" role="status">
+      <p><strong>You are looking at changed trend data</strong> (a what-if). Only your copy changed; the real data stay the same.</p>
+      <div class="row"><a class="btn" href="#/whatif">Change it again</a><button class="btn" type="button" id="wi-off">Back to the real data</button></div>
+    </section>` : "";
   const profiles = demo ? await cached("/api/profiles") : [];
   const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
   const g = res.groups;
   const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
-  const eligible = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
-  // Best-fit areas' roles first, then can-do areas'; each keeps the score order. With no area
-  // scores at all every role is listed, as before.
-  const best = g.mode === "none" ? eligible
-    : ["best_fit", "can_do"].flatMap((name) => eligible.filter((m) => groupOf[m.it_area] === name));
+  const best = listedRoles(res.results, g);
   if (g.mode !== "none" && best.length) {  // ranks per scenario within this grouped list (groups do not depend on the scenario)
     const gi = (m) => (groupOf[m.it_area] === "best_fit" ? 0 : 1);
     const ranks = {};
@@ -781,6 +799,7 @@ async function pageResults() {
     ${demo ? "" : stepBar("results")}
     <p class="eyebrow">${demo ? "" : "Step 4 of 4 · "}Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
     <h1>Best matches for your level</h1>
+    ${whatIfBanner}
     ${groupsHtml(g)}
     ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     ${g.mode === "none" ? "" : `<details class="group"><summary><span>How your IT areas were scored</span></summary><div class="group-body stack" style="gap: 6px">${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div></details>`}
@@ -802,6 +821,8 @@ async function pageResults() {
     b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
   });
   document.getElementById("hpw").onchange = (e) => { state.hoursPerWeek = Number(e.target.value); saveState(); pageResults().catch(showError); };
+  const off = document.getElementById("wi-off");
+  if (off) off.onclick = () => { delete state.trendChanges; whatIfEdits = null; saveState(); pageResults().catch(showError); };
   wireMoreAreas("#/results");
   draw();
 }
@@ -836,6 +857,11 @@ async function pageTrends() {
     <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.</div>
     <p class="muted">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
     <div class="grid">${scoreCards}</div>
+    <section class="card stack" style="gap: 8px">
+      <h2>What if this data changed?</h2>
+      <p class="small">Change an arXiv paper count, the DOSM job ad count or a role's MyCOL status, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
+      <div class="row"><a class="btn primary" href="#/whatif">Change the trend data</a></div>
+    </section>
     <div class="card stack" style="gap: 8px">
       <h2>How the trend score works</h2>
       <p class="small">Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction. <strong>Malaysian demand</strong>: MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.</p>
@@ -883,6 +909,239 @@ async function pageTrends() {
       document.getElementById("upd-status").textContent = e.message;
       btn.disabled = false;
     }
+  };
+}
+
+/* ---------- what if: change the trend data ---------- */
+
+/* The student (or a judge) changes a raw trend input on a private copy; the server runs the
+   same pipeline as the real data (signals -> trend scores -> matching) and returns what moved.
+   "Show all my matches" keeps the copy for this tab, so every page uses it until reset. */
+const INPUT_NAMES = { arxiv_ai_papers: "AI papers on arXiv", online_job_ads: "Online job ads (DOSM)" };
+const INPUT_RULES = {
+  arxiv_ai_papers: "Growth of more than +10% counts as up, less than −10% as down, otherwise flat.",
+  online_job_ads: "A change of more than +5% counts as up, less than −5% as down. The share of all online ads is checked the same way (±0.25 points).",
+};
+const SIGNAL_NAMES = { arxiv_ai_paper_growth: "AI paper growth (arXiv)", dosm_online_ads: "Online job ads (DOSM)",
+  dosm_online_ad_share: "Share of all online job ads (DOSM)", mycol_coverage: "Roles on MyCOL in this area", mycol_status: "MyCOL status" };
+const DIRECTIONS = { up: "up", down: "down", flat: "flat", on_mycol: "on MyCOL", near_mycol: "near MyCOL", not_on_mycol: "not on MyCOL",
+  yes: "on MyCOL", near: "near MyCOL", no: "not on MyCOL", no_data: "no data" };
+const MYCOL_NAMES = { yes: "On MyCOL critical list", near: "Related MyCOL occupation", no: "Not on MyCOL" };
+const num0 = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const pct = (n, d = 1) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n).toFixed(d)}`;
+const fromTo = (b, a, d = 1) => (b === a || fmt(b, d) === fmt(a, d) ? fmt(a, d) : `${fmt(b, d)} → <strong>${fmt(a, d)}</strong>`);
+
+let whatIfArea = "data_ai";
+let whatIfEdits = null;  // { inputs: {trend_id: value}, mycol: {role_id: status} }, kept while the tab is open
+const editCount = () => Object.keys(whatIfEdits.inputs).length + Object.keys(whatIfEdits.mycol).length;
+
+// The student's answers, or the demo student when there are none yet; always on the real data.
+function whatIfBody() {
+  const { trend_changes, ...body } = matchBody(hasAnswers() ? state.demo : "P01");
+  return body;
+}
+
+function whatIfInputs(w) {
+  const items = w.inputs.filter((i) => i.area === whatIfArea);
+  const growth = (i, v) => {
+    const g = 100 * (v / i.previous.value - 1);
+    return { text: `${pct(g)}%`, dir: g > i.rule.up_pct ? "up" : g < -i.rule.up_pct ? "down" : "flat" };
+  };
+  const number = (i) => {
+    const v = whatIfEdits.inputs[i.id] ?? i.value, g = growth(i, v);
+    return `
+    <div class="wi-row stack${v !== i.value ? " changed" : ""}" style="gap: 6px">
+      <label for="wi-${esc(i.id)}"><strong>${INPUT_NAMES[i.metric]}</strong> <span class="muted small">${esc(i.scope)} · ${esc(i.period_start)} – ${esc(i.period_end)}</span></label>
+      <div class="row" style="gap: 10px">
+        <input class="wi-num" type="number" inputmode="numeric" id="wi-${esc(i.id)}" data-input="${esc(i.id)}" min="0" max="${i.max}" step="1" value="${v}">
+        <span class="small muted"><span>Real value:</span> ${num0(i.value)}</span>
+      </div>
+      <p class="small"><span>Compared with</span> ${num0(i.previous.value)} <span class="muted">(${esc(i.previous.period_start)} – ${esc(i.previous.period_end)})</span>: <strong data-growth="${esc(i.id)}">${g.text}</strong> <span class="chip plain" data-dir="${esc(i.id)}">${DIRECTIONS[g.dir]}</span></p>
+      <p class="small muted">${INPUT_RULES[i.metric]} <span>Source:</span> <a href="${safeUrl(i.source_url)}" rel="noopener" target="_blank">${esc(i.source_name)}</a> <span>(${esc(i.release_date)})</span></p>
+    </div>`;
+  };
+  const mycol = (r) => {
+    const v = whatIfEdits.mycol[r.id] ?? r.value;
+    return `
+    <div class="wi-row wi-mycol${v !== r.value ? " changed" : ""}">
+      <label for="wi-${esc(r.id)}">${esc(r.label)}</label>
+      <select id="wi-${esc(r.id)}" data-mycol="${esc(r.id)}">${r.options.map((o) => `<option value="${o}"${o === v ? " selected" : ""}>${MYCOL_NAMES[o]}</option>`).join("")}</select>
+      <span class="small muted"><span>Real:</span> <span>${MYCOL_NAMES[r.value]}</span></span>
+    </div>`;
+  };
+  const numbers = items.filter((i) => i.kind === "number"), roles = items.filter((i) => i.kind === "mycol");
+  const src = roles[0];
+  return `
+    ${numbers.length ? numbers.map(number).join("") : '<p class="small muted">No arXiv category matches this area, so its trend has no AI momentum part. Only MyCOL can change it.</p>'}
+    <h3>MyCOL critical-occupation status</h3>
+    <p class="small muted">TalentCorp's list of occupations Malaysia is short of. A role on the list adds to its area's Malaysian demand.${src && src.source_url ? ` <span>Source:</span> <a href="${safeUrl(src.source_url)}" rel="noopener" target="_blank">${esc(src.source_name)}</a>` : ""}</p>
+    <div class="stack" style="gap: 6px">${roles.map(mycol).join("")}</div>`;
+}
+
+function whatIfHtml(r) {
+  const roleName = Object.fromEntries(r.before.map((m) => [m.role_id, m.role_name]));
+  const changeRow = (c) => (c.kind === "mycol"
+    ? `<li><strong>${esc(c.label)}</strong> · <span>MyCOL status</span>: <span>${MYCOL_NAMES[c.before]}</span> → <strong>${MYCOL_NAMES[c.after]}</strong></li>`
+    : `<li><strong>${esc(AREA_NAMES[c.area])}</strong> · <span>${INPUT_NAMES[c.metric]}</span> <span class="muted">(${esc(c.scope)})</span>: ${num0(c.before)} → <strong>${num0(c.after)}</strong></li>`);
+  const value = (s, v) => {
+    if (v === null || v === undefined || v === "" || s.signal === "mycol_status") return "";
+    const n = Number(v);
+    if (s.signal === "dosm_online_ad_share") return `${pct(n, 2)} pp`;
+    if (s.signal === "mycol_coverage") return `${fmt(n, 0)}%`;
+    return `${pct(n)}%`;
+  };
+  const sigRow = (s) => `
+    <li><strong>${esc(s.layer === "role" ? s.entity_label : AREA_NAMES[s.area] || s.entity_label)}</strong> · <span>${SIGNAL_NAMES[s.signal] || esc(s.signal)}</span>:
+      ${value(s, s.before.value)} <span class="chip plain">${DIRECTIONS[s.before.direction] || esc(s.before.direction)}</span> →
+      ${value(s, s.after.value)} <span class="chip${s.direction_changed ? "" : " plain"}">${DIRECTIONS[s.after.direction] || esc(s.after.direction)}</span>
+      ${s.direction_changed ? "" : '<span class="small muted">(direction unchanged)</span>'}</li>`;
+  const scoreRow = (t) => `
+    <tr><td>${t.kind === "area" ? `<strong>${esc(AREA_NAMES[t.key])}</strong>` : esc(roleName[t.key] || t.key)}</td>
+      <td class="num">${fromTo(t.before.demand, t.after.demand)}</td><td class="num">${fromTo(t.before.ai, t.after.ai)}</td>
+      <td class="num">${fromTo(t.before.score, t.after.score)}</td></tr>`;
+  const before = listedRoles(r.before, r.groups), after = listedRoles(r.after, r.groups);
+  const was = Object.fromEntries(before.map((m, i) => [m.role_id, { ...m, rank: i + 1 }]));
+  const scoreMoved = after.filter((m) => was[m.role_id] && was[m.role_id].total !== m.total).length;
+  const rankMoved = after.filter((m, i) => was[m.role_id] && was[m.role_id].rank !== i + 1).length;
+  const rankRow = (m, i) => {
+    const b = was[m.role_id] || { rank: i + 1, total: m.total, trend: m.trend }, up = b.rank - (i + 1);
+    return `<tr${b.total !== m.total ? ' class="hl"' : ""}>
+      <td class="num">${up ? `${b.rank} → <strong>${i + 1}</strong> <span class="${up > 0 ? "rank-up" : "rank-down"}">${up > 0 ? "▲" : "▼"}${Math.abs(up)}</span>` : i + 1}</td>
+      <td>${esc(m.role_name)}</td><td class="num">${fromTo(b.total, m.total)}</td><td class="num">${fromTo(b.trend, m.trend)}</td></tr>`;
+  };
+  const step = (n, title, body) => `<li class="stack" style="gap: 8px"><h3><span class="stage-num" aria-hidden="true">${n}</span>${title}</h3>${body}</li>`;
+  const scores = r.trend_scores.length
+    ? `<div class="table-wrap"><table><thead><tr><th>For</th><th>Malaysian demand</th><th>AI momentum</th><th>Trend score</th></tr></thead><tbody>${r.trend_scores.map(scoreRow).join("")}</tbody></table></div>
+       <p class="small muted">Each part = 50 + 50 × the confidence-weighted average direction of its signals. Trend score = Malaysian demand × ${Math.round(r.scenario.demand * 100)}% + AI momentum × ${Math.round(r.scenario.ai * 100)}%.</p>`
+    : '<p class="note">No trend score changed: no signal crossed its threshold, so nothing below moves. This is on purpose: a small change in the data should not reorder anyone\'s jobs.</p>';
+  const ranks = !r.trend_scores.length ? "" : scoreMoved
+    ? `<p class="small"><span>Match scores changed:</span> <strong>${scoreMoved}</strong> · <span>ranks moved:</span> <strong>${rankMoved}</strong></p>
+       <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Role</th><th>Match score</th><th>AI-era trend</th></tr></thead><tbody>${after.slice(0, 10).map(rankRow).join("")}</tbody></table></div>
+       <p class="small muted"><span>Match score change = trend change ×</span> ${Math.round(r.trend_weight * 100)}%. <span>Your skills, interests and IT area fit stay the same, so only the trend part moves.</span></p>`
+    : '<p class="note">None of the roles in your list changed score: the trend scores that moved belong to roles outside your best-fit and can-do areas.</p>';
+  return `
+  <section class="card stack" style="gap: 12px">
+    <h2>What changes</h2>
+    <ol class="wi-chain">
+      ${step(1, "The data you changed", `<ul class="quals small">${r.changes.map(changeRow).join("")}</ul>`)}
+      ${step(2, "Signals", r.signals.length ? `<ul class="quals small">${r.signals.map(sigRow).join("")}</ul>` : '<p class="small">No signal changed.</p>')}
+      ${step(3, "Trend scores", scores)}
+      ${r.trend_scores.length ? step(4, "Your job ranking", ranks) : ""}
+    </ol>
+    <div class="row"><button class="btn primary" type="button" id="wi-apply">Show all my matches with this data</button></div>
+  </section>`;
+}
+
+async function pageWhatIf() {
+  const w = await cached("/api/whatif");
+  if (!whatIfEdits) whatIfEdits = JSON.parse(JSON.stringify(state.trendChanges || { inputs: {}, mycol: {} }));
+  const own = hasAnswers() && !state.demo;
+  const profiles = own ? [] : await cached("/api/profiles");
+  const demo = own ? null : profiles.find((p) => p.profile_id === (state.demo || "P01"));
+  const edited = (a) => w.inputs.some((i) => i.area === a && (i.id in whatIfEdits.inputs || i.id in whatIfEdits.mycol));
+  render(`
+  <div class="stack">
+    <p class="eyebrow">What if?</p>
+    <h1>Change the trend data and see what changes</h1>
+    <p class="muted">The AI-era trend is ${Math.round(w.trend_weight * 100)}% of every match score. Change a number below, and the same code that builds the real scores runs again on your copy: new signals, new trend scores, new job ranking.</p>
+    <div class="note small"><strong>Only your copy changes.</strong> The real data, and what everyone else sees, stay the same.</div>
+    <p class="small">${own ? "<span>Ranking for:</span> <strong>your answers</strong>" : `<span>Ranking for the demo student:</span> <strong>${esc(demo ? demo.name : "P01")}</strong>`} · <span>Scenario:</span> <span id="wi-sc"></span></p>
+    <section class="card stack" style="gap: 10px">
+      <h2>Quick examples</h2>
+      <div class="row" style="gap: 8px">${w.examples.map((e) => `<button class="btn" type="button" data-example="${esc(e.id)}">${esc(e.name)}</button>`).join("")}</div>
+    </section>
+    <section class="card stack" style="gap: 12px">
+      <h2>Or change the data yourself</h2>
+      <div class="tabs" role="group" aria-label="IT area">${Object.keys(AREA_NAMES).map((a) => `<button type="button" data-area="${a}" aria-pressed="${a === whatIfArea}">${esc(AREA_NAMES[a])}${edited(a) ? '<span aria-hidden="true"> •</span>' : ""}</button>`).join("")}</div>
+      <div id="wi-inputs" class="stack" style="gap: 12px">${whatIfInputs(w)}</div>
+      <div class="row">
+        <button class="btn primary" type="button" id="wi-run">See what changes</button>
+        <button class="btn" type="button" id="wi-reset">Reset to the real data</button>
+        <span class="small muted"><span>Changes:</span> <strong id="wi-n">${editCount()}</strong></span>
+      </div>
+    </section>
+    <div id="wi-out" aria-live="polite"></div>
+  </div>`);
+  cached("/api/scenarios").then((list) => {
+    const s = list.find((x) => x.id === state.scenario);
+    const el = document.getElementById("wi-sc");
+    if (el && s) el.textContent = s.name;
+  }).catch(() => {});
+  const out = document.getElementById("wi-out");
+  const run = async () => {
+    if (!editCount()) {
+      out.innerHTML = '<p class="warn">Change at least one number or MyCOL status first, or pick a quick example.</p>';
+      return;
+    }
+    out.innerHTML = '<p class="muted" role="status">Running the trend pipeline on your copy…</p>';
+    try {
+      const r = await api("/api/whatif", { body: JSON.stringify({ ...whatIfBody(), trend_changes: whatIfEdits }) });
+      out.innerHTML = whatIfHtml(r);
+      document.getElementById("wi-apply").onclick = () => {
+        state.trendChanges = JSON.parse(JSON.stringify(whatIfEdits));
+        if (!hasAnswers()) state.demo = "P01";
+        saveState();
+        location.hash = "#/results";
+      };
+      out.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      out.innerHTML = `<p class="warn">${esc(e.message)}</p>`;
+    }
+  };
+  const item = (id) => w.inputs.find((i) => i.id === id);
+  const wire = () => {
+    app.querySelectorAll("[data-input]").forEach((el) => {
+      el.oninput = () => {
+        const i = item(el.dataset.input), v = Number(el.value);
+        const ok = el.value !== "" && v >= 0 && v <= i.max;
+        if (ok && v !== i.value) whatIfEdits.inputs[i.id] = v; else delete whatIfEdits.inputs[i.id];
+        el.closest(".wi-row").classList.toggle("changed", ok && v !== i.value);
+        el.setCustomValidity(ok ? "" : `0 – ${num0(i.max)}`);
+        if (ok) {
+          const g = 100 * (v / i.previous.value - 1);
+          document.querySelector(`[data-growth="${i.id}"]`).textContent = `${pct(g)}%`;
+          document.querySelector(`[data-dir="${i.id}"]`).textContent = DIRECTIONS[g > i.rule.up_pct ? "up" : g < -i.rule.up_pct ? "down" : "flat"];
+        }
+        document.getElementById("wi-n").textContent = editCount();
+      };
+    });
+    app.querySelectorAll("[data-mycol]").forEach((el) => {
+      el.onchange = () => {
+        const r = item(el.dataset.mycol);
+        if (el.value !== r.value) whatIfEdits.mycol[r.id] = el.value; else delete whatIfEdits.mycol[r.id];
+        el.closest(".wi-row").classList.toggle("changed", el.value !== r.value);
+        document.getElementById("wi-n").textContent = editCount();
+      };
+    });
+  };
+  wire();
+  app.querySelectorAll("[data-area]").forEach((b) => {
+    b.onclick = () => {
+      whatIfArea = b.dataset.area;
+      app.querySelectorAll("[data-area]").forEach((x) => {
+        x.setAttribute("aria-pressed", String(x === b));
+        const dot = x.querySelector("span");
+        if (edited(x.dataset.area) && !dot) x.insertAdjacentHTML("beforeend", '<span aria-hidden="true"> •</span>');
+        if (!edited(x.dataset.area) && dot) dot.remove();
+      });
+      document.getElementById("wi-inputs").innerHTML = whatIfInputs(w);
+      wire();
+    };
+  });
+  app.querySelectorAll("[data-example]").forEach((b) => {
+    b.onclick = () => {
+      const e = w.examples.find((x) => x.id === b.dataset.example);
+      whatIfEdits = JSON.parse(JSON.stringify(e.changes));
+      const first = item(Object.keys(e.changes.inputs)[0] || Object.keys(e.changes.mycol)[0]);
+      if (first) whatIfArea = first.area;
+      pageWhatIf().then(() => document.getElementById("wi-run").click()).catch(showError);
+    };
+  });
+  document.getElementById("wi-run").onclick = run;
+  document.getElementById("wi-reset").onclick = () => {
+    whatIfEdits = { inputs: {}, mycol: {} };
+    if (state.trendChanges) { delete state.trendChanges; saveState(); }
+    pageWhatIf().catch(showError);
   };
 }
 
@@ -1548,6 +1807,7 @@ async function route() {
     else if (page === "skills") await pageSkills();
     else if (page === "results") await pageResults();
     else if (page === "trends") await pageTrends();
+    else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
     else pageHome();
   } catch (e) {

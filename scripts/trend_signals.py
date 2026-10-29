@@ -387,19 +387,18 @@ def role_signals(roles, t):
     return out
 
 
-def main():
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "data" / "trends.csv"
-    dst = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "data" / "trend_signals.csv"
-    t = Trends(read_csv(src))
-    subdomains = read_csv(SUBDOMAINS)
-    roles = read_csv(ROLES) if ROLES.exists() else []
+def clean_roles(roles):
+    """Normalise is_mycol in place; ValueError if a role has another value."""
     for r in roles:
         r["is_mycol"] = r["is_mycol"].strip().lower()
         if r["is_mycol"] not in ("yes", "near", "no"):
-            sys.exit(f"{ROLES.name} {r['role_id']}: is_mycol must be yes / near / no")
-    if not roles:
-        print(f"  ({ROLES.relative_to(ROOT)} not found: role layer and MyCOL coverage have no data)")
+            raise ValueError(f"{ROLES.name} {r['role_id']}: is_mycol must be yes / near / no")
+    return roles
 
+
+def build(t, subdomains, roles):
+    """Every signal for trends t (a Trends), numbered in file order. main() writes them;
+    scripts/whatif.py runs the same code on a changed copy of the inputs."""
     signals = []
     for sd in subdomains:
         signals.append(arxiv_signal(t, sd))
@@ -420,6 +419,21 @@ def main():
         s["signal_id"] = f"S{i:02d}"
         s["formula_version"] = FORMULA_VERSION
         s["computed_date"] = today
+    return signals
+
+
+def main():
+    src = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "data" / "trends.csv"
+    dst = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "data" / "trend_signals.csv"
+    t = Trends(read_csv(src))
+    subdomains = read_csv(SUBDOMAINS)
+    try:
+        roles = clean_roles(read_csv(ROLES)) if ROLES.exists() else []
+    except ValueError as e:
+        sys.exit(str(e))
+    if not roles:
+        print(f"  ({ROLES.relative_to(ROOT)} not found: role layer and MyCOL coverage have no data)")
+    signals = build(t, subdomains, roles)
 
     # Every referenced trend_id must exist in the input.
     missing = [i for s in signals for i in s["input_trend_ids"].split(";") if i and i not in t.by_id]

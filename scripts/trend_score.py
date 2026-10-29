@@ -65,8 +65,9 @@ def score(signals: list[dict]) -> dict:
             "input_signal_ids": ";".join(i for p in SPLIT for i in used[p])}
 
 
-def build() -> list[dict]:
-    signals = [s for s in read("trend_signals.csv") if s["scored"] == "TRUE"]
+def build(signals: list[dict] | None = None, roles: list[dict] | None = None) -> list[dict]:
+    """Score rows from the signal and role files, or from the lists given (scripts/whatif.py)."""
+    signals = [s for s in (read("trend_signals.csv") if signals is None else signals) if s["scored"] == "TRUE"]
     subdomain = {r["subfield_code"]: r["subdomain_id"] for r in read("subdomains.csv")}
     by_entity = {}
     for s in signals:
@@ -77,7 +78,7 @@ def build() -> list[dict]:
         sub = by_entity.get(("subdomain", subdomain.get(code)), [])
         rows.append({"role_id": "", "it_area": area, **score(sub),
                      "formula_version": FORMULA_VERSION, "computed_date": today})
-    for role in read("roles.csv"):
+    for role in read("roles.csv") if roles is None else roles:
         sub = by_entity.get(("subdomain", subdomain.get(role["subfield_code"])), [])
         own = by_entity.get(("role", role["role_id"]), [])
         rows.append({"role_id": role["role_id"], "it_area": SUBFIELD_AREA.get(role["subfield_code"], ""),

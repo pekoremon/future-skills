@@ -239,3 +239,17 @@ details.review > summary { flex-wrap: wrap; }
 .learn-skill h3 { margin: 0; }
 .learn-link { align-self: flex-start; }
 .group-head { margin-top: 8px; }
+
+/* What if: change the trend data */
+.wi-row { border-left: 3px solid transparent; padding-left: 10px; }
+.wi-row.changed { border-left-color: var(--c-trend); }
+.wi-num { width: 150px; min-height: 40px; padding: 6px 10px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-variant-numeric: tabular-nums; }
+.wi-num:invalid { border-color: var(--warn-text); }
+.wi-mycol { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.wi-mycol label { flex: 1 1 220px; }
+.wi-mycol select { min-height: 40px; }
+.wi-chain { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.wi-chain h3 { display: flex; align-items: center; gap: 10px; }
+tr.hl td { background: var(--accent-soft); }
+.rank-up { color: var(--accent); font-weight: 700; }
+.rank-down { color: var(--warn-text); font-weight: 700; }

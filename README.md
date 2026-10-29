@@ -56,6 +56,8 @@ Domain 1 requires all six:
 5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to
 6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads); each role shows its rank range across them, and the app says scores are estimates, not predictions. When the "Update data" job brings new trend data, the jobs page shows which recommendations moved
 
+Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend input (an IT area's arXiv AI paper count, the DOSM job ad count for Software Developers, or a role's MyCOL status), or pick a ready-made example, and the same code that builds the real scores runs on a private copy. The page shows each step: the data you changed → the signals whose direction moved (and why a small change moves nothing: it must cross a threshold) → the trend scores → your job ranking, before and after. "Show all my matches with this data" re-plans the whole jobs page until you go back to the real data. The data files and other users never see the change.
+
 Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 26 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
 
 Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
@@ -100,6 +102,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── update_trends.py     # Refresh trends.csv, then trend_signals.py ("Update data" button)
 │   ├── trend_signals.py     # Direction + confidence per signal
 │   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
+│   ├── whatif.py            # Run signals -> scores -> matching on a changed copy of the trend data
 │   └── validate_data.py     # Check every row has a source and date
 ├── src/
 │   ├── main.py              # Web server and JSON API (Replit entry point)
@@ -153,8 +156,10 @@ python src/main.py
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~2 min) / check its status |
+| GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
+| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0074": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
-`skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
+`/api/match`, `/api/explain` and `/api/learn` also take `trend_changes`: the result is then built from the changed copy, and `trend_data.what_if` is `true`. `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
 
 ### Check the data and run tests
 

@@ -29,6 +29,12 @@ Endpoints (all JSON):
     GET  /api/trends                 ?area=  trend scores, the signals behind them and the inputs
     POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
     GET  /api/trends/update          status of the last update job
+    GET  /api/whatif                 the trend inputs a what-if may change, and ready-made examples
+    POST /api/whatif                 same body as /api/match + trend_changes -> what changes: inputs,
+                                     signals, trend scores and the student's role ranks, before and after
+
+/api/match, /api/explain and /api/learn also take "trend_changes" (scripts/whatif.py): the
+results are then built from a changed copy of the trend data, for that request only.
 
 Run locally: python src/main.py   (PORT sets the port, default 8080)
 """
@@ -60,6 +66,7 @@ import explain  # noqa: E402
 import interest  # noqa: E402
 import learning  # noqa: E402
 import matching  # noqa: E402
+import whatif  # noqa: E402
 
 UPDATE_TIMEOUT_S = 600
 MAX_BODY = 4_000_000  # room for a base64 .docx CV
@@ -421,25 +428,50 @@ def match_options(req: dict, data: dict) -> tuple[dict, str]:
     return {**profile, "hours_per_week": hours}, scenario
 
 
-def trend_data_version() -> dict:
-    """Which trend data the scores used: a short hash of the trend files and the date computed.
+def trend_data_version(changes: dict | None = None) -> dict:
+    """Which trend data the scores used: a short hash of the trend files (and of the what-if
+    changes, if any) and the date computed.
 
     The page keeps the last ranking with this version, so when the "Update data" job writes
-    new trend data it can show the student what changed (automatic re-planning).
+    new trend data, or the student changes it in a what-if, it can show what changed
+    (automatic re-planning).
     """
     h = hashlib.sha256()
     for name in ("trend_scores.csv", "trend_signals.csv"):
         path = DATA / name
         if path.exists():
             h.update(path.read_bytes())
+    if changes:
+        h.update(json.dumps(changes, sort_keys=True).encode("utf-8"))
     dates = [r["computed_date"] for r in read_csv("trend_scores.csv") if r.get("computed_date")]
-    return {"id": h.hexdigest()[:12], "computed_date": max(dates, default=None)}
+    return {"id": h.hexdigest()[:12], "computed_date": max(dates, default=None), "what_if": bool(changes)}
+
+
+def trend_changes(req: dict, required: bool = False) -> dict | None:
+    """The request's checked what-if changes, or None when it changes nothing."""
+    try:
+        changes = whatif.validate(req.get("trend_changes"))
+    except whatif.WhatIfError as e:
+        raise BadRequest(str(e)) from None
+    if required and not whatif.changed(changes):
+        raise BadRequest("'trend_changes' must change at least one trend input")
+    return changes if whatif.changed(changes) else None
+
+
+def match_data(req: dict) -> tuple[dict, dict | None]:
+    """matching.load_data(), built from a changed copy of the trend data when the request
+    sends 'trend_changes'. Nothing is saved."""
+    data, changes = matching.load_data(), trend_changes(req)
+    if changes:
+        _, scores, roles = whatif.run(changes)
+        data = whatif.data_with(data, scores, roles)
+    return data, changes
 
 
 @route("POST", "/api/match")
 def match(request):
-    data = matching.load_data()
     req = body(request)
+    data, changes = match_data(req)
     top = req.get("top", 10)
     if not isinstance(top, int) or top < 1:
         raise BadRequest("'top' must be a positive integer")
@@ -464,7 +496,7 @@ def match(request):
                    skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
                              "trend_scores": matching.scenario_trend_scores(data, scenario)},
-                   trend_data=trend_data_version(), results=ranked[:top])
+                   trend_data=trend_data_version(changes), results=ranked[:top])
 
 
 @route("POST", "/api/explain")
@@ -473,8 +505,8 @@ def explain_match(request):
 
     The match is recomputed here, so the model only ever sees numbers our code produced.
     """
-    data = matching.load_data()
     req = body(request)
+    data, _ = match_data(req)
     profile, scenario = match_options(req, data)
     role_id = req.get("role_id")
     found = next((m for m in matching.rank_roles(profile, data, scenario=scenario)
@@ -493,8 +525,8 @@ def learn_role(request, role_id: str):
 @route("POST", "/api/learn")
 def learn_for_student(request):
     """The learning path built on this student's own skill gaps for one role."""
-    data = matching.load_data()
     req = body(request)
+    data, _ = match_data(req)
     profile, scenario = match_options(req, data)
     role_id = req.get("role_id")
     found = next((m for m in matching.rank_roles(profile, data, scenario=scenario)
@@ -580,6 +612,35 @@ def trends_update(request):
 @route("GET", "/api/trends/update")
 def trends_update_status(request):
     return jsonify(dict(_update_state))
+
+
+@route("GET", "/api/whatif")
+def what_if_inputs(request):
+    items = whatif.editable()
+    return jsonify(inputs=items, examples=whatif.examples(items), trend_weight=matching.WEIGHTS["trend"])
+
+
+@route("POST", "/api/whatif")
+def what_if(request):
+    """Change the trend data and see what changes: the same pipeline as the real data
+    (signals -> trend scores -> matching) runs on a changed copy, for this request only."""
+    req = body(request)
+    data, changes = matching.load_data(), trend_changes(req, required=True)
+    profile, scenario = match_options(req, data)
+    signals, scores, roles = whatif.run(changes)
+    after = whatif.data_with(data, scores, roles)
+
+    def ranked(d):
+        result = matching.match_student(profile, d, scenario=scenario)
+        return result["groups"], [{"role_id": m["role_id"], "role_name": m["role_name"], "it_area": m["it_area"],
+                                   "total": m["total"], "trend": m["components"]["trend"]["score"],
+                                   "flags": m["flags"]} for m in result["roles"]]
+    groups, before_roles = ranked(data)
+    _, after_roles = ranked(after)
+    return jsonify(changes=whatif.describe(changes), signals=whatif.signal_changes(signals, roles),
+                   trend_scores=whatif.score_changes(data, after, scenario),
+                   scenario={"id": scenario, **matching.SCENARIOS[scenario]}, trend_weight=matching.WEIGHTS["trend"],
+                   groups=groups, before=before_roles, after=after_roles)
 
 
 class Handler(BaseHTTPRequestHandler):
