@@ -19,7 +19,12 @@
     <a href="#/results" data-nav="results">Matches</a>
     <a href="#/trends" data-nav="trends">Trends</a>
   </nav>
-  <button class="lang-btn" type="button" id="lang" lang="ms">Bahasa Melayu</button>
+  <label class="visually-hidden" for="lang">Language</label>
+  <select class="lang-btn" id="lang" data-no-i18n>
+    <option value="en" lang="en">English</option>
+    <option value="ms" lang="ms">Bahasa Melayu</option>
+    <option value="zh" lang="zh-Hans">中文</option>
+  </select>
 </header>
 <main id="app" tabindex="-1"></main>
 <footer class="footer">

@@ -56,7 +56,7 @@ Domain 1 requires all six:
 5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to
 6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads); each role shows its rank range across them, and the app says scores are estimates, not predictions. When the "Update data" job brings new trend data, the jobs page shows which recommendations moved
 
-Plus **English or Bahasa Melayu**: a switch in the header translates the interface, the interest questions and the 26 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
+Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 26 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
 
 Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
@@ -202,7 +202,7 @@ python -m unittest discover tests
 - **Rising and declining skills.** Derive skill-level signals (for example, skills named in job ads over time), not only area- and role-level ones.
 - **Calibrate the trend score** with the team: a single medium-confidence signal can currently move a part to 100.
 - **Employer and HR view:** a skills-gap heatmap and reskilling plan for a whole team.
-- **A Chinese version** of the interface, and Bahasa Melayu for the test questions and AI explanations.
+- **Test questions and AI explanations** in Bahasa Melayu and Chinese, not only the interface.
 - **More HRD Corp-claimable programmes,** checked against HRD Corp's own records, not only provider pages.
 - **Progress tracking** along the learning path, and keeping refreshed trend data across deployment restarts.
 - **A fairness check:** the app collects no age, gender or background, and a test could show that recommendations depend only on interests, skills and the CV.

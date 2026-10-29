@@ -71,7 +71,7 @@ button { font: inherit; }
 }
 .lang-btn:hover { border-color: var(--accent); }
 .lang-note { display: none; }
-html[lang="ms"] .lang-note { display: block; }
+html:not([lang="en"]) .lang-note { display: block; }
 
 main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; outline: none; }
 .footer { max-width: 960px; margin: 0 auto; padding: 16px 16px 32px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
