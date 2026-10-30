@@ -40,6 +40,7 @@ Run locally: python src/main.py   (PORT sets the port, default 8080)
 """
 
 import csv
+import gzip
 import hashlib
 import json
 import mimetypes
@@ -643,6 +644,27 @@ def what_if(request):
                    groups=groups, before=before_roles, after=after_roles)
 
 
+def low_data(res: Response, method: str, headers) -> tuple[int, bytes, dict]:
+    """Status, body and headers that cost students on mobile data as little as possible.
+
+    GET answers carry an ETag of their content: a browser that already has the same bytes
+    gets 304 and no body. Text bodies over 1 KB are gzip-compressed for browsers that accept
+    it (about 70-85% smaller). Cache-Control stays no-cache, so every page load still checks
+    for new data (the "Update data" job), but an unchanged file costs one tiny request."""
+    out = {"Content-Type": res.content_type, "Cache-Control": "no-cache", "Vary": "Accept-Encoding"}
+    status, data = res.status, res.body
+    if method == "GET" and status == 200:
+        etag = '"' + hashlib.sha256(data).hexdigest()[:16] + '"'
+        out["ETag"] = etag
+        if etag in (headers.get("If-None-Match") or ""):
+            return 304, b"", out
+    textual = res.content_type.startswith(("text/", "application/json", "application/javascript", "image/svg"))
+    if textual and len(data) > 1024 and "gzip" in (headers.get("Accept-Encoding") or ""):
+        data = gzip.compress(data, compresslevel=6)
+        out["Content-Encoding"] = "gzip"
+    return status, data, out
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "FutureSkills/1.0"
 
@@ -656,12 +678,13 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:  # keep serving; report the error as JSON
                 self.log_error("error on %s %s: %r", method, self.path, e)
                 res = jsonify(error="internal server error", http_status=500)
-        self.send_response(res.status)
-        self.send_header("Content-Type", res.content_type)
-        self.send_header("Content-Length", str(len(res.body)))
-        self.send_header("Cache-Control", "no-cache")
+        status, data, headers = low_data(res, method, self.headers)
+        self.send_response(status)
+        for name, value in headers.items():
+            self.send_header(name, value)
+        self.send_header("Content-Length", str(len(data)))
         self.end_headers()
-        self.wfile.write(res.body)
+        self.wfile.write(data)
 
     def do_GET(self):
         self._send("GET")

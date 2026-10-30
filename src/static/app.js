@@ -1447,6 +1447,7 @@ function questionBody(q) {
       <label class="stack" style="gap: 6px"><span class="muted small">Your Python code</span>
       <textarea class="code-input" id="answer" rows="12" spellcheck="false" autocapitalize="off">${esc(state.test.code[q.id] ?? q.starter)}</textarea></label>
       <div class="row"><button class="btn" type="button" id="run">Run tests</button><span class="muted small" id="run-status" role="status"></span></div>
+      ${pyWorker ? "" : '<p class="muted small">The first run downloads Python into your browser (up to about 10 MB, once per visit). On mobile data, use Wi-Fi if you can.</p>'}
       <div id="run-out"></div>`;
   }
   return `<details class="more"><summary>Tables and data</summary><pre class="code">${esc(q.setup_sql)}</pre></details>
