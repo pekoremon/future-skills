@@ -473,6 +473,21 @@ const MS = {
   "What if this data changed?": "Bagaimana jika data ini berubah?",
   "Change an arXiv paper count, the DOSM job ad count or a role's MyCOL status, and see the signals, the trend scores and your job ranking move. Only your copy changes.": "Ubah bilangan kertas kajian arXiv, bilangan iklan kerja DOSM atau status MyCOL sesuatu peranan, dan lihat isyarat, skor trend dan kedudukan pekerjaan anda bergerak. Hanya salinan anda yang berubah.",
   "Change the trend data": "Ubah data trend",
+  // ux pass (app.js topCard, pageHome, quick start)
+  "No login": "Tanpa log masuk",
+  "Nothing saved on our server": "Tiada apa-apa disimpan di pelayan kami",
+  "Built on official data:": "Dibina daripada data rasmi:",
+  "Quick start: about 3 minutes": "Mula pantas: kira-kira 3 minit",
+  "The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.": "Laluan penuh mengambil masa kira-kira 20 minit dan memberi keputusan paling tepat. Mula pantas mengambil masa kira-kira 3 minit: tandakan alat yang anda guna dan nilai kemahiran anda, lihat pekerjaan anda serta-merta, dan tambah yang lain kemudian.",
+  "Example result": "Contoh keputusan",
+  "This is the fictional demo student's top job, worked out live from the same data as yours.": "Ini ialah pekerjaan teratas pelajar demo rekaan, dikira secara langsung daripada data yang sama dengan anda.",
+  "Learn next:": "Belajar seterusnya:",
+  "Learning path →": "Laluan pembelajaran →",
+  "Your top jobs": "Pekerjaan teratas anda",
+  "See all roles and why ↓": "Lihat semua peranan dan sebabnya ↓",
+  "Why these jobs? Your IT areas and how they were scored": "Kenapa pekerjaan ini? Bidang IT anda dan cara ia diberi skor",
+  "See my jobs now": "Lihat pekerjaan saya sekarang",
+  "Quick start: tick the tools you use and rate a few skills, then press \"See my jobs now\". You can add your interests and the skills test later for a better match.": "Mula pantas: tandakan alat yang anda guna dan nilai beberapa kemahiran, kemudian tekan \"Lihat pekerjaan saya sekarang\". Anda boleh tambah minat dan ujian kemahiran kemudian untuk padanan yang lebih baik.",
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
@@ -1000,6 +1015,21 @@ const ZH = {
   "What if this data changed?": "如果这些数据改变会怎样？",
   "Change an arXiv paper count, the DOSM job ad count or a role's MyCOL status, and see the signals, the trend scores and your job ranking move. Only your copy changes.": "修改 arXiv 论文数、DOSM 招聘广告数或某个职位的 MyCOL 状态，看看信号、趋势分数和你的职位排名怎么变。只有你的副本会改变。",
   "Change the trend data": "修改趋势数据",
+  // ux pass (app.js topCard, pageHome, quick start)
+  "No login": "无需登录",
+  "Nothing saved on our server": "我们的服务器不保存任何资料",
+  "Built on official data:": "数据来自官方来源：",
+  "Quick start: about 3 minutes": "快速开始：约 3 分钟",
+  "The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.": "完整流程约 20 分钟，结果最准确。快速开始约 3 分钟：勾选你用过的工具、评估你的技能，马上就能看到适合的职位，其他步骤之后再补。",
+  "Example result": "结果示例",
+  "This is the fictional demo student's top job, worked out live from the same data as yours.": "这是虚构示范学生的第一名职位，用和你一样的数据即时算出。",
+  "Learn next:": "下一步要学：",
+  "Learning path →": "学习路径 →",
+  "Your top jobs": "最适合你的职位",
+  "See all roles and why ↓": "查看全部职位和原因 ↓",
+  "Why these jobs? Your IT areas and how they were scored": "为什么是这些职位？你的 IT 领域和评分方法",
+  "See my jobs now": "马上看我的职位",
+  "Quick start: tick the tools you use and rate a few skills, then press \"See my jobs now\". You can add your interests and the skills test later for a better match.": "快速开始：勾选你用过的工具，评估几项技能，然后按「马上看我的职位」。之后可以再补兴趣问卷和技能测验，结果会更准。",
 };
 
 const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and tools/g, "履历与工具").replace(/preferences/g, "偏好").replace(/ and /g, "和");

@@ -138,6 +138,8 @@ function pageHome() {
     <p class="eyebrow">Future-ready careers for IT students</p>
     <h1>Find the part of IT that suits you, and the job to aim for.</h1>
     <p class="muted">Future Skills combines your CV, an interest questionnaire and a short IT skills test to show which of 6 IT areas fits you best, then ranks 26 IT roles, explains every score, shows the skills you still need, and links each role to the UN Sustainable Development Goals.</p>
+    <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
+    <p class="small muted"><span>Built on official data:</span> TalentCorp MyCOL 2024/2025 · DOSM · O*NET 31.0 · arXiv</p>
     <div class="steps">
       <div class="card"><h3>Your CV</h3><p class="muted small">Optional. Upload it, or rate your skills instead. About 1 minute.</p></div>
       <div class="card"><h3>Your interests</h3><p class="muted small">36 quick statements about IT work you would enjoy. About 8 minutes.</p></div>
@@ -148,11 +150,27 @@ function pageHome() {
     <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
     <div class="row">
       <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
+      <a class="btn" href="#/skills" id="quick">Quick start: about 3 minutes</a>
       <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
       <a class="btn ghost" href="#/trends">See the AI-trend data</a>
     </div>
+    <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.</p>
+    <section class="card stack" style="gap: 10px" id="example" hidden>
+      <p class="eyebrow">Example result</p>
+      <p class="small muted">This is the fictional demo student's top job, worked out live from the same data as yours.</p>
+      <ol class="top-list" id="example-list"></ol>
+    </section>
   </div>`);
   document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; };
+  document.getElementById("quick").onclick = () => { state.quick = true; saveState(); };
+  // Show what the student will get: the demo student's real top job, fetched after the page draws.
+  api("/api/match", { body: JSON.stringify({ profile_id: "P01", top: 35 }) }).then((r) => {
+    const m = listedRoles(r.results, r.groups)[0];
+    const box = document.getElementById("example");
+    if (!m || !box) return;
+    document.getElementById("example-list").innerHTML = topCard(m, 1);
+    box.hidden = false;
+  }).catch(() => { /* the example is a nice-to-have; the page works without it */ });
 }
 
 async function pageQuizIntro() {
@@ -271,21 +289,7 @@ async function pageSkills() {
       <div class="group-body"><p class="muted small">${hint}</p>${rows}</div></details>`;
   }).join("");
   const techs = skills.filter((s) => s.skill_type === "technology");
-  render(`
-  <div class="stack">
-    ${stepBar("cv")}
-    <p class="eyebrow">Step 1 of 4 · Your skills (no CV needed)</p>
-    <h1>What can you already do?</h1>
-    <div class="note stack" style="gap: 8px">
-      <p><strong>Fastest: upload your CV.</strong> AI reads it and ticks the technologies you use; then check the list below.</p>
-      <div class="row"><a class="btn primary" href="#/cv">Upload my CV</a></div>
-    </div>
-    <p class="muted">Or rate what you know below; anything left at “–” counts as not yet learned. Scale: 1 Basic · 2 Some · 3 Good · 4 Strong · 5 Expert.</p>
-    <div class="card row">
-      <label for="zone"><strong>Highest education (finished or about to finish)</strong></label>
-      <select id="zone">${Object.entries(ZONES).map(([z, l]) => `<option value="${z}"${Number(z) === Number(state.zone) ? " selected" : ""}>${l}</option>`).join("")}</select>
-    </div>
-    ${groupHtml}
+  const techHtml = `
     <details class="group" open><summary><span>Technologies you use <span class="muted small">(${techs.length} that O*NET marks In Demand)</span></span></summary>
       <div class="group-body">
         <label class="small muted" for="tech-search">Search technologies</label>
@@ -294,9 +298,29 @@ async function pageSkills() {
           ${techs.map((s) => `<button type="button" data-tech="${esc(s.skill_id)}" data-name="${esc(s.skill_name.toLowerCase())}" aria-pressed="${state.techs.includes(s.skill_id)}">${esc(s.skill_name)}</button>`).join("")}
         </div>
       </div>
-    </details>
+    </details>`;
+  // Quick start: the tools first (they place the student in IT areas), then straight to the jobs.
+  const quick = Boolean(state.quick);
+  const next = '<a class="btn primary" href="#/quiz" id="go">Next: step 2, interests</a>';
+  const see = `<a class="btn${quick ? " primary" : ""}" href="#/results" id="see">See my jobs now</a>`;
+  render(`
+  <div class="stack">
+    ${stepBar("cv")}
+    <p class="eyebrow">Step 1 of 4 · Your skills (no CV needed)</p>
+    <h1>What can you already do?</h1>
+    ${quick ? '<div class="note small">Quick start: tick the tools you use and rate a few skills, then press "See my jobs now". You can add your interests and the skills test later for a better match.</div>' : `
+    <div class="note stack" style="gap: 8px">
+      <p><strong>Fastest: upload your CV.</strong> AI reads it and ticks the technologies you use; then check the list below.</p>
+      <div class="row"><a class="btn primary" href="#/cv">Upload my CV</a></div>
+    </div>`}
+    <p class="muted">Or rate what you know below; anything left at “–” counts as not yet learned. Scale: 1 Basic · 2 Some · 3 Good · 4 Strong · 5 Expert.</p>
+    <div class="card row">
+      <label for="zone"><strong>Highest education (finished or about to finish)</strong></label>
+      <select id="zone">${Object.entries(ZONES).map(([z, l]) => `<option value="${z}"${Number(z) === Number(state.zone) ? " selected" : ""}>${l}</option>`).join("")}</select>
+    </div>
+    ${quick ? techHtml + groupHtml : groupHtml + techHtml}
     <div class="sticky-actions row">
-      <a class="btn primary" href="#/quiz" id="go">Next: step 2, interests</a>
+      ${quick ? see + next.replace("btn primary", "btn") : next + see}
       <span class="muted small" id="count"></span>
     </div>
   </div>`);
@@ -324,6 +348,7 @@ async function pageSkills() {
     app.querySelectorAll("[data-tech]").forEach((b) => { b.hidden = q && !b.dataset.name.includes(q); });
   };
   document.getElementById("go").onclick = () => { state.demo = null; saveState(); };
+  document.getElementById("see").onclick = () => { state.demo = null; saveState(); };
 }
 
 // The CV summary lives in memory only: it is never saved to sessionStorage. Only the
@@ -599,6 +624,36 @@ function moveBadge(m) {
   return `<span class="chip ${up > 0 ? "" : "plain"}" title="Rank under current trends: ${m.baseline_rank}">${up > 0 ? "▲" : "▼"} ${Math.abs(up)} vs current trends</span>`;
 }
 
+// What to learn next for a role, in the learning path's own order: the biggest gap in a skill
+// the student rated or showed in the test, then the first missing technology. Skills nobody
+// rated are left out here: an unrated skill always looks like a big gap.
+function learnNext(m) {
+  const d = m.skill_detail;
+  const gap = d.gaps.find((x) => x.rated !== false && x.level_needed - x.your_level >= 0.5);
+  return [gap, d.tech_missing[0]].filter(Boolean).map((x) => x.skill_name);
+}
+
+// One job in short: the summary at the top of the results page and the home page example.
+function topCard(m, rank) {
+  const next = learnNext(m);
+  return `
+    <li class="top-card">
+      <div class="top-main">
+        <h3>${rank}. ${esc(m.role_name)}</h3>
+        <div class="row" style="gap: 6px">
+          <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
+          ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : ""}
+          ${rangeBadge(m)}
+        </div>
+        ${next.length ? `<p class="small"><span class="muted">Learn next:</span> ${next.map(esc).join(", ")}</p>` : ""}
+      </div>
+      <div class="top-side">
+        <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
+        <a class="btn primary" href="#/learn/${esc(m.role_id)}">Learning path &rarr;</a>
+      </div>
+    </li>`;
+}
+
 function pathHtml(p) {
   if (!p.steps.length && !p.gaps_without_course.length) return "";
   const steps = p.steps.map((s) => `
@@ -720,10 +775,7 @@ function groupsHtml(g) {
   const hiddenHtml = hidden.length ? `<details class="group"><summary><span>Not shown <span class="muted small">(${hidden.length})</span></span></summary>
     <div class="group-body"><ul class="quals">${hidden.map(line).join("")}</ul></div></details>` : "";
   if (g.mode !== "both") {
-    const missing = g.mode === "interest_only"
-      ? '<p class="small">Your skills are not checked yet, so this is from your interests only.</p><div class="row"><a class="btn primary" href="#/test">Take the skills test</a><a class="btn ghost" href="#/cv">Add your CV</a></div>'
-      : '<p class="small">Your interests are not checked yet, so this is from your skills only.</p><div class="row"><a class="btn primary" href="#/quiz">Answer the interest questions (8 min)</a></div>';
-    return section("best_fit", groupTitle(g, "best_fit"), `Your top ${g.top} areas. Their roles are listed below.`, missing) + hiddenHtml;
+    return section("best_fit", groupTitle(g, "best_fit"), `Your top ${g.top} areas. Their roles are listed below.`) + hiddenHtml;
   }
   return `<div class="stack" style="gap: 12px">
     <p class="small muted">Each IT area is placed by your interest (from the questionnaire) and your skill (your skills test and CV evidence). "High" means among your top ${g.top}.</p>
@@ -732,6 +784,18 @@ function groupsHtml(g) {
     ${grow ? `<section class="stack" style="gap: 8px"><h2>${GROUPS.grow_into[0]}</h2><p class="small muted">${GROUPS.grow_into[1]}</p>${grow}</section>` : ""}
     ${hiddenHtml}
   </div>`;
+}
+
+// With only interests or only skills, say what is missing and offer the next step, in view
+// near the top (the area groups themselves are folded under "Why these jobs?").
+function accuracyNote(g) {
+  if (g.mode === "interest_only") {
+    return '<div class="note stack" style="gap: 8px"><p class="small">Your skills are not checked yet, so this is from your interests only.</p><div class="row"><a class="btn primary" href="#/test">Take the skills test</a><a class="btn ghost" href="#/cv">Add your CV</a></div></div>';
+  }
+  if (g.mode === "skill_only") {
+    return '<div class="note stack" style="gap: 8px"><p class="small">Your interests are not checked yet, so this is from your skills only.</p><div class="row"><a class="btn primary" href="#/quiz">Answer the interest questions (8 min)</a></div></div>';
+  }
+  return "";
 }
 
 async function pageResults() {
@@ -794,21 +858,37 @@ async function pageResults() {
     app.querySelectorAll("details.more").forEach((d) => d.addEventListener("toggle", () => d.open && loadRoleExtra(d.closest(".match"))));
     app.querySelectorAll("[data-explain]").forEach((b) => { b.onclick = () => explainRole(b); });
   };
+  // The jobs come first; how the IT areas were placed and scored is one tap away.
+  const topJobs = best.length ? `
+    <section class="card stack" style="gap: 10px" aria-labelledby="top-title">
+      <div class="row" style="justify-content: space-between">
+        <h2 id="top-title">Your top jobs</h2>
+        <button class="btn ghost" type="button" id="to-list">See all roles and why &darr;</button>
+      </div>
+      <ol class="top-list">${best.slice(0, 3).map((m, i) => topCard(m, i + 1)).join("")}</ol>
+    </section>` : "";
+  const scored = `<h3>How your IT areas were scored</h3>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}`;
+  const why = g.mode === "none" ? groupsHtml(g) : `
+    <details class="group">
+      <summary><span>Why these jobs? Your IT areas and how they were scored</span></summary>
+      <div class="group-body stack" style="gap: 12px">${groupsHtml(g)}${scored}</div>
+    </details>`;
   render(`
   <div class="stack">
     ${demo ? "" : stepBar("results")}
     <p class="eyebrow">${demo ? "" : "Step 4 of 4 · "}Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
     <h1>Best matches for your level</h1>
     ${whatIfBanner}
-    ${groupsHtml(g)}
+    ${topJobs}
+    ${accuracyNote(g)}
+    ${replan}
+    ${why}
     ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
-    ${g.mode === "none" ? "" : `<details class="group"><summary><span>How your IT areas were scored</span></summary><div class="group-body stack" style="gap: 6px">${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}</div></details>`}
+    ${scenarioCard}
     <div class="card stack" style="gap: 8px">
       <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
       <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
     </div>
-    ${replan}
-    ${scenarioCard}
     <div id="list" class="stack"></div>
     <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
     <div class="row">
@@ -817,6 +897,8 @@ async function pageResults() {
     </div>
   </div>`);
   document.getElementById("more").onclick = () => { shown = best.length; draw(); };
+  const toList = document.getElementById("to-list");
+  if (toList) toList.onclick = () => document.getElementById("list").scrollIntoView({ behavior: "smooth", block: "start" });
   app.querySelectorAll("[data-scenario]").forEach((b) => {
     b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
   });
@@ -1793,6 +1875,8 @@ async function route() {
   document.querySelectorAll("[data-nav]").forEach((a) => {
     const on = a.dataset.nav === page || (page === "interests" && a.dataset.nav === "quiz");
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    // On phones the menu is one row that scrolls sideways: keep the current page's tab in view.
+    if (on) a.parentElement.scrollLeft = Math.max(0, a.offsetLeft - 40);
   });
   window.scrollTo(0, 0);
   try {

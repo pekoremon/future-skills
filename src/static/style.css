@@ -70,10 +70,20 @@ button { font: inherit; }
   background: var(--surface); color: var(--text); font: inherit; font-size: 14px; cursor: pointer;
 }
 .lang-btn:hover { border-color: var(--accent); }
+/* Phones: brand and language on one line, the menu as one row that scrolls sideways */
+@media (max-width: 560px) {
+  .topbar { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 8px 12px 4px; }
+  .brand { grid-row: 1; grid-column: 1; }
+  .lang-btn { grid-row: 1; grid-column: 2; min-height: 36px; padding: 4px 8px; font-size: 13px; }
+  .topbar nav { grid-row: 2; grid-column: 1 / -1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px 4px; }
+  .topbar nav::-webkit-scrollbar { display: none; }
+  .topbar nav a { padding: 6px 10px; min-height: 36px; white-space: nowrap; }
+}
 .lang-note { display: none; }
 html:not([lang="en"]) .lang-note { display: block; }
 
 main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; outline: none; }
+main:focus-visible { outline: none; }  /* route() focuses <main> for screen readers; no frame around the page */
 .footer { max-width: 960px; margin: 0 auto; padding: 16px 16px 32px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
 
 .stack { display: flex; flex-direction: column; gap: 16px; }
@@ -253,3 +263,12 @@ details.review > summary { flex-wrap: wrap; }
 tr.hl td { background: var(--accent-soft); }
 .rank-up { color: var(--accent); font-weight: 700; }
 .rank-down { color: var(--warn-text); font-weight: 700; }
+
+/* Top jobs first (results page) and the example result on the home page */
+.top-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.top-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.top-list .top-card:first-child { border-color: var(--accent); }
+.top-main { display: flex; flex-direction: column; gap: 6px; flex: 1 1 260px; min-width: 0; }
+.top-side { display: flex; align-items: center; gap: 14px; }
+.trust .chip { font-weight: 600; }
+#list { scroll-margin-top: 110px; }
