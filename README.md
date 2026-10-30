@@ -157,7 +157,7 @@ python src/main.py
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~2 min) / check its status |
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
-| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0074": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
+| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0075": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
 `/api/match`, `/api/explain` and `/api/learn` also take `trend_changes`: the result is then built from the changed copy, and `trend_data.what_if` is `true`. `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
 
