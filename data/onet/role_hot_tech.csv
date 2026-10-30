@@ -2242,3 +2242,57 @@ IT26,11-3021.00,Tableau,Business intelligence and data analysis software,N,O*NET
 IT26,11-3021.00,Teradata Database,Data base management system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
 IT26,11-3021.00,The MathWorks MATLAB,Analytical or scientific software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
 IT26,11-3021.00,UNIX,Operating system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,IBM SPSS Statistics,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft Excel,Spreadsheet software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft Office software,Office suite software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Python,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,R,Object or component oriented development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,SAS,Analytical or scientific software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Structured query language SQL,Data base user interface and query software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Tableau,Business intelligence and data analysis software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Amazon Redshift,Data base user interface and query software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Amazon Web Services AWS software,Data base user interface and query software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Apache Hadoop,Data base management system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Apache Spark,Business intelligence and data analysis software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,C++,Object or component oriented development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Extensible markup language XML,Enterprise application integration software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,IBM DB2,Data base user interface and query software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Linux,Operating system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft Access,Data base user interface and query software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft PowerPoint,Presentation software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft SQL Server,Data base user interface and query software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft Visual Basic,Development environment software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft Visual Basic for Applications VBA,Development environment software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Microsoft Word,Word processing software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,SAP software,Enterprise resource planning ERP software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,Teradata Database,Data base management system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,The MathWorks MATLAB,Analytical or scientific software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,UNIX,Operating system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Adobe After Effects,Video creation and editing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Adobe Creative Cloud software,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Adobe Illustrator,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Adobe InDesign,Desktop publishing software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Adobe Photoshop,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Canva,Graphics or photo imaging software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Cascading style sheets CSS,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Figma,Graphical user interface development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Hypertext markup language HTML,Web platform development software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Microsoft Excel,Spreadsheet software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Microsoft Office software,Office suite software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Microsoft PowerPoint,Presentation software,Y,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,AJAX,Web platform development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Adobe Acrobat,Document management software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Apple macOS,Operating system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Autodesk AutoCAD Civil 3D,Computer aided design CAD software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,C,Development environment software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,C++,Object or component oriented development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Extensible markup language XML,Enterprise application integration software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,JavaScript,Web platform development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Microsoft Visio,Process mapping and design software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Microsoft Windows,Operating system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Microsoft Word,Word processing software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,PHP,Web platform development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Python,Object or component oriented development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,Trimble SketchUp Pro,Graphics or photo imaging software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,UNIX,Operating system software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,jQuery,Object or component oriented development software,N,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22

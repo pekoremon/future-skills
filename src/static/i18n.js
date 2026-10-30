@@ -42,6 +42,8 @@ const ROLES_MS = {
   "Computer Systems Analysts": "Penganalisis Sistem Komputer",
   "Information Technology Project Managers": "Pengurus Projek Teknologi Maklumat",
   "Computer and Information Systems Managers": "Pengurus Sistem Komputer dan Maklumat",
+  "Statisticians": "Ahli Statistik",
+  "Special Effects Artists and Animators": "Artis Kesan Khas dan Animator",
 };
 const SDG_MS = {
   "Good Health and Well-being": "Kesihatan Baik dan Kesejahteraan",
@@ -89,6 +91,8 @@ const ROLES_ZH = {
   "Computer Systems Analysts": "计算机系统分析师",
   "Information Technology Project Managers": "IT 项目经理",
   "Computer and Information Systems Managers": "计算机与信息系统经理",
+  "Statisticians": "统计师",
+  "Special Effects Artists and Animators": "特效艺术家与动画师",
 };
 const SDG_ZH = {
   "Good Health and Well-being": "良好健康与福祉",
@@ -496,7 +500,7 @@ const MS = {
   "All signals, data and sources →": "Semua isyarat, data dan sumber →",
   "Loading the trend data…": "Memuatkan data trend…",
   "Where do you fit in?": "Di mana tempat anda?",
-  "Find the IT area that suits you and which of 26 IT roles to aim for, with the skills you still need and free courses to learn them.": "Cari bidang IT yang sesuai dengan anda dan peranan IT yang patut disasarkan daripada 26, dengan kemahiran yang masih perlu dan kursus percuma untuk mempelajarinya.",
+  "Find the IT area that suits you and which of 28 IT roles to aim for, with the skills you still need and free courses to learn them.": "Cari bidang IT yang sesuai dengan anda dan peranan IT yang patut disasarkan daripada 28, dengan kemahiran yang masih perlu dan kursus percuma untuk mempelajarinya.",
   "Could not load the trend data.": "Tidak dapat memuatkan data trend.",
   "Open the Trends page": "Buka halaman Trend",
   "ICT jobs, growth in a year": "Pekerjaan ICT, pertumbuhan setahun",
@@ -534,7 +538,7 @@ const MS = {
   "MyCOL is TalentCorp's official list of occupations Malaysia is short of. Each bar counts our IT roles in that area.": "MyCOL ialah senarai rasmi TalentCorp bagi pekerjaan yang kekurangan tenaga kerja di Malaysia. Setiap bar mengira peranan IT kami dalam bidang itu.",
   "roles matched to MyCOL occupations by the team": "peranan dipadankan dengan pekerjaan MyCOL oleh pasukan",
   "Rising and flat IT roles": "Peranan IT yang naik dan mendatar",
-  "Trend score of each of our 26 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "Skor trend setiap 26 peranan IT kami: isyarat bidang IT-nya serta sama ada MyCOL menyenaraikan peranan itu sendiri.",
+  "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "Skor trend setiap 28 peranan IT kami: isyarat bidang IT-nya serta sama ada MyCOL menyenaraikan peranan itu sendiri.",
   "Most momentum": "Momentum tertinggi",
   "Least momentum": "Momentum terendah",
   "No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.": "Tiada peranan yang menurun dalam data terkini: skor terendah bermaksud isyarat mendatar, bukan menurun.",
@@ -1088,7 +1092,7 @@ const ZH = {
   "All signals, data and sources →": "全部信号、数据和来源 →",
   "Loading the trend data…": "正在载入趋势数据……",
   "Where do you fit in?": "你适合哪里？",
-  "Find the IT area that suits you and which of 26 IT roles to aim for, with the skills you still need and free courses to learn them.": "找出适合你的 IT 领域，以及 26 个 IT 职位中该瞄准哪一个，还有你仍需的技能和免费课程。",
+  "Find the IT area that suits you and which of 28 IT roles to aim for, with the skills you still need and free courses to learn them.": "找出适合你的 IT 领域，以及 28 个 IT 职位中该瞄准哪一个，还有你仍需的技能和免费课程。",
   "Could not load the trend data.": "无法载入趋势数据。",
   "Open the Trends page": "打开趋势页面",
   "ICT jobs, growth in a year": "ICT 就业一年增长",
@@ -1126,7 +1130,7 @@ const ZH = {
   "MyCOL is TalentCorp's official list of occupations Malaysia is short of. Each bar counts our IT roles in that area.": "MyCOL 是 TalentCorp 公布的马来西亚紧缺职业官方名单。每条统计该领域内我们的 IT 职位数。",
   "roles matched to MyCOL occupations by the team": "职位与 MyCOL 职业的对应由团队完成",
   "Rising and flat IT roles": "上升和持平的 IT 职位",
-  "Trend score of each of our 26 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "我们 26 个 IT 职位各自的趋势分数：所属 IT 领域的信号，加上 MyCOL 是否列出该职位本身。",
+  "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "我们 28 个 IT 职位各自的趋势分数：所属 IT 领域的信号，加上 MyCOL 是否列出该职位本身。",
   "Most momentum": "势头最强",
   "Least momentum": "势头最弱",
   "No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.": "最新数据中没有职位在下降：最低分代表信号持平，而不是下降。",

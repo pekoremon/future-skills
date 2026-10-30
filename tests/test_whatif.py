@@ -99,7 +99,7 @@ class TestApi(unittest.TestCase):
         self.assertEqual(res.status, 200)
         kinds = {i["kind"] for i in d["inputs"]}
         self.assertEqual(kinds, {"number", "mycol"})
-        self.assertEqual(len([i for i in d["inputs"] if i["kind"] == "mycol"]), 26)
+        self.assertEqual(len([i for i in d["inputs"] if i["kind"] == "mycol"]), 28)
         self.assertTrue(all(i["source_url"].startswith("https://") for i in d["inputs"] if i["kind"] == "number"))
         self.assertEqual(d["trend_weight"], matching.WEIGHTS["trend"])
 

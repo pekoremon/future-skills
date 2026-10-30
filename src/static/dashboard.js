@@ -283,7 +283,7 @@ function vizRolesChart(t, roles) {
   const falling = rs.some((r) => r.score < 50);
   const body = `<div class="viz-pair">${list("Most momentum", most, "")}${list("Least momentum", least, "muted")}</div>
     ${falling ? "" : '<p class="small muted">No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.</p>'}`;
-  return vizCard("Rising and flat IT roles", "Trend score of each of our 26 IT roles: its IT area's signals plus whether MyCOL lists the role itself.",
+  return vizCard("Rising and flat IT roles", "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.",
     body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`,
     vizTable(["Role", "IT area", "Trend score", "Malaysian demand", "AI momentum"],
       [...rs].sort((a, b) => b.score - a.score || name(a).localeCompare(name(b)))

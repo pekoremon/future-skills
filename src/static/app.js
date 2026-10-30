@@ -148,7 +148,7 @@ function pageHome() {
     <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
     <section class="card stack" id="start" style="gap: 12px">
       <h2>Where do you fit in?</h2>
-      <p class="muted">Find the IT area that suits you and which of 26 IT roles to aim for, with the skills you still need and free courses to learn them.</p>
+      <p class="muted">Find the IT area that suits you and which of 28 IT roles to aim for, with the skills you still need and free courses to learn them.</p>
       <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
       <div class="row">
         <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>

@@ -31,7 +31,7 @@ class TestTrendScore(unittest.TestCase):
     def test_every_area_and_role_has_a_score(self):
         rows = trend_score.build()
         self.assertEqual({r["it_area"] for r in rows if not r["role_id"]}, set(trend_score.SUBFIELD_AREA.values()))
-        self.assertEqual(len([r for r in rows if r["role_id"]]), 26)
+        self.assertEqual(len([r for r in rows if r["role_id"]]), 28)
         for r in rows:
             self.assertTrue(0 <= r["trend_score"] <= 100)
 

@@ -31,3 +31,5 @@ IT23,web_ux,50.0,50.0,50.0,my_demand;ai_momentum,,S15;S45;S14,v2-it-signals,2026
 IT24,it_mgmt,100.0,100.0,no data,my_demand,ai_momentum,S18;S46,v2-it-signals,2026-10-31
 IT25,it_mgmt,100.0,100.0,no data,my_demand,ai_momentum,S18;S47,v2-it-signals,2026-10-31
 IT26,it_mgmt,100.0,100.0,no data,my_demand,ai_momentum,S18;S48,v2-it-signals,2026-10-31
+IT27,data_ai,75.0,100.0,50.0,my_demand;ai_momentum,,S06;S49;S05,v2-it-signals,2026-10-31
+IT28,web_ux,50.0,50.0,50.0,my_demand;ai_momentum,,S15;S50;S14,v2-it-signals,2026-10-31

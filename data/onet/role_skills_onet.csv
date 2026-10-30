@@ -620,3 +620,42 @@ IT26,11-3021.00,2.B.1.e,Instructing,transferable_skill,3.12,3.88,O*NET 31.0 Data
 IT26,11-3021.00,2.B.3.a,Operations Analysis,transferable_skill,3.12,3.38,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
 IT26,11-3021.00,2.B.1.d,Negotiation,transferable_skill,3.0,3.25,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
 IT26,11-3021.00,2.B.5.b,Management of Financial Resources,transferable_skill,3.0,3.38,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.1.e,Mathematics,essential_skill,4.88,5.38,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.1.a,Reading Comprehension,essential_skill,4.0,4.88,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.2.a,Critical Thinking,essential_skill,4.0,4.5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.1.b,Active Listening,essential_skill,3.88,4.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.1.d,Speaking,essential_skill,3.88,4.25,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.1.c,Writing,essential_skill,3.75,4.25,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.2.b,Active Learning,essential_skill,3.75,3.88,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.1.f,Science,essential_skill,3.5,3.88,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.2.c,Learning Strategies,essential_skill,3.12,3.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.A.2.d,Monitoring,essential_skill,3.0,3.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.C.4.a,Mathematics,knowledge,4.67,6.24,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.C.3.a,Computers and Electronics,knowledge,4.19,5.57,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.C.7.a,English Language,knowledge,3.9,4.81,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.B.2.i,Complex Problem Solving,transferable_skill,3.88,4.12,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.B.4.e,Judgment and Decision Making,transferable_skill,3.38,3.88,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.B.3.e,Programming,transferable_skill,3.0,3.12,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.B.4.g,Systems Analysis,transferable_skill,3.0,3.12,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.B.4.h,Systems Evaluation,transferable_skill,3.0,3.12,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT27,15-2041.00,2.B.5.a,Time Management,transferable_skill,3.0,3.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.1.b,Active Listening,essential_skill,3.88,3.88,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.1.a,Reading Comprehension,essential_skill,3.75,4.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.2.a,Critical Thinking,essential_skill,3.75,3.75,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.1.d,Speaking,essential_skill,3.25,3.5,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.1.c,Writing,essential_skill,3.12,3.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.2.b,Active Learning,essential_skill,3.12,3.38,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.A.2.d,Monitoring,essential_skill,3.0,3.25,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.3.a,Computers and Electronics,knowledge,4.95,5.15,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.7.a,English Language,knowledge,4.38,3.79,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.3.c,Design,knowledge,4.22,4.28,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.9.b,Communications and Media,knowledge,4.11,4.57,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.1.e,Customer and Personal Service,knowledge,3.94,3.64,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.1.d,Sales and Marketing,knowledge,3.87,3.79,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.9.a,Telecommunications,knowledge,3.45,2.74,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.3.b,Engineering and Technology,knowledge,3.19,3.81,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.2.a,Production and Processing,knowledge,3.15,2.84,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.C.4.g,Geography,knowledge,3.01,4.11,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.B.4.e,Judgment and Decision Making,transferable_skill,3.12,3.12,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.B.2.i,Complex Problem Solving,transferable_skill,3.0,3.25,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22
+IT28,27-1014.00,2.B.5.a,Time Management,transferable_skill,3.0,3.0,O*NET 31.0 Database,https://www.onetcenter.org/database.html,2026-10-22

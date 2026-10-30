@@ -6,7 +6,7 @@
 
 # Future Skills
 
-Future Skills helps IT students find the part of IT that suits them. An interest questionnaire, an IT skills test and the student's CV score 6 IT areas (software engineering, data & AI, cybersecurity, cloud & networking, web & interface design, IT management), then 26 IT roles are ranked with an explained score, the skills still missing, a free-course pathway, Malaysian demand and AI-trend signals, and SDG links.
+Future Skills helps IT students find the part of IT that suits them. An interest questionnaire, an IT skills test and the student's CV score 6 IT areas (software engineering, data & AI, cybersecurity, cloud & networking, web & interface design, IT management), then 28 IT roles are ranked with an explained score, the skills still missing, a free-course pathway, Malaysian demand and AI-trend signals, and SDG links.
 
 ## Team Information
 
@@ -58,7 +58,7 @@ Domain 1 requires all six:
 
 Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend input (an IT area's arXiv AI paper count, the DOSM job ad count for Software Developers, or a role's MyCOL status), or pick a ready-made example, and the same code that builds the real scores runs on a private copy. The page shows each step: the data you changed → the signals whose direction moved (and why a small change moves nothing: it must cross a threshold) → the trend scores → your job ranking, before and after. "Show all my matches with this data" re-plans the whole jobs page until you go back to the real data. The data files and other users never see the change.
 
-Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 26 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
+Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 28 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
 
 Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
@@ -157,7 +157,7 @@ python src/main.py
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~2 min) / check its status |
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
-| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0075": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
+| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0077": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
 `/api/match`, `/api/explain` and `/api/learn` also take `trend_changes`: the result is then built from the changed copy, and `trend_data.what_if` is `true`. `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
 
