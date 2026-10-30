@@ -23,7 +23,6 @@ const FLAGS = {
 };
 const QUIET_FLAGS = ["area_not_scored", "interest_not_scored"];  // explained once at the top of the page
 const PART_LABEL = { area: "IT area fit", interest: "Interest fit", skill: "Skill fit", trend: "AI-era trend" };
-const PART_NAMES = { my_demand: "Malaysian demand", ai_momentum: "AI momentum" };
 const STORE_KEY = "future-skills-v1";
 // The 51 O*NET skills and knowledge areas, grouped so a student rates 21 groups instead.
 // A group's rating is copied to every O*NET skill in it, so matching still runs per skill.
@@ -132,45 +131,46 @@ function stepBar(current) {
 
 /* ---------- pages ---------- */
 
+// The first page: where IT jobs are heading (dashboard.js), then where the student fits in.
 function pageHome() {
   render(`
   <div class="stack">
-    <p class="eyebrow">Future-ready careers for IT students</p>
-    <h1>Find the part of IT that suits you, and the job to aim for.</h1>
-    <p class="muted">Future Skills combines your CV, an interest questionnaire and a short IT skills test to show which of 6 IT areas fits you best, then ranks 26 IT roles, explains every score, shows the skills you still need, and links each role to the UN Sustainable Development Goals.</p>
-    <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
-    <p class="small muted"><span>Built on official data:</span> TalentCorp MyCOL 2024/2025 · DOSM · O*NET 31.0 · arXiv</p>
-    <div class="steps">
-      <div class="card"><h3>Your CV</h3><p class="muted small">Optional. Upload it, or rate your skills instead. About 1 minute.</p></div>
-      <div class="card"><h3>Your interests</h3><p class="muted small">36 quick statements about IT work you would enjoy. About 8 minutes.</p></div>
-      <div class="card"><h3>Skills test</h3><p class="muted small">Only the 3 to 6 IT areas your CV and interests point to, with code you run in the browser.</p></div>
-      <div class="card"><h3>Your jobs</h3><p class="muted small">Grouped by what you enjoy and what you can do: ranked roles, the skills you still need and free courses.</p></div>
-    </div>
-    <p class="muted small">Every step is optional and you can go back any time; the more you do, the better the result.</p>
-    <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
-    <div class="row">
-      <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
-      <a class="btn" href="#/skills" id="quick">Quick start: about 3 minutes</a>
-      <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
-      <a class="btn ghost" href="#/trends">See the AI-trend data</a>
-    </div>
-    <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.</p>
-    <section class="card stack" style="gap: 10px" id="example" hidden>
-      <p class="eyebrow">Example result</p>
-      <p class="small muted">This is the fictional demo student's top job, worked out live from the same data as yours.</p>
-      <ol class="top-list" id="example-list"></ol>
+    <section class="stack" style="gap: 10px">
+      <p class="eyebrow">AI-era job trends for IT students in Malaysia</p>
+      <h1>Where IT jobs are heading</h1>
+      <p class="muted">Official Malaysian data and global AI research in one place. The charts follow the data, and every number shows its source and date.</p>
+      <div class="row">
+        <button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button>
+        <a class="btn ghost" href="#/trends">All signals, data and sources &rarr;</a>
+      </div>
+    </section>
+    <div id="home-dash" class="stack"><p class="muted" role="status">Loading the trend data…</p></div>
+    <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
+    <section class="card stack" id="start" style="gap: 12px">
+      <h2>Where do you fit in?</h2>
+      <p class="muted">Find the IT area that suits you and which of 26 IT roles to aim for, with the skills you still need and free courses to learn them.</p>
+      <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
+      <div class="row">
+        <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
+        <a class="btn" href="#/skills" id="quick">Quick start: about 3 minutes</a>
+        <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
+      </div>
+      <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.</p>
+      <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
     </section>
   </div>`);
   document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; };
   document.getElementById("quick").onclick = () => { state.quick = true; saveState(); };
-  // Show what the student will get: the demo student's real top job, fetched after the page draws.
-  api("/api/match", { body: JSON.stringify({ profile_id: "P01", top: 35 }) }).then((r) => {
-    const m = listedRoles(r.results, r.groups)[0];
-    const box = document.getElementById("example");
-    if (!m || !box) return;
-    document.getElementById("example-list").innerHTML = topCard(m, 1);
-    box.hidden = false;
-  }).catch(() => { /* the example is a nice-to-have; the page works without it */ });
+  document.getElementById("to-start").onclick = () => document.getElementById("start").scrollIntoView({ behavior: "smooth", block: "start" });
+  Promise.all([api("/api/trends"), cached("/api/roles")]).then(([t, roles]) => {
+    const dash = document.getElementById("home-dash");
+    if (!dash) return;  // the student has moved on to another page
+    dash.innerHTML = trendDashboard(t, roles);
+    wireDashboard(dash);
+  }).catch(() => {
+    const dash = document.getElementById("home-dash");
+    if (dash) dash.innerHTML = '<p class="warn">Could not load the trend data. <a href="#/trends">Open the Trends page</a></p>';
+  });
 }
 
 async function pageQuizIntro() {
@@ -910,16 +910,9 @@ async function pageResults() {
 }
 
 let trendTab = "software_dev";
+let trendSignalsOpen = false;  // keep "Signals by IT area" open when the student switches its tabs
 async function pageTrends() {
-  const t = await api("/api/trends");
-  const status = await api("/api/trends/update");
-  const scoreCards = t.scores.filter((s) => !s.role_id).map((s) => `
-    <div class="card stack" style="gap: 6px">
-      <span class="muted small">${esc(AREA_NAMES[s.it_area] || s.it_area)}</span>
-      <span class="big">${esc(s.trend_score)}</span>
-      <span class="small">Malaysian demand: <strong>${esc(s.my_demand_score)}</strong> · AI momentum: <strong>${esc(s.ai_momentum_score)}</strong></span>
-      ${s.missing ? `<span class="chip warn-chip">No data: ${esc(s.missing.split(";").map((k) => PART_NAMES[k] || k).join(", "))}</span>` : ""}
-    </div>`).join("");
+  const [t, status, roles] = await Promise.all([api("/api/trends"), api("/api/trends/update"), cached("/api/roles")]);
   const sub = t.subdomains.find((d) => SUBFIELD_AREA[d.subfield_code] === trendTab) || {};
   const roleIds = new Set(t.scores.filter((s) => s.role_id && s.it_area === trendTab).map((s) => s.role_id));
   const signals = t.signals.filter((r) => (r.layer === "subdomain" && r.entity_id === sub.subdomain_id) || (r.layer === "role" && roleIds.has(r.entity_id)));
@@ -937,18 +930,12 @@ async function pageTrends() {
     <p class="eyebrow">AI-era trend signals</p>
     <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
     <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.</div>
-    <p class="muted">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
-    <div class="grid">${scoreCards}</div>
+    <div id="trend-dash" class="stack"></div>
     <section class="card stack" style="gap: 8px">
       <h2>What if this data changed?</h2>
       <p class="small">Change an arXiv paper count, the DOSM job ad count or a role's MyCOL status, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
       <div class="row"><a class="btn primary" href="#/whatif">Change the trend data</a></div>
     </section>
-    <div class="card stack" style="gap: 8px">
-      <h2>How the trend score works</h2>
-      <p class="small">Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction. <strong>Malaysian demand</strong>: MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.</p>
-      <p class="small muted">Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked "composition effect".</p>
-    </div>
     <div class="card stack" style="gap: 10px">
       <h2>Update data</h2>
       <p class="small muted">Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.</p>
@@ -956,15 +943,28 @@ async function pageTrends() {
       <div class="row"><button class="btn primary" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
       <pre class="log" id="log" hidden></pre>
     </div>
-    <h2>Signals by IT area</h2>
-    <div class="tabs" role="group" aria-label="IT area">${Object.keys(AREA_NAMES).map((d) => `<button type="button" data-tab="${d}" aria-pressed="${d === trendTab}">${esc(AREA_NAMES[d])}</button>`).join("")}</div>
-    <div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(signals)}</tbody></table></div>
+    <details class="group"><summary><span>How the trend score works</span></summary>
+      <div class="group-body stack" style="gap: 8px">
+        <p class="small">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
+        <p class="small">Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction. <strong>Malaysian demand</strong>: MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.</p>
+        <p class="small muted">Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked "composition effect".</p>
+      </div>
+    </details>
+    <details class="group"${trendSignalsOpen ? " open" : ""}><summary><span>Signals by IT area</span></summary>
+      <div class="group-body stack" style="gap: 10px">
+        <div class="tabs" role="group" aria-label="IT area">${Object.keys(AREA_NAMES).map((d) => `<button type="button" data-tab="${d}" aria-pressed="${d === trendTab}">${esc(AREA_NAMES[d])}</button>`).join("")}</div>
+        <div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(signals)}</tbody></table></div>
+      </div>
+    </details>
     <details class="group"><summary><span>ICT sector background (not scored) <span class="muted small">(${context.length})</span></span></summary>
       <div class="group-body"><div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(context)}</tbody></table></div></div></details>
     <details class="group"><summary><span>All input data with sources <span class="muted small">(${t.inputs.length})</span></span></summary>
       <div class="group-body"><div class="table-wrap"><table><thead><tr><th>Entity</th><th>Metric</th><th>Value</th><th>Period</th><th>Source</th></tr></thead><tbody>${inRows}</tbody></table></div></div></details>
   </div>`);
-  app.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => { trendTab = b.dataset.tab; pageTrends().catch(showError); }; });
+  const dash = document.getElementById("trend-dash");
+  dash.innerHTML = trendDashboard(t, roles);
+  wireDashboard(dash);
+  app.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => { trendTab = b.dataset.tab; trendSignalsOpen = true; pageTrends().catch(showError); }; });
   const btn = document.getElementById("update");
   const show = (s) => {
     const label = { idle: "", running: "Updating…", done: `Updated ${s.finished ? new Date(s.finished).toLocaleString() : ""}. Your jobs page will re-check your plan with the new data.`, failed: "Update failed; previous data kept." };
