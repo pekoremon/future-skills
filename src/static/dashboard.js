@@ -62,12 +62,14 @@ function vizShowTip(title, rows, x, y) {
     el.append(row);
   }
   el.hidden = false;
-  const pad = 14, w = el.offsetWidth, h = el.offsetHeight;
+  // Work in screen pixels, then divide by the page zoom (style.css) since left/top get zoomed.
+  const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+  const pad = 14, w = el.offsetWidth * z, h = el.offsetHeight * z;
   let left = x + pad, top = y - h - pad;
   if (left + w > window.innerWidth - 8) left = Math.max(8, x - w - pad);
   if (top < 8) top = y + pad;
-  el.style.left = `${left}px`;
-  el.style.top = `${top}px`;
+  el.style.left = `${left / z}px`;
+  el.style.top = `${top / z}px`;
 }
 function vizHideTip() {
   if (vizTipEl) vizTipEl.hidden = true;

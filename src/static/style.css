@@ -37,6 +37,7 @@
   --c-trend: #F0A04B; --focus: #8AB4F8; color-scheme: dark;
 }
 
+html { zoom: 1.15; }  /* whole site drawn 1.15x larger */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }  /* classes like .stack set display, which would override it */
 body {
