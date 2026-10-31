@@ -66,6 +66,13 @@ class TestSummarise(unittest.TestCase):
         with self.assertRaises(cv_reader.CVError):
             cv_reader.docx_text(b"not a zip")
 
+    def test_docx_zip_bomb_refused(self):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("word/document.xml", b"<w:document>" + b" " * 1000 + b"</w:document>")
+        with mock.patch.object(cv_reader, "MAX_DOCX_XML_BYTES", 500), self.assertRaises(cv_reader.CVError):
+            cv_reader.docx_text(buf.getvalue())
+
     def test_personal_details_removed(self):
         text, n = cv_reader.redact("IC 900101-14-5678 | 012-345 6789 | +60 3-1234 5678 | aiman@example.com")
         self.assertEqual(n, 4)

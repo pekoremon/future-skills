@@ -37,6 +37,7 @@ import matching
 
 MAX_CV_CHARS = 20_000      # longer CVs are cut; the start holds the key facts
 MIN_CV_CHARS = 80
+MAX_DOCX_XML_BYTES = 20_000_000  # word/document.xml unpacked; a real CV is well under 1 MB
 MAX_TOKENS = 3500
 DOCX_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
@@ -125,9 +126,15 @@ def redact(text: str) -> tuple[str, int]:
 def docx_text(data: bytes) -> str:
     """Paragraph text of a .docx file, using only zipfile and XML parsing."""
     try:
-        with zipfile.ZipFile(io.BytesIO(data)) as z:
-            root = ElementTree.fromstring(z.read("word/document.xml"))
-    except (zipfile.BadZipFile, KeyError, ElementTree.ParseError):
+        with zipfile.ZipFile(io.BytesIO(data)) as z, z.open("word/document.xml") as f:
+            xml = f.read(MAX_DOCX_XML_BYTES + 1)  # never unpack more, so a zip bomb is refused
+    except (zipfile.BadZipFile, KeyError, RuntimeError, NotImplementedError):
+        raise CVError("could not read this .docx file") from None
+    if len(xml) > MAX_DOCX_XML_BYTES:
+        raise CVError("this .docx file is too large once unpacked")
+    try:
+        root = ElementTree.fromstring(xml)
+    except ElementTree.ParseError:
         raise CVError("could not read this .docx file") from None
     paras = ("".join(t.text or "" for t in p.iter(DOCX_NS + "t")) for p in root.iter(DOCX_NS + "p"))
     return "\n".join(p for p in paras if p.strip())

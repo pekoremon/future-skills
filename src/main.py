@@ -645,6 +645,7 @@ def trends(request):
 
 def run_update(arxiv: bool) -> None:
     cmd = [sys.executable, str(SCRIPTS / "update_trends.py")] + ([] if arxiv else ["--no-arxiv"])
+    code, log = -1, ""
     try:
         done = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
                               timeout=UPDATE_TIMEOUT_S)
@@ -654,10 +655,14 @@ def run_update(arxiv: bool) -> None:
                                   capture_output=True, text=True, timeout=60)
             code, log = done.returncode, log + done.stdout + done.stderr
     except subprocess.TimeoutExpired as e:
-        code, log = -1, f"timed out after {UPDATE_TIMEOUT_S} s\n{e.stdout or ''}"
-    _update_state.update(status="done" if code == 0 else "failed", returncode=code,
-                         log=log[-4000:], finished=datetime.now(timezone.utc).isoformat())
-    _update_lock.release()
+        out = e.stdout.decode("utf-8", "replace") if isinstance(e.stdout, bytes) else e.stdout or ""
+        code, log = -1, f"{log}timed out after {e.timeout:g} s\n{out}"
+    except Exception as e:  # noqa: BLE001  any failure must still free the lock
+        code, log = -1, f"{log}could not run the update: {e!r}"
+    finally:
+        _update_state.update(status="done" if code == 0 else "failed", returncode=code,
+                             log=log[-4000:], finished=datetime.now(timezone.utc).isoformat())
+        _update_lock.release()
 
 
 def start_update(arxiv: bool, trigger: str) -> bool:
@@ -812,8 +817,14 @@ class Handler(BaseHTTPRequestHandler):
     server_version = "FutureSkills/1.0"
 
     def _send(self, method: str) -> None:
-        size = int(self.headers.get("Content-Length") or 0)
-        if size > MAX_BODY:
+        try:
+            size = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            size = -1
+        if size < 0:
+            self.close_connection = True  # the body's end is unknown, so do not read on
+            res = jsonify(error="bad Content-Length", http_status=400)
+        elif size > MAX_BODY:
             res = jsonify(error="request too large", http_status=413)
         else:
             try:

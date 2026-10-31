@@ -42,7 +42,8 @@ QUIZ_KEEP = 500  # video quizzes waiting for answers, kept in memory
 LLM_TIMEOUT_S = 40
 LLM_MAX_TOKENS = 3000
 
-_lock = threading.Lock()
+_lock = threading.Lock()        # the video quizzes
+_daily_lock = threading.Lock()  # the daily puzzle, held while the LLM writes it
 _daily = {}    # "YYYY-MM-DD" -> stored puzzle (with its answer)
 _quizzes = {}  # quiz id -> {"url", "questions" (with answers)}
 _bank = None
@@ -202,7 +203,7 @@ def _write_cache(key: str, stored: dict) -> None:
 def daily_stored(day: date) -> dict:
     """The day's puzzle with its answer, written once and then reused."""
     key = day.isoformat()
-    with _lock:
+    with _daily_lock:
         if key in _daily:
             return _daily[key]
         cached = _read_cache().get(key)
@@ -328,6 +329,7 @@ def video_quiz(url) -> dict:
 
 
 def check_video_quiz(quiz_id, answers) -> dict:
+    """Grade a quiz once: the reply shows the answers, so the same quiz cannot be sent again."""
     quiz = _quizzes.get(quiz_id) if isinstance(quiz_id, str) else None
     if quiz is None:
         raise PuzzleError("this quiz has expired; start it again")
@@ -335,6 +337,9 @@ def check_video_quiz(quiz_id, answers) -> dict:
     if not isinstance(answers, list) or len(answers) != len(qs):
         raise PuzzleError(f"'answers' must be a list of {len(qs)} option numbers")
     results = [graded(q, a, f"{quiz_id}|{q['id']}") for q, a in zip(qs, answers)]
+    with _lock:
+        if _quizzes.pop(quiz_id, None) is None:  # another request graded it first
+            raise PuzzleError("this quiz has expired; start it again")
     score = sum(r["correct"] for r in results)
     needed = min(VIDEO_PASS, len(qs))
     return {"quiz_id": quiz_id, "url": quiz["url"], "score": score, "total": len(qs), "pass_mark": needed,

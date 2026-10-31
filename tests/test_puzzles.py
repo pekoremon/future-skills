@@ -121,9 +121,18 @@ class TestVideoQuiz(NoLLM):
         one_wrong = [*right[:4], (right[4] + 1) % 4]
         _, r = call("POST", "/api/puzzles/video/check", {"quiz_id": quiz["quiz_id"], "answers": one_wrong})
         self.assertEqual((r["score"], r["passed"]), (4, True))
+        _, quiz = call("POST", "/api/puzzles/video", {"url": VIDEO})
+        right = self.answers(quiz["quiz_id"])
         two_wrong = [*right[:3], (right[3] + 1) % 4, (right[4] + 1) % 4]
         _, r = call("POST", "/api/puzzles/video/check", {"quiz_id": quiz["quiz_id"], "answers": two_wrong})
         self.assertEqual((r["score"], r["passed"]), (3, False))
+
+    def test_graded_once(self):
+        # the reply shows the answers, so sending the same quiz again must not count
+        _, quiz = call("POST", "/api/puzzles/video", {"url": VIDEO})
+        right = self.answers(quiz["quiz_id"])
+        self.assertEqual(call("POST", "/api/puzzles/video/check", {"quiz_id": quiz["quiz_id"], "answers": [0] * 5})[0], 200)
+        self.assertEqual(call("POST", "/api/puzzles/video/check", {"quiz_id": quiz["quiz_id"], "answers": right})[0], 400)
 
     def test_bad_requests(self):
         self.assertEqual(call("POST", "/api/puzzles/video", {"url": "https://example.com"})[0], 400)

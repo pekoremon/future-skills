@@ -251,6 +251,14 @@ class TestApi(unittest.TestCase):
         self.assertEqual(second.status_code, 409)
         main._update_lock.release()
 
+    def test_update_that_cannot_start_frees_the_lock(self):
+        self.assertTrue(main._update_lock.acquire(blocking=False))
+        with mock.patch.object(main.subprocess, "run", side_effect=OSError("no python")):
+            main.run_update(False)
+        self.assertEqual(main._update_state["status"], "failed")
+        self.assertTrue(main._update_lock.acquire(blocking=False))  # free again
+        main._update_lock.release()
+
     def test_automatic_update_due_after_a_week(self):
         status = self.client.get("/api/trends/update").json
         last = main.last_api_fetch()

@@ -68,21 +68,45 @@ const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? esc(u) : "#");
 const nameIn = (s) => (window.trName ? window.trName(s) : s);
 const fmt = (n, d = 1) => (n === null || n === undefined || n === "" ? "–" : Number(n).toFixed(d));
 
-async function api(path, opts) {
+// Counts page changes. A reply a page asked for while it was loading, that comes back after the
+// student has moved to another page, throws StalePage instead, so that page stops and never draws
+// over the new one. Replies to a button press (a CV read, the test result) are always kept.
+let routeSeq = 0;
+let loadingSeq = null;  // routeSeq while route() is still loading that page
+class StalePage extends Error {}
+function stillCurrent(seq) {
+  if (seq !== null && seq !== routeSeq) throw new StalePage("the page changed");
+}
+
+async function request(path, opts) {
   const res = await fetch(path, opts && opts.body ? { method: "POST", headers: { "Content-Type": "application/json" }, ...opts } : opts);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
 }
+async function api(path, opts) {
+  const seq = loadingSeq;
+  try {
+    return await request(path, opts);
+  } finally {
+    stillCurrent(seq);
+  }
+}
 async function cached(path) {
-  if (!cache[path]) cache[path] = api(path).catch((e) => { delete cache[path]; throw e; });
-  return cache[path];
+  const seq = loadingSeq;
+  if (!cache[path]) cache[path] = request(path).catch((e) => { delete cache[path]; throw e; });
+  try {
+    return await cache[path];
+  } finally {
+    stillCurrent(seq);
+  }
 }
 
 function render(html) {
   app.innerHTML = html;
 }
 function showError(e) {
+  if (e instanceof StalePage) return;  // the student moved on; the newer page draws
   const offline = e instanceof TypeError;  // fetch() rejects with TypeError when the server cannot be reached
   render(`<div class="warn stack" role="alert" style="gap: 10px">
     <p>${offline ? "Cannot reach the Future Skills server. It may have stopped or be restarting." : `Something went wrong: ${esc(e.message)}.`}</p>
@@ -1849,6 +1873,7 @@ async function pageSharedResult(token) {
   try {
     r = await api("/api/assessment/result", { body: JSON.stringify(readShareToken(token)) });
   } catch (e) {
+    if (e instanceof StalePage) throw e;
     render(`<div class="stack"><h1>This share link does not work</h1>
       <p class="muted">It may be cut off, or made with an older version of the test.</p>
       <div class="row"><a class="btn primary" href="#/test">Take the IT skills test</a></div></div>`);
@@ -2461,6 +2486,8 @@ async function pageImpact() {
 async function route() {
   const parts = location.hash.replace(/^#\/?/, "").split("/");
   const page = parts[0] || "trends";  // the Trends page is the landing page
+  const seq = ++routeSeq;
+  loadingSeq = seq;
   document.querySelectorAll("[data-nav]").forEach((a) => {
     const on = a.dataset.nav === page || (page === "interests" && a.dataset.nav === "quiz");
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
@@ -2493,7 +2520,10 @@ async function route() {
     else if (page === "impact") await pageImpact();
     else await pageTrends();
   } catch (e) {
+    if (e instanceof StalePage) return;  // the student moved on; the newer route() draws
     showError(e);
+  } finally {
+    if (loadingSeq === seq) loadingSeq = null;
   }
   app.focus({ preventScroll: true });
 }

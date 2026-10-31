@@ -8,3 +8,7 @@ requires-python = ">=3.10"
 # The app uses only the Python standard library. This file exists so Replit's
 # package step recognises a Python project; there is nothing to install.
 dependencies = []
+
+[tool.pytest.ini_options]
+# samples/ holds a student project for "Prove it" (it needs Flask); it is not part of the app's tests.
+testpaths = ["tests"]
