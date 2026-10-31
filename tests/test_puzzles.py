@@ -29,11 +29,11 @@ class NoLLM(unittest.TestCase):
 
 
 class TestBank(NoLLM):
-    def test_four_puzzles_per_area_and_level(self):
-        menu = puzzles.summary()
-        self.assertEqual([a["id"] for a in menu["areas"]], puzzles.AREAS)
-        for a in menu["areas"]:
-            self.assertEqual(a["counts"], {"easy": 4, "medium": 4, "hard": 4}, a["id"])
+    def test_four_backup_puzzles_per_area_and_level(self):
+        from collections import Counter
+        counts = Counter((p["area"], p["level"]) for p in puzzles.load_bank()["puzzles"])
+        self.assertEqual(set(counts), {(a, lv) for a in puzzles.AREAS for lv in puzzles.LEVELS})
+        self.assertEqual(set(counts.values()), {4})
 
     def test_every_puzzle_is_well_formed(self):
         ids = set()
@@ -42,36 +42,13 @@ class TestBank(NoLLM):
             ids.add(p["id"])
             self.assertEqual(puzzles.valid_puzzle(p)["correct"], p["correct"])  # same checks as LLM puzzles
 
-    def test_public_puzzle_hides_the_answer(self):
-        _, data = call("GET", "/api/puzzles/round?area=cybersecurity&level=easy")
-        self.assertEqual(len(data["puzzles"]), 4)
-        for p in data["puzzles"]:
-            self.assertFalse({"correct", "wrong", "explain"} & set(p))
-            self.assertEqual(len(p["options"]), 4)
-
     def test_options_are_shuffled_so_the_answer_moves(self):
         spots = {puzzles.shuffled(p, p["id"])[1] for p in puzzles.load_bank()["puzzles"]}
         self.assertEqual(spots, {0, 1, 2, 3})
 
-
-class TestCheck(NoLLM):
-    def test_right_and_wrong_answers(self):
-        p = puzzles.by_id()["DA-H2"]
-        options, answer = puzzles.shuffled(p, p["id"])
-        status, right = call("POST", "/api/puzzles/check", {"id": "DA-H2", "choice": answer})
-        self.assertEqual(status, 200)
-        self.assertTrue(right["correct"])
-        self.assertEqual(right["points"], 30)
-        self.assertEqual(options[right["answer"]], "Precision 0.8, recall 0.4")
-        _, wrong = call("POST", "/api/puzzles/check", {"id": "DA-H2", "choice": (answer + 1) % 4})
-        self.assertFalse(wrong["correct"])
-        self.assertEqual(wrong["points"], 0)
-
-    def test_bad_requests(self):
-        self.assertEqual(call("POST", "/api/puzzles/check", {"id": "nope", "choice": 0})[0], 400)
-        self.assertEqual(call("POST", "/api/puzzles/check", {"id": "SE-E1", "choice": 4})[0], 400)
-        self.assertEqual(call("POST", "/api/puzzles/check", {"id": "SE-E1", "choice": True})[0], 400)
-        self.assertEqual(call("GET", "/api/puzzles/round?area=games&level=easy")[0], 400)
+    def test_practice_endpoints_are_gone(self):
+        self.assertEqual(main.dispatch("GET", "/api/puzzles").status, 404)
+        self.assertEqual(main.dispatch("GET", "/api/puzzles/round?area=data_ai&level=easy").status, 404)
 
 
 class TestDaily(NoLLM):
@@ -82,12 +59,17 @@ class TestDaily(NoLLM):
             _, b = call("GET", "/api/puzzles/daily")
             self.assertEqual(a, b)
             self.assertEqual(a["source"], "bank")
+            self.assertFalse({"correct", "wrong", "explain"} & set(a["puzzle"]))
+            self.assertEqual(len(a["puzzle"]["options"]), 4)
             self.assertEqual((a["area"], a["level"]), puzzles.daily_plan(day))
             stored = puzzles._daily["2026-11-01"]
             answer = puzzles.shuffled(stored, stored["id"])[1]
             _, r = call("POST", "/api/puzzles/daily/check", {"date": "2026-11-01", "choice": answer})
             self.assertTrue(r["correct"])
-            self.assertEqual(r["points"], 2 * puzzles.load_bank()["levels"][a["level"]]["points"])
+            self.assertEqual(r["level"], a["level"])
+            _, wrong = call("POST", "/api/puzzles/daily/check", {"date": "2026-11-01", "choice": (answer + 1) % 4})
+            self.assertFalse(wrong["correct"])
+            self.assertEqual(call("POST", "/api/puzzles/daily/check", {"date": "2026-11-01", "choice": 4})[0], 400)
             self.assertEqual(call("POST", "/api/puzzles/daily/check", {"date": "2026-11-02", "choice": 0})[0], 400)
 
     def test_area_changes_every_day(self):

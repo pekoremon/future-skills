@@ -1,15 +1,63 @@
-/* IT Puzzles (play.js): the game pages and the video check dialog. */
+/* My learning as a game (play.js): stats, daily challenge, level map, shop, coin toast and dialogs. */
+.coin-chip { text-decoration: none; color: var(--text); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
 .play-stats { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
 .play-stats .card { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
 .play-stats strong { font-size: 22px; line-height: 1.2; }
 .daily-card { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-soft), var(--surface) 70%); }
-.play-areas { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.level-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); text-decoration: none; }
-.level-row:hover { border-color: var(--accent); color: var(--text); }
-.stars { color: #D99A00; letter-spacing: 1px; white-space: nowrap; }
-.stars-off { color: var(--bar-muted); }
-.big-stars .stars { font-size: 34px; }
-.puzzle-q { font-size: 18px; }
+
+/* level map: rows of 5 that snake, a line joining the levels */
+.lv-map { display: grid; gap: 22px; padding: 6px 4px; }
+.lv-row { display: flex; align-items: center; position: relative; }
+.lv-row.rev { flex-direction: row-reverse; }
+.lv-row.more::after { content: ""; position: absolute; right: 25px; top: 50%; width: 5px; height: calc(100% + 22px); background: var(--track); border-radius: 3px; z-index: 0; }
+.lv-row.rev.more::after { right: auto; left: 25px; }
+.lv-link { flex: 1; height: 5px; background: var(--track); border-radius: 3px; min-width: 6px; }
+.lv-link.on { background: #E0A400; }
+.lv-link.off { visibility: hidden; }
+.lv-slot { width: 54px; height: 54px; flex: none; }
+.lv-node { position: relative; z-index: 1; flex: none; width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--border); background: var(--surface); color: var(--muted); font-size: 20px; cursor: pointer; display: grid; place-items: center; transition: transform 0.15s; }
+.lv-node:hover { transform: scale(1.08); }
+.lv-node.done { background: radial-gradient(circle at 35% 30%, #FFE27A, #E0A400 70%); border-color: #B88300; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.lv-node.current { background: var(--accent); border-color: var(--accent-strong); color: var(--on-accent); animation: lv-pulse 1.8s ease-out infinite; }
+.lv-num { position: absolute; right: -6px; bottom: -6px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--surface); border: 2px solid var(--border); color: var(--text); font-size: 11px; font-weight: 700; line-height: 18px; text-shadow: none; }
+@keyframes lv-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
+@media (prefers-reduced-motion: reduce) { .lv-node.current { animation: none; } }
+@media (max-width: 420px) {
+  .lv-node, .lv-slot { width: 44px; height: 44px; font-size: 17px; }
+  .lv-row.more::after { right: 20px; }
+  .lv-row.rev.more::after { left: 20px; }
+}
+
+/* shop: a small button on My learning opens the shop dialog */
+.shop-btn { font-weight: 700; }
+.shop-dialog { width: min(820px, calc(100vw - 32px)); }
+.shop-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.shop-tabs button { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer; }
+.shop-tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.shop-icon { width: 100%; height: 64px; display: grid; place-items: center; font-size: 34px; border-radius: 10px; background: var(--track); }
+.special-thumb { width: 100%; height: 96px; border-radius: 10px; border: 1px solid var(--border); background: center / cover no-repeat; display: flex; align-items: flex-end; padding: 8px; }
+.special-thumb span { background: rgba(0, 0, 0, 0.55); color: #fff; border-radius: 8px; padding: 2px 8px; font-size: 15px; }
+.shop-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.shop-item { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; justify-items: start; }
+.shop-item.using { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.bg-swatch { width: 100%; height: 64px; border-radius: 10px; border: 1px solid var(--border); background-color: var(--bg); }
+
+/* the colour backgrounds: the same wash on the swatch and on the page, light enough for text */
+.bg-classic { background-image: radial-gradient(circle at 15% 0%, var(--accent-soft), transparent 70%); }
+.bg-orange, html[data-bg="orange"] body { background-image: radial-gradient(80vw 60vh at 0% 0%, rgba(255, 140, 0, 0.42), transparent 75%), radial-gradient(70vw 60vh at 100% 100%, rgba(255, 140, 0, 0.32), transparent 75%), linear-gradient(rgba(255, 140, 0, 0.14), rgba(255, 140, 0, 0.14)); }
+.bg-pink, html[data-bg="pink"] body { background-image: radial-gradient(80vw 60vh at 0% 0%, rgba(236, 72, 153, 0.42), transparent 75%), radial-gradient(70vw 60vh at 100% 100%, rgba(236, 72, 153, 0.32), transparent 75%), linear-gradient(rgba(236, 72, 153, 0.14), rgba(236, 72, 153, 0.14)); }
+.bg-red, html[data-bg="red"] body { background-image: radial-gradient(80vw 60vh at 0% 0%, rgba(220, 38, 38, 0.42), transparent 75%), radial-gradient(70vw 60vh at 100% 100%, rgba(220, 38, 38, 0.32), transparent 75%), linear-gradient(rgba(220, 38, 38, 0.14), rgba(220, 38, 38, 0.14)); }
+.bg-purple, html[data-bg="purple"] body { background-image: radial-gradient(80vw 60vh at 0% 0%, rgba(139, 92, 246, 0.42), transparent 75%), radial-gradient(70vw 60vh at 100% 100%, rgba(139, 92, 246, 0.32), transparent 75%), linear-gradient(rgba(139, 92, 246, 0.14), rgba(139, 92, 246, 0.14)); }
+.bg-blue, html[data-bg="blue"] body { background-image: radial-gradient(80vw 60vh at 0% 0%, rgba(37, 99, 235, 0.42), transparent 75%), radial-gradient(70vw 60vh at 100% 100%, rgba(37, 99, 235, 0.32), transparent 75%), linear-gradient(rgba(37, 99, 235, 0.14), rgba(37, 99, 235, 0.14)); }
+.bg-gold, html[data-bg="gold"] body { background-image: radial-gradient(80vw 60vh at 0% 0%, rgba(217, 160, 0, 0.42), transparent 75%), radial-gradient(70vw 60vh at 100% 100%, rgba(217, 160, 0, 0.32), transparent 75%), linear-gradient(rgba(217, 160, 0, 0.14), rgba(217, 160, 0, 0.14)); }
+html[data-bg] body { background-color: var(--bg); background-attachment: fixed; }
+
+/* coin toast */
+.coin-toast { position: fixed; left: 50%; top: 72px; transform: translateX(-50%); z-index: 1000; padding: 10px 18px; border-radius: 999px; background: #E0A400; color: #241A00; font-weight: 800; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); animation: coin-pop 2.6s ease forwards; pointer-events: none; }
+@keyframes coin-pop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(0.9); } 12% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -14px); } }
+
+/* puzzles in the dialogs */
+.puzzle-q { font-size: 17px; line-height: 1.4; margin: 0; }
 .puzzle-options button { display: flex; align-items: center; gap: 12px; height: auto; padding: 12px 16px; line-height: 1.4; }
 .puzzle-options button:disabled { cursor: default; }
 .opt-letter { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--track); color: var(--text); font-size: 13px; font-weight: 700; }
@@ -24,13 +72,54 @@
   :root:not([data-theme="light"]) .puzzle-options button.is-right { background: #143A26; color: #A6E3BF; }
   :root:not([data-theme="light"]) .puzzle-options button.is-wrong { background: #3D1A17; color: #F2B1A9; }
 }
-.round-result { text-align: left; }
 .quiz-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--text); }
 .quiz-dialog::backdrop { background: rgba(15, 20, 25, 0.55); }
 .quiz-q { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 @media (max-width: 520px) {
-  .play-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .play-stats { gap: 6px; }
   .play-stats .card { padding: 10px; }
   .play-stats strong { font-size: 18px; }
   .quiz-dialog { padding: 14px; }
 }
+
+/* cursors (play.js sets --cursor) and trail effects */
+html[data-cursor], html[data-cursor] * { cursor: var(--cursor) !important; }
+.trail-dot { position: fixed; z-index: 2000; pointer-events: none; font-size: 16px; transform: translate(-50%, -50%); animation: trail-up 0.9s ease-out forwards; }
+@keyframes trail-up { from { opacity: 1; } to { opacity: 0; transform: translate(-50%, -160%) scale(0.5); } }
+
+/* special themes: picture, colours, fonts and banner all change. html:root beats the dark-mode rules. */
+html:root[data-special] { color-scheme: light; }
+html:root[data-special] body { background: var(--special-pic) center bottom / cover no-repeat fixed, var(--bg); }
+html:root[data-special] body::before, html:root[data-special] #fx-net { display: none; }
+html:root[data-special] .fx-banner, html:root[data-special] .fx-hero { background: var(--special-pic) center 70% / cover no-repeat !important; }
+html:root[data-special] .fx-banner::before, html:root[data-special] .fx-banner::after { opacity: 0.35; }
+html:root[data-special] .card, html:root[data-special] .quiz-q { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+html:root[data-special] h1, html:root[data-special] h2, html:root[data-special] .brand, html:root[data-special] .eyebrow { font-family: var(--special-font); letter-spacing: 0.02em; }
+
+html:root[data-special="pirate"] {
+  --special-pic: url("/static/themes/pirate.svg"); --special-font: "Pirata One", Georgia, serif;
+  --bg: #EAD7B0; --surface: #F8ECD2; --text: #2E1E10; --muted: #6B4F33; --border: #C9A877; --line: #DCC398;
+  --accent: #8E2F1C; --accent-strong: #6B1F10; --accent-soft: #F1D9B8; --on-accent: #FFF6E6; --track: #E2CDA5;
+  --focus: #8E2F1C; --fx-a: #8E2F1C; --fx-b: #B8860B; --fx-c: #2F6E8A; --fx-glow: rgba(142, 47, 28, 0.35); --fx-edge: #C9A877;
+}
+html:root[data-special="pirate"] body { font-family: Georgia, "Times New Roman", serif; }
+html:root[data-special="pirate"] h1 { font-size: clamp(32px, 6vw, 46px); }
+
+html:root[data-special="space"] {
+  --special-pic: url("/static/themes/space.svg"); --special-font: "Orbitron", system-ui, sans-serif; color-scheme: dark;
+  --bg: #070B1F; --surface: #121A3A; --text: #E8ECFF; --muted: #A9B2DA; --border: #2A3570; --line: #1E2858;
+  --accent: #8C7BFF; --accent-strong: #B9AEFF; --accent-soft: #231F5C; --on-accent: #0A0A20; --track: #1E2858;
+  --warn-bg: #3A2A12; --warn-text: #F3C78A; --focus: #B9AEFF; --fx-a: #8C7BFF; --fx-b: #3FB3FF; --fx-c: #FF8FD8; --fx-glow: rgba(140, 123, 255, 0.4); --fx-edge: #2A3570;
+}
+html:root[data-special="space"] body { background-position: center; }
+
+html:root[data-special="arcade"] {
+  --special-pic: url("/static/themes/arcade.svg"); --special-font: "Press Start 2P", ui-monospace, monospace; color-scheme: dark;
+  --bg: #0D0221; --surface: #1A0B3D; --text: #F5F0FF; --muted: #C9B8F0; --border: #FF2E97; --line: #3A1F6E;
+  --accent: #00E5F0; --accent-strong: #7FF8FF; --accent-soft: #10305A; --on-accent: #0D0221; --track: #3A1F6E;
+  --warn-bg: #3D1530; --warn-text: #FFB3DA; --focus: #00E5F0; --fx-a: #00E5F0; --fx-b: #FF2E97; --fx-c: #FFE45C; --fx-glow: rgba(255, 46, 151, 0.45); --fx-edge: #FF2E97;
+}
+html:root[data-special="arcade"] h1 { font-size: clamp(18px, 3.4vw, 26px); line-height: 1.5; }
+html:root[data-special="arcade"] h2 { font-size: 14px; line-height: 1.6; }
+html:root[data-special="arcade"] .brand, html:root[data-special="arcade"] .eyebrow { font-size: 11px; }
+html:root[data-special="arcade"] .card { box-shadow: 0 0 0 1px #FF2E97, 0 0 18px rgba(255, 46, 151, 0.25); }

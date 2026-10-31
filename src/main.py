@@ -33,9 +33,6 @@ Endpoints (all JSON):
     GET  /api/whatif                 the trend inputs a what-if may change, and ready-made examples
     POST /api/whatif                 same body as /api/match + trend_changes -> what changes: inputs,
                                      signals, trend scores and the student's role ranks, before and after
-    GET  /api/puzzles                the puzzle game: IT areas, levels and puzzle counts
-    GET  /api/puzzles/round          ?area=&level=  that set's puzzles (no answers)
-    POST /api/puzzles/check          puzzle id + chosen option -> right or wrong, and why
     GET  /api/puzzles/daily          today's daily challenge (LLM-written, or from the bank)
     POST /api/puzzles/daily/check    date + chosen option -> right or wrong, and why
     POST /api/puzzles/video          learning-path video URL -> 5 questions on its topic
@@ -673,27 +670,6 @@ def puzzle_call(fn, *args):
         return jsonify(fn(*args))
     except puzzles.PuzzleError as e:
         raise BadRequest(str(e)) from None
-
-
-@route("GET", "/api/puzzles")
-def puzzle_menu(request):
-    return jsonify(**puzzles.summary(), llm=puzzles.llm_status(), video_pass=puzzles.VIDEO_PASS,
-                   video_questions=puzzles.VIDEO_QUESTIONS)
-
-
-@route("GET", "/api/puzzles/round")
-def puzzle_round(request):
-    area, level = request.args.get("area"), request.args.get("level")
-    try:
-        return jsonify(area=area, level=level, puzzles=puzzles.round_for(area, level))
-    except puzzles.PuzzleError as e:
-        raise BadRequest(str(e)) from None
-
-
-@route("POST", "/api/puzzles/check")
-def puzzle_check(request):
-    data = body(request)
-    return puzzle_call(puzzles.check, data.get("id"), data.get("choice"))
 
 
 @route("GET", "/api/puzzles/daily")

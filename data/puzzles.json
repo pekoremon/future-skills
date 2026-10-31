@@ -1,10 +1,10 @@
 {
   "name": "Future Skills Puzzles",
-  "note": "Short IT puzzles in the 5 IT areas, 4 per area and level. 'correct' is the right option and 'wrong' the 3 others; the server shuffles them, so the page never knows the answer before it checks.",
+  "note": "Backup puzzles in the 5 IT areas, 4 per area and level: the daily challenge and the video check use them when the LLM is not set up or fails. 'correct' is the right option and 'wrong' the 3 others; the server shuffles them, so the page never knows the answer before it checks.",
   "levels": {
-    "easy": {"label": "Easy", "points": 10},
-    "medium": {"label": "Medium", "points": 20},
-    "hard": {"label": "Hard", "points": 30}
+    "easy": {"label": "Easy"},
+    "medium": {"label": "Medium"},
+    "hard": {"label": "Hard"}
   },
   "puzzles": [
     {"id": "SE-E1", "area": "software_dev", "level": "easy", "kind": "Predict the output",

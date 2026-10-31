@@ -1,7 +1,8 @@
-/* IT Puzzles (#/play): the daily challenge and practice rounds in the 5 IT areas, and the
-   5-question check a learning-path video needs before it counts as done. Loaded before app.js
-   and uses its helpers (api, cached, esc, render, readSaved) once a page opens. The server
-   keeps the answers; the page only learns one after it sends a choice. */
+/* My learning as a game (#/progress): each learning path is a map of levels, the daily
+   challenge and the video checks earn coins, and coins buy page backgrounds in the shop.
+   A video only counts as done after a 5-question check with 4 right. Loaded before app.js
+   and uses its helpers (api, cached, esc, render, progress, ...) once a page opens. The
+   server keeps the answers; the page only learns one after it sends a choice. */
 "use strict";
 
 const VIDEO_FORMATS = ["video", "playlist"];
@@ -9,15 +10,86 @@ const VIDEO_QUIZ_SIZE = 5;
 const VIDEO_PASS_MARK = 4;
 const PLAY_KEY = "future-skills-puzzles-v1";
 const LETTERS = "ABCD";
+const COINS = { perRight: 10, perfect: 30, daily: { easy: 30, medium: 40, hard: 50 } };
+// The shop. Coins come 30-50 a day from the daily challenge and up to 80 a video, so the first
+// colour takes a few days and a special theme a few weeks. Colours tint the background
+// (play.css); cursors swap the mouse pointer, and trails add an effect behind it; a special
+// theme changes everything: picture, colours, fonts, banner and cursor.
+const BACKGROUNDS = [
+  { id: "classic", name: "Classic", price: 0 },
+  { id: "orange", name: "Orange", price: 200 },
+  { id: "pink", name: "Pink", price: 300 },
+  { id: "red", name: "Red", price: 400 },
+  { id: "purple", name: "Purple", price: 500 },
+  { id: "blue", name: "Blue", price: 650 },
+  { id: "gold", name: "Gold", price: 1000 },
+];
+const CURSORS = [
+  { id: "arrow", name: "Normal", price: 0, icon: "↖" },
+  { id: "coin", name: "Coin", price: 150, icon: "🪙" },
+  { id: "star", name: "Star", price: 200, icon: "⭐" },
+  { id: "rocket", name: "Rocket", price: 250, icon: "🚀" },
+  { id: "cat", name: "Cat", price: 300, icon: "🐱" },
+  { id: "sword", name: "Sword", price: 400, icon: "🗡️" },
+  { id: "bubbles", name: "Bubble trail", price: 500, icon: "🫧", trail: ["🫧", "○", "◦"] },
+  { id: "sparkle", name: "Sparkle trail", price: 600, icon: "✨", trail: ["✨", "⭐", "✦", "·"] },
+];
+const SPECIALS = [
+  { id: "arcade", name: "Arcade", price: 1500, cursor: "👾", font: "Press+Start+2P", sample: "Press Start 2P",
+    desc: "Neon grid, pixel font and a space-invader cursor." },
+  { id: "space", name: "Outer space", price: 2000, cursor: "🚀", font: "Orbitron:wght@500;700", sample: "Orbitron",
+    desc: "Stars, a ringed planet, a sci-fi font and a rocket cursor." },
+  { id: "pirate", name: "Pirate ship", price: 2500, cursor: "🗡️", font: "Pirata+One", sample: "Pirata One",
+    desc: "A ship at sea, parchment pages, a pirate font and a sword cursor." },
+];
+const SHOP_TABS = [
+  { id: "colours", label: "Colours", items: BACKGROUNDS },
+  { id: "cursors", label: "Cursors & effects", items: CURSORS },
+  { id: "specials", label: "Special themes", items: SPECIALS },
+];
+const KIND = {
+  video: { icon: "▶", label: "YouTube video" }, playlist: { icon: "▶", label: "YouTube playlist" },
+  course: { icon: "📘", label: "Free course" }, project: { icon: "🛠", label: "Project" },
+  certification: { icon: "🏅", label: "Certification" },
+};
+const ROW = 5;  // levels per row of the map
 
-// { best: {"area|level": most right in one round}, daily: {"YYYY-MM-DD": {correct, points}} }, in this browser.
+// { coins, earned, daily: {"YYYY-MM-DD": {correct, coins}}, video: {url: coins earned},
+//   owned: [shop item ids], bg, cursor, special (null when off) }, in this browser.
 let play = null;
-const playStore = () => play || (play = (({ best, daily }) => ({ best: best || {}, daily: daily || {} }))(readSaved(PLAY_KEY) || {}));
+function playStore() {
+  if (!play) {
+    const s = readSaved(PLAY_KEY) || {};
+    const sold = (list, id) => list.some((b) => b.id === id);  // items the shop no longer sells are dropped
+    const all = [...BACKGROUNDS, ...CURSORS, ...SPECIALS];
+    play = { coins: s.coins || 0, earned: s.earned || 0, daily: s.daily || {}, video: s.video || {},
+      owned: [...new Set(["classic", "arrow", ...(s.owned || []).filter((id) => sold(all, id))])],
+      bg: sold(BACKGROUNDS, s.bg) ? s.bg : "classic", cursor: sold(CURSORS, s.cursor) ? s.cursor : "arrow",
+      special: sold(SPECIALS, s.special) ? s.special : null };
+    applyLook();
+  }
+  return play;
+}
 const savePlay = () => writeSaved(PLAY_KEY, playStore());
 
-// 4 of 4 right: 3 stars; 3: 2 stars; 2: 1 star.
-const starsFor = (right, total) => (!total || right < Math.ceil(total / 2) ? 0 : right >= total ? 3 : right >= total - 1 ? 2 : 1);
-const starHtml = (n) => `<span class="stars" role="img" aria-label="${n} of 3 stars">${"★".repeat(n)}<span class="stars-off">${"☆".repeat(3 - n)}</span></span>`;
+function showCoins() {
+  const el = document.getElementById("coin-count");
+  if (el) el.textContent = playStore().coins;
+}
+function addCoins(n, why) {
+  if (n <= 0) return;
+  const s = playStore();
+  s.coins += n;
+  s.earned += n;
+  savePlay();
+  showCoins();
+  const t = document.createElement("div");
+  t.className = "coin-toast";
+  t.setAttribute("role", "status");
+  t.textContent = `+${n} 🪙 ${why}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
 
 function streak(day) {
   // Days in a row with the daily challenge played, up to today (or yesterday, before today's is played).
@@ -29,226 +101,245 @@ function streak(day) {
   return n;
 }
 
-async function pagePlay(a, b) {
-  if (a === "daily") return pageDaily();
-  if (a && b) return pageRound(a, b);
-  return pagePlayHome();
-}
+/* ---------- the page ---------- */
 
-async function pagePlayHome() {
-  const [menu, daily] = await Promise.all([cached("/api/puzzles"), cached("/api/puzzles/daily").catch(() => null)]);
-  const store = playStore();
-  const levels = Object.fromEntries(menu.levels.map((l) => [l.id, l]));
-  let points = Object.values(store.daily).reduce((t, d) => t + (d.points || 0), 0);
-  let stars = 0;
-  let maxStars = 0;
-  for (const a of menu.areas) {
-    for (const l of menu.levels) {
-      const best = store.best[`${a.id}|${l.id}`] || 0;
-      points += best * l.points;
-      stars += starsFor(best, a.counts[l.id]);
-      maxStars += 3;
-    }
-  }
-  const played = daily && store.daily[daily.date];
+async function pageMyLearning() {
+  const daily = await cached("/api/puzzles/daily").catch(() => null);
+  const s = playStore();
+  const paths = trackedPaths();
+  const cleared = Object.keys(progress.done).length;
+  const played = daily && s.daily[daily.date];
   const dailyCard = daily ? `
     <section class="card stack daily-card" style="gap: 10px" aria-labelledby="daily-title">
       <div class="row" style="justify-content: space-between; gap: 8px">
         <p class="eyebrow">Daily challenge · ${esc(daily.date)}</p>
         <span class="chip">🔥 ${streak(daily.date)} day streak</span>
       </div>
-      <h2 id="daily-title">${esc(nameIn(daily.area_name))} · ${esc(levels[daily.level].label)}</h2>
-      <p class="muted small">One puzzle a day, the same for every student, worth double points (${daily.points}). ${daily.source === "llm" ? "Written today by AI." : "From the puzzle bank."} The area changes every day.</p>
+      <h2 id="daily-title">${esc(nameIn(daily.area_name))} · ${esc(daily.level_label)}</h2>
+      <p class="muted small">One IT puzzle a day, the same for every student. Solve it for 🪙 ${COINS.daily[daily.level]} coins. The area changes every day.</p>
       ${played
-        ? `<div class="${played.correct ? "note" : "warn"}">${played.correct ? `You solved today's puzzle: +${played.points} points.` : "Not this time."} A new puzzle comes out tomorrow.</div>`
-        : '<div class="row"><a class="btn primary" href="#/play/daily">Play today\'s puzzle</a></div>'}
+        ? `<div class="${played.correct ? "note" : "warn"}">${played.correct ? `Solved today: +${played.coins} 🪙.` : "Not this time."} A new challenge comes out tomorrow.</div>`
+        : '<div class="row"><button class="btn primary" type="button" id="daily-go">Play today\'s challenge</button></div>'}
     </section>` : "";
   render(`
   <div class="stack">
-    <div class="stack" style="gap: 6px">
-      <p class="eyebrow">Practise your IT skills</p>
-      <h1>IT Puzzles</h1>
-      <p class="lead">Short puzzles in the 5 IT areas: predict the output, spot the bug, read the log. Each round has 4 puzzles; get them all right for 3 stars.</p>
+    <div class="row" style="justify-content: space-between; align-items: flex-end; gap: 10px">
+      <div class="stack" style="gap: 6px">
+        <p class="eyebrow">Your learning journey</p>
+        <h1>My learning</h1>
+      </div>
+      <button class="btn shop-btn" type="button" id="shop-open">🛍️ Shop</button>
     </div>
     <div class="play-stats">
-      <div class="card"><strong>${points}</strong><span class="muted small">points</span></div>
-      <div class="card"><strong>${stars} / ${maxStars}</strong><span class="muted small">stars</span></div>
-      <div class="card"><strong>${Object.keys(store.daily).length}</strong><span class="muted small">daily puzzles played</span></div>
+      <div class="card"><strong>🪙 ${s.coins}</strong><span class="muted small">coins</span></div>
+      <div class="card"><strong>★ ${cleared}</strong><span class="muted small">levels cleared</span></div>
+      <div class="card"><strong>🔥 ${daily ? streak(daily.date) : 0}</strong><span class="muted small">day streak</span></div>
     </div>
     ${dailyCard}
-    <div class="play-areas">${menu.areas.map((a) => `
-      <section class="card stack" style="gap: 8px">
-        <h2>${esc(nameIn(a.name))}</h2>
-        ${menu.levels.map((l) => {
-          const best = store.best[`${a.id}|${l.id}`];
-          return `<a class="level-row" href="#/play/${esc(a.id)}/${esc(l.id)}">
-            <span><strong>${esc(l.label)}</strong> <span class="muted small">${l.points} points each</span></span>
-            ${best === undefined ? '<span class="muted small">Play &rarr;</span>' : starHtml(starsFor(best, a.counts[l.id]))}
-          </a>`;
-        }).join("")}
-      </section>`).join("")}
-    </div>
-    <p class="muted small">Your stars and points are saved in this browser.</p>
+    ${paths.length ? paths.map(pathMapHtml).join("") : `
+      <section class="card stack" style="gap: 10px">
+        <h2>No learning path yet</h2>
+        <p class="muted">Open a learning path from your jobs and tick the first thing you finish. It then shows here as a map of levels.</p>
+        <div class="row"><a class="btn primary" href="#/results">Go to my jobs &rarr;</a></div>
+      </section>`}
+    <p class="muted small">Coins, levels and shop items are saved in this browser.</p>
   </div>`);
-}
-
-// One puzzle at a time: the student picks an option, the server says if it is right and why.
-function runPuzzles({ title, list, check, done }) {
-  const results = [];
-  const show = (i) => {
-    const p = list[i];
-    render(`
-    <div class="stack play">
-      <a class="btn ghost" href="#/play" style="align-self: flex-start">&larr; All puzzles</a>
-      <div class="row" style="justify-content: space-between; gap: 8px">
-        <p class="eyebrow">${esc(title)}</p>
-        <span class="muted small">Puzzle ${i + 1} of ${list.length}</span>
-      </div>
-      <div class="progress" role="progressbar" aria-label="Round progress" aria-valuemin="0" aria-valuemax="${list.length}" aria-valuenow="${i}"><div style="width: ${(i / list.length) * 100}%"></div></div>
-      <section class="card stack" style="gap: 12px">
-        ${puzzleHtml(p)}
-        <div id="feedback" aria-live="polite"></div>
-      </section>
-    </div>`);
-    wireOptions(app, async (choice, buttons) => {
-      const r = await check(p, choice);
-      results.push(r);
-      markAnswer(buttons, choice, r);
-      const last = i + 1 === list.length;
-      document.getElementById("feedback").innerHTML = `
-        <div class="stack" style="gap: 10px">
-          <div class="${r.correct ? "note" : "warn"}"><strong>${r.correct ? `Right! +${r.points} points` : "Not quite."}</strong>${r.correct ? "" : ` The answer is ${LETTERS[r.answer]}.`}</div>
-          <p class="small">${esc(r.explain)}</p>
-          <div class="row"><button class="btn primary" type="button" id="next">${last ? "See your result" : "Next puzzle"} &rarr;</button></div>
-        </div>`;
-      const next = document.getElementById("next");
-      next.onclick = () => (last ? done(results) : show(i + 1));
-      next.focus();
-    });
-  };
-  show(0);
-}
-
-function puzzleHtml(p, n) {
-  return `
-    <span class="chip plain" style="align-self: flex-start">${esc(p.kind)}</span>
-    <h2 class="puzzle-q">${n ? `${n}. ` : ""}${esc(p.prompt)}</h2>
-    ${p.code ? `<pre class="code" data-no-i18n>${esc(p.code)}</pre>` : ""}
-    <div class="options puzzle-options" role="group" aria-label="Answers" data-no-i18n>${p.options.map((o, i) => `
-      <button type="button" data-i="${i}"><span class="opt-letter">${LETTERS[i]}</span><span>${esc(o)}</span></button>`).join("")}
-    </div>`;
-}
-
-// Calls pick(choice, buttons) once, on the first option clicked inside root.
-function wireOptions(root, pick) {
-  const buttons = [...root.querySelectorAll(".puzzle-options button")];
-  buttons.forEach((b) => {
-    b.onclick = async () => {
-      buttons.forEach((x) => { x.disabled = true; });
-      b.setAttribute("aria-pressed", "true");
-      try {
-        await pick(Number(b.dataset.i), buttons);
-      } catch (e) {
-        buttons.forEach((x) => { x.disabled = false; });
-        b.removeAttribute("aria-pressed");
-        alert(`Could not check the answer: ${e.message}`);
-      }
+  document.getElementById("shop-open").onclick = () => openShop();
+  document.getElementById("daily-go")?.addEventListener("click", () => dailyChallenge(daily));
+  app.querySelectorAll("[data-level]").forEach((b) => {
+    b.onclick = () => levelDialog(b.dataset.path, b.dataset.level, Number(b.dataset.n));
+  });
+  app.querySelectorAll("[data-untrack]").forEach((b) => {
+    b.onclick = () => {
+      delete progress.paths[b.dataset.untrack];  // ticks stay, so they come back if the path is opened again
+      saveProgress();
+      pageMyLearning();
     };
   });
 }
 
-function markAnswer(buttons, choice, r) {
-  buttons.forEach((x, i) => {
-    x.removeAttribute("aria-pressed");
-    if (i === r.answer) x.classList.add("is-right");
-    else if (i === choice) x.classList.add("is-wrong");
+// One path as rows of levels that snake left-right, right-left, joined by a line.
+function pathMapHtml(p) {
+  const keys = Object.keys(p.items);
+  const current = keys.findIndex((k) => !progress.done[k]);
+  const node = (k, i) => {
+    const m = (p.meta || {})[k] || {};
+    const kind = KIND[m.kind] || { icon: "•", label: "Item" };
+    const done = Boolean(progress.done[k]);
+    const cls = done ? "done" : i === current ? "current" : "todo";
+    return `<button type="button" class="lv-node ${cls}" data-path="${esc(p.id)}" data-level="${esc(k)}" data-n="${i + 1}"
+      aria-label="Level ${i + 1}: ${esc(m.title || kind.label)}${done ? " (cleared)" : ""}" title="${esc(m.title || kind.label)}">
+      <span class="lv-icon" aria-hidden="true">${done ? "★" : kind.icon}</span><span class="lv-num" aria-hidden="true">${i + 1}</span>
+    </button>`;
+  };
+  const rows = [];
+  for (let r = 0; r * ROW < keys.length; r += 1) {
+    const slice = keys.slice(r * ROW, r * ROW + ROW);
+    const cells = [];
+    for (let c = 0; c < ROW; c += 1) {
+      if (c) cells.push(`<span class="lv-link${c < slice.length && progress.done[slice[c - 1]] ? " on" : ""}${c >= slice.length ? " off" : ""}" aria-hidden="true"></span>`);
+      cells.push(c < slice.length ? node(slice[c], r * ROW + c) : '<span class="lv-slot" aria-hidden="true"></span>');
+    }
+    rows.push(`<div class="lv-row${r % 2 ? " rev" : ""}${(r + 1) * ROW < keys.length ? " more" : ""}">${cells.join("")}</div>`);
+  }
+  const next = current >= 0 ? (p.meta || {})[keys[current]] : null;
+  return `
+    <article class="card stack" style="gap: 12px">
+      <div class="row" style="justify-content: space-between; gap: 8px">
+        <h2>${esc(p.name)}</h2>
+        ${p.pct === 100 ? '<span class="chip">All levels cleared 🏆</span>' : `<span class="chip plain">${esc(nameIn(p.area || "IT"))}</span>`}
+      </div>
+      ${progressHtml(p, state.hoursPerWeek)}
+      ${next ? `<p class="small">Next level: <strong>${esc(next.title)}</strong></p>` : ""}
+      <div class="lv-map" role="group" aria-label="Levels of ${esc(p.name)}">${rows.join("")}</div>
+      <div class="row">
+        <a class="btn" href="#/learn/${esc(p.id)}">Open the full path &rarr;</a>
+        <button class="btn ghost" type="button" data-untrack="${esc(p.id)}">Stop tracking</button>
+      </div>
+    </article>`;
+}
+
+function levelDialog(pathId, key, n) {
+  const p = progress.paths[pathId];
+  const m = (p.meta || {})[key] || { title: `Level ${n}`, kind: "", url: "" };
+  const kind = KIND[m.kind] || { icon: "•", label: "Item" };
+  const isVideo = VIDEO_FORMATS.includes(m.kind);
+  const done = Boolean(progress.done[key]);
+  const { dialog, frame } = openDialog();
+  frame(`Level ${n} · ${kind.label}`, m.title, `
+    ${done
+      ? `<div class="note">Cleared on ${esc(progress.done[key])} ★${progress.quizzes[key] ? ` · check ${progress.quizzes[key].score}/${progress.quizzes[key].total}` : ""}</div>`
+      : `<p class="small muted">${isVideo ? `Watch it, then pass a ${VIDEO_QUIZ_SIZE}-question check (${VIDEO_PASS_MARK} right) to clear this level. Every right answer earns 🪙 ${COINS.perRight}; all ${VIDEO_QUIZ_SIZE} right earns 🪙 ${COINS.perfect} more.` : "Finish it, then mark the level as cleared."}</p>`}
+    <div class="row">
+      ${/^https?:\/\//i.test(m.url || "") ? `<a class="btn" href="${safeUrl(m.url)}" target="_blank" rel="noopener">Open ${isVideo ? "video" : "it"} ↗</a>` : ""}
+      ${done ? '<button class="btn ghost" type="button" id="lv-undo">Mark as not done</button>'
+        : `<button class="btn primary" type="button" id="lv-done">${isVideo && !progress.quizzes[key] ? "I've watched it: start the check" : "Mark as cleared"}</button>`}
+    </div>`);
+  const finish = () => {
+    progress.done[key] = today();
+    p.updated = today();
+    saveProgress();
+    pageMyLearning();
+  };
+  dialog.querySelector("#lv-done")?.addEventListener("click", () => {
+    if (isVideo && !progress.quizzes[key]) {
+      dialog.close();
+      videoQuiz(key, m.title, (r) => { progress.quizzes[key] = { score: r.score, total: r.total, date: today() }; finish(); });
+    } else {
+      dialog.close();
+      finish();
+    }
+  });
+  dialog.querySelector("#lv-undo")?.addEventListener("click", () => {
+    delete progress.done[key];
+    saveProgress();
+    dialog.close();
+    pageMyLearning();
   });
 }
 
-async function pageRound(area, level) {
-  const [menu, round] = await Promise.all([cached("/api/puzzles"), api(`/api/puzzles/round?area=${encodeURIComponent(area)}&level=${encodeURIComponent(level)}`)]);
-  const areaInfo = menu.areas.find((a) => a.id === area);
-  const levelIds = menu.levels.map((l) => l.id);
-  const levelInfo = menu.levels.find((l) => l.id === level);
-  const title = `${nameIn(areaInfo.name)} · ${levelInfo.label}`;
-  runPuzzles({
-    title,
-    list: round.puzzles,
-    check: (p, choice) => api("/api/puzzles/check", { body: JSON.stringify({ id: p.id, choice }) }),
-    done: (results) => {
-      const right = results.filter((r) => r.correct).length;
-      const total = results.length;
-      const key = `${area}|${level}`;
-      const store = playStore();
-      const before = store.best[key];
-      if (before === undefined || right > before) { store.best[key] = right; savePlay(); }
-      const next = levelIds[levelIds.indexOf(level) + 1];
-      render(`
-      <div class="stack play">
-        <section class="card stack round-result" style="gap: 12px">
-          <p class="eyebrow">${esc(title)}</p>
-          <h1>${right} of ${total} right</h1>
-          <div class="big-stars">${starHtml(starsFor(right, total))}</div>
-          <p>${right === total ? "Perfect round!" : right >= total - 1 ? "Nearly perfect. One more try for 3 stars?" : right >= total / 2 ? "Good start. Read the explanations and try again." : "This one is tricky. Try the round again, or start one level lower."}
-            +${results.reduce((t, r) => t + r.points, 0)} points${before !== undefined && right <= before ? ` (your best is still ${before} of ${total})` : ""}.</p>
-          <div class="row">
-            ${next && right >= total - 1 ? `<a class="btn primary" href="#/play/${esc(area)}/${esc(next)}">Try ${esc(menu.levels.find((l) => l.id === next).label)} &rarr;</a>` : ""}
-            <button class="btn${next && right >= total - 1 ? "" : " primary"}" type="button" id="again">Play again</button>
-            <a class="btn ghost" href="#/play">All puzzles</a>
-          </div>
-        </section>
-        <section class="card stack" style="gap: 6px">
-          <h2>Use it on your career path</h2>
-          <p class="small muted">Puzzles are practice only; the IT skills test is what counts towards your job matches.</p>
-          <div class="row"><a class="btn" href="#/test">Take the IT skills test</a><a class="btn ghost" href="#/results">My job matches</a></div>
-        </section>
-      </div>`);
-      document.getElementById("again").onclick = () => pageRound(area, level);
-    },
-  });
+/* ---------- shop: colours, cursors and effects, special themes ---------- */
+
+const emojiCursor = (ch) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"><text x="2" y="27" font-size="26">${ch}</text></svg>`)}") 6 6, auto`;
+
+// Puts the saved colour, cursor, trail and special theme on the page (index.html sets the
+// colour and theme before first paint; this adds the cursor, fonts and trail).
+function applyLook() {
+  const s = play;
+  const root = document.documentElement;
+  const special = SPECIALS.find((x) => x.id === s.special);
+  if (special) { root.dataset.special = special.id; delete root.dataset.bg; }
+  else { delete root.dataset.special; if (s.bg && s.bg !== "classic") root.dataset.bg = s.bg; else delete root.dataset.bg; }
+  const cursor = CURSORS.find((c) => c.id === s.cursor);
+  const icon = special ? special.cursor : cursor && cursor.id !== "arrow" && !cursor.trail ? cursor.icon : null;
+  if (icon) { root.dataset.cursor = "on"; root.style.setProperty("--cursor", emojiCursor(icon)); }
+  else { delete root.dataset.cursor; root.style.removeProperty("--cursor"); }
+  trailChars = cursor && cursor.trail ? cursor.trail : null;
+  if (special && !document.getElementById(`font-${special.id}`)) {
+    const link = document.createElement("link");
+    link.id = `font-${special.id}`;
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${special.font}&display=swap`;
+    document.head.appendChild(link);
+  }
 }
 
-async function pageDaily() {
-  render('<div class="card row" role="status"><span class="spinner" aria-hidden="true"></span><strong>Getting today\'s puzzle…</strong></div>');
-  const daily = await cached("/api/puzzles/daily");
-  const store = playStore();
-  if (store.daily[daily.date]) { location.hash = "#/play"; return; }
-  const level = (await cached("/api/puzzles")).levels.find((l) => l.id === daily.level);
-  runPuzzles({
-    title: `Daily challenge · ${daily.date} · ${nameIn(daily.area_name)} · ${level.label}`,
-    list: [daily.puzzle],
-    check: (p, choice) => api("/api/puzzles/daily/check", { body: JSON.stringify({ date: daily.date, choice }) }),
-    done: ([r]) => {
-      store.daily[daily.date] = { correct: r.correct, points: r.points };
+// Trail effects: a few characters that float up and fade behind the mouse.
+let trailChars = null;
+let trailLast = 0;
+const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+document.addEventListener("mousemove", (e) => {
+  if (!trailChars || calm.matches || e.timeStamp - trailLast < 40) return;
+  trailLast = e.timeStamp;
+  const dot = document.createElement("span");
+  dot.className = "trail-dot";
+  dot.setAttribute("aria-hidden", "true");
+  dot.textContent = trailChars[Math.floor(Math.random() * trailChars.length)];
+  dot.style.left = `${e.clientX}px`;
+  dot.style.top = `${e.clientY}px`;
+  document.body.appendChild(dot);
+  setTimeout(() => dot.remove(), 900);
+});
+
+function openShop(tab = "colours") {
+  const { dialog, frame } = openDialog();
+  dialog.classList.add("shop-dialog");
+  const draw = (current) => {
+    const s = playStore();
+    const t = SHOP_TABS.find((x) => x.id === current);
+    const equipped = (kind, id) => (kind === "colours" ? s.bg === id && !s.special : kind === "cursors" ? s.cursor === id : s.special === id);
+    const preview = (kind, it) => (kind === "colours" ? `<div class="bg-swatch bg-${it.id}" aria-hidden="true"></div>`
+      : kind === "cursors" ? `<div class="shop-icon" aria-hidden="true">${it.icon}</div>`
+      : `<div class="special-thumb" aria-hidden="true" style="background-image: url('/static/themes/${it.id}.svg')"><span style="font-family: '${it.sample}', serif">Aa ${it.cursor}</span></div>`);
+    frame("Shop", `🪙 ${s.coins} coins`, `
+      <div class="shop-tabs" role="tablist">${SHOP_TABS.map((x) => `<button type="button" role="tab" aria-selected="${x.id === current}" data-tab="${x.id}">${esc(x.label)}</button>`).join("")}</div>
+      ${current === "colours" && s.special ? '<p class="small warn">A special theme is on, so colours are hidden. Turn it off on the Special themes tab.</p>' : ""}
+      <div class="shop-grid">${t.items.map((it) => {
+        const owned = s.owned.includes(it.id);
+        const on = equipped(current, it.id);
+        const action = on ? (current === "specials" ? `<button class="btn" type="button" data-off>Turn off</button>` : '<span class="chip">In use</span>')
+          : owned ? `<button class="btn" type="button" data-use="${it.id}">Use</button>`
+          : `<button class="btn${s.coins >= it.price ? " primary" : ""}" type="button" data-buy="${it.id}"${s.coins >= it.price ? "" : " disabled"}>🪙 ${it.price}</button>`;
+        return `<div class="shop-item${on ? " using" : ""}">${preview(current, it)}<strong>${esc(it.name)}</strong>${it.desc ? `<span class="muted small">${esc(it.desc)}</span>` : ""}${action}</div>`;
+      }).join("")}</div>`);
+    const use = (id) => {
+      if (current === "colours") { s.bg = id; s.special = null; } else if (current === "cursors") s.cursor = id; else s.special = id;
       savePlay();
-      render(`
-      <div class="stack play">
-        <section class="card stack round-result" style="gap: 12px">
-          <p class="eyebrow">Daily challenge · ${esc(daily.date)}</p>
-          <h1>${r.correct ? "Solved!" : "Not this time"}</h1>
-          <p>${r.correct ? `+${r.points} points. ` : ""}🔥 ${streak(daily.date)} day streak. A new puzzle comes out tomorrow.</p>
-          ${daily.source === "llm" ? '<p class="muted small">Today\'s puzzle was written by AI. If you think its answer is wrong, tell your lecturer or the Future Skills team.</p>' : ""}
-          <div class="row"><a class="btn primary" href="#/play">Practise more puzzles</a></div>
-        </section>
-      </div>`);
-    },
-  });
+      applyLook();
+      draw(current);
+    };
+    dialog.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => draw(b.dataset.tab); });
+    dialog.querySelectorAll("[data-use]").forEach((b) => { b.onclick = () => use(b.dataset.use); });
+    dialog.querySelector("[data-off]")?.addEventListener("click", () => { s.special = null; savePlay(); applyLook(); draw(current); });
+    dialog.querySelectorAll("[data-buy]").forEach((b) => {
+      b.onclick = () => {
+        const it = t.items.find((x) => x.id === b.dataset.buy);
+        if (!it || s.coins < it.price || s.owned.includes(it.id)) return;
+        s.coins -= it.price;
+        s.owned.push(it.id);
+        showCoins();
+        use(it.id);
+      };
+    });
+  };
+  draw(tab);
+  dialog.addEventListener("close", () => { if (location.hash === "#/progress") pageMyLearning(); });
 }
 
-/* ---------- video check: 5 questions, 4 right to mark a video done ---------- */
+/* ---------- dialogs: daily challenge and video check ---------- */
 
-function videoQuiz(url, title, onPass) {
+function openDialog() {
   const dialog = document.createElement("dialog");
   dialog.className = "quiz-dialog";
   dialog.setAttribute("aria-labelledby", "quiz-title");
   document.body.appendChild(dialog);
   dialog.addEventListener("close", () => dialog.remove());
-  const frame = (body) => {
+  const frame = (eyebrow, title, body) => {
     dialog.innerHTML = `
       <div class="stack" style="gap: 14px">
-        <div class="row" style="justify-content: space-between; gap: 8px; align-items: flex-start">
+        <div class="row" style="justify-content: space-between; gap: 8px; align-items: flex-start; flex-wrap: nowrap">
           <div class="stack" style="gap: 2px">
-            <p class="eyebrow">Quick check before it counts as done</p>
+            <p class="eyebrow">${esc(eyebrow)}</p>
             <h2 id="quiz-title">${esc(title)}</h2>
           </div>
           <button class="btn ghost" type="button" data-close aria-label="Close">✕</button>
@@ -257,19 +348,83 @@ function videoQuiz(url, title, onPass) {
       </div>`;
     dialog.querySelectorAll("[data-close]").forEach((b) => { b.onclick = () => dialog.close(); });
   };
+  dialog.showModal();
+  return { dialog, frame };
+}
+
+function puzzleHtml(p, n) {
+  return `
+    <span class="chip plain" style="align-self: flex-start">${esc(p.kind)}</span>
+    <h3 class="puzzle-q">${n ? `${n}. ` : ""}${esc(p.prompt)}</h3>
+    ${p.code ? `<pre class="code" data-no-i18n>${esc(p.code)}</pre>` : ""}
+    <div class="options puzzle-options" role="group" aria-label="Answers" data-no-i18n>${p.options.map((o, i) => `
+      <button type="button" data-i="${i}"><span class="opt-letter">${LETTERS[i]}</span><span>${esc(o)}</span></button>`).join("")}
+    </div>`;
+}
+
+function markAnswer(buttons, choice, r) {
+  buttons.forEach((x, i) => {
+    x.disabled = true;
+    x.removeAttribute("aria-pressed");
+    if (i === r.answer) x.classList.add("is-right");
+    else if (i === choice) x.classList.add("is-wrong");
+  });
+}
+
+function dailyChallenge(daily) {
+  const { dialog, frame } = openDialog();
+  const reward = COINS.daily[daily.level];
+  frame(`Daily challenge · ${daily.date}`, `${nameIn(daily.area_name)} · ${daily.level_label}`, `
+    <p class="small muted">Solve it for 🪙 ${reward}. One try only.</p>
+    <section class="stack quiz-q" style="gap: 10px">${puzzleHtml(daily.puzzle)}</section>
+    <div id="daily-feedback" aria-live="polite"></div>`);
+  const buttons = [...dialog.querySelectorAll(".puzzle-options button")];
+  buttons.forEach((b) => {
+    b.onclick = async () => {
+      buttons.forEach((x) => { x.disabled = true; });
+      const choice = Number(b.dataset.i);
+      let r;
+      try {
+        r = await api("/api/puzzles/daily/check", { body: JSON.stringify({ date: daily.date, choice }) });
+      } catch (e) {
+        buttons.forEach((x) => { x.disabled = false; });
+        alert(`Could not check the answer: ${e.message}`);
+        return;
+      }
+      markAnswer(buttons, choice, r);
+      const s = playStore();
+      s.daily[daily.date] = { correct: r.correct, coins: r.correct ? reward : 0 };
+      savePlay();
+      if (r.correct) addCoins(reward, "daily challenge");
+      dialog.querySelector("#daily-feedback").innerHTML = `
+        <div class="stack" style="gap: 10px">
+          <div class="${r.correct ? "note" : "warn"}"><strong>${r.correct ? `Solved! +${reward} 🪙` : `Not quite. The answer is ${LETTERS[r.answer]}.`}</strong> 🔥 ${streak(daily.date)} day streak.</div>
+          <p class="small">${esc(r.explain)}</p>
+          <div class="row"><button class="btn primary" type="button" data-close>Back to my levels</button></div>
+        </div>`;
+      dialog.querySelectorAll("[data-close]").forEach((x) => { x.onclick = () => dialog.close(); });
+      dialog.addEventListener("close", () => { if (location.hash === "#/progress") pageMyLearning(); });
+    };
+  });
+}
+
+// The 5-question check on a learning-path video. Coins: 10 per right answer and 30 more for
+// all 5, counted once per video (a retry only adds what beats the best try so far).
+function videoQuiz(url, title, onPass) {
+  const { dialog, frame } = openDialog();
+  const eyebrow = "Quick check before it counts as done";
   const start = async () => {
-    frame('<div class="row" role="status"><span class="spinner" aria-hidden="true"></span><strong>Writing your questions…</strong></div>');
+    frame(eyebrow, title, '<div class="row" role="status"><span class="spinner" aria-hidden="true"></span><strong>Writing your questions…</strong></div>');
     let quiz;
     try {
       quiz = await api("/api/puzzles/video", { body: JSON.stringify({ url }) });
     } catch (e) {
-      frame(`<div class="warn">Could not load the quiz: ${esc(e.message)}</div><div class="row"><button class="btn" type="button" data-close>Close</button></div>`);
+      frame(eyebrow, title, `<div class="warn">Could not load the check: ${esc(e.message)}</div><div class="row"><button class="btn" type="button" data-close>Close</button></div>`);
       return;
     }
     const answers = Array(quiz.questions.length).fill(null);
-    frame(`
-      <p class="small muted">Answer ${quiz.questions.length} questions on this video's topic${quiz.skills.length ? ` (${esc(quiz.skills.slice(0, 3).join(", "))})` : ""}. Get ${quiz.pass_mark} right and it is marked as done.
-        ${quiz.source === "llm" ? "The questions are written by AI from the video's title and skills." : "The questions come from the puzzle bank for this IT area."}</p>
+    frame(eyebrow, title, `
+      <p class="small muted">${quiz.questions.length} questions on this video's topic${quiz.skills.length ? ` (${esc(quiz.skills.slice(0, 3).join(", "))})` : ""}. Get ${quiz.pass_mark} right to clear it. Each right answer earns 🪙 ${COINS.perRight}; all ${quiz.questions.length} earns 🪙 ${COINS.perfect} more.</p>
       ${quiz.questions.map((q, i) => `<section class="stack quiz-q" style="gap: 10px" data-q="${i}">${puzzleHtml(q, i + 1)}</section>`).join("")}
       <div class="row"><button class="btn primary" type="button" id="quiz-submit" disabled>Check my answers</button><span class="muted small" id="quiz-left">${quiz.questions.length} left</span></div>`);
     dialog.querySelectorAll("[data-q]").forEach((sec) => {
@@ -297,23 +452,28 @@ function videoQuiz(url, title, onPass) {
       dialog.querySelectorAll("[data-q]").forEach((sec) => {
         const i = Number(sec.dataset.q);
         const res = r.results[i];
-        sec.querySelectorAll(".puzzle-options button").forEach((b) => { b.disabled = true; });
         markAnswer([...sec.querySelectorAll(".puzzle-options button")], answers[i], res);
-        sec.insertAdjacentHTML("beforeend", `<p class="small ${res.correct ? "muted" : ""}">${res.correct ? "✓ Right." : `✗ The answer is ${LETTERS[res.answer]}.`} ${esc(res.explain)}</p>`);
+        sec.insertAdjacentHTML("beforeend", `<p class="small">${res.correct ? "✓ Right." : `✗ The answer is ${LETTERS[res.answer]}.`} ${esc(res.explain)}</p>`);
       });
-      const verdict = `
+      const s = playStore();
+      const worth = r.score * COINS.perRight + (r.score === r.total ? COINS.perfect : 0);
+      const gain = Math.max(0, worth - (s.video[url] || 0));
+      if (gain) { s.video[url] = worth; savePlay(); addCoins(gain, "video check"); }
+      e.target.parentElement.outerHTML = `
         <div class="${r.passed ? "note" : "warn"} quiz-verdict" role="status">
-          <strong>${r.score} of ${r.total} right.</strong>
-          ${r.passed ? "Passed: this video is marked as done." : `You need ${r.pass_mark} to pass. Look again at the parts you missed, then try a new set of questions.`}
+          <strong>${r.score} of ${r.total} right${gain ? ` · +${gain} 🪙` : ""}.</strong>
+          ${r.passed ? "Level cleared ★" : `You need ${r.pass_mark} to clear it. Look again at the parts you missed, then try a new set of questions.`}
+          ${!gain && r.score ? '<span class="small">(Coins only come from beating your best try on this video.)</span>' : ""}
         </div>
         <div class="row">${r.passed ? '<button class="btn primary" type="button" data-close>Done</button>' : '<button class="btn primary" type="button" id="quiz-retry">Try new questions</button><button class="btn ghost" type="button" data-close>Later</button>'}</div>`;
-      e.target.parentElement.outerHTML = verdict;
       dialog.querySelector(".quiz-verdict").scrollIntoView({ block: "nearest" });
       dialog.querySelectorAll("[data-close]").forEach((b) => { b.onclick = () => dialog.close(); });
       if (r.passed) onPass(r);
       else dialog.querySelector("#quiz-retry").onclick = start;
     };
   };
-  dialog.showModal();
   start();
 }
+
+// The coin count and the shop look, once app.js has loaded (readSaved is defined there).
+window.addEventListener("DOMContentLoaded", showCoins);

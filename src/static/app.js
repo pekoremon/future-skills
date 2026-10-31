@@ -1837,12 +1837,17 @@ async function pageLearn(roleId) {
       </li>`).join("")}</ul>
     </details>` : "";
   // Every item on this page that can be ticked, with its hours (projects and certifications have none).
+  // meta: what My learning's level map shows for each item (title, kind and link), in path order.
   const items = {};
-  for (const r of [...p.stages.flatMap((st) => st.resources), ...p.skills.flatMap((k) => k.resources)]) items[r.url] = r.hours || null;
-  for (const x of p.projects) items[`project:${x.id}`] = null;
-  for (const c of p.certifications) items[`cert:${c.cert_id}`] = null;
+  const meta = {};
+  for (const r of [...p.stages.flatMap((st) => st.resources), ...p.skills.flatMap((k) => k.resources)]) {
+    items[r.url] = r.hours || null;
+    meta[r.url] = { title: r.title, kind: r.format, url: r.url };
+  }
+  for (const x of p.projects) { items[`project:${x.id}`] = null; meta[`project:${x.id}`] = { title: x.title, kind: "project", url: x.guide.url }; }
+  for (const c of p.certifications) { items[`cert:${c.cert_id}`] = null; meta[`cert:${c.cert_id}`] = { title: c.cert_name, kind: "certification", url: c.url }; }
   const track = () => {
-    progress.paths[roleId] = { name: p.role.name, area: p.role.area_name, personal: p.personal, items, updated: today() };
+    progress.paths[roleId] = { name: p.role.name, area: p.role.area_name, personal: p.personal, items, meta, updated: today() };
   };
   if (progress.paths[roleId]) { track(); saveProgress(); }
   render(`
@@ -1859,6 +1864,7 @@ async function pageLearn(roleId) {
     <section class="card stack" style="gap: 8px" aria-labelledby="progress-title">
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
+      <p class="small muted">Videos count once you pass a ${VIDEO_QUIZ_SIZE}-question check. Every right answer earns 🪙 coins. <a href="#/progress">See your level map &rarr;</a></p>
     </section>
     ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "", list(p.stages[1].resources)) : ""}
@@ -1893,36 +1899,7 @@ async function pageLearn(roleId) {
   });
 }
 
-/* ---------- my learning page ---------- */
-
-function pageProgress() {
-  const paths = trackedPaths();
-  const cards = paths.map((p) => `
-    <article class="card stack" style="gap: 10px">
-      <div class="row" style="gap: 8px">
-        <h2>${esc(p.name)}</h2>
-        ${p.pct === 100 ? '<span class="chip">Path complete ✓</span>' : `<span class="chip plain">${esc(p.area || "IT")}</span>`}
-      </div>
-      ${progressHtml(p, state.hoursPerWeek)}
-      <div class="row">
-        <a class="btn primary" href="#/learn/${esc(p.id)}">Continue &rarr;</a>
-        <button class="btn ghost" type="button" data-untrack="${esc(p.id)}">Stop tracking</button>
-      </div>
-    </article>`).join("");
-  render(`
-  <div class="stack">
-    <h1>My learning</h1>
-    ${paths.length ? `<p class="muted small">Saved in this browser.</p>${cards}`
-      : `<p class="muted">Nothing here yet. Open a learning path from your jobs and tick what you finish.</p><div class="row"><a class="btn primary" href="#/results">Go to my jobs &rarr;</a></div>`}
-  </div>`);
-  app.querySelectorAll("[data-untrack]").forEach((b) => {
-    b.onclick = () => {
-      delete progress.paths[b.dataset.untrack];  // ticks stay, so they come back if the path is opened again
-      saveProgress();
-      pageProgress();
-    };
-  });
-}
+/* ---------- my learning page: the level map, daily challenge and shop are in play.js ---------- */
 
 /* ---------- router ---------- */
 
@@ -1951,8 +1928,7 @@ async function route() {
     else if (page === "trends") await pageTrends();
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
-    else if (page === "progress") pageProgress();
-    else if (page === "play") await pagePlay(parts[1], parts[2]);
+    else if (page === "progress") await pageMyLearning();
     else await pageTrends();
   } catch (e) {
     showError(e);

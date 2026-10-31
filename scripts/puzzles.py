@@ -1,17 +1,18 @@
-"""IT puzzles: the 5-area practice game, the daily challenge and the video check quizzes.
-
-Practice: data/puzzles.json has 4 puzzles per IT area and level (easy, medium, hard). Each
-puzzle stores its right option and 3 wrong ones; the options are shuffled the same way for
-every request (seeded by the puzzle id), and the page only learns the answer from check().
+"""The daily challenge and the video check quizzes on My learning.
 
 Daily challenge: one puzzle per day (Malaysia time), the same for every student. The area
 and level rotate by date. The LLM configured for explain.py writes a fresh puzzle; without
-an API key, or when its reply fails the format check, the day's puzzle comes from the bank.
-Puzzles are kept in memory and in .cache/daily_puzzles.json, so a restart keeps the answer.
+an API key, or when its reply fails the format check, the day's puzzle comes from the bank
+in data/puzzles.json. Puzzles are kept in memory and in .cache/daily_puzzles.json, so a
+restart keeps the answer.
 
 Video check: before a YouTube video on a learning path counts as done, the student answers
 5 multiple-choice questions on its topic and needs 4 right. The LLM writes them from the
 video's title and the skills it teaches; the fallback is bank puzzles from the video's area.
+
+Every puzzle stores its right option and 3 wrong ones. The options are shuffled the same way
+for every request (seeded by the puzzle id), and the page only learns the answer after it
+sends a choice. Coins for right answers are counted by the page (play.js).
 """
 
 import hashlib
@@ -57,10 +58,6 @@ def load_bank() -> dict:
     return _bank
 
 
-def by_id() -> dict:
-    return {p["id"]: p for p in load_bank()["puzzles"]}
-
-
 def area_names() -> dict:
     return {a["id"]: a["name"] for a in matching.load_areas()}
 
@@ -85,36 +82,6 @@ def graded(p: dict, choice, seed: str | None = None) -> dict:
         raise PuzzleError(f"'choice' must be an option number 0-{len(options) - 1}")
     return {"id": p["id"], "correct": choice == answer, "answer": answer, "answer_text": options[answer],
             "explain": p["explain"]}
-
-
-def summary() -> dict:
-    """Areas, levels and how many puzzles each pair has, for the game's menu."""
-    bank, names = load_bank(), area_names()
-    counts = Counter((p["area"], p["level"]) for p in bank["puzzles"])
-    return {"name": bank["name"], "levels": [{"id": lv, **bank["levels"][lv]} for lv in LEVELS],
-            "areas": [{"id": a, "name": names.get(a, a), "counts": {lv: counts[(a, lv)] for lv in LEVELS}}
-                      for a in AREAS]}
-
-
-def check_area_level(area, level) -> None:
-    if area not in AREAS:
-        raise PuzzleError(f"'area' must be one of {AREAS}")
-    if level not in LEVELS:
-        raise PuzzleError(f"'level' must be one of {LEVELS}")
-
-
-def round_for(area: str, level: str) -> list[dict]:
-    check_area_level(area, level)
-    return [public(p) for p in load_bank()["puzzles"] if p["area"] == area and p["level"] == level]
-
-
-def check(puzzle_id: str, choice) -> dict:
-    p = by_id().get(puzzle_id)
-    if p is None:
-        raise PuzzleError(f"unknown puzzle id '{puzzle_id}'")
-    points = load_bank()["levels"][p["level"]]["points"]
-    result = graded(p, choice)
-    return {**result, "points": points if result["correct"] else 0}
 
 
 # ---------- LLM ----------
@@ -253,9 +220,9 @@ def daily_stored(day: date) -> dict:
 def daily(day: date | None = None) -> dict:
     day = day or today()
     s = daily_stored(day)
-    level = load_bank()["levels"][s["level"]]
     return {"date": s["date"], "area": s["area"], "area_name": area_names().get(s["area"], s["area"]),
-            "level": s["level"], "points": level["points"] * 2, "source": s["source"], "model": s.get("model"),
+            "level": s["level"], "level_label": load_bank()["levels"][s["level"]]["label"],
+            "source": s["source"], "model": s.get("model"),
             "puzzle": public(s, s["id"])}
 
 
@@ -272,9 +239,7 @@ def parse_day(value) -> date:
 def check_daily(value, choice) -> dict:
     day = parse_day(value)
     s = daily_stored(day)
-    result = graded(s, choice, s["id"])
-    points = load_bank()["levels"][s["level"]]["points"] * 2
-    return {**result, "date": s["date"], "points": points if result["correct"] else 0}
+    return {**graded(s, choice, s["id"]), "date": s["date"], "level": s["level"]}
 
 
 # ---------- video check quiz ----------
