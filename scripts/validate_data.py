@@ -88,7 +88,7 @@ ALLOWED = {
     ("role_skills.csv", "row_type"): {"skill_knowledge", "in_demand_tech"},
     ("sdg_map.csv", "link_strength"): {"direct", "indirect"},
     ("trends.csv", "entity_type"): {"subdomain", "mycol_occupation", "occupation", "occupation_group",
-                                    "sector"},
+                                    "sector", "graduates"},
     ("trends.csv", "is_proxy"): {"TRUE", "FALSE"},
     ("trends.csv", "is_censored"): {"TRUE", "FALSE"},
     ("trends.csv", "series_break_flag"): {"TRUE", "FALSE"},

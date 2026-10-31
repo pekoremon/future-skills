@@ -152,13 +152,14 @@ function vizKpis(t, roles) {
       same ? `<span class="muted">All sectors:</span> ${vizSigned(vizNum(same.value))}%` : "",
     ]));
   }
-  const wage = vizSeries(t.inputs, "sector", "ict", "median_monthly_wage").pop();
-  const wageAll = vizSeries(t.inputs, "sector", "overall", "median_monthly_wage").pop();
-  const wageGrowth = vizSeries(t.inputs, "sector", "ict", "median_wage_growth_yoy").pop();
+  // DOSM publishes graduate salaries only for all graduates, not by field or age.
+  const grad = (who) => vizSeries(t.inputs, "graduates", who, "median_monthly_wage").pop();
+  const wage = grad("all"), degree = grad("degree"), diploma = grad("diploma");
   if (wage) {
-    tiles.push(tile("ICT median monthly wage", `RM ${vizInt(wage.value)}`, [
-      wageAll ? `<span class="muted">All sectors:</span> RM ${vizInt(wageAll.value)}` : "",
-      wageGrowth ? `<span class="muted">Change in a year:</span> ${vizSigned(vizNum(wageGrowth.value))}%` : "",
+    tiles.push(tile("Graduate median monthly wage", `RM ${vizInt(wage.value)}`, [
+      degree ? `<span class="muted">Degree:</span> RM ${vizInt(degree.value)}` : "",
+      diploma ? `<span class="muted">Diploma:</span> RM ${vizInt(diploma.value)}` : "",
+      `<span class="muted">DOSM Graduates Statistics ${esc(wage.period_start.slice(0, 4))}; all fields and ages</span>`,
     ]));
   }
   const fastest = vizAiGrowth(t).filter((r) => r.growth !== null).sort((a, b) => b.growth - a.growth)[0];
