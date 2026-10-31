@@ -87,7 +87,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── certifications.csv
 │   ├── sdg_map.csv
 │   ├── courses.csv
-│   ├── learning_resources.csv # 137 free videos and courses, each link checked
+│   ├── learning_resources.csv # 158 free videos and courses, each link checked
 │   ├── interest_items.json  # 36 team-written RIASEC items, 24 tagged with an IT area
 │   └── sample_profiles.json # Fictional demo profiles only
 ├── docs/                    # Screenshots, diagrams
