@@ -127,6 +127,7 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
             hours += r["hours"]
         else:
             untimed += 1
+    hours = round(hours, 1)  # weeks follow the total the page shows
     return {
         "role": {"role_id": role_id, "name": role["role_name_en"], "it_area": role["it_area"],
                  "area_name": area["name"] if area else None, "job_zone": int(role["job_zone"]),
