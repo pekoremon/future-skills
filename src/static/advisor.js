@@ -10,6 +10,32 @@ const SOURCE_NAMES = { cv: "CV and tools", preference: "Interests", test: "Skill
 const GROUP_LABEL = { best_fit: "Best fit", can_do: "Can do", grow_into: "Wants to grow into" };
 const CLEAR_LEAD = 10;  // matching.CLEAR_LEAD: area-fit points the best area needs over the next one
 
+// The words Malaysian job ads use for each role (O*NET titles such as "Software Quality
+// Assurance Analysts and Testers" find almost nothing), for the job-search links.
+const JOB_SEARCH = {
+  IT01: "Software Developer", IT02: "Programmer", IT03: "QA Engineer", IT04: "Blockchain Developer",
+  IT05: "Data Scientist", IT06: "AI Research Scientist", IT07: "Business Intelligence Analyst",
+  IT08: "Database Administrator", IT09: "Database Architect", IT10: "Data Engineer",
+  IT11: "Security Analyst", IT12: "Penetration Tester", IT13: "Digital Forensics",
+  IT14: "Cybersecurity Engineer", IT15: "System Administrator", IT16: "Network Engineer",
+  IT17: "Network Support", IT18: "IT Support", IT19: "Solution Architect", IT20: "Web Developer",
+  IT21: "UI UX Designer", IT22: "Game Designer", IT23: "Web Administrator", IT27: "Statistician",
+  IT28: "Animator",
+};
+
+// Search links for a role on the government job portal and the two biggest job sites in
+// Malaysia (checked 2026-11-01: each opens a search without signing in).
+function jobLinks(m) {
+  const q = JOB_SEARCH[m.role_id] || m.role_name;
+  const sites = [
+    ["MYFutureJobs", `https://candidates.myfuturejobs.gov.my/search-jobs?what=${encodeURIComponent(q)}`],
+    ["JobStreet", `https://my.jobstreet.com/${encodeURIComponent(q.replace(/\s+/g, "-"))}-jobs`],
+    ["LinkedIn", `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q)}&location=Malaysia`],
+  ];
+  return `<div class="row no-print small" style="gap: 10px"><span class="muted">Find jobs</span>${sites.map(([name, url]) =>
+    `<a href="${safeUrl(url)}" target="_blank" rel="noopener">${name}</a>`).join("")}</div>`;
+}
+
 // Up to 2 questions from what the results say (sources that disagree, two areas close
 // together, a top job whose rank depends on the future, an area the student likes but
 // cannot do yet), then the next step for the top job.
@@ -149,6 +175,7 @@ async function pageAdvisor() {
             <strong><span>${i + 1}.</span> ${esc(m.role_name)}</strong>
             <div class="row" style="gap: 6px"><span class="chip plain">${esc(m.area_name || "Other IT area")}</span>${rangeBadge(m)}</div>
             <div class="legend parts">${parts(m)}</div>
+            ${jobLinks(m)}
           </div>
           <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
         </li>`).join("")}</ol>`
@@ -202,7 +229,7 @@ async function pageAdvisor() {
 // pages already translate keep their translation).
 const addWords = (dict, words) => { for (const k of Object.keys(words)) if (!(k in dict)) dict[k] = words[k]; };
 addWords(MS, {
-  "Seeing a career advisor?": "Akan berjumpa penasihat kerjaya?",
+  "Seeing a career advisor?": "Akan berjumpa penasihat kerjaya?", "Find jobs": "Cari kerja",
   "Take one page with your top jobs, skills to work on and questions to ask.": "Bawa satu halaman berisi pekerjaan teratas, kemahiran untuk diusahakan dan soalan untuk ditanya.",
   "Make my page": "Sediakan halaman saya", "Making your page…": "Sedang menyediakan halaman anda…",
   "Print or save as PDF": "Cetak atau simpan sebagai PDF", "For your career advisor": "Untuk penasihat kerjaya anda",
@@ -231,7 +258,7 @@ PATTERNS_MS.push(
   [/^(Realistic|Investigative|Artistic|Social|Enterprising|Conventional) (\d+)%$/, (m) => `${tr(m[1])} ${m[2]}%`],
 );
 addWords(ZH, {
-  "Seeing a career advisor?": "要见职业顾问吗？",
+  "Seeing a career advisor?": "要见职业顾问吗？", "Find jobs": "找工作",
   "Take one page with your top jobs, skills to work on and questions to ask.": "带上一页纸：你的首选职位、要补的技能和可以问的问题。",
   "Make my page": "生成我的页面", "Making your page…": "正在生成你的页面……",
   "Print or save as PDF": "打印或存为 PDF", "For your career advisor": "给你的职业顾问",
