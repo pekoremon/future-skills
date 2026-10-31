@@ -326,8 +326,6 @@ const MS = {
   "AI-era trend signals": "Isyarat trend era AI",
   "MALAYSIA IT STUDENT MARKET INSIGHTS": "WAWASAN PASARAN PELAJAR IT MALAYSIA",
   "Based on recent data, not a forecast.": "Berdasarkan data terkini, bukan ramalan.",
-  "Malaysia’s IT sector is demonstrating strong, positive momentum, driven by superior job growth that outperforms the national average, highly competitive graduate median wages and rapid AI integration, creating an expanding pool of high-value opportunities for tech graduates.":
-    "Sektor IT Malaysia menunjukkan momentum yang kukuh dan positif, didorong oleh pertumbuhan pekerjaan yang mengatasi purata nasional, gaji penengah graduan yang sangat kompetitif dan integrasi AI yang pesat, sekali gus mewujudkan lebih banyak peluang bernilai tinggi untuk graduan teknologi.",
   "Malaysian demand:": "Permintaan Malaysia:", "AI momentum:": "Momentum AI:", "· AI momentum:": "· Momentum AI:", "Malaysian demand": "Permintaan Malaysia", "AI momentum": "Momentum AI",
   "no data": "tiada data",
   "Each signal has a strength from −1 (falling) through 0 (flat) to +1 (rising) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average strength.":
@@ -531,8 +529,8 @@ const MS = {
   "Fastest-growing AI research": "Penyelidikan AI paling pantas berkembang",
   "arXiv, latest 6 months": "arXiv, 6 bulan terkini",
   "Trend score by IT area": "Skor trend mengikut bidang IT",
-  "You may wonder: Which IT areas does Malaysia need, and how fast is AI entering them? Let's check our future trend.":
-    "Anda mungkin tertanya-tanya: Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya? Mari lihat trend masa depan kita.",
+  "Which IT areas does Malaysia need, and how fast is AI entering them?": "Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya?",
+  "The trend scores below show each area.": "Skor trend di bawah menunjukkan setiap bidang.",
   "What is a Trend Score?": "Apakah Skor Trend?",
   "A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:": "Indeks 0–100 yang mengukur kelajuan pertumbuhan dan permintaan pasaran sesuatu bidang IT, dikira daripada dua aliran yang sama berat:",
   "Malaysian Demand:": "Permintaan Malaysia:",
@@ -962,8 +960,6 @@ const ZH = {
   "AI-era trend signals": "AI 时代趋势信号",
   "MALAYSIA IT STUDENT MARKET INSIGHTS": "马来西亚 IT 学生市场洞察",
   "Based on recent data, not a forecast.": "基于近期数据，并非预测。",
-  "Malaysia’s IT sector is demonstrating strong, positive momentum, driven by superior job growth that outperforms the national average, highly competitive graduate median wages and rapid AI integration, creating an expanding pool of high-value opportunities for tech graduates.":
-    "马来西亚 IT 行业正展现强劲的积极势头：就业增长高于全国平均水平，毕业生薪资中位数极具竞争力，AI 应用快速普及，为科技毕业生带来越来越多高价值的机会。",
   "Malaysian demand:": "马来西亚需求：", "AI momentum:": "AI 势头：", "· AI momentum:": "· AI 势头：", "Malaysian demand": "马来西亚需求", "AI momentum": "AI 势头",
   "no data": "没有数据",
   "Each signal has a strength from −1 (falling) through 0 (flat) to +1 (rising) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average strength.":
@@ -1167,8 +1163,8 @@ const ZH = {
   "Fastest-growing AI research": "增长最快的 AI 研究",
   "arXiv, latest 6 months": "arXiv，最近 6 个月",
   "Trend score by IT area": "各 IT 领域的趋势分数",
-  "You may wonder: Which IT areas does Malaysia need, and how fast is AI entering them? Let's check our future trend.":
-    "你可能会想：马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？一起来看看未来趋势。",
+  "Which IT areas does Malaysia need, and how fast is AI entering them?": "马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？",
+  "The trend scores below show each area.": "下面的趋势分列出每个领域。",
   "What is a Trend Score?": "什么是趋势分数？",
   "A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:": "0–100 的指数，衡量一个 IT 领域的增长速度和市场需求，由两个权重相同的部分计算：",
   "Malaysian Demand:": "马来西亚需求：",
