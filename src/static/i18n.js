@@ -142,6 +142,26 @@ const MS = {
   "Answer by what you would enjoy, not what you are already good at.": "Jawab berdasarkan apa yang anda akan seronok lakukan, bukan apa yang anda sudah mahir.",
   "Continue questionnaire": "Sambung soal selidik", "Start questionnaire": "Mula soal selidik",
   "Skip to step 3: the skills test": "Langkau ke langkah 3: ujian kemahiran",
+  // pirate crew (crew.js)
+  "Set sail: which crew role is yours?": "Belayar: peranan kru yang mana milik anda?",
+  "Every answer trains your sailor. At the end, they become one of six crew roles.": "Setiap jawapan melatih kelasi anda. Pada akhirnya, kelasi itu menjadi salah satu daripada enam peranan kru.",
+  "Answer by what you would enjoy, not what you are already good at. No role is better than another.": "Jawab berdasarkan apa yang anda akan seronok lakukan, bukan apa yang anda sudah mahir. Tiada peranan yang lebih baik daripada yang lain.",
+  "Start the voyage": "Mula belayar", "Continue the voyage": "Sambung pelayaran",
+  "Your interest map": "Peta minat anda", "Your sailor": "Kelasi anda", "Your crew role": "Peranan anda dalam kru",
+  "IT paths to look at:": "Bidang IT untuk diterokai:", "No role is better than another.": "Tiada peranan yang lebih baik daripada yang lain.",
+  "Shipwright": "Tukang Kapal", "Navigator": "Jurunavigasi", "Bard": "Pemuzik", "Ship's Doctor": "Doktor Kapal", "Captain": "Kapten", "Quartermaster": "Kuartermaster",
+  "You like building and fixing real things. On the ship, you keep everything working.": "Anda suka membina dan membaiki benda sebenar. Di kapal, anda pastikan semuanya berfungsi.",
+  "You like working out how things work. You read the stars and find the route.": "Anda suka mencari tahu bagaimana sesuatu berfungsi. Anda membaca bintang dan mencari laluan.",
+  "You like making things that look and feel good. You give the ship its style.": "Anda suka mencipta sesuatu yang cantik dan selesa digunakan. Anda memberi kapal gayanya sendiri.",
+  "You like helping people. The crew comes to you when they need help.": "Anda suka membantu orang. Anak kapal datang kepada anda apabila mereka perlukan bantuan.",
+  "You like leading and making decisions. You set the course and rally the crew.": "Anda suka memimpin dan membuat keputusan. Anda menetapkan haluan dan menyatukan anak kapal.",
+  "You like order and getting the details right. You keep the supplies and the treasure in check.": "Anda suka keteraturan dan memastikan butiran betul. Anda menjaga bekalan dan harta karun.",
+  "Hardware, networks, cloud infrastructure": "Perkakasan, rangkaian, infrastruktur awan",
+  "Data, AI, finding and fixing bugs": "Data, AI, mencari dan membaiki pepijat",
+  "Interface design, games, media": "Reka bentuk antara muka, permainan, media",
+  "IT support, training, education technology": "Sokongan IT, latihan, teknologi pendidikan",
+  "Project and product management, starting a business": "Pengurusan projek dan produk, memulakan perniagaan",
+  "Databases, cybersecurity, IT operations": "Pangkalan data, keselamatan siber, operasi IT",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "Soalan ditulis oleh pasukan, berdasarkan jenis minat RIASEC Holland seperti yang digunakan oleh",
   // interest items
   "← Back": "← Kembali", "Pause": "Jeda", "I would enjoy...": "Saya akan seronok...",
@@ -643,6 +663,9 @@ const MS = {
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
+// Crew titles on the interest results ("The Curious Captain"), crew.js.
+const CREW_ADJ_MS = { Handy: "Cekap", Curious: "Ingin Tahu", Creative: "Kreatif", Caring: "Prihatin", Bold: "Berani", Organised: "Teratur" };
+const CREW_ADJ_ZH = { Handy: "手巧的", Curious: "好奇的", Creative: "有创意的", Caring: "贴心的", Bold: "大胆的", Organised: "有条理的" };
 const byLength = (o) => Object.entries(o).sort((a, b) => b[0].length - a[0].length);
 const NAMES = { ms: byLength({ ...AREAS_MS, ...ROLES_MS, ...SDG_MS }), zh: byLength({ ...AREAS_ZH, ...ROLES_ZH, ...SDG_ZH }) };
 const names = (s) => {
@@ -672,6 +695,8 @@ const PATTERNS_MS = [
   [/^Your interest results$/, () => "Keputusan minat anda"],
   [/^IT skills test( result)?$/, (m) => (m[1] ? "Keputusan ujian kemahiran IT" : "Ujian kemahiran IT")],
   [/^Item (\d+) of (\d+)$/, (m) => `Item ${m[1]} daripada ${m[2]}`],
+  [/^The (Handy|Curious|Creative|Caring|Bold|Organised) (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => `${MS[m[2]]} yang ${CREW_ADJ_MS[m[1]]}`],
+  [/^The (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => MS[m[1]]],
   [/^([RIASEC]) · (\w+)$/, (m) => (MS[m[2]] ? `${m[1]} · ${MS[m[2]]}` : null)],
   [/^(.+\.) Type descriptions written by the team, based on$/, (m) => `${tr(m[1])} ${MS["Type descriptions written by the team, based on"]}`],
   [/^Question (\d+) of (\d+)$/, (m) => `Soalan ${m[1]} daripada ${m[2]}`],
@@ -846,6 +871,26 @@ const ZH = {
   "Answer by what you would enjoy, not what you are already good at.": "按你会不会喜欢来回答，而不是按你已经擅长什么。",
   "Continue questionnaire": "继续问卷", "Start questionnaire": "开始问卷",
   "Skip to step 3: the skills test": "跳到第 3 步：技能测验",
+  // pirate crew (crew.js)
+  "Set sail: which crew role is yours?": "扬帆出发：你是船上的哪个角色？",
+  "Every answer trains your sailor. At the end, they become one of six crew roles.": "每个回答都在训练你的小水手。最后，它会变成六种船员角色之一。",
+  "Answer by what you would enjoy, not what you are already good at. No role is better than another.": "按你会不会喜欢来回答，而不是按你已经擅长什么。没有哪个角色比别的更好。",
+  "Start the voyage": "开始航行", "Continue the voyage": "继续航行",
+  "Your interest map": "你的兴趣地图", "Your sailor": "你的小水手", "Your crew role": "你的船员角色",
+  "IT paths to look at:": "可以看看的 IT 方向：", "No role is better than another.": "没有哪个角色比别的更好。",
+  "Shipwright": "船匠", "Navigator": "领航员", "Bard": "吟游乐手", "Ship's Doctor": "船医", "Captain": "船长", "Quartermaster": "军需官",
+  "You like building and fixing real things. On the ship, you keep everything working.": "你喜欢动手做东西、修东西。在船上，是你让一切保持运转。",
+  "You like working out how things work. You read the stars and find the route.": "你喜欢弄清楚事情是怎么运作的。你看星星、找航线。",
+  "You like making things that look and feel good. You give the ship its style.": "你喜欢做出好看又好用的东西。是你让这艘船有了自己的风格。",
+  "You like helping people. The crew comes to you when they need help.": "你喜欢帮助别人。船员需要帮忙时，都会来找你。",
+  "You like leading and making decisions. You set the course and rally the crew.": "你喜欢带头和做决定。你定下航向，带领全体船员。",
+  "You like order and getting the details right. You keep the supplies and the treasure in check.": "你喜欢有条理，把细节做对。船上的物资和宝藏都由你管。",
+  "Hardware, networks, cloud infrastructure": "硬件、网络、云端基础设施",
+  "Data, AI, finding and fixing bugs": "数据、AI、找出并修复程序错误",
+  "Interface design, games, media": "界面设计、游戏、多媒体",
+  "IT support, training, education technology": "IT 支持、培训、教育科技",
+  "Project and product management, starting a business": "项目与产品管理、创业",
+  "Databases, cybersecurity, IT operations": "数据库、网络安全、IT 运维",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "题目由团队编写，依据 Holland 的 RIASEC 兴趣类型，参考",
   // interest items
   "← Back": "← 返回", "Pause": "暂停", "I would enjoy...": "我会喜欢……",
@@ -1366,6 +1411,8 @@ const PATTERNS_ZH = [
   [/^Your interest results$/, () => "你的兴趣结果"],
   [/^IT skills test( result)?$/, (m) => (m[1] ? "IT 技能测验结果" : "IT 技能测验")],
   [/^Item (\d+) of (\d+)$/, (m) => `第 ${m[1]} 题，共 ${m[2]} 题`],
+  [/^The (Handy|Curious|Creative|Caring|Bold|Organised) (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => `${CREW_ADJ_ZH[m[1]]}${ZH[m[2]]}`],
+  [/^The (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => ZH[m[1]]],
   [/^([RIASEC]) · (\w+)$/, (m) => (ZH[m[2]] ? `${m[1]} · ${ZH[m[2]]}` : null)],
   [/^(.+\.) Type descriptions written by the team, based on$/, (m) => `${tr(m[1])}${ZH["Type descriptions written by the team, based on"]}`],
   [/^Question (\d+) of (\d+)$/, (m) => `第 ${m[1]} 题，共 ${m[2]} 题`],
