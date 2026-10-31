@@ -878,7 +878,7 @@ async function pageTrends() {
     <section class="stack" style="gap: 10px">
     <p class="eyebrow">AI-era trend signals</p>
     <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
-    <div class="row"><button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button></div>
+    <div class="row"><button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button><button class="btn" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
     <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.</div>
     </section>
     <div id="trend-jobs" class="viz-hero-chart"></div>
@@ -890,11 +890,6 @@ ${startCard()}
       <p class="small">Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
       <div class="row"><a class="btn primary" href="#/whatif">Change the trend data</a></div>
     </section>
-    <div class="card stack" style="gap: 10px">
-      <h2>Update data</h2>
-      <p class="small muted">Fetches the latest OpenDOSM figures and arXiv paper counts (about a minute), then recomputes the signals and scores. If a source fails, its previous data is kept.</p>
-      <div class="row"><button class="btn primary" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
-    </div>
   </div>`);
   const dash = document.getElementById("trend-dash"), jobs = document.getElementById("trend-jobs");
   jobs.innerHTML = trendHeroChart(t);
