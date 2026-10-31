@@ -355,6 +355,8 @@ const MS = {
   "Answer the interest questions": "Jawab soalan minat",
   "See your last result": "Lihat keputusan terakhir anda", "Start a new test": "Mula ujian baharu", "Start the test": "Mula ujian", "Skip to step 4, my jobs": "Langkau ke langkah 4, kerjaya saya",
   "Quick check": "Semakan pantas", "In depth": "Mendalam", "Hands-on": "Amali",
+  "Each score comes from 3 questions, so one lucky or unlucky answer moves it by 33 points.": "Setiap skor datang daripada 3 soalan, jadi satu jawapan bertuah atau tidak bertuah mengubahnya sebanyak 33 mata.",
+  "Also in:": "Juga dalam:",
   "Select all that apply.": "Pilih semua yang berkenaan.", "Your answer": "Jawapan anda", "Your Python code": "Kod Python anda", "Run tests": "Jalankan ujian",
   "Tables and data": "Jadual dan data", "Your SQL query (SQLite)": "Pertanyaan SQL anda (SQLite)", "Run query": "Jalankan pertanyaan", "No rows": "Tiada baris",
   "Showing the first 50 rows.": "Menunjukkan 50 baris pertama.", "Running…": "Sedang dijalankan…", "Loading Python (first time only)…": "Memuatkan Python (kali pertama sahaja)…",
@@ -607,6 +609,11 @@ const PATTERNS_MS = [
   [/^Something went wrong: (.+)$/, (m) => `Ada masalah: ${m[1]}`],
   [/^Continue \((\d+) answered\)$/, (m) => `Sambung (${m[1]} dijawab)`],
   [/^About (\d+) min$/, (m) => `Kira-kira ${m[1]} min`], [/^(\d+) questions$/, (m) => `${m[1]} soalan`],
+  [/^Likely between (\d+) and (\d+): only 3 questions, so it is rough\.$/, (m) => `Mungkin antara ${m[1]} dan ${m[2]}: hanya 3 soalan, jadi ia anggaran kasar.`],
+  [/^Every answer is checked against a cited source, and (\d+) of (\d+) questions match a topic in a known IT certification exam\. (.+)$/,
+    (m) => `Setiap jawapan disemak dengan sumber yang dipetik, dan ${m[1]} daripada ${m[2]} soalan sepadan dengan topik dalam peperiksaan pensijilan IT yang dikenali. ${m[3]
+      .replace(/^Not yet reviewed by outside experts\.$/, "Belum disemak oleh pakar luar.")
+      .replace(/^Questions (.+)\.$/, (x, t) => `Soalan ${t.replace(/reviewed by (\d+) IT experts/, "disemak oleh $1 pakar IT").replace(/tried by (\d+) students/, "dicuba oleh $1 pelajar").replace(" and ", " dan ")}.`)}`],
   [/^Test this area too \(about (\d+) min\)$/, (m) => `Uji bidang ini juga (kira-kira ${m[1]} min)`],
   [/^Test all remaining areas \(about (\d+) min\)$/, (m) => `Uji semua bidang yang tinggal (kira-kira ${m[1]} min)`],
   [/^Your test left out (this area|these (\d+) areas)\. Add a (\d+)-question quick check for any of them: your earlier answers stay, and your result groups are worked out again with the new scores\.$/,
@@ -960,6 +967,8 @@ const ZH = {
   "Answer the interest questions": "回答兴趣问题",
   "See your last result": "查看上次结果", "Start a new test": "开始新的测验", "Start the test": "开始测验", "Skip to step 4, my jobs": "跳到第 4 步，我的职位",
   "Quick check": "快速检测", "In depth": "深入", "Hands-on": "实作",
+  "Each score comes from 3 questions, so one lucky or unlucky answer moves it by 33 points.": "每个分数只来自 3 道题，所以一题蒙对或失手，分数就会变动 33 分。",
+  "Also in:": "也见于：",
   "Select all that apply.": "选出所有适用的答案。", "Your answer": "你的答案", "Your Python code": "你的 Python 代码", "Run tests": "运行测试",
   "Tables and data": "数据表和数据", "Your SQL query (SQLite)": "你的 SQL 查询（SQLite）", "Run query": "运行查询", "No rows": "没有数据行",
   "Showing the first 50 rows.": "只显示前 50 行。", "Running…": "正在运行……", "Loading Python (first time only)…": "正在载入 Python（只需第一次）……",
@@ -1202,6 +1211,11 @@ const PATTERNS_ZH = [
   [/^Something went wrong: (.+)$/, (m) => `出了点问题：${m[1]}`],
   [/^Continue \((\d+) answered\)$/, (m) => `继续（已答 ${m[1]} 题）`],
   [/^About (\d+) min$/, (m) => `约 ${m[1]} 分钟`], [/^(\d+) questions$/, (m) => `${m[1]} 题`],
+  [/^Likely between (\d+) and (\d+): only 3 questions, so it is rough\.$/, (m) => `大概在 ${m[1]} 到 ${m[2]} 之间：只有 3 道题，所以只是粗略估计。`],
+  [/^Every answer is checked against a cited source, and (\d+) of (\d+) questions match a topic in a known IT certification exam\. (.+)$/,
+    (m) => `每道题的答案都对照了引用的来源，${m[2]} 道题中有 ${m[1]} 道对应知名 IT 认证考试的考点。${m[3]
+      .replace(/^Not yet reviewed by outside experts\.$/, "尚未经外部专家审核。")
+      .replace(/^Questions (.+)\.$/, (x, t) => `题目${t.replace(/reviewed by (\d+) IT experts/, "经 $1 位 IT 专家审核").replace(/tried by (\d+) students/, "由 $1 名学生试做").replace(" and ", "，并")}。`)}`],
   [/^Test this area too \(about (\d+) min\)$/, (m) => `也测这个领域（约 ${m[1]} 分钟）`],
   [/^Test all remaining areas \(about (\d+) min\)$/, (m) => `测试其余所有领域（约 ${m[1]} 分钟）`],
   [/^Your test left out (this area|these (\d+) areas)\. Add a (\d+)-question quick check for any of them: your earlier answers stay, and your result groups are worked out again with the new scores\.$/,

@@ -6,6 +6,120 @@
   "source_url": "https://www.onetcenter.org/database.html",
   "source_date": "2026-10-23",
   "disclaimer": "An indicative self-check of job-entry skills, not a certification or a hiring decision.",
+  "exams_note": "Each question may name the certification exam section that covers the same topic. Team mapping by exam section, read off the official syllabus or exam objectives on 2026-10-31; not endorsed by the exam owners. Security+ V8 is due around 2026-11-17, so recheck SY0-701 then.",
+  "exams": {
+    "pcep": {
+      "name": "Python Institute PCEP",
+      "code": "PCEP-30-02",
+      "url": "https://pythoninstitute.org/pcep-exam-syllabus",
+      "sections": {
+        "1": "Computer Programming and Python Fundamentals",
+        "2": "Control Flow: Conditional Blocks and Loops",
+        "3": "Data Collections: Tuples, Dictionaries, Lists, and Strings",
+        "4": "Functions and Exceptions"
+      }
+    },
+    "pcap": {
+      "name": "Python Institute PCAP",
+      "code": "PCAP-31-03",
+      "url": "https://pythoninstitute.org/pcap-exam-syllabus",
+      "sections": {
+        "1": "Modules and Packages",
+        "2": "Exceptions",
+        "3": "Strings",
+        "4": "Object-Oriented Programming",
+        "5": "Miscellaneous"
+      }
+    },
+    "istqb": {
+      "name": "ISTQB Certified Tester Foundation Level",
+      "code": "CTFL v4.0",
+      "url": "https://istqb.org/downloads/viewcategory/9.html",
+      "sections": {
+        "1": "Fundamentals of Testing",
+        "2": "Testing Throughout the Software Development Lifecycle",
+        "3": "Static Testing",
+        "4": "Test Analysis and Design",
+        "5": "Managing the Test Activities",
+        "6": "Test Tools"
+      }
+    },
+    "dataplus": {
+      "name": "CompTIA Data+",
+      "code": "DA0-002",
+      "url": "https://www.comptia.org/en/certifications/data/",
+      "sections": {
+        "1": "Data concepts and environments",
+        "2": "Data acquisition and preparation",
+        "3": "Data analysis",
+        "4": "Visualization and reporting",
+        "5": "Data governance"
+      }
+    },
+    "secplus": {
+      "name": "CompTIA Security+",
+      "code": "SY0-701",
+      "url": "https://www.comptia.org/en/certifications/security/",
+      "sections": {
+        "1": "General Security Concepts",
+        "2": "Threats, Vulnerabilities, and Mitigations",
+        "3": "Security Architecture",
+        "4": "Security Operations",
+        "5": "Security Program Management and Oversight"
+      }
+    },
+    "netplus": {
+      "name": "CompTIA Network+",
+      "code": "N10-009",
+      "url": "https://www.comptia.org/en/certifications/network/",
+      "sections": {
+        "1": "Networking concepts",
+        "2": "Network implementation",
+        "3": "Network operations",
+        "4": "Network security",
+        "5": "Network troubleshooting"
+      }
+    },
+    "linuxplus": {
+      "name": "CompTIA Linux+",
+      "code": "XK0-006",
+      "url": "https://www.comptia.org/en/certifications/linux/",
+      "sections": {
+        "1": "System Management",
+        "2": "Services and User Management",
+        "3": "Security",
+        "4": "Automation, Orchestration, and Scripting",
+        "5": "Troubleshooting"
+      }
+    },
+    "awsccp": {
+      "name": "AWS Certified Cloud Practitioner",
+      "code": "CLF-C02",
+      "url": "https://docs.aws.amazon.com/aws-certification/latest/examguides/cloud-practitioner-02.html",
+      "sections": {
+        "1": "Cloud Concepts",
+        "2": "Security and Compliance",
+        "3": "Cloud Technology and Services",
+        "4": "Billing, Pricing, and Support"
+      }
+    },
+    "projectplus": {
+      "name": "CompTIA Project+",
+      "code": "PK0-005",
+      "url": "https://www.comptia.org/en/certifications/project/",
+      "sections": {
+        "1": "Project management concepts",
+        "2": "Project life cycle phases",
+        "3": "Tools and documentation",
+        "4": "Basics of IT and governance"
+      }
+    }
+  },
+  "review": {
+    "experts": 0,
+    "pilot_students": 0,
+    "note": "Raise these when outside experts have reviewed the bank and students have piloted it; the results page shows them."
+  },
   "selection": {
     "screen_per_domain": 3,
     "deep_domains": 2,
@@ -174,6 +288,12 @@
           "name": "Python FAQ: Why are default values shared between objects?",
           "url": "https://docs.python.org/3/faq/programming.html#why-are-default-values-shared-between-objects"
         }
+      ],
+      "exams": [
+        {
+          "exam": "pcep",
+          "section": "4"
+        }
       ]
     },
     {
@@ -232,6 +352,12 @@
           "name": "Python tutorial: Floating-point arithmetic",
           "url": "https://docs.python.org/3/tutorial/floatingpoint.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "pcep",
+          "section": "1"
+        }
       ]
     },
     {
@@ -261,6 +387,12 @@
           "name": "Python FAQ: How do I copy an object?",
           "url": "https://docs.python.org/3/faq/programming.html#how-do-i-copy-an-object-in-python"
         }
+      ],
+      "exams": [
+        {
+          "exam": "pcep",
+          "section": "3"
+        }
       ]
     },
     {
@@ -287,6 +419,12 @@
         {
           "name": "Python docs: unittest.mock",
           "url": "https://docs.python.org/3/library/unittest.mock.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "istqb",
+          "section": "2"
         }
       ]
     },
@@ -316,6 +454,12 @@
         {
           "name": "Python FAQ: Why do lambdas defined in a loop all return the same result?",
           "url": "https://docs.python.org/3/faq/programming.html#why-do-lambdas-defined-in-a-loop-with-different-values-all-return-the-same-result"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "pcap",
+          "section": "5"
         }
       ]
     },
@@ -373,6 +517,12 @@
           "name": "Wikipedia: Open-closed principle",
           "url": "https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle"
         }
+      ],
+      "exams": [
+        {
+          "exam": "pcap",
+          "section": "4"
+        }
       ]
     },
     {
@@ -399,6 +549,12 @@
         {
           "name": "Wikipedia: Leap year (Gregorian calendar)",
           "url": "https://en.wikipedia.org/wiki/Leap_year#Gregorian_calendar"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "istqb",
+          "section": "4"
         }
       ]
     },
@@ -614,6 +770,12 @@
           "name": "Python docs: Sorting HOW TO",
           "url": "https://docs.python.org/3/howto/sorting.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "pcep",
+          "section": "3"
+        }
       ]
     },
     {
@@ -681,6 +843,12 @@
           "name": "Python docs: Using lists as stacks",
           "url": "https://docs.python.org/3/tutorial/datastructures.html#using-lists-as-stacks"
         }
+      ],
+      "exams": [
+        {
+          "exam": "pcep",
+          "section": "3"
+        }
       ]
     },
     {
@@ -708,6 +876,12 @@
         {
           "name": "SQLite: SELECT (GROUP BY and HAVING)",
           "url": "https://www.sqlite.org/lang_select.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "3"
         }
       ]
     },
@@ -764,6 +938,12 @@
           "name": "OpenStax Introductory Statistics: Skewness and the mean, median and mode",
           "url": "https://openstax.org/books/introductory-statistics-2e/pages/2-6-skewness-and-the-mean-median-and-mode"
         }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "3"
+        }
       ]
     },
     {
@@ -791,6 +971,12 @@
         {
           "name": "Wikipedia: Database normalization",
           "url": "https://en.wikipedia.org/wiki/Database_normalization"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "1"
         }
       ]
     },
@@ -925,6 +1111,12 @@
           "name": "SQLite: SELECT (join operators)",
           "url": "https://www.sqlite.org/lang_select.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -947,6 +1139,12 @@
         {
           "name": "SQLite: Built-in aggregate functions",
           "url": "https://www.sqlite.org/lang_aggfunc.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "3"
         }
       ]
     },
@@ -1112,6 +1310,12 @@
           "name": "Python docs: Sorting HOW TO (key functions)",
           "url": "https://docs.python.org/3/howto/sorting.html#key-functions"
         }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -1153,6 +1357,12 @@
           "name": "SQLite: SELECT",
           "url": "https://www.sqlite.org/lang_select.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "3"
+        }
       ]
     },
     {
@@ -1187,6 +1397,12 @@
           "name": "OWASP SQL Injection Prevention Cheat Sheet",
           "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -1213,6 +1429,12 @@
         {
           "name": "OWASP Password Storage Cheat Sheet",
           "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "1"
         }
       ]
     },
@@ -1241,6 +1463,12 @@
           "name": "CISA: Recognize and report phishing",
           "url": "https://www.cisa.gov/secure-our-world/recognize-and-report-phishing"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -1267,6 +1495,12 @@
         {
           "name": "CISA: Multifactor authentication",
           "url": "https://www.cisa.gov/MFA"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "4"
         }
       ]
     },
@@ -1295,6 +1529,12 @@
         {
           "name": "MDN: Transport Layer Security",
           "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "1"
         }
       ]
     },
@@ -1330,6 +1570,12 @@
           "name": "NIST NICE Framework (SP 800-181r1)",
           "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "4"
+        }
       ]
     },
     {
@@ -1358,6 +1604,12 @@
         {
           "name": "OWASP Cross Site Scripting Prevention Cheat Sheet",
           "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
         }
       ]
     },
@@ -1390,6 +1642,12 @@
           "name": "NIST NICE Framework (SP 800-181r1)",
           "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -1416,6 +1674,12 @@
         {
           "name": "RFC 8725: JSON Web Token Best Current Practices",
           "url": "https://www.rfc-editor.org/rfc/rfc8725"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
         }
       ]
     },
@@ -1444,6 +1708,12 @@
         {
           "name": "NIST SP 800-61r3: Incident Response Recommendations",
           "url": "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "4"
         }
       ]
     },
@@ -1477,6 +1747,12 @@
           "name": "OWASP Insecure Direct Object Reference Prevention Cheat Sheet",
           "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -1504,6 +1780,12 @@
         {
           "name": "OWASP CSRF Prevention Cheat Sheet",
           "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
         }
       ]
     },
@@ -1535,6 +1817,12 @@
           "name": "CIS Controls v8: Control 4 (secure configuration)",
           "url": "https://www.cisecurity.org/controls/v8"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -1564,6 +1852,12 @@
         {
           "name": "MDN: Strict-Transport-Security",
           "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "4"
         }
       ]
     },
@@ -1650,6 +1944,12 @@
           "name": "NIST NICE Framework (SP 800-181r1)",
           "url": "https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "4"
+        }
       ]
     },
     {
@@ -1688,6 +1988,12 @@
         {
           "name": "OWASP: Path Traversal",
           "url": "https://owasp.org/www-community/attacks/Path_Traversal"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
         }
       ]
     },
@@ -1795,6 +2101,12 @@
           "name": "OWASP Password Storage Cheat Sheet",
           "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "secplus",
+          "section": "2"
+        }
       ]
     },
     {
@@ -1821,6 +2133,12 @@
         {
           "name": "chmod(1) manual page",
           "url": "https://man7.org/linux/man-pages/man1/chmod.1.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "linuxplus",
+          "section": "3"
         }
       ]
     },
@@ -1850,6 +2168,12 @@
           "name": "AWS Well-Architected Framework: Reliability pillar",
           "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "awsccp",
+          "section": "1"
+        }
       ]
     },
     {
@@ -1878,6 +2202,12 @@
           "name": "NIST SP 800-145: The NIST Definition of Cloud Computing",
           "url": "https://csrc.nist.gov/pubs/sp/800/145/final"
         }
+      ],
+      "exams": [
+        {
+          "exam": "awsccp",
+          "section": "1"
+        }
       ]
     },
     {
@@ -1900,6 +2230,12 @@
         {
           "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
           "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "1"
         }
       ]
     },
@@ -1928,6 +2264,12 @@
         {
           "name": "RFC 1034: Domain names - concepts and facilities",
           "url": "https://www.rfc-editor.org/rfc/rfc1034"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "5"
         }
       ]
     },
@@ -1958,6 +2300,12 @@
           "name": "Docker Docs: Build cache",
           "url": "https://docs.docker.com/build/cache/"
         }
+      ],
+      "exams": [
+        {
+          "exam": "linuxplus",
+          "section": "4"
+        }
       ]
     },
     {
@@ -1985,6 +2333,12 @@
           "name": "crontab(5) manual page",
           "url": "https://man7.org/linux/man-pages/man5/crontab.5.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "linuxplus",
+          "section": "4"
+        }
       ]
     },
     {
@@ -2007,6 +2361,12 @@
         {
           "name": "Google SRE Book: Availability table",
           "url": "https://sre.google/sre-book/availability-table/"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "3"
         }
       ]
     },
@@ -2034,6 +2394,12 @@
         {
           "name": "AWS IAM: Security best practices (least privilege)",
           "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "awsccp",
+          "section": "2"
         }
       ]
     },
@@ -2063,6 +2429,12 @@
           "name": "unlink(2) manual page",
           "url": "https://man7.org/linux/man-pages/man2/unlink.2.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "linuxplus",
+          "section": "5"
+        }
       ]
     },
     {
@@ -2091,6 +2463,12 @@
           "name": "AWS Well-Architected: Reliability pillar (disaster recovery objectives)",
           "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "3"
+        }
       ]
     },
     {
@@ -2116,6 +2494,12 @@
         {
           "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
           "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "1"
         }
       ]
     },
@@ -2145,6 +2529,12 @@
           "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
           "url": "https://www.rfc-editor.org/rfc/rfc4632"
         }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -2173,6 +2563,12 @@
           "name": "RFC 826: An Ethernet Address Resolution Protocol",
           "url": "https://www.rfc-editor.org/rfc/rfc826"
         }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "5"
+        }
       ]
     },
     {
@@ -2199,6 +2595,12 @@
         {
           "name": "RFC 3550: RTP, A Transport Protocol for Real-Time Applications",
           "url": "https://www.rfc-editor.org/rfc/rfc3550"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "1"
         }
       ]
     },
@@ -2227,6 +2629,12 @@
         {
           "name": "RFC 4987: TCP SYN Flooding Attacks and Common Mitigations",
           "url": "https://www.rfc-editor.org/rfc/rfc4987"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "4"
         }
       ]
     },
@@ -2257,6 +2665,12 @@
         {
           "name": "RFC 1812: Requirements for IP Version 4 Routers (5.2.4.3)",
           "url": "https://www.rfc-editor.org/rfc/rfc1812"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "2"
         }
       ]
     },
@@ -2323,6 +2737,12 @@
         {
           "name": "df(1) manual page",
           "url": "https://man7.org/linux/man-pages/man1/df.1.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "linuxplus",
+          "section": "4"
         }
       ]
     },
@@ -2428,6 +2848,12 @@
           "name": "Google SRE Book: Availability table",
           "url": "https://sre.google/sre-book/availability-table/"
         }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "3"
+        }
       ]
     },
     {
@@ -2491,6 +2917,12 @@
           "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
           "url": "https://www.rfc-editor.org/rfc/rfc4632"
         }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -2515,6 +2947,12 @@
         {
           "name": "RFC 4632: Classless Inter-domain Routing (CIDR)",
           "url": "https://www.rfc-editor.org/rfc/rfc4632"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "netplus",
+          "section": "1"
         }
       ]
     },
@@ -3042,6 +3480,12 @@
           "name": "The Scrum Guide (2020)",
           "url": "https://scrumguides.org/scrum-guide.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -3069,6 +3513,12 @@
         {
           "name": "Wikipedia: Non-functional requirement",
           "url": "https://en.wikipedia.org/wiki/Non-functional_requirement"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "2"
         }
       ]
     },
@@ -3098,6 +3548,12 @@
           "name": "Wikipedia: Scope creep",
           "url": "https://en.wikipedia.org/wiki/Scope_creep"
         }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -3125,6 +3581,12 @@
         {
           "name": "Wikipedia: Critical path method",
           "url": "https://en.wikipedia.org/wiki/Critical_path_method"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "3"
         }
       ]
     },
@@ -3154,6 +3616,12 @@
           "name": "Prosci: The ADKAR Model",
           "url": "https://www.prosci.com/methodology/adkar"
         }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -3176,6 +3644,12 @@
         {
           "name": "PMI: Earned Value Management",
           "url": "https://www.pmi.org/learning/library/earned-value-management-systems-analysis-8026"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "3"
         }
       ]
     },
@@ -3205,6 +3679,12 @@
           "name": "PMI: Earned Value Management",
           "url": "https://www.pmi.org/learning/library/earned-value-management-systems-analysis-8026"
         }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "3"
+        }
       ]
     },
     {
@@ -3232,6 +3712,12 @@
         {
           "name": "Wikipedia: Risk management (risk options)",
           "url": "https://en.wikipedia.org/wiki/Risk_management#Risk_options"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "1"
         }
       ]
     },
@@ -3261,6 +3747,12 @@
           "name": "The Scrum Guide (2020)",
           "url": "https://scrumguides.org/scrum-guide.html"
         }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -3289,6 +3781,12 @@
           "name": "Wikipedia: Associative entity",
           "url": "https://en.wikipedia.org/wiki/Associative_entity"
         }
+      ],
+      "exams": [
+        {
+          "exam": "dataplus",
+          "section": "1"
+        }
       ]
     },
     {
@@ -3311,6 +3809,12 @@
         {
           "name": "The Scrum Guide (2020)",
           "url": "https://scrumguides.org/scrum-guide.html"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "1"
         }
       ]
     },
@@ -3336,6 +3840,12 @@
         {
           "name": "Wikipedia: Critical path method",
           "url": "https://en.wikipedia.org/wiki/Critical_path_method"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "3"
         }
       ]
     },
@@ -3376,6 +3886,12 @@
         {
           "name": "Wikipedia: Non-functional requirement",
           "url": "https://en.wikipedia.org/wiki/Non-functional_requirement"
+        }
+      ],
+      "exams": [
+        {
+          "exam": "projectplus",
+          "section": "2"
         }
       ]
     }

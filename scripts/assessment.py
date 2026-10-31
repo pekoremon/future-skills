@@ -24,12 +24,16 @@ from pathlib import Path
 BANK_PATH = Path(__file__).resolve().parent.parent / "data" / "it_assessment.json"
 
 # Fields that give the answer away; the student only sees them in the report.
-HIDDEN = ("answer", "accept", "tolerance", "explanation", "expected_rows", "ordered", "refs")
+HIDDEN = ("answer", "accept", "tolerance", "explanation", "expected_rows", "ordered", "refs", "exams")
 AREA_SPLIT = {"screen": 0.4, "deep": 0.6}  # area score of an area tested in depth (team choice)
 # O*NET level (0-7) a fully right answer shows in the skills an item is tagged with. Team
 # choice, read off O*NET's level anchors: a quick check is basic use, a hands-on task
 # applied work. A part-right answer shows that level x the share of points earned.
 STAGE_LEVEL = {"screen": 3.0, "deep": 4.0, "practical": 5.0}
+# A score from 3 questions is rough, so each area score also gets a likely range: the 80%
+# Wilson interval of the share of points earned, over the effective number of questions
+# (points-weighted). Team choice; SOURCES.md, "Choices and limits".
+RANGE_Z = 1.2816
 SQL_MAX_STEPS = 2_000_000  # SQLite VM steps before a query is stopped
 SQL_MAX_ROWS = 50
 # Longest string or blob a query may build. Without it one step such as randomblob(1e9)
@@ -288,6 +292,30 @@ def correct_answer(q: dict):
     return q["answer"]
 
 
+def score_range(earned: float, weights: list) -> list:
+    """Likely range (0-100) of a score of earned / sum(weights) from questions worth `weights`."""
+    n = sum(weights) ** 2 / sum(w * w for w in weights)  # effective number of questions
+    p, z2 = earned / sum(weights), RANGE_Z ** 2
+    centre = (p + z2 / (2 * n)) / (1 + z2 / n)
+    half = RANGE_Z * ((p * (1 - p) + z2 / (4 * n)) / n) ** 0.5 / (1 + z2 / n)
+    return [max(0, round(100 * (centre - half))), min(100, round(100 * (centre + half)))]
+
+
+def exams_for(q: dict) -> list:
+    """The certification exam sections that cover the same topic as q (team mapping)."""
+    exams = load_bank()["exams"]
+    return [{"name": exams[e["exam"]]["name"], "code": exams[e["exam"]]["code"], "url": exams[e["exam"]]["url"],
+             "section": f'{e["section"]}. {exams[e["exam"]]["sections"][e["section"]]}'} for e in q.get("exams", [])]
+
+
+def trust() -> dict:
+    """What backs the question bank, for one line on the results page."""
+    bank = load_bank()
+    qs = bank["questions"]
+    return {"questions": len(qs), "with_source": sum(1 for q in qs if q["refs"]),
+            "with_exam": sum(1 for q in qs if q.get("exams")), **{k: bank["review"][k] for k in ("experts", "pilot_students")}}
+
+
 def level_for(score: float) -> dict:
     return next(lv for lv in load_bank()["scoring"]["levels"] if score >= lv["min"])
 
@@ -320,16 +348,17 @@ def report(seed: int, responses: dict, areas: list | None = None, added: list | 
     deep = top_domains(seed, {k: v for k, v in responses.items() if by_id[k]["stage"] == "screen"}, focus)
     asked = screen_questions(seed, focus) + deep_questions(seed, deep) + added_questions(seed, extra)
 
-    items, earned, possible = [], {}, {}
+    items, earned, possible, weights = [], {}, {}, {}
     for q in asked:
         g = grade(q, responses.get(q["id"]), seed)
         key = (q["domain"], "screen" if q["stage"] == "screen" else "deep")
         earned[key] = earned.get(key, 0) + g["points"]
         possible[key] = possible.get(key, 0) + g["max"]
+        weights.setdefault(key, []).append(g["max"])
         items.append({"id": q["id"], "domain": q["domain"], "stage": q["stage"], "type": q["type"],
                       "skill": q["skill"], "prompt": q["prompt"], "answered": q["id"] in responses,
                       **g, "correct_answer": correct_answer(q), "explanation": q["explanation"],
-                      "refs": q["refs"]})
+                      "refs": q["refs"], "exams": exams_for(q)})
 
     domains = []
     for d in bank["domains"]:
@@ -343,10 +372,12 @@ def report(seed: int, responses: dict, areas: list | None = None, added: list | 
         row["added"] = d["id"] in extra
         screen_points, screen_max = earned.get((d["id"], "screen"), 0), possible[(d["id"], "screen")]
         row.update(screen_points=screen_points, screen_max=screen_max,
-                   profile=round(100 * screen_points / screen_max))
+                   profile=round(100 * screen_points / screen_max),
+                   profile_range=score_range(screen_points, weights[(d["id"], "screen")]))
         if d["id"] in deep:
             score = round(100 * earned[(d["id"], "deep")] / possible[(d["id"], "deep")])
-            row.update(readiness=score, level=level_for(score))
+            row.update(readiness=score, level=level_for(score),
+                       readiness_range=score_range(earned[(d["id"], "deep")], weights[(d["id"], "deep")]))
 
     # One score per tested area to compare them, used here and by matching. An area seen
     # only in the quick check may not overtake the areas tested in depth: it scored no higher
@@ -364,4 +395,4 @@ def report(seed: int, responses: dict, areas: list | None = None, added: list | 
     return {"seed": seed, "areas": focus, "added": extra, "deep_domains": deep, "recommended": best["id"], "domains": domains,
             "skills_to_improve": gaps, "items": items,
             "total_points": round(sum(i["points"] for i in items), 2),
-            "total_max": sum(i["max"] for i in items), "disclaimer": bank["disclaimer"]}
+            "total_max": sum(i["max"] for i in items), "disclaimer": bank["disclaimer"], "trust": trust()}

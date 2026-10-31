@@ -4,6 +4,7 @@ import json
 import math
 import re
 import sqlite3
+import sys
 import unittest
 from collections import Counter
 from pathlib import Path
@@ -184,6 +185,27 @@ class TestItAssessment(unittest.TestCase):
                 if q["type"] == "code":
                     self.assertIn("Programming", names)
 
+    def test_exam_links_point_at_real_sections(self):
+        for key, exam in BANK["exams"].items():
+            self.assertTrue(exam["url"].startswith("https://"), key)
+            self.assertTrue(exam["sections"], key)
+        for q in BANK["questions"]:
+            for e in q.get("exams", []):
+                with self.subTest(q["id"]):
+                    self.assertIn(e["section"], BANK["exams"][e["exam"]]["sections"])
+
+    def test_score_range(self):
+        """80% Wilson interval: wide for 3 questions, always containing the score."""
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import assessment
+        self.assertEqual(assessment.score_range(3, [1, 1, 1]), [65, 100])
+        self.assertEqual(assessment.score_range(2, [1, 1, 1]), [32, 89])
+        self.assertEqual(assessment.score_range(0, [1, 1, 1]), [0, 35])
+        for earned in range(9):
+            lo, hi = assessment.score_range(earned, [2, 2, 4])
+            self.assertLessEqual(lo, 100 * earned / 8)
+            self.assertGreaterEqual(hi, 100 * earned / 8)
+
     def test_domains_cite_onet_codes(self):
         for d in BANK["domains"]:
             for soc in d["onet_soc"]:
@@ -305,10 +327,14 @@ class TestAssessmentFlow(unittest.TestCase):
         self.assertEqual(result["total_points"], result["total_max"])
         self.assertEqual(result["skills_to_improve"], [])
         self.assertTrue(all(d["profile"] == 100 for d in result["domains"]))
+        self.assertTrue(all(d["profile_range"][1] == 100 for d in result["domains"]))
+        self.assertEqual(result["trust"]["questions"], len(BANK["questions"]))
+        self.assertTrue(all("exams" in i for i in result["items"]))
         for d in result["domains"]:
             if d["tested_in_depth"]:
                 self.assertEqual(d["readiness"], 100)
                 self.assertEqual(d["level"]["label"], "Job-ready")
+                self.assertEqual(d["readiness_range"][1], 100)
 
     def test_strong_screen_domains_are_chosen(self):
         _, start = self.call("GET", "/api/assessment/start")

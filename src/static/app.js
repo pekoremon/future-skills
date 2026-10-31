@@ -1698,6 +1698,13 @@ async function pageSharedResult(token) {
   pageTestResult(r);
 }
 
+// What backs the questions, from the bank: sources, exam links and (once done) review and pilot.
+function trustLine(t) {
+  if (!t) return "";  // results saved before this line existed
+  const done = [t.experts && `reviewed by ${t.experts} IT experts`, t.pilot_students && `tried by ${t.pilot_students} students`].filter(Boolean);
+  return `<p class="small muted">Every answer is checked against a cited source, and ${t.with_exam} of ${t.questions} questions match a topic in a known IT certification exam. ${done.length ? `Questions ${done.join(" and ")}.` : "Not yet reviewed by outside experts."}</p>`;
+}
+
 /* The student's own result, or with `sharedResult` a read-only view of someone else's. */
 function pageTestResult(sharedResult = null) {
   const isShared = Boolean(sharedResult);
@@ -1711,7 +1718,8 @@ function pageTestResult(sharedResult = null) {
     <div class="card stack" style="gap: 10px">
       <div class="row" style="justify-content: space-between"><h3>${esc(d.name)}</h3><span class="chip${d.level.min >= 75 ? "" : d.level.min >= 50 ? " plain" : " warn-chip"}">${esc(d.level.label)}</span></div>
       <div class="row" style="align-items: baseline; gap: 6px"><span class="big">${d.readiness}</span><span class="muted">/ 100 readiness</span></div>
-      <div class="bar"><div class="on" style="width: ${d.readiness}%"></div></div>
+      <div class="bar ranged">${d.readiness_range ? `<div class="band" style="left: ${d.readiness_range[0]}%; width: ${d.readiness_range[1] - d.readiness_range[0]}%"></div>` : ""}<div class="on" style="width: ${d.readiness}%"></div></div>
+      ${d.readiness_range ? `<p class="small muted">Likely between ${d.readiness_range[0]} and ${d.readiness_range[1]}: only 3 questions, so it is rough.</p>` : ""}
       ${d.area_score === undefined ? "" : `<p class="small">Area score <strong>${d.area_score}</strong> <span class="muted">= 40% quick check (${d.profile}) + 60% readiness (${d.readiness})</span></p>`}
       <div><p class="muted small">Jobs in this area (O*NET):</p>
         <ul class="quals small">${d.roles.map((x) => `<li><a href="https://www.onetonline.org/link/summary/${esc(x.onet_soc)}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join("")}</ul></div>
@@ -1760,6 +1768,7 @@ function pageTestResult(sharedResult = null) {
         <p><strong>Answer:</strong> <span data-no-i18n>${esc(answerText(i))}</span></p>
         <p class="muted" data-no-i18n>${esc(i.explanation)}</p>
         <p class="small">Source: ${i.refs.map((x) => `<a href="${safeUrl(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(" · ")}</p>
+        ${(i.exams || []).map((x) => `<p class="small">Also in: <a href="${safeUrl(x.url)}" target="_blank" rel="noopener" data-no-i18n>${esc(x.name)} (${esc(x.code)})</a> <span class="muted" data-no-i18n>· ${esc(x.section)}</span></p>`).join("")}
       </div>
     </details>`).join("");
   render(`
@@ -1768,6 +1777,7 @@ function pageTestResult(sharedResult = null) {
     <p class="eyebrow">Step 3 of 4 · IT skills test result</p>
     <h1>Your strongest IT area: ${esc(best.name)}</h1>
     <p class="muted">${esc(r.disclaimer)}</p>
+    ${trustLine(r.trust)}
     <div class="row"><button class="btn" type="button" id="share">Share my result</button></div>
     <div class="card stack" id="share-box" style="gap: 6px" hidden>
       <label class="small muted" for="share-url">Anyone with this link sees your IT profile, top 2 areas and skills to work on; the page does not show your answers, but the link itself carries them (that is how the result is rebuilt), so share it only with people you choose. Nothing is saved on our server.</label>
@@ -1775,6 +1785,7 @@ function pageTestResult(sharedResult = null) {
     </div>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
       <p class="muted small">Quick-check score in each tested area (0–100): the same number of questions per area, so you can compare them. Your top 2 (bold) were then tested in depth.</p>
+      <p class="muted small">Each score comes from 3 questions, so one lucky or unlucky answer moves it by 33 points.</p>
       ${profile}${heldNote}</div>
     <h2>Your top 2, tested in depth</h2>
     <p class="muted small">Readiness counts the in-depth and hands-on questions in that area. Your strongest area has the highest area score; an area seen only in the quick check is never ranked above these two, here or on your jobs page. Right answers also count as skills in your job matches.</p>

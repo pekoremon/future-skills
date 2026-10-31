@@ -130,6 +130,8 @@ main:focus-visible { outline: none; }  /* route() focuses <main> for screen read
 .bar { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
 .bar > div { height: 100%; border-radius: 999px; background: var(--bar-muted); }
 .bar > div.on { background: var(--accent); }
+.bar.ranged { position: relative; }
+.bar > div.band { position: absolute; top: 0; border-radius: 0; background: var(--accent); opacity: 0.3; }
 .sdg-row { border-top: 1px solid var(--line); padding-top: 10px; }
 .sdg-row p { margin: 0; }
 .hex { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; overflow: visible; }
