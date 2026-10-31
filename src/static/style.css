@@ -643,23 +643,65 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 html[data-lite] *, html[data-lite] *::before, html[data-lite] *::after { animation: none !important; transition: none !important; }
 html[data-lite] body::before, html[data-lite] .topbar::after { display: none; }
 
-/* IT test as a treasure hunt (crew.js): sea map, "I don't know yet", chests */
-.sea { display: block; width: 100%; max-height: 150px; overflow: visible; --sea: #CFE8F3; --sea-line: #9CCBE0; }
-:root[data-theme="dark"] .sea { --sea: #12324A; --sea-line: #1F4E6E; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sea { --sea: #12324A; --sea-line: #1F4E6E; } }
+/* IT test as a treasure hunt (crew.js): sea chart, island levels, cutscenes, "I don't know yet", chests */
+.sea { display: block; width: 100%; max-height: 240px; overflow: visible; }
+.sea, .isle-big { --sea: #CFE8F3; --sea-line: #9CCBE0; }
+:root[data-theme="dark"] .sea, :root[data-theme="dark"] .isle-big { --sea: #12324A; --sea-line: #1F4E6E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sea, :root:not([data-theme="light"]) .isle-big { --sea: #12324A; --sea-line: #1F4E6E; } }
 .sea-bg { fill: var(--sea); }
-.sea .wave { fill: none; stroke: var(--sea-line); stroke-width: 2; stroke-linecap: round; }
-.sea .sand { fill: #E9D5A1; } .sea .grass { fill: #6BAF5B; }
-.sea .isle { opacity: 0.55; transition: opacity 0.3s; }
-.sea .isle.here, .sea .isle.explored { opacity: 1; }
-.sea .isle-ico { font-size: 18px; }
-.sea .isle-name { font-size: 14px; font-weight: 700; fill: var(--text); }
-.sea .isle-mark { font-size: 18px; } .sea .isle-mark.x { fill: #C0392B; font-weight: 800; }
-.sea .dot { fill: none; stroke: var(--text); stroke-opacity: 0.45; stroke-width: 1.5; } .sea .dot-on { fill: var(--accent); }
-.sea .isle-flag { animation: fade-in 0.5s; }
+.sea .wave, .isle-big .wave { fill: none; stroke: var(--sea-line); stroke-width: 2; stroke-linecap: round; animation: wave 3s ease-in-out infinite alternate; }
+@keyframes wave { to { transform: translateX(8px); } }
+.sand { fill: #E9D5A1; } .grass { fill: #6BAF5B; }
+.sea .isle { opacity: 0.6; }
+.sea .isle.open, .sea .isle.explored { opacity: 1; }
+.sea .isle.pick { cursor: pointer; }
+.sea .isle.pick .sand { animation: isle-glow 1.6s ease-in-out infinite; }
+@keyframes isle-glow { 50% { fill: #F6E7B8; } }
+.sea .isle-ico { font-size: 26px; }
+.sea .isle-name { font-size: 15px; font-weight: 700; fill: var(--text); }
+.sea .isle-mark { font-size: 24px; } .sea .isle-mark.x { fill: #C0392B; font-weight: 800; }
 .sea .ship { transition: transform 0.9s ease-in-out; }
-.sea .ship > path:first-child { animation: bob 2.4s ease-in-out infinite; }
-@keyframes bob { 50% { transform: translateY(2px); } }
+.sea .hull { animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(3px); } }
+.isle-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.isle-card { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 10px 14px; text-align: left; border-radius: 14px; border: 1.5px solid var(--accent); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.isle-card:hover:not(:disabled) { background: var(--accent-soft); }
+.isle-card.done { border-color: var(--border); opacity: 0.7; cursor: default; }
+.isle-card-ico { font-size: 24px; line-height: 1; }
+.isle-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-strong); }
+.isle-dots { display: flex; gap: 6px; margin-left: auto; }
+.isle-dots span { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; }
+.isle-dots span.on { background: currentColor; }
+.isle-dots span.now { background: currentColor; opacity: 0.45; transform: scale(1.25); }
+
+/* cutscenes between levels */
+.scene { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(4px); animation: fade-in 0.25s; cursor: pointer; }
+.scene.out { opacity: 0; transition: opacity 0.2s; }
+.scene-card { width: min(420px, 100%); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.5); animation: scene-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.scene-card h2 { font-size: 24px; }
+.scene .scene-skip { position: fixed; right: 16px; bottom: 16px; }
+.scene-coins { font-size: 22px; font-weight: 800; color: #B8860B; animation: coin-up 1s 0.9s both; }
+.scene-names { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+@keyframes scene-in { from { transform: scale(0.7); opacity: 0; } }
+@keyframes coin-up { from { opacity: 0; transform: translateY(12px) scale(0.6); } }
+.isle-big { width: 100%; border-radius: 18px; }
+.isle-big .isle-ico.big { font-size: 34px; } .isle-big .loot-ico { font-size: 30px; }
+.isle-big .pole, .isle-big .loot { display: none; }
+.isle-big.flag .pole { display: inline; animation: pole-up 0.8s 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both; transform-box: fill-box; transform-origin: bottom; }
+.isle-big.flag .cloth { animation: flag-wave 0.5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: left; }
+.isle-big.dig .loot { display: inline; animation: loot-up 0.9s 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.isle-big .spark { fill: #E8A317; font-size: 16px; }
+.isle-big.arrive { animation: zoom-in 1.2s ease-out; transform-origin: center; }
+@keyframes pole-up { from { transform: scaleY(0); } }
+@keyframes loot-up { from { opacity: 0; transform: translateY(30px) scale(0.4); } }
+@keyframes zoom-in { from { transform: scale(1.35); } }
+.old-map { width: 100%; }
+.old-map .parchment { fill: #F3E3BF; stroke: #B8925A; stroke-width: 3; }
+.old-map .map-isle { fill: #E2CB95; stroke: #B8925A; stroke-width: 2; }
+.old-map .trail { fill: none; stroke: #9A7444; stroke-width: 2.5; stroke-dasharray: 6 6; }
+.old-map .isle-ico { font-size: 22px; }
+.old-map .x-mark { fill: none; stroke: #C0392B; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw-x 0.7s 0.6s ease-out forwards; }
+@keyframes draw-x { to { stroke-dashoffset: 0; } }
 .btn.dunno { flex: none; }
 .btn.dunno[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-strong); font-weight: 700; }
 .chests { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
@@ -675,11 +717,14 @@ html[data-lite] body::before, html[data-lite] .topbar::after { display: none; }
 @keyframes lid-open { 0%, 45% { transform: rotate(0); } 100% { transform: rotate(-24deg); } }
 @keyframes chest-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
 @media (max-width: 560px) {
-  .sea .isle-name { font-size: 17px; }
+  .sea .isle-name { font-size: 19px; }
+  .sea .isle-ico { font-size: 30px; }
+  .isle-cards { grid-template-columns: minmax(0, 1fr); }
   .chests { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sea .ship, .sea .ship > path, .chest, .chest * { animation: none !important; transition: none !important; }
+  .sea *, .chest, .chest *, .scene, .scene *, .isle-big, .isle-big * { animation: none !important; transition: none !important; }
+  .old-map .x-mark { stroke-dashoffset: 0; }
 }
 
 /* "What changed vs Current trends" under the scenario buttons */

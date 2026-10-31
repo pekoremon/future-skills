@@ -141,10 +141,11 @@ function crewHexGrow(svg, from, to) {
 const crewTitle = (top, second) => (second ? `The ${CREW[second].adj} ${CREW[top].role}` : `The ${CREW[top].role}`);
 
 /* ---------- IT skills test as a treasure hunt ----------
-   Each tested IT area is an island. The quick check scouts every island (a flag when its
-   questions are answered); the 2 strongest become treasure islands, dug into by the in-depth
-   and hands-on questions; the result opens one chest per treasure island, its metal set by
-   the level. Right or wrong is never shown before the result. */
+   Each tested IT area is an island, and each island's questions are one level. The student
+   picks the next island on a sea chart; a short scene plays on arrival and when the level is
+   done. The quick check scouts every island (a flag); the 2 strongest become treasure islands,
+   dug into by the in-depth and hands-on questions; the result opens one chest per treasure
+   island, its metal set by the level. Right or wrong is never shown before the result. */
 const ISLANDS = {
   software_dev: { icon: "💻", short: "Software" },
   data_ai: { icon: "📊", short: "Data & AI" },
@@ -155,47 +156,114 @@ const ISLANDS = {
 const CHEST = { gold: ["#F2C230", "#B8860B"], silver: ["#D5DBE3", "#8A96A6"], wood: ["#B07A4A", "#6B4423"] };
 const chestTier = (level) => (level.min >= 75 ? "gold" : level.min >= 50 ? "silver" : "wood");
 
-let seaShipX = null;  // where the ship was on the last question, so it sails from there
-
-function seaMap(t, idx) {
-  const ids = [...t.areas, ...(t.added || [])];
-  const W = 40 + ids.length * 100, cx = (i) => 70 + i * 100, cy = 58;
-  const q = t.questions[idx];
-  const islands = ids.map((id, i) => {
-    const qs = t.questions.filter((x) => x.domain === id);
-    const screen = qs.filter((x) => x.stage === "screen"), deep = qs.filter((x) => x.stage !== "screen");
-    const done = (list) => list.length && list.every((x) => x.id in t.responses);
-    const treasure = (t.deepDomains || []).includes(id);
-    const here = q.domain === id, x = cx(i);
-    const dots = screen.map((s, k) => `<circle cx="${x - 12 + k * 12}" cy="${cy + 32}" r="3.5" class="${s.id in t.responses ? "dot-on" : "dot"}"/>`).join("");
-    return `<g class="isle${here ? " here" : ""}${done(screen) ? " explored" : ""}">
-      <ellipse cx="${x}" cy="${cy + 10}" rx="38" ry="13" class="sand"/><ellipse cx="${x}" cy="${cy + 4}" rx="26" ry="12" class="grass"/>
-      <text x="${x}" y="${cy + 8}" text-anchor="middle" class="isle-ico">${ISLANDS[id].icon}</text>
-      ${done(screen) ? `<g class="isle-flag"><rect x="${x + 18}" y="${cy - 26}" width="2.5" height="30" fill="#5A3A1A"/><path d="M${x + 20.5} ${cy - 26} h16 l-5 6 l5 6 h-16z" fill="#C0392B"/></g>` : ""}
-      ${treasure ? (done(deep) ? `<text x="${x}" y="${cy - 14}" text-anchor="middle" class="isle-mark">💰</text>` : `<text x="${x}" y="${cy - 14}" text-anchor="middle" class="isle-mark x">✕</text>`) : ""}
-      ${dots}
-      <text x="${x}" y="${cy + 54}" text-anchor="middle" class="isle-name">${ISLANDS[id].short}</text></g>`;
-  }).join("");
-  const shipX = cx(ids.indexOf(q.domain)) - 50;
-  const from = seaShipX === null ? shipX : seaShipX;
-  seaShipX = shipX;
-  const crew = state.crew || {};
-  return `<svg class="sea" viewBox="0 0 ${W} 120" role="img" aria-label="Map of your ${ids.length} IT areas">
-    <rect x="0" y="0" width="${W}" height="120" rx="14" class="sea-bg"/>
-    <path d="M14 22 q8 -5 16 0 t16 0 M${W - 70} 104 q8 -5 16 0 t16 0 M${W / 2} 14 q8 -5 16 0 t16 0" class="wave"/>
-    ${islands}
-    <g class="ship" style="transform: translateX(${from}px)" data-to="${shipX}">
-      <path d="M2 74 h34 l-6 11 h-22z" fill="#7A4E2D"/><rect x="18" y="38" width="2.5" height="36" fill="#5A3A1A"/>
-      <path d="M21 40 l14 26 h-14z" fill="#F4F1EA"/>
-      <g transform="translate(-1 48) scale(0.13)">${sailorSVG({ role: crew.lead, size: true })}</g>
-    </g></svg>`;
+// Questions are played island by island: an island's questions of one stage (quick check, or
+// in depth and hands-on) are one level. The order inside the test does not matter to grading.
+const isleIds = (t) => [...t.areas, ...(t.added || [])];
+const levelOf = (t, id, deep) => t.questions.filter((x) => x.domain === id && (x.stage !== "screen") === deep);
+function isleStatus(t, id) {
+  const screen = levelOf(t, id, false), deep = levelOf(t, id, true);
+  const done = (list) => list.length > 0 && list.every((x) => x.id in t.responses);
+  const open = [...screen, ...deep].some((x) => !(x.id in t.responses));
+  return { screen, deep, scouted: done(screen), treasure: (t.deepDomains || []).includes(id), dug: done(deep), open };
 }
 
-// Sails the ship from the last island to this question's island.
-function seaSail(svg) {
-  const ship = svg && svg.querySelector(".ship");
-  if (!ship) return;
-  requestAnimationFrame(() => requestAnimationFrame(() => { ship.style.transform = `translateX(${ship.dataset.to}px)`; }));
+// The sea chart on the map page: islands in a zigzag, the ship docked where it last was.
+function seaChart(t, at) {
+  const ids = isleIds(t);
+  const W = 70 + ids.length * 150, H = 220;
+  const pos = (i) => [100 + i * 150, i % 2 ? 128 : 84];
+  const islands = ids.map((id, i) => {
+    const [x, y] = pos(i), s = isleStatus(t, id);
+    return `<g class="isle${s.open ? " open" : ""}${s.scouted ? " explored" : ""}" data-isle="${id}">
+      <ellipse cx="${x}" cy="${y + 14}" rx="54" ry="18" class="sand"/><ellipse cx="${x}" cy="${y + 6}" rx="38" ry="16" class="grass"/>
+      <text x="${x}" y="${y + 13}" text-anchor="middle" class="isle-ico">${ISLANDS[id].icon}</text>
+      ${s.scouted ? `<g class="isle-flag"><rect x="${x + 26}" y="${y - 34}" width="3" height="40" fill="#5A3A1A"/><path d="M${x + 29} ${y - 34} h20 l-6 7 l6 7 h-20z" fill="#C0392B"/></g>` : ""}
+      ${s.treasure ? `<text x="${x - 30}" y="${y - 10}" text-anchor="middle" class="isle-mark${s.dug ? "" : " x"}">${s.dug ? "💰" : "✕"}</text>` : ""}
+      <text x="${x}" y="${y + 56}" text-anchor="middle" class="isle-name">${ISLANDS[id].short}</text></g>`;
+  }).join("");
+  const i = ids.indexOf(at);
+  const [sx, sy] = i === -1 ? [22, 150] : [pos(i)[0] - 92, pos(i)[1] + 2];
+  return `<svg class="sea chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of your ${ids.length} IT areas">
+    <rect x="0" y="0" width="${W}" height="${H}" rx="16" class="sea-bg"/>
+    <path d="M18 30 q10 -6 20 0 t20 0 M${W - 90} 200 q10 -6 20 0 t20 0 M${W / 2} 22 q10 -6 20 0 t20 0 M${W / 3} 196 q10 -6 20 0 t20 0" class="wave"/>
+    ${islands}
+    <g class="ship" style="transform: translate(${sx}px, ${sy}px)">${shipSVG()}</g></svg>`;
+}
+
+const shipSVG = () => `<g class="hull"><path d="M2 34 h48 l-8 15 h-32z" fill="#7A4E2D"/><rect x="25" y="-8" width="3" height="42" fill="#5A3A1A"/>
+  <path d="M28 -6 l20 34 h-20z" fill="#F4F1EA"/><path d="M28 -8 h12 l-4 4 l4 4 h-12z" fill="#C0392B"/>
+  <g transform="translate(2 4) scale(0.16)">${sailorSVG({ role: (state.crew || {}).lead, size: true })}</g></g>`;
+
+// Moves the ship on a drawn chart to an island, then resolves.
+function sailTo(svg, id, t) {
+  const ship = svg.querySelector(".ship"), i = isleIds(t).indexOf(id);
+  const [x, y] = [100 + i * 150 - 92, (i % 2 ? 128 : 84) + 2];
+  if (reducedMotion()) return Promise.resolve();
+  ship.style.transform = `translate(${x}px, ${y}px)`;
+  return new Promise((r) => setTimeout(r, 950));
+}
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Cutscenes: a short full-screen moment between levels. A click, a key or "Skip" ends it. */
+function scene(html, ms = 2200) {
+  const el = document.createElement("div");
+  el.className = "scene";
+  el.setAttribute("role", "status");
+  el.innerHTML = `<div class="scene-card">${html}</div><button class="btn ghost scene-skip" type="button">Skip ›</button>`;
+  document.body.appendChild(el);
+  return new Promise((resolve) => {
+    const end = () => { clearTimeout(timer); document.removeEventListener("keydown", end); el.classList.add("out"); setTimeout(() => { el.remove(); resolve(); }, 200); };
+    const timer = setTimeout(end, reducedMotion() ? Math.min(ms, 1400) : ms);
+    el.onclick = end;
+    document.addEventListener("keydown", end, { once: true });
+  });
+}
+
+// One island up close, with the sailor on the beach: a flag going up, or treasure coming out.
+function isleScene(id, mode) {
+  const crew = state.crew || {};
+  return `<svg class="isle-big ${mode}" viewBox="0 0 300 190" aria-hidden="true" focusable="false">
+    <rect x="0" y="0" width="300" height="190" rx="18" class="sea-bg"/>
+    <path d="M20 40 q10 -6 20 0 t20 0 M220 170 q10 -6 20 0 t20 0" class="wave"/>
+    <ellipse cx="150" cy="140" rx="120" ry="34" class="sand"/><ellipse cx="150" cy="128" rx="86" ry="28" class="grass"/>
+    <g class="palm"><path d="M222 136 q-6 -40 4 -72" stroke="#7A4E2D" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M226 64 q-26 -8 -40 8 M226 64 q-10 -22 -32 -22 M226 64 q14 -20 36 -14 M226 64 q24 -2 32 18" stroke="#3E8E41" stroke-width="7" fill="none" stroke-linecap="round"/></g>
+    <text x="96" y="136" text-anchor="middle" class="isle-ico big">${ISLANDS[id].icon}</text>
+    <g class="pole"><rect x="176" y="62" width="4" height="70" fill="#5A3A1A"/><path class="cloth" d="M180 64 h34 l-9 10 l9 10 h-34z" fill="#C0392B"/></g>
+    <g class="loot"><text x="178" y="120" text-anchor="middle" class="loot-ico">💰</text><text x="160" y="100" class="spark">✦</text><text x="196" y="96" class="spark">✦</text></g>
+    <g transform="translate(104 44) scale(0.38)">${sailorSVG({ role: crew.lead, size: true, cls: mode === "arrive" ? "act-I hold-I" : mode === "dig" ? "act-R" : "act-E" })}</g>
+  </svg>`;
+}
+
+function arriveScene(t, id, deep) {
+  const n = levelOf(t, id, deep).length;
+  return scene(`${isleScene(id, "arrive")}
+    <p class="eyebrow">${deep ? "Treasure island" : "New island"}</p>
+    <h2>${esc(ISLANDS[id].short)}</h2>
+    <p class="muted">${n} ${deep ? "harder questions" : "questions"}</p>`, 1900);
+}
+
+function clearedScene(id, deep, coins) {
+  return scene(`${isleScene(id, deep ? "dig" : "flag")}
+    <h2>${deep ? "Treasure dug up!" : "Island explored!"}</h2>
+    <p class="muted">${esc(ISLANDS[id].short)}</p>
+    ${coins ? `<p class="scene-coins">+${coins} 🪙</p>` : ""}`, 2300);
+}
+
+// After the quick check: an old map where the 2 strongest islands get a red X.
+function treasureScene(t) {
+  const ids = isleIds(t), W = 60 + ids.length * 90;
+  const marks = ids.map((id, i) => {
+    const x = 60 + i * 90, y = i % 2 ? 92 : 64, hit = t.deepDomains.includes(id);
+    return `<g class="${hit ? "hit" : ""}"><circle cx="${x}" cy="${y}" r="26" class="map-isle"/><text x="${x}" y="${y + 7}" text-anchor="middle" class="isle-ico">${ISLANDS[id].icon}</text>
+      ${hit ? `<path class="x-mark" d="M${x - 16} ${y - 16} l32 32 M${x + 16} ${y - 16} l-32 32"/>` : ""}</g>`;
+  }).join("");
+  return scene(`<svg class="old-map" viewBox="0 0 ${W} 150" aria-hidden="true" focusable="false">
+      <rect x="4" y="4" width="${W - 8}" height="142" rx="10" class="parchment"/>
+      <path d="M${60} ${64} ${ids.map((_, i) => `L${60 + i * 90} ${i % 2 ? 92 : 64}`).join(" ")}" class="trail"/>${marks}</svg>
+    <h2>Treasure signs found!</h2>
+    <p class="muted">Dig deeper on these islands:</p>
+    <p class="scene-names">${t.deepDomains.map((d) => `<strong>${ISLANDS[d].icon} <span>${esc(ISLANDS[d].short)}</span></strong>`).join("")}</p>`, 2800);
 }
 
 function chestSVG(tier, open) {
@@ -217,8 +285,9 @@ const TEST_COINS = { island: 20, finish: 30 };
 function testCoins(kind, id) {
   const got = readSaved(TEST_COINS_KEY) || {};
   const key = `${kind}:${id}`;
-  if (got[key] || typeof addCoins !== "function") return;
+  if (got[key] || typeof addCoins !== "function") return 0;
   got[key] = true;
   writeSaved(TEST_COINS_KEY, got);
   addCoins(TEST_COINS[kind], kind === "island" ? "island explored" : "test finished");
+  return TEST_COINS[kind];
 }

@@ -1441,8 +1441,7 @@ async function addAreas(ids, returnTo) {
   t.extending = true;
   t.returnTo = returnTo;
   saveState();
-  const first = t.questions.findIndex((q) => ids.includes(q.domain) && !(q.id in t.responses));
-  location.hash = `#/test/${(first === -1 ? t.questions.length - 1 : first) + 1}`;
+  location.hash = "#/test/map";
 }
 
 function wireMoreAreas(returnTo) {
@@ -1458,7 +1457,7 @@ async function startTest(areas) {
   state.test = { seed: t.seed, areas: t.areas, domains: t.domains, selection: t.selection, questions: t.questions, responses: {},
     code: {}, runs: {}, deepDomains: null, result: null };
   saveState();
-  location.hash = "#/test/1";
+  location.hash = "#/test/map";
 }
 
 // The areas the test checks, from the student's CV evidence and interests (server rules).
@@ -1469,8 +1468,6 @@ const testPlan = () => api("/api/assessment/plan", { body: JSON.stringify({
 async function pageTestIntro() {
   const going = testInProgress();
   const answered = going ? Object.keys(state.test.responses).length : 0;
-  const open = going ? state.test.questions.findIndex((q) => !(q.id in state.test.responses)) : -1;
-  const nextOpen = going ? (open === -1 ? state.test.questions.length - 1 : open) : 0;
   const plan = await testPlan();
   const missing = [!skillsDone() && ["#/cv", "add your CV"], !quizDone() && ["#/quiz", "answer the interest questions"]].filter(Boolean)
     .map(([href, text], i) => `<a href="${href}">${i ? text : text[0].toUpperCase() + text.slice(1)}</a>`);
@@ -1495,7 +1492,7 @@ async function pageTestIntro() {
       </ul>
     </div>
     <div class="stack">
-      ${going ? `<a class="btn primary" href="#/test/${nextOpen + 1}">Continue (${answered} answered)</a>` : ""}
+      ${going ? `<a class="btn primary" href="#/test/map">Continue (${answered} answered)</a>` : ""}
       ${state.test && state.test.result ? `<a class="btn primary" href="#/test/result">See your last result</a>` : ""}
       <button class="btn${going || (state.test && state.test.result) ? "" : " primary"}" type="button" id="begin">${state.test ? "Start a new test" : "Start the test"}</button>
       <a class="btn ghost" href="#/results">Skip to step 4, my jobs</a>
@@ -1617,6 +1614,8 @@ function wireAnswer(q) {
   }
 }
 
+// Next question on this island; when the island's level is done, its scene, then the chart,
+// the in-depth stage (after the treasure map) or the result.
 async function nextFromItem(idx, button) {
   const t = state.test;
   const q = t.questions[idx];
@@ -1625,17 +1624,25 @@ async function nextFromItem(idx, button) {
     button.textContent = "Running your tests…";
     await runCode(q);  // grade the latest code, not an older run
   }
-  if (t.questions.filter((x) => x.domain === q.domain && x.stage === "screen").every((x) => x.id in t.responses)) testCoins("island", q.domain);
+  if (!(q.id in t.responses)) { t.responses[q.id] = null; saveState(); }  // left blank: same as "I don't know yet"
+  const deep = q.stage !== "screen";
+  const level = levelOf(t, q.domain, deep);
+  const after = level.slice(level.indexOf(q) + 1).concat(level).find((x) => !(x.id in t.responses));
+  if (after) { location.hash = `#/test/${t.questions.indexOf(after) + 1}`; return; }
+  t.at = q.domain;
+  saveState();
+  await clearedScene(q.domain, deep, deep ? 0 : testCoins("island", q.domain));
   try {
-    if (idx + 1 < t.questions.length) {
-      location.hash = `#/test/${idx + 2}`;
+    if (isleIds(t).some((id) => isleStatus(t, id).open)) {
+      location.hash = "#/test/map";
     } else if (!t.deepDomains) {
       button.textContent = "Finding your strongest areas…";
       const next = await api("/api/assessment/next", { body: JSON.stringify({ seed: t.seed, areas: t.areas, responses: t.responses }) });
       t.deepDomains = next.domains;
       t.questions = t.questions.concat(next.questions);
       saveState();
-      location.hash = `#/test/${idx + 2}`;
+      await treasureScene(t);
+      location.hash = "#/test/map";
     } else {
       button.textContent = "Scoring…";
       t.result = await api("/api/assessment/result", { body: JSON.stringify({ seed: t.seed, areas: t.areas, added: t.added || [], responses: t.responses }) });
@@ -1651,34 +1658,94 @@ async function nextFromItem(idx, button) {
   }
 }
 
+// The sea chart between levels: the student picks the next island to sail to.
+function pageTestMap() {
+  if (!testInProgress()) { location.hash = "#/test"; return; }
+  const t = state.test;
+  const ids = isleIds(t);
+  const open = ids.filter((id) => isleStatus(t, id).open);
+  if (!open.length) {  // every level answered but not graded yet (page closed mid-way): finish from the last question
+    location.hash = `#/test/${t.questions.length}`;
+    return;
+  }
+  const deep = Boolean(t.deepDomains) && open.every((id) => t.deepDomains.includes(id) && levelOf(t, id, false).every((x) => x.id in t.responses));
+  const answered = Object.keys(t.responses).length;
+  const card = (id) => {
+    const s = isleStatus(t, id), level = deep ? s.deep : s.screen;
+    const left = level.filter((x) => !(x.id in t.responses)).length;
+    const todo = deep ? !s.dug : !s.scouted;
+    const status = todo ? `${left} ${deep ? "harder questions" : "questions"}` : deep ? "Treasure dug up" : "Explored";
+    return `<button class="isle-card${todo ? "" : " done"}" type="button" data-sail="${id}"${todo ? "" : " disabled"}>
+      <span class="isle-card-ico" aria-hidden="true">${todo ? ISLANDS[id].icon : deep ? "💰" : "🚩"}</span>
+      <span class="stack" style="gap: 0"><strong>${esc(domainName(id))}</strong><span class="muted small">${status}</span></span></button>`;
+  };
+  render(`
+  <div class="quiz test stack">
+    <div class="row" style="justify-content: space-between">
+      <a class="btn ghost" href="#/test">&larr; Back</a>
+      <span class="muted small">${answered} of ${testLength(t)} answered</span>
+      <a class="btn ghost" href="#/test">Pause</a>
+    </div>
+    <p class="eyebrow">${deep ? "Step 3 of 4 · Dig for treasure" : "Step 3 of 4 · Explore the islands"}</p>
+    <h1>${deep ? (ids.some((id) => isleStatus(t, id).dug) ? "On to the last treasure island" : "Which treasure island first?") : answered ? "Where to next?" : "Choose your first island"}</h1>
+    ${seaChart(t, t.at)}
+    <div class="isle-cards">${ids.filter((id) => !deep || t.deepDomains.includes(id)).map(card).join("")}</div>
+    <p class="muted small">${deep ? "These questions go deeper, with a hands-on task on each island." : "Each island is one IT area. Answer what you can: \"I don't know yet\" is fine."}</p>
+  </div>`);
+  const chart = app.querySelector(".sea.chart");
+  let sailing = false;
+  const go = async (id) => {
+    if (sailing) return;
+    sailing = true;
+    app.querySelectorAll("[data-sail]").forEach((b) => { b.disabled = true; });
+    await sailTo(chart, id, t);
+    await arriveScene(t, id, deep);
+    const first = levelOf(t, id, deep).find((x) => !(x.id in t.responses));
+    location.hash = `#/test/${t.questions.indexOf(first) + 1}`;
+  };
+  app.querySelectorAll("button[data-sail]:not(:disabled)").forEach((b) => {
+    b.onclick = () => go(b.dataset.sail);
+    const isle = chart.querySelector(`[data-isle="${b.dataset.sail}"]`);
+    if (isle) { isle.classList.add("pick"); isle.onclick = () => go(b.dataset.sail); }
+  });
+}
+
+// Above each question: the island, and one dot per question of this level.
+function isleBar(t, q) {
+  const level = levelOf(t, q.domain, q.stage !== "screen");
+  const dots = level.map((x) => `<span class="${x === q ? "now" : x.id in t.responses ? "on" : ""}"></span>`).join("");
+  return `<div class="isle-bar"><span class="isle-card-ico" aria-hidden="true">${ISLANDS[q.domain].icon}</span>
+    <strong>${esc(domainName(q.domain))}</strong><span class="isle-dots" role="img" aria-label="Question ${level.indexOf(q) + 1} of ${level.length} on this island">${dots}</span></div>`;
+}
+
 function pageTestItem(n) {
   if (!testInProgress()) { location.hash = "#/test"; return; }
   const t = state.test;
   const idx = Math.min(Math.max(n, 1), t.questions.length) - 1;
   const q = t.questions[idx];
   const total = testLength(t);
-  const lastScreen = !t.deepDomains && idx === t.questions.length - 1;
+  const level = levelOf(t, q.domain, q.stage !== "screen");
+  const before = level[level.indexOf(q) - 1];
+  const lastOfLevel = level.every((x) => x === q || x.id in t.responses);
+  const done = Object.keys(t.responses).length - (q.id in t.responses ? 1 : 0);
   render(`
   <div class="quiz test stack">
     <div class="row" style="justify-content: space-between">
-      <a class="btn ghost" href="${idx ? `#/test/${idx}` : "#/test"}" aria-label="Previous question">&larr; Back</a>
-      <span class="muted small">Question ${idx + 1} of ${total}</span>
+      <a class="btn ghost" href="${before ? `#/test/${t.questions.indexOf(before) + 1}` : "#/test/map"}">&larr; ${before ? "Back" : "Map"}</a>
+      <span class="muted small">Question ${done + 1} of ${total}</span>
       <a class="btn ghost" href="#/test">Pause</a>
     </div>
-    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / total) * 100)}%"></div></div>
-    ${seaMap(t, idx)}
-    ${(t.added || []).includes(q.domain) && !(t.added || []).includes((t.questions[idx - 1] || {}).domain) ? `<p class="note">Extra quick check: <strong>${esc(nameList(t.added.filter((a) => !(t.result && (t.result.added || []).includes(a)))))}</strong>. Your earlier answers stay as they are.</p>` : ""}
-    ${idx === screenCount(t) && t.deepDomains ? `<p class="note">Your strongest areas so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
-    <div class="row"><span class="chip">${esc(domainName(q.domain))}</span><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done + 1}"><div style="width: ${Math.round(((done + 1) / total) * 100)}%"></div></div>
+    ${isleBar(t, q)}
+    <div class="row"><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
     <h2 id="q-text" data-no-i18n>${esc(q.prompt)}</h2>
     ${q.code ? `<pre class="code" aria-label="Code or log for this question">${esc(q.code)}</pre>` : ""}
     ${questionBody(q)}
     <div class="sticky-actions row" style="flex-wrap: nowrap">
       <button class="btn dunno" type="button" id="dunno" aria-pressed="${t.responses[q.id] === null}">I don't know yet</button>
-      <button class="btn primary" type="button" id="next" style="flex: 1">${idx + 1 === total ? "See my result" : lastScreen ? "Continue to in-depth questions" : "Next"}</button>
+      <button class="btn primary" type="button" id="next" style="flex: 1">${lastOfLevel ? "Finish this island" : "Next"}</button>
     </div>
   </div>`);
-  seaSail(app.querySelector(".sea"));
   wireAnswer(q);
   const next = document.getElementById("next");
   next.onclick = () => nextFromItem(idx, next);
@@ -2375,6 +2442,7 @@ async function route() {
   try {
     if (page === "shared" && parts[1]) await pageSharedResult(parts[1]);
     else if (page === "test" && parts[1] === "result") pageTestResult();
+    else if (page === "test" && parts[1] === "map") pageTestMap();
     else if (page === "test" && parts[1]) pageTestItem(Number(parts[1]) || 1);
     else if (page === "test") await pageTestIntro();
     else if (page === "quiz" && parts[1]) await pageQuizItem(Number(parts[1]) || 1);
