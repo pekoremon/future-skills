@@ -556,6 +556,8 @@ const MS = {
   "About these estimates": "Tentang anggaran ini",
   "How the match score works": "Cara skor padanan berfungsi",
   "Show more": "Tunjuk lagi",
+  "No arXiv category matches this area, so there is no number to change here.": "Tiada kategori arXiv yang sepadan dengan bidang ini, jadi tiada nombor untuk diubah di sini.",
+  "Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.": "Ubah bilangan kertas kajian arXiv atau bilangan iklan kerja DOSM, dan lihat isyarat, skor trend dan kedudukan pekerjaan anda bergerak. Hanya salinan anda yang berubah.",
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
@@ -1169,6 +1171,8 @@ const ZH = {
   "About these estimates": "关于这些估计",
   "How the match score works": "匹配分数怎么算",
   "Show more": "显示更多",
+  "No arXiv category matches this area, so there is no number to change here.": "arXiv 没有对应这个领域的类别，所以这里没有可以修改的数字。",
+  "Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.": "修改 arXiv 论文数或 DOSM 招聘广告数，看看信号、趋势分数和你的职位排名怎么变。只有你的副本会改变。",
 };
 
 const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and tools/g, "履历与工具").replace(/preferences/g, "偏好").replace(/ and /g, "和");

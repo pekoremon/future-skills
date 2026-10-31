@@ -3,7 +3,7 @@
    Drawn from /api/trends and /api/roles, so every chart follows the data the "Update data"
    job writes. Plain HTML bars and one small SVG line chart, no chart library, so the page
    stays light on mobile data. Chart rules: one accent hue for the series that matters and
-   gray for context, an ordered teal ramp for MyCOL status, colours checked for colour
+   gray for context, colours checked for colour
    blindness and contrast in light and dark mode (style.css, --viz-*). Every chart has a
    table view and direct labels, so hover details never hold the only copy of a number.
    Uses esc, fmt, AREA_NAMES and SUBFIELD_AREA from app.js (loaded after this file). */
@@ -154,11 +154,6 @@ function vizKpis(t, roles) {
       wageGrowth ? `<span class="muted">Change in a year:</span> ${vizSigned(vizNum(wageGrowth.value))}%` : "",
     ]));
   }
-  const it = roles.filter((r) => AREA_NAMES[r.it_area]);
-  if (it.length) {
-    tiles.push(tile("IT roles on the MyCOL critical list", `${it.filter((r) => r.is_mycol === "yes").length} / ${it.length}`,
-      ["<span class=\"muted\">TalentCorp MyCOL 2024/2025</span>"]));
-  }
   const fastest = vizAiGrowth(t).filter((r) => r.growth !== null).sort((a, b) => b.growth - a.growth)[0];
   if (fastest) {
     tiles.push(tile("Fastest-growing AI research", `${vizSigned(fastest.growth)}%`,
@@ -235,32 +230,7 @@ function vizAiChart(t) {
     body, `<span>Source:</span> arXiv API · ${win} · <span>fetched</span> ${esc(ref ? ref.after.fetched_date : "")}`,
     vizTable(["IT area", "AI papers before", "AI papers latest", "Growth", "Direction"],
       rows.map((r) => [esc(AREA_NAMES[r.area]), r.before ? vizInt(r.before.value) : "–", r.after ? vizInt(r.after.value) : "–",
-        r.growth === null ? "no data" : `${vizSigned(r.growth)}%`, VIZ_DIRECTION[r.direction] || "no data"])));
-}
-
-function vizMycolChart(roles) {
-  const STATUS = [["yes", "On MyCOL critical list", "l1"], ["near", "Related MyCOL occupation", "l2"], ["no", "Not on MyCOL", "l3"]];
-  const by = {};
-  roles.filter((r) => AREA_NAMES[r.it_area]).forEach((r) => {
-    const c = (by[r.it_area] = by[r.it_area] || { yes: [], near: [], no: [] });
-    (c[r.is_mycol] || c.no).push(r.role_name_en);
-  });
-  const rows = Object.entries(by).sort(([, a], [, b]) => b.yes.length - a.yes.length || b.near.length - a.near.length);
-  if (!rows.length) return "";
-  const total = (c) => c.yes.length + c.near.length + c.no.length;
-  const maxN = Math.max(...rows.map(([, c]) => total(c)));
-  const body = `
-    <div class="viz-legend">${STATUS.map(([, label, cls]) => `<span><i class="viz-key ${cls}"></i>${label}</span>`).join("")}</div>
-    <div class="viz-rows">${rows.map(([area, c]) => `
-      <div class="viz-row no-value">
-        <span class="viz-label">${esc(AREA_NAMES[area])}</span>
-        <span class="viz-track"><span class="viz-stack" style="width: ${(total(c) * 100) / maxN}%">${STATUS.filter(([k]) => c[k].length).map(([k, label, cls]) => `
-          <span class="viz-seg ${cls}" style="flex: ${c[k].length}" data-tip="${vizTipAttr(AREA_NAMES[area], [[String(c[k].length), label, cls], ...c[k].map((n) => ["", n])])}">${c[k].length}</span>`).join("")}</span></span>
-      </div>`).join("")}</div>`;
-  return vizCard("IT roles on Malaysia's critical-occupations list",
-    "MyCOL is TalentCorp's official list of occupations Malaysia is short of. Each bar counts our IT roles in that area.",
-    body, "<span>Source:</span> TalentCorp MyCOL 2024/2025 · <span>roles matched to MyCOL occupations by the team</span>",
-    vizTable(["IT area", ...STATUS.map(([, label]) => label)], rows.map(([area, c]) => [esc(AREA_NAMES[area]), ...STATUS.map(([k]) => String(c[k].length))])));
+        r.growth === null ? "no data" : `${vizSigned(r.growth)}%`, VIZ_DIRECTION[r.direction] || "no data"])), true);
 }
 
 function vizRolesChart(t, roles) {
@@ -366,7 +336,6 @@ function trendDashboard(t, roles) {
       ${vizAreaChart(t)}
       ${vizJobsChart(t)}
       ${vizAiChart(t)}
-      ${vizMycolChart(roles)}
       ${vizRolesChart(t, roles)}
     </div>`;
 }

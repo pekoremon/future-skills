@@ -604,7 +604,6 @@ function matchCard(m, rank) {
         <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)}</h3>
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
-          ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : m.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
           ${rangeBadge(m)}
           ${flags}
           ${sdg}
@@ -668,7 +667,6 @@ function topCard(m, rank) {
         <h3>${rank}. ${esc(m.role_name)}</h3>
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
-          ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : ""}
           ${rangeBadge(m)}
         </div>
         ${next.length ? `<p class="small"><span class="muted">Learn next:</span> ${next.map(esc).join(", ")}</p>` : ""}
@@ -963,7 +961,7 @@ async function pageTrends() {
     <div id="trend-dash" class="stack"></div>
     <section class="card stack" style="gap: 8px">
       <h2>What if this data changed?</h2>
-      <p class="small">Change an arXiv paper count, the DOSM job ad count or a role's MyCOL status, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
+      <p class="small">Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
       <div class="row"><a class="btn primary" href="#/whatif">Change the trend data</a></div>
     </section>
     <div class="card stack" style="gap: 10px">
@@ -1038,7 +1036,6 @@ const SIGNAL_NAMES = { arxiv_ai_paper_growth: "AI paper growth (arXiv)", dosm_on
   dosm_online_ad_share: "Share of all online job ads (DOSM)", mycol_coverage: "Roles on MyCOL in this area", mycol_status: "MyCOL status" };
 const DIRECTIONS = { up: "up", down: "down", flat: "flat", on_mycol: "on MyCOL", near_mycol: "near MyCOL", not_on_mycol: "not on MyCOL",
   yes: "on MyCOL", near: "near MyCOL", no: "not on MyCOL", no_data: "no data" };
-const MYCOL_NAMES = { yes: "On MyCOL critical list", near: "Related MyCOL occupation", no: "Not on MyCOL" };
 const num0 = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
 const pct = (n, d = 1) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n).toFixed(d)}`;
 const fromTo = (b, a, d = 1) => (b === a || fmt(b, d) === fmt(a, d) ? fmt(a, d) : `${fmt(b, d)} → <strong>${fmt(a, d)}</strong>`);
@@ -1072,29 +1069,14 @@ function whatIfInputs(w) {
       <p class="small muted">${INPUT_RULES[i.metric]} <span>Source:</span> <a href="${safeUrl(i.source_url)}" rel="noopener" target="_blank">${esc(i.source_name)}</a> <span>(${esc(i.release_date)})</span></p>
     </div>`;
   };
-  const mycol = (r) => {
-    const v = whatIfEdits.mycol[r.id] ?? r.value;
-    return `
-    <div class="wi-row wi-mycol${v !== r.value ? " changed" : ""}">
-      <label for="wi-${esc(r.id)}">${esc(r.label)}</label>
-      <select id="wi-${esc(r.id)}" data-mycol="${esc(r.id)}">${r.options.map((o) => `<option value="${o}"${o === v ? " selected" : ""}>${MYCOL_NAMES[o]}</option>`).join("")}</select>
-      <span class="small muted"><span>Real:</span> <span>${MYCOL_NAMES[r.value]}</span></span>
-    </div>`;
-  };
-  const numbers = items.filter((i) => i.kind === "number"), roles = items.filter((i) => i.kind === "mycol");
-  const src = roles[0];
+  const numbers = items.filter((i) => i.kind === "number");
   return `
-    ${numbers.length ? numbers.map(number).join("") : '<p class="small muted">No arXiv category matches this area, so its trend has no AI momentum part. Only MyCOL can change it.</p>'}
-    <h3>MyCOL critical-occupation status</h3>
-    <p class="small muted">TalentCorp's list of occupations Malaysia is short of. A role on the list adds to its area's Malaysian demand.${src && src.source_url ? ` <span>Source:</span> <a href="${safeUrl(src.source_url)}" rel="noopener" target="_blank">${esc(src.source_name)}</a>` : ""}</p>
-    <div class="stack" style="gap: 6px">${roles.map(mycol).join("")}</div>`;
+    ${numbers.length ? numbers.map(number).join("") : '<p class="small muted">No arXiv category matches this area, so there is no number to change here.</p>'}`;
 }
 
 function whatIfHtml(r) {
   const roleName = Object.fromEntries(r.before.map((m) => [m.role_id, m.role_name]));
-  const changeRow = (c) => (c.kind === "mycol"
-    ? `<li><strong>${esc(c.label)}</strong> · <span>MyCOL status</span>: <span>${MYCOL_NAMES[c.before]}</span> → <strong>${MYCOL_NAMES[c.after]}</strong></li>`
-    : `<li><strong>${esc(AREA_NAMES[c.area])}</strong> · <span>${INPUT_NAMES[c.metric]}</span> <span class="muted">(${esc(c.scope)})</span>: ${num0(c.before)} → <strong>${num0(c.after)}</strong></li>`);
+  const changeRow = (c) => (`<li><strong>${esc(AREA_NAMES[c.area])}</strong> · <span>${INPUT_NAMES[c.metric]}</span> <span class="muted">(${esc(c.scope)})</span>: ${num0(c.before)} → <strong>${num0(c.after)}</strong></li>`);
   const value = (s, v) => {
     if (v === null || v === undefined || v === "" || s.signal === "mycol_status") return "";
     const n = Number(v);
@@ -1160,7 +1142,7 @@ async function pageWhatIf() {
     <p class="small">${own ? "<span>Ranking for:</span> <strong>your answers</strong>" : `<span>Ranking for the demo student:</span> <strong>${esc(demo ? demo.name : "P01")}</strong>`} · <span>Scenario:</span> <span id="wi-sc"></span></p>
     <section class="card stack" style="gap: 10px">
       <h2>Quick examples</h2>
-      <div class="row" style="gap: 8px">${w.examples.map((e) => `<button class="btn" type="button" data-example="${esc(e.id)}">${esc(e.name)}</button>`).join("")}</div>
+      <div class="row" style="gap: 8px">${w.examples.filter((e) => !Object.keys(e.changes.mycol).length).map((e) => `<button class="btn" type="button" data-example="${esc(e.id)}">${esc(e.name)}</button>`).join("")}</div>
     </section>
     <section class="card stack" style="gap: 12px">
       <h2>Or change the data yourself</h2>
@@ -1956,7 +1938,6 @@ async function pageLearn(roleId) {
     <h1>${esc(p.role.name)}: how to get there</h1>
     <div class="row" style="gap: 6px">
       <span class="chip plain">${esc(p.role.area_name || "IT")}</span>
-      ${p.role.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : p.role.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
       <a class="chip plain" href="https://www.onetonline.org/link/summary/${esc(p.role.onet_soc)}" target="_blank" rel="noopener">What the job involves (O*NET)</a>
     </div>
     <section class="card stack" style="gap: 8px" aria-labelledby="progress-title">
