@@ -60,6 +60,11 @@ TABLES = {
     },
 }
 
+TABLES["projects.csv"] = {
+    "columns": ["project_id", "role_id", "title", "description"],
+    "required": ["project_id", "role_id", "title", "description"],
+}
+
 TABLES["learning_resources.csv"] = {
     "columns": ["resource_id", "targets", "title", "provider", "format", "url", "duration_hours",
                 "cost_myr", "level", "language", "verified_date", "notes"],
@@ -220,6 +225,8 @@ def check_references(tables: dict[str, list[dict]]) -> list[str]:
         ref("courses.csv", i, "skill", row.get("skill_id", ""))
     for i, row in enumerate(tables.get("certifications.csv", []), start=2):
         ref("certifications.csv", i, "role", row.get("role_id", ""))
+    for i, row in enumerate(tables.get("projects.csv", []), start=2):
+        ref("projects.csv", i, "role", row.get("role_id", ""))
     areas = {"all", "software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux", "it_mgmt"}
     for i, row in enumerate(tables.get("learning_resources.csv", []), start=2):
         for target in filter(None, row.get("targets", "").split(";")):

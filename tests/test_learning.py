@@ -23,6 +23,12 @@ class TestLearning(unittest.TestCase):
             self.assertTrue(all(r["url"].startswith("https://") for r in links))
             self.assertLessEqual(len(p["skills"]), learning.MAX_SKILLS)
 
+    def test_every_role_has_project_ideas(self):
+        for role in self.data["roles"]:
+            p = learning.page(role["role_id"], self.data)
+            self.assertGreaterEqual(len(p["projects"]), 2, role["role_id"])
+            self.assertTrue(all(x["title"] and x["description"] for x in p["projects"]))
+
     def test_path_lists_its_sdg_targets(self):
         for role in self.data["roles"]:
             p = learning.page(role["role_id"], self.data)

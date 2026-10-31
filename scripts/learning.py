@@ -7,7 +7,8 @@ Stages, in order:
                     its free resources (data/learning_resources.csv) and courses
                     (data/courses.csv). With a student profile the list is that student's
                     gaps from matching.py; without one it is the role's own list.
-  4. Prove it       certifications for the role (data/certifications.csv)
+  4. Prove it       portfolio project ideas for the role (data/projects.csv) and its
+                    certifications (data/certifications.csv)
 
 Every stage is free. Paid courses whose provider says they are HRD Corp claimable are
 listed apart, for working adults whose employer can claim the fee (matching.hrd_corp_options).
@@ -111,6 +112,8 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
     for s in skills:
         s["sdg"] = [{"target": x["target"], "goal_name": x["goal_name"]} for x in data["sdg"].get(("skill", s["skill_id"]), [])]
     certs = [c for c in matching.read_csv("certifications.csv") if c["role_id"] == role_id]
+    projects = [{"id": p["project_id"], "title": p["title"], "description": p["description"]}
+                for p in matching.read_csv("projects.csv") if p["role_id"] == role_id]
 
     seen, hours, untimed = set(), 0.0, 0
     for r in foundations + for_role + [x for s in skills for x in s["resources"]]:
@@ -131,6 +134,7 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
             {"id": "role", "title": f"Made for {role['role_name_en']}", "resources": for_role},
         ],
         "skills": skills, "skills_not_shown": more,
+        "projects": projects,
         "certifications": certs,
         "hrd_corp_options": hrd,
         "sdg": sdg_summary(role_id, skills, data["sdg"]),

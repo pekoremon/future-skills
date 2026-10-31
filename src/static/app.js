@@ -172,7 +172,7 @@ function pageHome() {
       </div>
       <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.</p>
       <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
-      <p class="muted small">Your answers and learning progress are saved in this browser only, so you can close the page and come back.</p>
+      <p class="muted small">Your progress is saved in this browser.</p>
       ${JOURNEY.some((st) => st.done() || skipped(st)) || trackedPaths().length ? '<div class="row"><button class="btn ghost small" type="button" id="forget">Clear my saved answers and progress</button></div>' : ""}
     </section>
   </div>`);
@@ -1828,14 +1828,18 @@ function doneBox(key, title) {
 }
 
 function resourceHtml(r) {
-  const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr === 0 || r.cost_myr === null ? "Free" : `RM ${fmt(r.cost_myr, 0)}`, r.level ? esc(r.level) : ""].filter(Boolean);
-  const done = progress.done[r.url];
-  return `<li class="res${done ? " is-done" : ""}">
+  const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr ? `RM ${fmt(r.cost_myr, 0)}` : "", r.level ? esc(r.level) : ""].filter(Boolean);
+  return `<li class="res${progress.done[r.url] ? " is-done" : ""}">
     <div class="res-top"><span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>${doneBox(r.url, r.title)}</div>
     <a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
-    <span class="muted small">${facts.join(" · ")}${r.notes ? ` · ${esc(r.notes)}` : ""}<span class="done-when">${done ? ` · finished ${esc(done)}` : ""}</span></span>
+    <span class="muted small">${facts.join(" · ")}</span>
   </li>`;
 }
+
+// The UN's colour for each of the 17 Sustainable Development Goals, for the goal tiles.
+const SDG_COLOURS = ["", "#E5243B", "#DDA63A", "#4C9F38", "#C5192D", "#FF3A21", "#26BDE2", "#FCC30B", "#A21942", "#FD6925",
+  "#DD1367", "#FD9D24", "#BF8B2E", "#3F7E44", "#0A97D9", "#56C02B", "#00689D", "#19486A"];
+const sdgTile = (goal, name) => `<span class="sdg-tile" style="background: ${SDG_COLOURS[goal] || "var(--accent)"}" role="img" aria-label="SDG ${esc(goal)}: ${esc(name)}"><b>${esc(goal)}</b><small>SDG</small></span>`;
 
 /* ---------- learning progress ---------- */
 
@@ -1869,8 +1873,8 @@ function pathProgressLabel(roleId) {
 function progressHtml(st, hoursPerWeek) {
   const left = Math.max(0, st.hoursTotal - st.hoursDone);
   return `<div class="row" style="justify-content: space-between; gap: 6px">
-      <strong>${st.done} of ${st.total} finished · ${st.pct}%</strong>
-      <span class="muted small">${st.hoursTotal ? `${fmt(st.hoursDone)} of ${fmt(st.hoursTotal)} timed hours done${left && hoursPerWeek ? ` · about ${fmt(left / hoursPerWeek)} weeks left at ${esc(hoursPerWeek)} h a week` : ""}` : ""}</span>
+      <strong>${st.done} / ${st.total} done</strong>
+      <span class="muted small">${left && hoursPerWeek ? `about ${fmt(left / hoursPerWeek, 0)} weeks left at ${esc(hoursPerWeek)} h a week` : ""}</span>
     </div>
     <div class="progress learn-progress" role="progressbar" aria-label="Learning path progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${st.pct}"><div style="width: ${st.pct}%"></div></div>`;
 }
@@ -1891,51 +1895,60 @@ async function pageLearn(roleId) {
   const more = (rest, html) => (rest.length ? `<details class="fold"><summary><span>Show more</span> <span class="muted">(${rest.length})</span></summary>${html}</details>` : "");
   const list = (rs, n = 3) => (rs.length
     ? `<ul class="res-list">${rs.slice(0, n).map(resourceHtml).join("")}</ul>${more(rs.slice(n), `<ul class="res-list">${rs.slice(n).map(resourceHtml).join("")}</ul>`)}`
-    : '<p class="muted small">No checked free resource in our list yet.</p>');
+    : '<p class="muted small">No free course yet.</p>');
   const skillHtml = (s) => `
     <div class="stack learn-skill" style="gap: 6px">
-      <h3>${esc(s.skill_name)} <span class="muted small">· ${s.kind === "technology" ? "technology" : "skill"}${s.your_level !== undefined ? (s.rated === false ? ` · not rated yet · needed ${fmt(s.level_needed)} (O*NET 0–7)` : ` · you ${fmt(s.your_level)} → needed ${fmt(s.level_needed)} (O*NET 0–7)`) : ""}</span></h3>
-      ${s.sdg && s.sdg.length ? `<div class="row" style="gap: 6px">${s.sdg.map((x) => `<span class="chip plain small" title="${esc(x.goal_name)}">SDG ${esc(x.target)}</span>`).join("")}</div>` : ""}
+      <h3>${esc(s.skill_name)}${s.your_level !== undefined && s.rated !== false ? ` <span class="muted small">you ${fmt(s.your_level)} → need ${fmt(s.level_needed)}</span>` : ""}</h3>
       ${list(s.resources, 2)}
     </div>`;
   const skills = p.skills.slice(0, 3).map(skillHtml).join("") + more(p.skills.slice(3), p.skills.slice(3).map(skillHtml).join(""));
-  const certs = p.certifications.length
-    ? `<ul class="res-list">${p.certifications.map((c) => `<li class="res${progress.done[`cert:${c.cert_id}`] ? " is-done" : ""}"><div class="res-top"><span class="chip plain res-kind">Certification</span>${doneBox(`cert:${c.cert_id}`, c.cert_name)}</div>
-        <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
-        <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""} · ${esc(c.how_to_get)}</span></li>`).join("")}</ul>`
-    : '<p class="muted small">No certification listed for this role yet. A portfolio of the projects from the courses above is the best proof.</p>';
-  const sdgRows = p.sdg.map((t) => `
-    <div class="stack sdg-row" style="gap: 4px">
-      <p><strong>SDG ${esc(t.target)}</strong> · ${esc(t.goal_name)}</p>
-      ${t.role ? `<p class="small">This job (${esc(t.role.link_strength)} link): ${esc(t.role.rationale)}</p>` : ""}
-      ${t.skills.length ? `<p class="small muted">${t.role ? "Also built by" : "Built by"} ${t.skills.length} skill${t.skills.length > 1 ? "s" : ""} on this path: ${t.skills.map((k) => `<span title="${esc(k.link_strength)} link: ${esc(k.rationale)}">${esc(k.skill_name)}</span>`).join(", ")}</p>` : ""}
-    </div>`).join("");
+  // Projects to build first (every role has them), then any certification; all can be ticked.
+  const proveIt = `<ul class="res-list">${p.projects.map((x) => `<li class="res${progress.done[`project:${x.id}`] ? " is-done" : ""}">
+      <div class="res-top"><span class="chip plain res-kind">Project</span>${doneBox(`project:${x.id}`, x.title)}</div>
+      <strong>${esc(x.title)}</strong>
+      <span class="muted small">${esc(x.description)}</span></li>`).join("")}${p.certifications.map((c) => `<li class="res${progress.done[`cert:${c.cert_id}`] ? " is-done" : ""}">
+      <div class="res-top"><span class="chip plain res-kind">Certification</span>${doneBox(`cert:${c.cert_id}`, c.cert_name)}</div>
+      <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
+      <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""}</span></li>`).join("")}</ul>`;
+  // One row per goal: the goal's icon tile, its name and one line on how this job helps.
+  const goals = new Map();  // keeps the server's order: the job's own goals first
+  for (const t of p.sdg) {
+    const goal = t.target.split(".")[0];
+    if (!goals.has(goal)) goals.set(goal, { goal, name: t.goal_name, why: null, skills: [] });
+    const g = goals.get(goal);
+    if (t.role && !g.why) g.why = t.role.rationale;
+    for (const k of t.skills) if (!g.skills.includes(k.skill_name)) g.skills.push(k.skill_name);
+  }
   const sdgCard = p.sdg.length ? `
-    <section class="card stack" style="gap: 10px" aria-labelledby="sdg-title">
-      <h2 id="sdg-title">What this path contributes to</h2>
-      <p class="muted small">The UN Sustainable Development Goal targets this job serves, and the skills on this path that build them. The links are the team's judgement (data/sdg_map.csv), not UN text; hover a skill to see why.</p>
-      ${sdgRows}
+    <section class="card stack" style="gap: 12px" aria-labelledby="sdg-title">
+      <h2 id="sdg-title">Global goals this job supports</h2>
+      ${[...goals.values()].map((g) => `<div class="sdg-goal">
+        ${sdgTile(g.goal, g.name)}
+        <div class="stack" style="gap: 2px">
+          <strong>${esc(g.name)}</strong>
+          <span class="small muted">${g.why ? esc(g.why) : `Built by ${esc(g.skills.slice(0, 3).join(", "))}`}</span>
+        </div>
+      </div>`).join("")}
     </section>` : "";
   const hrd = p.hrd_corp_options.length ? `
     <details class="card fold-card" aria-labelledby="hrd-title">
       <summary><h2 id="hrd-title">Working already? Courses your employer can claim</h2></summary>
-      <p class="muted small">Paid courses whose provider page says they are claimable under HRD Corp. Only an employer registered and paying the HRD Corp levy can claim, and it must apply before the course starts. Check with the provider and your HR first. Not part of the free plan above or its hours.</p>
+      <p class="muted small">Paid courses your employer may claim under HRD Corp. Ask HR before you sign up.</p>
       <ul class="res-list">${p.hrd_corp_options.map((c) => `<li class="res">
         <span class="chip res-kind">HRD Corp claimable</span>
         <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>
-        <span class="muted small">${esc(c.provider)} · RM ${fmt(c.cost_myr, 0)} · for ${c.skills.map(esc).join(", ")} · checked ${esc(c.verified_date)}</span>
-        ${c.notes && !/^Same course as/.test(c.notes) ? `<span class="small muted">${esc(c.notes)}</span>` : ""}
+        <span class="muted small">${esc(c.provider)} · RM ${fmt(c.cost_myr, 0)} · ${c.skills.map(esc).join(", ")}</span>
       </li>`).join("")}</ul>
     </details>` : "";
-  // Every item on this page that can be ticked, with its hours (certifications have none).
+  // Every item on this page that can be ticked, with its hours (projects and certifications have none).
   const items = {};
   for (const r of [...p.stages.flatMap((st) => st.resources), ...p.skills.flatMap((k) => k.resources)]) items[r.url] = r.hours || null;
+  for (const x of p.projects) items[`project:${x.id}`] = null;
   for (const c of p.certifications) items[`cert:${c.cert_id}`] = null;
   const track = () => {
     progress.paths[roleId] = { name: p.role.name, area: p.role.area_name, personal: p.personal, items, updated: today() };
   };
   if (progress.paths[roleId]) { track(); saveProgress(); }
-  const time = p.total_hours ? `About <strong>${fmt(p.total_hours)} hours</strong> of free material, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.resources_without_hours ? `, plus ${p.resources_without_hours} self-paced course${p.resources_without_hours > 1 ? "s" : ""}` : ""}.` : "";
   render(`
   <div class="stack">
     <a class="btn ghost" href="#/results" style="align-self: flex-start">&larr; Back to my jobs</a>
@@ -1946,18 +1959,14 @@ async function pageLearn(roleId) {
       ${p.role.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : p.role.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
       <a class="chip plain" href="https://www.onetonline.org/link/summary/${esc(p.role.onet_soc)}" target="_blank" rel="noopener">What the job involves (O*NET)</a>
     </div>
-    <div class="note">${time} Everything here is free. We opened every link and checked its title, channel and length; videos open on YouTube in a new tab.</div>
     <section class="card stack" style="gap: 8px" aria-labelledby="progress-title">
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
-      <p class="muted small">Tick “Done” on each course, video or certificate when you finish it. Your ticks are saved in this browser and listed on the My learning page.</p>
     </section>
-    ${stage(1, p.stages[0].title, "Start here: the basics every student in this area needs.", list(p.stages[0].resources))}
-    ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "Courses aimed at this exact job.", list(p.stages[1].resources)) : ""}
-    ${stage(p.stages[1].resources.length ? 3 : 2, p.personal ? "Close your skill gaps" : "Skills and tools this job uses",
-      p.personal ? "Your biggest gaps for this role, with where to learn each one. Skills you have not rated yet come last; <a href=\"#/skills\">rate them</a> to see your real gaps." : "From O*NET, tools first. Take the steps on the home page to see only the ones you are missing.",
-      skills + (p.skills_not_shown ? `<p class="muted small">Plus ${p.skills_not_shown} more skill${p.skills_not_shown > 1 ? "s" : ""} without a free resource in our list yet.</p>` : ""))}
-    ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "A recognised certificate or a portfolio shows employers what you can do.", certs)}
+    ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
+    ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "", list(p.stages[1].resources)) : ""}
+    ${stage(p.stages[1].resources.length ? 3 : 2, p.personal ? "Close your skill gaps" : "Skills and tools this job uses", "", skills)}
+    ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "", proveIt)}
     ${hrd}
     ${sdgCard}
     <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a><a class="btn" href="#/progress">My learning</a></div>
@@ -1971,10 +1980,7 @@ async function pageLearn(roleId) {
       // the same item can appear twice on a page (a foundation course that also teaches a skill)
       app.querySelectorAll(`[data-done="${CSS.escape(key)}"]`).forEach((b) => {
         b.checked = box.checked;
-        const li = b.closest(".res");
-        li.classList.toggle("is-done", box.checked);
-        const when = li.querySelector(".done-when");
-        if (when) when.textContent = box.checked ? ` · finished ${progress.done[key]}` : "";
+        b.closest(".res").classList.toggle("is-done", box.checked);
       });
       document.getElementById("learn-progress").innerHTML = progressHtml(pathStats(items), p.hours_per_week);
     };
@@ -1985,30 +1991,23 @@ async function pageLearn(roleId) {
 
 function pageProgress() {
   const paths = trackedPaths();
-  const finished = Object.keys(progress.done).length;
   const cards = paths.map((p) => `
     <article class="card stack" style="gap: 10px">
-      <div class="stack" style="gap: 4px">
+      <div class="row" style="gap: 8px">
         <h2>${esc(p.name)}</h2>
-        <div class="row" style="gap: 6px">
-          <span class="chip plain">${esc(p.area || "IT")}</span>
-          ${p.pct === 100 ? '<span class="chip">Path complete ✓</span>' : ""}
-          <span class="muted small">last updated ${esc(p.updated || "–")}</span>
-        </div>
+        ${p.pct === 100 ? '<span class="chip">Path complete ✓</span>' : `<span class="chip plain">${esc(p.area || "IT")}</span>`}
       </div>
       ${progressHtml(p, state.hoursPerWeek)}
       <div class="row">
-        <a class="btn primary" href="#/learn/${esc(p.id)}">${p.done ? "Continue" : "Open"} this path &rarr;</a>
+        <a class="btn primary" href="#/learn/${esc(p.id)}">Continue &rarr;</a>
         <button class="btn ghost" type="button" data-untrack="${esc(p.id)}">Stop tracking</button>
       </div>
     </article>`).join("");
   render(`
   <div class="stack">
-    <p class="eyebrow">My learning</p>
-    <h1>The learning paths you are working on</h1>
-    <p class="muted">Open a learning path from your jobs and tick each course, video or certificate when you finish it. A path shows here from your first tick. Progress is saved in this browser only: use the same browser and device to come back to it.</p>
-    ${paths.length ? `<p class="small muted">${finished} item${finished === 1 ? "" : "s"} finished across ${paths.length} path${paths.length === 1 ? "" : "s"}. A course that sits on more than one path counts on each.</p>${cards}`
-      : `<div class="note">No learning path tracked yet. Pick a job, open its learning path and tick what you finish.</div><div class="row"><a class="btn primary" href="#/results">Go to my jobs &rarr;</a></div>`}
+    <h1>My learning</h1>
+    ${paths.length ? `<p class="muted small">Saved in this browser.</p>${cards}`
+      : `<p class="muted">Nothing here yet. Open a learning path from your jobs and tick what you finish.</p><div class="row"><a class="btn primary" href="#/results">Go to my jobs &rarr;</a></div>`}
   </div>`);
   app.querySelectorAll("[data-untrack]").forEach((b) => {
     b.onclick = () => {

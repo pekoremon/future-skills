@@ -105,6 +105,10 @@ One row per course × skill; a course that teaches several skills has one row pe
 | level | Provider's level label |
 | notes | What the page said, caveats |
 
+## projects.csv — portfolio project ideas per role
+
+Two short projects per role that a student can build to show employers the role's skills, shown under "Prove it" on the learning path. Written by the team (`source_name` says so); columns `project_id`, `role_id`, `title`, `description`.
+
 ## certifications.csv — licences and certifications that prove a role's skills
 
 Only skills that need a licence or certificate as proof; basic skills are covered by `courses.csv`. Every value was read on the issuer's or regulator's own page (or a cited news/university page when the official one gave no figure); unconfirmed values stay empty and the reason goes in `notes`.
