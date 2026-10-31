@@ -183,10 +183,13 @@ function vizAreaChart(t) {
   const body = `
     <div class="viz-split">
       <div class="stack" style="gap: 10px">
-    <div class="viz-legend"><span><i class="viz-key refline"></i>above 50 = growing, below 50 = shrinking</span></div>
-    ${vizColumns(rows.map((r) => ({ label: vizAreaLabel(r.area), value: fmt(r.score), from: 0, to: Math.max(0, Math.min(100, r.score)),
-    tip: vizTipAttr(AREA_NAMES[r.area], [[fmt(r.score), "Trend score"], [part(r.demand), "Malaysian demand"], [part(r.ai), "AI momentum"]]) })),
-    [{ at: 0, cls: "zero" }, { at: 50 }])}
+    <div class="viz-legend"><span><i class="viz-key midline"></i>above 50 = growing, below 50 = shrinking</span></div>
+    <div class="viz-rows viz-rank">${rows.map((r) => vizBarRow(`<span data-no-i18n>${esc(trName(AREA_NAMES[r.area]))}</span>`,
+    `<span class="viz-bar${r.score < 50 ? " muted" : ""}" style="left: 0; width: ${Math.max(0, Math.min(100, r.score))}%"></span>`, fmt(r.score),
+    vizTipAttr(AREA_NAMES[r.area], [[fmt(r.score), "Trend score"], [part(r.demand), "Malaysian demand"], [part(r.ai), "AI momentum"]]),
+    '<span class="viz-mid"></span>')).join("")}
+      <div class="viz-row viz-axis" aria-hidden="true"><span></span><span class="viz-track"><span style="left: 0">0</span><span style="left: 50%">50</span><span style="left: 100%">100</span></span><span></span></div>
+    </div>
       </div>
       <aside class="viz-explain">
         <h4>What is a Trend Score?</h4>

@@ -447,6 +447,20 @@ details.why .explain-out { padding-bottom: 4px; }
 .viz-bar.muted { background: var(--viz-muted); }
 .viz-value { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .viz-row[data-tip]:hover .viz-bar, .viz-seg:hover { filter: brightness(1.15); }
+/* Ranked bars on a full 0-100 track with a dashed line at 50 (trend score by IT area). */
+.viz-rank { gap: 6px; }
+.viz-rank .viz-row { grid-template-columns: minmax(0, 34%) minmax(0, 1fr) 40px; gap: 12px; }
+.viz-rank .viz-label { font-weight: 600; }
+.viz-rank .viz-track { height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--viz-muted) 16%, transparent); }
+.viz-rank .viz-bar { border-radius: 6px; }
+.viz-rank .viz-value { font-size: 15px; font-weight: 700; }
+.viz-mid { position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 1.5px dashed var(--text); opacity: 0.45; z-index: 1; pointer-events: none; }
+.viz-axis { padding: 0; }
+.viz-axis .viz-track { height: 14px; background: none; }
+.viz-axis .viz-track > span { position: absolute; top: 0; transform: translateX(-50%); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.viz-axis .viz-track > span:first-child { transform: none; }
+.viz-axis .viz-track > span:last-child { transform: translateX(-100%); }
+.viz-key.midline { width: 0; height: 12px; border-left: 1.5px dashed var(--text); opacity: 0.6; border-radius: 0; margin: 0 8px 0 4px; }
 .viz-colchart { display: flex; flex-direction: column; gap: 8px; }
 /* Columns and their reference lines share one box; the margin leaves room for the value above a full bar. */
 .viz-plot { position: relative; height: 200px; margin-top: 22px; }
@@ -510,6 +524,8 @@ details.why .explain-out { padding-bottom: 4px; }
   .viz-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
   .viz-row.no-value { grid-template-columns: minmax(0, 1fr); }
   .viz-row .viz-label { grid-column: 1 / -1; }
+  .viz-rank .viz-row { grid-template-columns: minmax(0, 1fr) 40px; }
+  .viz-axis > span:first-child { display: none; }
   .viz-tile-value { font-size: 26px; }
   .viz-plot { height: 160px; }
   .viz-cols { gap: 4px; }
