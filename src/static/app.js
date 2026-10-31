@@ -681,7 +681,11 @@ function rangeBadge(m) {
 }
 
 function moveBadge(m) {
-  if (state.scenario === "baseline" || !m.baseline_rank || m.baseline_rank === m.rank) return "";
+  if (state.scenario === "baseline" || !m.baseline_rank) return "";
+  if (m.baseline_rank === m.rank) {  // same place: show how much the score itself moved
+    const d = m.total - (m.baseline_total ?? m.total);
+    return Math.abs(d) < 0.05 ? "" : `<span class="chip plain" title="Score under current trends: ${fmt(m.baseline_total)}">${d > 0 ? "+" : "−"}${fmt(Math.abs(d))} points vs current trends</span>`;
+  }
   const up = m.baseline_rank - m.rank;
   return `<span class="chip ${up > 0 ? "" : "plain"}" title="Rank under current trends: ${m.baseline_rank}">${up > 0 ? "▲" : "▼"} ${Math.abs(up)} vs current trends</span>`;
 }
@@ -875,6 +879,7 @@ async function pageResults() {
         ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === state.scenario}">${esc(s.name)}</button>`).join("")}
       </div>
       <p class="small" id="sc-desc"></p>
+      <div class="sc-change small" id="sc-change" hidden></div>
       <p class="small"><strong>These are estimates, not predictions.</strong> The app only suggests jobs; the choice is yours.</p>
       <details class="fold"><summary>About these estimates</summary><div class="stack" style="gap: 8px">
       <p class="small">Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.</p>
@@ -903,6 +908,26 @@ async function pageResults() {
   await drawJobs();
 }
 
+// Under the scenario buttons: what this scenario changed against current trends, so switching
+// always shows something, and says why the top jobs keep their order when they do.
+function scenarioChange(sc, best) {
+  const box = document.getElementById("sc-change");
+  if (sc.id === "baseline" || !sc.baseline_trend_scores) { box.hidden = true; return; }
+  const areas = Object.keys(AREA_NAMES).filter((k) => k in sc.trend_scores && k in sc.baseline_trend_scores)
+    .map((k) => [k, sc.baseline_trend_scores[k], sc.trend_scores[k]])
+    .sort((a, b) => Math.abs(b[2] - b[1]) - Math.abs(a[2] - a[1]));
+  const top = best.slice(0, 6);
+  const moved = top.filter((m) => m.scenario_ranks && m.scenario_ranks[sc.id] !== m.scenario_ranks.baseline).length;
+  const most = Math.max(0, ...top.map((m) => Math.abs(m.total - m.baseline_total)));
+  const jobs = moved
+    ? `${moved} of your top ${top.length} jobs moved.`
+    : `Your top ${top.length} jobs keep their order. Their scores moved by up to ${fmt(most)} points: jobs in the same IT area get mostly the same trend change, and the trend is 20% of the match.`;
+  box.innerHTML = `<strong>What changed vs Current trends</strong>
+    <ul>${areas.map(([k, a, b]) => `<li><span>${esc(AREA_NAMES[k])}</span> <span class="${b > a ? "up" : b < a ? "down" : "muted"}">${fmt(a)} → ${fmt(b)}</span></li>`).join("")}</ul>
+    <p>${jobs}</p>`;
+  box.hidden = false;
+}
+
 // The jobs part of the results page, for the chosen scenario.
 async function drawJobs() {
   const demo = state.demo;
@@ -921,6 +946,7 @@ async function drawJobs() {
   const g = res.groups;
   const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
   const best = rankedRoles(res);
+  scenarioChange(sc, best);
   let shown = 6;
   const draw = () => {
     const list = best.slice(0, shown);

@@ -531,15 +531,18 @@ def match(request):
         order = [m["role_id"] for m in matching.rank_roles(profile, data, scenario=name) if listed(m)]
         for i, rid in enumerate(order):
             ranks.setdefault(rid, {})[name] = i + 1
-    baseline_rank = {m["role_id"]: i + 1 for i, m in
-                     enumerate(matching.rank_roles(profile, data, scenario="baseline"))}
+    baseline = matching.rank_roles(profile, data, scenario="baseline")
+    baseline_rank = {m["role_id"]: i + 1 for i, m in enumerate(baseline)}
+    baseline_total = {m["role_id"]: m["total"] for m in baseline}  # so the page can show what a scenario changed
     for i, m in enumerate(ranked):
         m["rank"], m["baseline_rank"] = i + 1, baseline_rank[m["role_id"]]
+        m["baseline_total"] = baseline_total[m["role_id"]]
         m["scenario_ranks"] = ranks.get(m["role_id"])  # None for a role the page does not list
     return jsonify(**result, weights=matching.WEIGHTS, area_weights=matching.AREA_WEIGHTS,
                    skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
-                             "trend_scores": matching.scenario_trend_scores(data, scenario)},
+                             "trend_scores": matching.scenario_trend_scores(data, scenario),
+                             "baseline_trend_scores": matching.scenario_trend_scores(data, "baseline")},
                    trend_data=trend_data_version(changes), sdg_bonus=matching.SDG_BONUS,
                    sdg_goals=matching.sdg_goal_options(data), results=ranked[:top])
 
