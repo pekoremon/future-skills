@@ -26,6 +26,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | GitHub Repository | https://github.com/pekoremon/future-skills |
 | Replit Project | https://future-skills.replit.app (published from Replit) |
 | Live Demo | https://future-skills.replit.app |
+| Slide Deck (final) | [Final slides (Google Slides)](https://docs.google.com/presentation/d/14WWRzzf9dqd45InyG1uRPT6mZLD3NvtS/edit?usp=sharing&ouid=114251194357292641710&rtpof=true&sd=true) |
 | Slide Deck (preliminary) | [Pitch deck (Google Drive)](https://drive.google.com/file/d/1ZcFFKKtm1UjylE6r0XQ_gE3tUY09VYbC/view?usp=sharing) |
 | Demo Video (final, backup) | https://youtu.be/gBkuoCRChHI |
 | Demo Video (preliminary) | https://youtu.be/QdBmTyO73JM |
@@ -287,7 +288,7 @@ python scripts/fairness_check.py  # the same CV as 8 different students gives th
 - [x] Final Solution Report (`SDC2026_HandsOffOurRights_Final.pdf`, 9-page finalist template)
 - [x] Updated PRD
 - [x] Updated technology declaration (`SDC2026_HandsOffOurRights_TechDeclaration.pdf`)
-- [x] Final slides (.pptx, plus a flattened PDF)
+- [x] Final slides: [Google Slides](https://docs.google.com/presentation/d/14WWRzzf9dqd45InyG1uRPT6mZLD3NvtS/edit?usp=sharing&ouid=114251194357292641710&rtpof=true&sd=true)
 - [x] Backup recorded demo video (YouTube): https://youtu.be/gBkuoCRChHI
 - [x] Live prototype: https://future-skills.replit.app
 - [x] Public repo, Apache-2.0 LICENSE, continuous commits
