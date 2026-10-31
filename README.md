@@ -103,7 +103,8 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── trend_signals.py     # Direction + confidence per signal
 │   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
 │   ├── whatif.py            # Run signals -> scores -> matching on a changed copy of the trend data
-│   └── validate_data.py     # Check every row has a source and date
+│   ├── validate_data.py     # Check every row has a source and date
+│   └── check_links.py       # Check every course, video and project link still opens
 ├── src/
 │   ├── main.py              # Web server and JSON API (Replit entry point)
 │   └── static/              # Web app: index.html, app.js, style.css
@@ -166,7 +167,10 @@ python src/main.py
 ```bash
 python scripts/validate_data.py
 python -m unittest discover tests
+python scripts/check_links.py   # needs internet: every course, video, certification and project link still opens
 ```
+
+`check_links.py` checks YouTube links through YouTube's oEmbed, so a removed video counts as broken. Sites that refuse scripts (HTTP 401/403/429, e.g. OpenLearn, TryHackMe) are listed as "blocked" to open by hand, not as broken.
 
 ## Data Rules
 
