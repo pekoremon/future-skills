@@ -267,10 +267,10 @@ python scripts/fairness_check.py  # the same CV as 8 different students gives th
 
 **Final round (due 1 Nov 2026, 07:59 MYT)**
 
-- [ ] Final Solution Report (`SDC2026_HandsOffOurRights_Final.pdf`, 9-page finalist template)
-- [ ] Updated PRD
-- [ ] Updated technology declaration (`SDC2026_HandsOffOurRights_TechDeclaration.pdf`)
-- [ ] Final slides (.pptx, plus a flattened PDF)
+- [x] Final Solution Report (`SDC2026_HandsOffOurRights_Final.pdf`, 9-page finalist template)
+- [x] Updated PRD
+- [x] Updated technology declaration (`SDC2026_HandsOffOurRights_TechDeclaration.pdf`)
+- [x] Final slides (.pptx, plus a flattened PDF)
 - [x] Backup recorded demo video (YouTube): https://youtu.be/gBkuoCRChHI
 - [x] Live prototype: https://future-skills.replit.app
 - [x] Public repo, Apache-2.0 LICENSE, continuous commits
