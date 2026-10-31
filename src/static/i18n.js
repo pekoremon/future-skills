@@ -323,7 +323,7 @@ const MS = {
   "Malaysia’s IT Students: What’s Next?": "Pelajar IT Malaysia: Apa Seterusnya?",
   "Many IT students in Malaysia are unsure which career path suits them, which tech fields will be in demand, and how AI may affect their future jobs. Our platform helps students understand their interests and skills, explore Malaysia’s IT job market trends, and find a career direction that fits them.": "Ramai pelajar IT di Malaysia tidak pasti laluan kerjaya mana yang sesuai, bidang teknologi mana yang akan diperlukan, dan bagaimana AI mungkin menjejaskan pekerjaan masa depan mereka. Platform kami membantu pelajar memahami minat dan kemahiran mereka, meneroka trend pasaran kerja IT Malaysia, dan mencari hala tuju kerjaya yang sesuai.",
   "AI-era trend signals": "Isyarat trend era AI",
-  "Which IT areas does Malaysia need, and how fast is AI entering them?": "Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya?",
+  "MALAYSIA IT STUDENT MARKET INSIGHTS": "WAWASAN PASARAN PELAJAR IT MALAYSIA",
   "These signals describe the recent past; they do not predict the future.": "Isyarat ini menggambarkan masa lalu terdekat; ia tidak meramal masa depan.",
   "Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.":
     "Setiap satu membandingkan 1 hingga 4 titik data, jadi skor trend daripadanya ialah anggaran. Lihat tiga senario masa depan di halaman kerjaya anda.",
@@ -949,7 +949,7 @@ const ZH = {
   "Malaysia’s IT Students: What’s Next?": "马来西亚 IT 学生：下一步去哪？",
   "Many IT students in Malaysia are unsure which career path suits them, which tech fields will be in demand, and how AI may affect their future jobs. Our platform helps students understand their interests and skills, explore Malaysia’s IT job market trends, and find a career direction that fits them.": "许多马来西亚 IT 学生不确定哪条职业道路适合自己、哪些技术领域会有需求，以及 AI 会如何影响他们未来的工作。我们的平台帮助学生了解自己的兴趣和技能，探索马来西亚 IT 就业市场趋势，并找到适合自己的职业方向。",
   "AI-era trend signals": "AI 时代趋势信号",
-  "Which IT areas does Malaysia need, and how fast is AI entering them?": "马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？",
+  "MALAYSIA IT STUDENT MARKET INSIGHTS": "马来西亚 IT 学生市场洞察",
   "These signals describe the recent past; they do not predict the future.": "这些信号描述的是最近的过去，不是预测未来。",
   "Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.":
     "每个信号只比较 1 至 4 个数据点，所以由此算出的趋势分只是估计。请看职位页上的三个未来情景。",
