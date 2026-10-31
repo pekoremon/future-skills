@@ -272,6 +272,11 @@ function vizRolesChart(t, roles) {
 
 function vizDrawLine(el) {
   const data = JSON.parse(el.dataset.line);
+  if (document.documentElement.dataset.lite) {  // Lite mode: the same numbers as a table
+    el.innerHTML = `<div class="table-wrap"><table><thead><tr><th scope="col">Quarter</th>${data.series.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr></thead>
+      <tbody>${data.quarters.map((q, i) => `<tr><th scope="row">${esc(vizQuarter(q))}</th>${data.series.map((s) => `<td>${s.values[i] === null ? "–" : `${vizSigned(s.values[i])}%`}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    return;
+  }
   const W = Math.max(260, Math.round(el.clientWidth)), narrow = W < 460, n = data.quarters.length;
   const H = 220, m = { l: 40, r: narrow ? 14 : 132, t: 14, b: 30 };
   const vals = data.series.flatMap((s) => s.values).filter((v) => v !== null);

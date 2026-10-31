@@ -58,6 +58,13 @@ Domain 1 requires all six:
 
 Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend input (an IT area's arXiv AI paper count, the DOSM job ad count for Software Developers, or a role's MyCOL status), or pick a ready-made example, and the same code that builds the real scores runs on a private copy. The page shows each step: the data you changed → the signals whose direction moved (and why a small change moves nothing: it must cross a threshold) → the trend scores → your job ranking, before and after. "Show all my matches with this data" re-plans the whole jobs page until you go back to the real data. The data files and other users never see the change.
 
+Plus, for students who learn on their own time and phone data:
+
+- **Lite mode** (the "Lite" switch in the top bar): no background animation, photos or line chart (its numbers show as a table), and no learning paths loaded ahead. A bar shows the page size the browser measured, for example "1.0 MB → 147 KB" on the Trends page.
+- **Study plan with re-planning** (My learning and each learning path): a finish date from the path's hours at the student's hours a week. Falling behind is spotted from the hours ticked off; "I didn't study this week" moves the plan a week. The page then shows the new finish date next to the planned one, the item to catch up on first, and the hours a week that would still keep the planned date.
+- **Calendar export:** one weekly study session on the day and time the student picks, each listing what to study that week with links, as a Google Calendar link or an `.ics` file for Outlook and Apple Calendar.
+- **SDG contribution, added up** (`#/impact`, `GET /api/sdg/summary`): how many students follow a learning path and the hours they have ticked off, towards SDG 4.3, 4.4 and 8.5 and towards each target their paths list. Browsers send only a random id, the role and the hours (`scripts/impact.py`).
+
 Plus **"Seeing a career advisor?"** (`#/advisor`): one page a student takes to a career talk, for example at their university's career centre. It shows their best IT area and why, their top 3 jobs with each one's rank range across the three scenarios, the top job's first three skill gaps with a free course each, their learning progress, and up to three questions to ask. The questions are built from the results: sources that disagree, two areas that are close, a rank that depends on the future, an area to grow into, then which internship or project fits the top job. The page prints on one A4 sheet with space for notes, or saves as a PDF. It always uses the real trend data, and nothing is saved on our server.
 
 Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 25 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
@@ -105,6 +112,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── trend_signals.py     # Direction + confidence per signal
 │   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
 │   ├── whatif.py            # Run signals -> scores -> matching on a changed copy of the trend data
+│   ├── impact.py            # SDG contribution: anonymous learning-path hours added up per SDG target
 │   ├── validate_data.py     # Check every row has a source and date
 │   ├── fairness_check.py    # Same CV, different personal details -> same recommendations
 │   └── check_links.py       # Check every course, video and project link still opens

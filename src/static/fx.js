@@ -2,6 +2,7 @@
 // the photo hero on the landing page, scroll reveals and a light that follows the pointer.
 // Decoration only: it never changes what app.js shows or does.
 (() => {
+  if (document.documentElement.dataset.lite) return;  // Lite mode: no photos and no animation (app.js)
   const app = document.getElementById("app");
   const still = window.matchMedia("(prefers-reduced-motion: reduce)");
   const photo = (id, w = 1600) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=70`;
@@ -19,6 +20,7 @@
     whatif: ["1558494949-ef010cbdcc31", "scenario.simulate()", ["arXiv", "DOSM", "MyCOL"]],
     data: ["1506399558188-acca6f8cbf41", "trends.sources()", ["DOSM", "MyCOL", "arXiv"]],
     shared: ["1680783954745-3249be59e527", "result.share()", ["IT test"]],
+    impact: ["1516321497487-e288fb19713f", "sdg.aggregate()", ["SDG 4.3", "SDG 4.4", "SDG 8.5"]],
   };
   const AREAS = [
     ["Software Engineering", "1555066931-4365d14bab8c"],
