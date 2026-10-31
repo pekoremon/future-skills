@@ -343,6 +343,7 @@ function trendHeroChart(t) {
 function trendDashboard(t, roles) {
   return `
     <div class="viz-kpis">${vizKpis(t, roles)}</div>
+    <p>You may wonder: Which IT areas does Malaysia need, and how fast is AI entering them? Let's check our future trend.</p>
     <div class="viz-grid">
       ${vizAreaChart(t)}
       ${vizAiChart(t)}

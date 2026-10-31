@@ -523,6 +523,8 @@ const MS = {
   "Fastest-growing AI research": "Penyelidikan AI paling pantas berkembang",
   "arXiv, latest 6 months": "arXiv, 6 bulan terkini",
   "Trend score by IT area": "Skor trend mengikut bidang IT",
+  "You may wonder: Which IT areas does Malaysia need, and how fast is AI entering them? Let's check our future trend.":
+    "Anda mungkin tertanya-tanya: Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya? Mari lihat trend masa depan kita.",
   "What is a Trend Score?": "Apakah Skor Trend?",
   "A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:": "Indeks 0–100 yang mengukur kelajuan pertumbuhan dan permintaan pasaran sesuatu bidang IT, dikira daripada dua aliran yang sama berat:",
   "Malaysian Demand:": "Permintaan Malaysia:",
@@ -1149,6 +1151,8 @@ const ZH = {
   "Fastest-growing AI research": "增长最快的 AI 研究",
   "arXiv, latest 6 months": "arXiv，最近 6 个月",
   "Trend score by IT area": "各 IT 领域的趋势分数",
+  "You may wonder: Which IT areas does Malaysia need, and how fast is AI entering them? Let's check our future trend.":
+    "你可能会想：马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？一起来看看未来趋势。",
   "What is a Trend Score?": "什么是趋势分数？",
   "A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:": "0–100 的指数，衡量一个 IT 领域的增长速度和市场需求，由两个权重相同的部分计算：",
   "Malaysian Demand:": "马来西亚需求：",
