@@ -603,6 +603,22 @@ function moveBadge(m) {
 
 let lastMatchBody = null;
 
+// Learning paths, kept per role and match body. The jobs page loads its listed roles' paths in
+// the background, so "Learning path" opens at once even when the host is slow to answer.
+const learnCache = {};
+function learnData(roleId) {
+  const body = lastMatchBody ? JSON.stringify({ ...lastMatchBody, role_id: roleId }) : null;
+  const key = body || roleId;
+  if (!learnCache[key]) {
+    learnCache[key] = (body ? api("/api/learn", { body }) : api(`/api/learn/${encodeURIComponent(roleId)}`))
+      .catch((e) => { delete learnCache[key]; throw e; });
+  }
+  return learnCache[key];
+}
+async function prefetchLearn(roleIds) {
+  for (const id of roleIds) await learnData(id).catch(() => {});  // one at a time; errors retry on open
+}
+
 // "Why this job?": two sentences from the AI on why the role suits the student, loaded on open.
 async function whyJob(card) {
   const out = card.querySelector(".explain-out");
@@ -795,6 +811,7 @@ async function drawJobs() {
       : '<p class="muted">No roles in your best-fit areas match your education level yet. Try a higher education level on the skills page.</p>';
     document.getElementById("more").hidden = shown >= best.length;
     jobs.querySelectorAll("details.why").forEach((d) => d.addEventListener("toggle", () => d.open && whyJob(d.closest(".top-card"))));
+    prefetchLearn(list.map((m) => m.role_id));
   };
   const scored = `<h3>How your IT areas were scored</h3>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}`;
   const why = g.mode === "none" ? groupsHtml(g) : `
@@ -1755,11 +1772,11 @@ function progressHtml(st, hoursPerWeek) {
 }
 
 async function pageLearn(roleId) {
-  render('<p class="muted" role="status">Building the learning path…</p>');
-  const personal = Boolean(lastMatchBody);
-  const p = personal
-    ? await api("/api/learn", { body: JSON.stringify({ ...lastMatchBody, role_id: roleId }) })
-    : await api(`/api/learn/${encodeURIComponent(roleId)}`);
+  render(`<div class="card stack" role="status" style="gap: 10px">
+      <div class="row" style="gap: 12px"><span class="spinner" aria-hidden="true"></span><strong>Building your learning path…</strong></div>
+      <div class="wait-bar" aria-hidden="true"><div></div></div>
+    </div>`);
+  const p = await learnData(roleId);
   const stage = (n, title, hint, body) => `
     <section class="card stack learn-stage" style="gap: 10px">
       <h2><span class="stage-num" aria-hidden="true">${n}</span>${esc(title)}</h2>
