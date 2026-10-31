@@ -1,35 +1,9 @@
-/* The level map (play.js): stats, level map, shop, coin toast and dialogs. */
+/* Coins and the shop (play.js): coin chip, shop, coin toast and dialogs. */
 .coin-chip { text-decoration: none; color: var(--text); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
 .coin-ico { width: 18px; height: 18px; flex: none; }
 .shop-top { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
 .shop-ico { width: 18px; height: 18px; flex: none; }
 @media (max-width: 560px) { .shop-label { display: none; } }  /* phones: the bag icon alone */
-.play-stats { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
-.play-stats .card { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
-.play-stats strong { font-size: 22px; line-height: 1.2; }
-
-/* level map: rows of 5 that snake, a line joining the levels */
-.lv-map { display: grid; gap: 22px; padding: 6px 4px; }
-.lv-row { display: flex; align-items: center; position: relative; }
-.lv-row.rev { flex-direction: row-reverse; }
-.lv-row.more::after { content: ""; position: absolute; right: 25px; top: 50%; width: 5px; height: calc(100% + 22px); background: var(--track); border-radius: 3px; z-index: 0; }
-.lv-row.rev.more::after { right: auto; left: 25px; }
-.lv-link { flex: 1; height: 5px; background: var(--track); border-radius: 3px; min-width: 6px; }
-.lv-link.on { background: #E0A400; }
-.lv-link.off { visibility: hidden; }
-.lv-slot { width: 54px; height: 54px; flex: none; }
-.lv-node { position: relative; z-index: 1; flex: none; width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--border); background: var(--surface); color: var(--muted); font-size: 20px; cursor: pointer; display: grid; place-items: center; transition: transform 0.15s; }
-.lv-node:hover { transform: scale(1.08); }
-.lv-node.done { background: radial-gradient(circle at 35% 30%, #FFE27A, #E0A400 70%); border-color: #B88300; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
-.lv-node.current { background: var(--accent); border-color: var(--accent-strong); color: var(--on-accent); animation: lv-pulse 1.8s ease-out infinite; }
-.lv-num { position: absolute; right: -6px; bottom: -6px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--surface); border: 2px solid var(--border); color: var(--text); font-size: 11px; font-weight: 700; line-height: 18px; text-shadow: none; }
-@keyframes lv-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
-@media (prefers-reduced-motion: reduce) { .lv-node.current { animation: none; } }
-@media (max-width: 420px) {
-  .lv-node, .lv-slot { width: 44px; height: 44px; font-size: 17px; }
-  .lv-row.more::after { right: 20px; }
-  .lv-row.rev.more::after { left: 20px; }
-}
 
 /* shop: the bag button in the top bar opens the shop dialog */
 .shop-dialog { width: min(820px, calc(100vw - 32px)); }
@@ -78,9 +52,6 @@ html[data-bg] body { background-color: var(--bg); background-attachment: fixed; 
 .quiz-dialog::backdrop { background: rgba(15, 20, 25, 0.55); }
 .quiz-q { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 @media (max-width: 520px) {
-  .play-stats { gap: 6px; }
-  .play-stats .card { padding: 10px; }
-  .play-stats strong { font-size: 18px; }
   .quiz-dialog { padding: 14px; }
 }
 

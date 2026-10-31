@@ -194,7 +194,7 @@ async function pageQuizIntro() {
       ${sailorSVG({ cls: "act-nod" })}
       <p>Every answer trains your sailor. At the end, they become one of six crew roles.</p>
     </div>
-    <div class="crew-legend">${CREW_ORDER.map((k) => `<div><span aria-hidden="true">${CREW[k].icon}</span><span>${CREW[k].role}</span></div>`).join("")}</div>
+    <div class="crew-legend">${CREW_ORDER.map((k) => `<div><span aria-hidden="true">${CREW[k].icon}</span><span>${CREW[k].role}</span><span data-no-i18n>- ${k}</span></div>`).join("")}</div>
     <p class="muted small">Answer by what you would enjoy, not what you are already good at. No role is better than another.</p>
     <div class="card stack" style="gap: 6px">
       <h3>A proven interest test</h3>
@@ -2110,7 +2110,7 @@ async function pageLearn(roleId) {
       </li>`).join("")}</ul>
     </details>` : "";
   // Every item on this page that can be ticked, with its hours (projects and certifications have none).
-  // meta: what My learning's level map shows for each item (title, kind and link), in path order.
+  // meta: each item's title, kind and link, in path order.
   const items = {}, titles = {}, meta = {};
   for (const r of [...p.stages.flatMap((st) => st.resources), ...p.skills.flatMap((k) => k.resources)]) {
     items[r.url] = r.hours || null; titles[r.url] = r.title;
@@ -2141,7 +2141,7 @@ async function pageLearn(roleId) {
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
       <div id="learn-plan">${planNow()}</div>
-      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns 🪙 coins. <a href="#/progress/map">See your level map &rarr;</a></p>
+      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns 🪙 coins.</p>
     </section>
     ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "", list(p.stages[1].resources)) : ""}
@@ -2149,7 +2149,7 @@ async function pageLearn(roleId) {
     ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "", proveIt)}
     ${hrd}
     ${sdgCard}
-    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a><a class="btn" href="#/progress/map">My level map</a></div>
+    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a></div>
   </div>`);
   app.querySelectorAll("[data-done]").forEach((box) => {
     box.onchange = () => {
@@ -2456,7 +2456,7 @@ async function pageImpact() {
   </div>`);
 }
 
-/* ---------- my learning: the last learning path opened; the level map and shop are in play.js ---------- */
+/* ---------- my learning: the last learning path opened; coins and the shop are in play.js ---------- */
 
 /* ---------- router ---------- */
 
@@ -2488,10 +2488,10 @@ async function route() {
     else if (page === "trends") await pageTrends();
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
-    else if (page === "progress" && parts[1] === "map") await pageMyLearning();
+    else if (page === "progress" && parts[1] === "map") location.replace("#/progress");  // the level map is gone
     else if (page === "progress") {
       const last = progress.last || (trackedPaths()[0] || {}).id;
-      if (last) await pageLearn(last); else await pageMyLearning();
+      if (last) await pageLearn(last); else location.replace("#/results");
     }
     else if (page === "advisor") await pageAdvisor();
     else if (page === "impact") await pageImpact();

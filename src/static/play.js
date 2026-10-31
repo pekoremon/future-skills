@@ -1,5 +1,5 @@
-/* The level map (#/progress/map): each learning path is a map of levels, the video checks
-   earn coins, and coins buy page backgrounds in the shop.
+/* Coins and the shop: the video checks on a learning path earn coins, and coins buy page
+   backgrounds in the shop.
    A video only counts as done after a 5-question check with 4 right. Loaded before app.js
    and uses its helpers (api, cached, esc, render, progress, ...) once a page opens. The
    server keeps the answers; the page only learns one after it sends a choice. */
@@ -48,12 +48,6 @@ const SHOP_TABS = [
   { id: "cursors", label: "Cursors & effects", items: CURSORS },
   { id: "specials", label: "Special themes", items: SPECIALS },
 ];
-const KIND = {
-  video: { icon: "▶", label: "YouTube video" }, playlist: { icon: "▶", label: "YouTube playlist" },
-  course: { icon: "📘", label: "Free course" }, project: { icon: "🛠", label: "Project" },
-  certification: { icon: "🏅", label: "Certification" },
-};
-const ROW = 5;  // levels per row of the map
 
 // { coins, earned, video: {url: coins earned}, owned: [shop item ids], bg, cursor,
 //   special (null when off) }, in this browser.
@@ -90,132 +84,6 @@ function addCoins(n, why) {
   t.textContent = `+${n} 🪙 ${why}`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2600);
-}
-
-/* ---------- the page ---------- */
-
-async function pageMyLearning() {
-  const s = playStore();
-  const paths = trackedPaths();
-  const cleared = Object.keys(progress.done).length;
-  render(`
-  <div class="stack">
-    <div class="stack" style="gap: 6px">
-      <p class="eyebrow">Your learning journey</p>
-      <h1>My level map</h1>
-    </div>
-    <div class="play-stats">
-      <div class="card"><strong>🪙 ${s.coins}</strong><span class="muted small">coins</span></div>
-      <div class="card"><strong>★ ${cleared}</strong><span class="muted small">levels cleared</span></div>
-    </div>
-    ${paths.length ? paths.map(pathMapHtml).join("") + `
-      <a class="card impact-link" href="#/impact">${sdgTile(4, "Quality Education")}<span class="stack" style="gap: 2px"><strong>Your hours count towards SDG 4 and 8</strong><span class="small muted">See what every student here adds up to →</span></span></a>` : `
-      <section class="card stack" style="gap: 10px">
-        <h2>No learning path yet</h2>
-        <p class="muted">Open a learning path from your jobs and tick the first thing you finish. It then shows here as a map of levels.</p>
-        <div class="row"><a class="btn primary" href="#/results">Go to my jobs &rarr;</a></div>
-      </section>`}
-    <p class="muted small">Coins, levels and shop items are saved in this browser.</p>
-  </div>`);
-  app.querySelectorAll("[data-level]").forEach((b) => {
-    b.onclick = () => levelDialog(b.dataset.path, b.dataset.level, Number(b.dataset.n));
-  });
-  app.querySelectorAll("[data-plan]").forEach((box) => wirePlan(box, () => { box.innerHTML = planHtml(box.dataset.plan); }));
-  app.querySelectorAll("[data-untrack]").forEach((b) => {
-    b.onclick = () => {
-      delete progress.paths[b.dataset.untrack];  // ticks stay, so they come back if the path is opened again
-      saveProgress();
-      pageMyLearning();
-    };
-  });
-}
-
-// One path as rows of levels that snake left-right, right-left, joined by a line.
-function pathMapHtml(p) {
-  const keys = Object.keys(p.items);
-  const current = keys.findIndex((k) => !progress.done[k]);
-  const node = (k, i) => {
-    const m = (p.meta || {})[k] || {};
-    const kind = KIND[m.kind] || { icon: "•", label: "Item" };
-    const done = Boolean(progress.done[k]);
-    const cls = done ? "done" : i === current ? "current" : "todo";
-    return `<button type="button" class="lv-node ${cls}" data-path="${esc(p.id)}" data-level="${esc(k)}" data-n="${i + 1}"
-      aria-label="Level ${i + 1}: ${esc(m.title || kind.label)}${done ? " (cleared)" : ""}" title="${esc(m.title || kind.label)}">
-      <span class="lv-icon" aria-hidden="true">${done ? "★" : kind.icon}</span><span class="lv-num" aria-hidden="true">${i + 1}</span>
-    </button>`;
-  };
-  const rows = [];
-  for (let r = 0; r * ROW < keys.length; r += 1) {
-    const slice = keys.slice(r * ROW, r * ROW + ROW);
-    const cells = [];
-    for (let c = 0; c < ROW; c += 1) {
-      if (c) cells.push(`<span class="lv-link${c < slice.length && progress.done[slice[c - 1]] ? " on" : ""}${c >= slice.length ? " off" : ""}" aria-hidden="true"></span>`);
-      cells.push(c < slice.length ? node(slice[c], r * ROW + c) : '<span class="lv-slot" aria-hidden="true"></span>');
-    }
-    rows.push(`<div class="lv-row${r % 2 ? " rev" : ""}${(r + 1) * ROW < keys.length ? " more" : ""}">${cells.join("")}</div>`);
-  }
-  const next = current >= 0 ? (p.meta || {})[keys[current]] : null;
-  return `
-    <article class="card stack" style="gap: 12px">
-      <div class="row" style="justify-content: space-between; gap: 8px">
-        <h2>${esc(p.name)}</h2>
-        ${p.pct === 100 ? '<span class="chip">All levels cleared 🏆</span>' : `<span class="chip plain">${esc(nameIn(p.area || "IT"))}</span>`}
-      </div>
-      ${progressHtml(p, state.hoursPerWeek)}
-      ${next ? `<p class="small">Next level: <strong>${esc(next.title)}</strong></p>` : ""}
-      <div class="lv-map" role="group" aria-label="Levels of ${esc(p.name)}">${rows.join("")}</div>
-      <div data-plan="${esc(p.id)}">${planHtml(p.id)}</div>
-      <div class="row">
-        <a class="btn" href="#/learn/${esc(p.id)}">Open the full path &rarr;</a>
-        <button class="btn ghost" type="button" data-untrack="${esc(p.id)}">Stop tracking</button>
-      </div>
-    </article>`;
-}
-
-function levelDialog(pathId, key, n) {
-  const p = progress.paths[pathId];
-  const m = (p.meta || {})[key] || { title: `Level ${n}`, kind: "", url: "" };
-  const kind = KIND[m.kind] || { icon: "•", label: "Item" };
-  const isVideo = VIDEO_FORMATS.includes(m.kind);
-  const checked = QUIZ_FORMATS.includes(m.kind);
-  const project = m.kind === "project" && !progress.projects[key];  // cleared once the upload passes its check
-  const done = Boolean(progress.done[key]);
-  const { dialog, frame } = openDialog();
-  frame(`Level ${n} · ${kind.label}`, m.title, `
-    ${done
-      ? `<div class="note">Cleared on ${esc(progress.done[key])} ★${progress.quizzes[key] ? ` · check ${progress.quizzes[key].score}/${progress.quizzes[key].total}` : ""}</div>`
-      : `<p class="small muted">${project ? "Build it, then upload it. AI checks it against the brief." : checked ? `${isVideo ? "Watch" : "Finish"} it, then pass a ${VIDEO_QUIZ_SIZE}-question check (${VIDEO_PASS_MARK} right) to clear this level. Every right answer earns 🪙 ${COINS.perRight}; all ${VIDEO_QUIZ_SIZE} right earns 🪙 ${COINS.perfect} more.` : "Finish it, then mark the level as cleared."}</p>`}
-    <div class="row">
-      ${/^https?:\/\//i.test(m.url || "") ? `<a class="btn" href="${safeUrl(m.url)}" target="_blank" rel="noopener">Open ${isVideo ? "video" : "it"} ↗</a>` : ""}
-      ${done ? '<button class="btn ghost" type="button" id="lv-undo">Mark as not done</button>'
-        : `<button class="btn primary" type="button" id="lv-done">${project ? "Upload my project" : checked && !progress.quizzes[key] ? "Start the test" : "Mark as cleared"}</button>`}
-    </div>`);
-  const finish = () => {
-    progress.done[key] = today();
-    p.updated = today();
-    saveProgress();
-    reportPath(pathId);  // the SDG impact page counts the hours studied
-    pageMyLearning();
-  };
-  dialog.querySelector("#lv-done")?.addEventListener("click", () => {
-    if (project) {
-      dialog.close();
-      projectCheck(key, m.title, (r) => { progress.projects[key] = { date: today(), method: r.method }; finish(); });
-    } else if (checked && !progress.quizzes[key]) {
-      dialog.close();
-      videoQuiz(key, m.title, (r) => { progress.quizzes[key] = { score: r.score, total: r.total, date: today() }; finish(); });
-    } else {
-      dialog.close();
-      finish();
-    }
-  });
-  dialog.querySelector("#lv-undo")?.addEventListener("click", () => {
-    delete progress.done[key];
-    saveProgress();
-    reportPath(pathId);
-    dialog.close();
-    pageMyLearning();
-  });
 }
 
 /* ---------- shop: colours, cursors and effects, special themes ---------- */
@@ -303,7 +171,6 @@ function openShop(tab = "colours") {
     });
   };
   draw(tab);
-  dialog.addEventListener("close", () => { if (location.hash === "#/progress/map") pageMyLearning(); });
 }
 
 /* ---------- dialogs: video check ---------- */
