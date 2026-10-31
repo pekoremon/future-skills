@@ -1500,6 +1500,15 @@ const testPlan = () => api("/api/assessment/plan", { body: JSON.stringify({
   cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, technologies: state.techs,
   interest_answers: quizDone() ? state.answers : undefined }) });
 
+// Why the plan tests this area. The full test (no CV, no interests) gives no reason.
+function areaReason(plan, id) {
+  const cv = plan.from_cv.includes(id), liked = plan.from_interest.includes(id);
+  if (cv && liked) return "On your CV, and you like it";
+  if (cv) return "On your CV";
+  if (liked) return "You like this";
+  return plan.filled.includes(id) ? "Added to make 3" : "";
+}
+
 async function pageTestIntro() {
   const going = testInProgress();
   const answered = going ? Object.keys(state.test.responses).length : 0;
@@ -1518,7 +1527,8 @@ async function pageTestIntro() {
     <div class="card stack" style="gap: 10px">
       <p class="big">About ${plan.minutes} min</p>
       <p class="muted">${plan.question_count} questions</p>
-      <div class="row" style="gap: 6px">${plan.areas.map((id) => `<span class="chip">${esc(AREA_NAMES[id] || id)}</span>`).join("")}</div>
+      <ul class="area-why">${plan.areas.map((id) => `<li><span class="chip">${esc(AREA_NAMES[id] || id)}</span>
+        <span class="muted small">${areaReason(plan, id)}</span></li>`).join("")}</ul>
       <ul class="quals muted small" style="margin-top: 6px">
         <li>Every question is checked against official docs such as Python, MDN, OWASP and NIST.</li>
         <li>Topics follow certification exams such as CompTIA, AWS and Python Institute.</li>
