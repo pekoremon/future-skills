@@ -835,9 +835,8 @@ function accuracyNote(g) {
 async function pageResults() {
   const demo = state.demo;
   if (!hasAnswers()) {
-    render(`<div class="stack">${stepBar("results")}<h1>No answers yet</h1><p class="muted">Do at least one of steps 1 to 3 first, or try the fictional demo student.</p>
-      <div class="row"><a class="btn primary" href="#/cv">Start: step 1, your CV</a><button class="btn" type="button" id="demo">Try the demo student</button></div></div>`);
-    document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); pageResults(); };
+    render(`<div class="stack">${stepBar("results")}<h1>No answers yet</h1><p class="muted">Do at least one of steps 1 to 3 first.</p>
+      <div class="row"><a class="btn primary" href="#/cv">Start: step 1, your CV</a></div></div>`);
     return;
   }
   render('<p class="muted" role="status">Scoring IT roles…</p>');

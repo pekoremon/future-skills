@@ -310,7 +310,7 @@ const MS = {
     "Tiada bukti ditemui: AI tidak dapat membacanya sekarang dan tiada teknologi yang dijejak dalam CV anda. Padanan anda menggunakan ujian dan soal selidik sebagai ganti.",
   // results
   "Best matches for your level": "Padanan terbaik untuk tahap anda",
-  "No answers yet": "Belum ada jawapan", "Do at least one of steps 1 to 3 first, or try the fictional demo student.": "Lakukan sekurang-kurangnya satu daripada langkah 1 hingga 3 dahulu, atau cuba pelajar demo rekaan.",
+  "No answers yet": "Belum ada jawapan", "Do at least one of steps 1 to 3 first.": "Lakukan sekurang-kurangnya satu daripada langkah 1 hingga 3 dahulu.",
   "Scoring IT roles…": "Mengira skor peranan IT…", "Your matches": "Padanan anda",
   "Future scenario": "Senario masa depan",
   "These are estimates, not predictions.": "Ini anggaran, bukan ramalan.",
@@ -1142,7 +1142,7 @@ const ZH = {
     "没有找到证据：AI 暂时无法读取，而且履历中没有清单上的技术。你的匹配结果会改用测验和问卷。",
   // results
   "Best matches for your level": "最适合你学历的职位",
-  "No answers yet": "还没有作答", "Do at least one of steps 1 to 3 first, or try the fictional demo student.": "请先完成第 1 至 3 步中的至少一步，或试试虚构的示范学生。",
+  "No answers yet": "还没有作答", "Do at least one of steps 1 to 3 first.": "请先完成第 1 至 3 步中的至少一步。",
   "Scoring IT roles…": "正在为 IT 职位评分……", "Your matches": "你的匹配结果",
   "Future scenario": "未来情景",
   "These are estimates, not predictions.": "这些是估计，不是预测。",
