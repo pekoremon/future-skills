@@ -51,6 +51,39 @@ const SDG_MS = {
   "Peace, Justice and Strong Institutions": "Keamanan, Keadilan dan Institusi Kukuh",
   "Partnerships for the Goals": "Perkongsian untuk Matlamat",
 };
+// What each goal and target means (app.js SDG_GOAL_TEXT, SDG_TARGET_TEXT).
+const SDG_TEXT_MS = {
+  "Healthy lives and well-being for everyone, at every age.": "Hidup sihat dan sejahtera untuk semua, pada setiap peringkat umur.",
+  "Fair, good-quality education and lifelong learning for everyone.": "Pendidikan yang adil dan berkualiti serta pembelajaran sepanjang hayat untuk semua.",
+  "Steady, inclusive economic growth and decent jobs for everyone.": "Pertumbuhan ekonomi yang mampan dan inklusif serta pekerjaan wajar untuk semua.",
+  "Strong infrastructure, sustainable industry and more innovation.": "Infrastruktur yang kukuh, industri yang mampan dan lebih banyak inovasi.",
+  "Less inequality within and between countries.": "Kurang ketidaksamaan dalam dan antara negara.",
+  "Using natural resources wisely and producing goods sustainably.": "Menggunakan sumber asli dengan bijak dan mengeluarkan barangan secara mampan.",
+  "Peaceful, fair societies with justice for all and accountable institutions.": "Masyarakat yang aman dan adil, keadilan untuk semua dan institusi yang bertanggungjawab.",
+  "Countries and organisations working together to reach the goals.": "Negara dan organisasi bekerjasama untuk mencapai matlamat.",
+  "Fewer early deaths from non-communicable diseases, and better mental health.": "Kurang kematian awal akibat penyakit tidak berjangkit, dan kesihatan mental yang lebih baik.",
+  "Equal access to affordable technical, vocational and university education.": "Akses sama rata kepada pendidikan teknikal, vokasional dan universiti yang mampu milik.",
+  "More young people and adults with job-ready skills, including digital skills.": "Lebih ramai belia dan dewasa dengan kemahiran sedia kerja, termasuk kemahiran digital.",
+  "All young people and most adults able to read, write and do maths.": "Semua belia dan kebanyakan dewasa boleh membaca, menulis dan mengira.",
+  "More qualified teachers, through better teacher training.": "Lebih ramai guru bertauliah, melalui latihan guru yang lebih baik.",
+  "Higher productivity through technology, innovation and new kinds of work.": "Produktiviti lebih tinggi melalui teknologi, inovasi dan jenis kerja baharu.",
+  "More decent jobs, entrepreneurship, creativity and small businesses.": "Lebih banyak pekerjaan wajar, keusahawanan, kreativiti dan perniagaan kecil.",
+  "Full employment and decent work for all, with equal pay for equal work.": "Guna tenaga penuh dan pekerjaan wajar untuk semua, dengan gaji sama untuk kerja yang sama.",
+  "Stronger financial institutions and wider access to banking and finance.": "Institusi kewangan yang lebih kukuh dan akses lebih luas kepada perbankan dan kewangan.",
+  "Reliable, sustainable infrastructure that everyone can use.": "Infrastruktur yang boleh dipercayai dan mampan untuk kegunaan semua.",
+  "Industry upgraded with clean, resource-efficient technology.": "Industri dinaik taraf dengan teknologi bersih dan cekap sumber.",
+  "More scientific research and better technology in industry.": "Lebih banyak penyelidikan saintifik dan teknologi yang lebih baik dalam industri.",
+  "Much wider access to the internet and information technology.": "Akses yang jauh lebih luas kepada internet dan teknologi maklumat.",
+  "Everyone included in social, economic and political life, whatever their background.": "Semua orang terlibat dalam kehidupan sosial, ekonomi dan politik, tanpa mengira latar belakang.",
+  "Natural resources managed sustainably and used efficiently.": "Sumber asli diurus secara mampan dan digunakan dengan cekap.",
+  "Rule of law and equal access to justice for all.": "Kedaulatan undang-undang dan akses sama rata kepada keadilan untuk semua.",
+  "Less illegal money and arms flows, and less organised crime.": "Kurang aliran wang dan senjata haram, dan kurang jenayah terancang.",
+  "Effective, accountable and transparent institutions.": "Institusi yang berkesan, bertanggungjawab dan telus.",
+  "Public access to information and protection of basic freedoms.": "Akses awam kepada maklumat dan perlindungan kebebasan asasi.",
+  "Stronger national institutions to prevent violence and fight crime.": "Institusi negara yang lebih kukuh untuk mencegah keganasan dan memerangi jenayah.",
+  "More international cooperation on science, technology and innovation.": "Lebih banyak kerjasama antarabangsa dalam sains, teknologi dan inovasi.",
+  "More high-quality, timely and reliable data for decisions.": "Lebih banyak data berkualiti tinggi, tepat pada masanya dan boleh dipercayai untuk membuat keputusan.",
+};
 // Chinese area names as in data/it_assessment.json (name_zh).
 const AREAS_ZH = {
   "Cloud, Infrastructure & Networking": "云端与基础设施 / 网络",
@@ -96,10 +129,43 @@ const SDG_ZH = {
   "Peace, Justice and Strong Institutions": "和平、正义与强大机构",
   "Partnerships for the Goals": "促进目标实现的伙伴关系",
 };
+const SDG_TEXT_ZH = {
+  "Healthy lives and well-being for everyone, at every age.": "让各年龄段的所有人都过上健康的生活，享有福祉。",
+  "Fair, good-quality education and lifelong learning for everyone.": "人人享有公平、优质的教育和终身学习机会。",
+  "Steady, inclusive economic growth and decent jobs for everyone.": "持续、包容的经济增长，人人有体面工作。",
+  "Strong infrastructure, sustainable industry and more innovation.": "建设坚实的基础设施，发展可持续产业，推动创新。",
+  "Less inequality within and between countries.": "减少国家内部和国家之间的不平等。",
+  "Using natural resources wisely and producing goods sustainably.": "明智地使用自然资源，以可持续的方式生产。",
+  "Peaceful, fair societies with justice for all and accountable institutions.": "和平、公正的社会，人人能诉诸司法，机构负责任。",
+  "Countries and organisations working together to reach the goals.": "各国和各组织携手合作，实现这些目标。",
+  "Fewer early deaths from non-communicable diseases, and better mental health.": "减少非传染性疾病导致的过早死亡，促进心理健康。",
+  "Equal access to affordable technical, vocational and university education.": "人人平等享有负担得起的技术、职业和大学教育。",
+  "More young people and adults with job-ready skills, including digital skills.": "让更多青年和成年人具备就业所需技能，包括数字技能。",
+  "All young people and most adults able to read, write and do maths.": "所有青年和大多数成年人具备读写和算术能力。",
+  "More qualified teachers, through better teacher training.": "通过更好的师资培训，增加合格教师。",
+  "Higher productivity through technology, innovation and new kinds of work.": "通过技术、创新和新型工作提高生产力。",
+  "More decent jobs, entrepreneurship, creativity and small businesses.": "创造更多体面工作，支持创业、创意和小企业。",
+  "Full employment and decent work for all, with equal pay for equal work.": "人人充分就业、有体面工作，同工同酬。",
+  "Stronger financial institutions and wider access to banking and finance.": "加强金融机构，让更多人获得银行和金融服务。",
+  "Reliable, sustainable infrastructure that everyone can use.": "人人可用的可靠、可持续基础设施。",
+  "Industry upgraded with clean, resource-efficient technology.": "用清洁、节约资源的技术升级产业。",
+  "More scientific research and better technology in industry.": "加强科学研究，提升产业技术。",
+  "Much wider access to the internet and information technology.": "大幅扩大互联网和信息技术的普及。",
+  "Everyone included in social, economic and political life, whatever their background.": "无论背景如何，人人都能参与社会、经济和政治生活。",
+  "Natural resources managed sustainably and used efficiently.": "可持续管理并高效利用自然资源。",
+  "Rule of law and equal access to justice for all.": "推进法治，人人平等诉诸司法。",
+  "Less illegal money and arms flows, and less organised crime.": "减少非法资金和武器流动，打击有组织犯罪。",
+  "Effective, accountable and transparent institutions.": "有效、负责和透明的机构。",
+  "Public access to information and protection of basic freedoms.": "公众能获取信息，基本自由受到保护。",
+  "Stronger national institutions to prevent violence and fight crime.": "加强国家机构，预防暴力、打击犯罪。",
+  "More international cooperation on science, technology and innovation.": "加强科学、技术和创新方面的国际合作。",
+  "More high-quality, timely and reliable data for decisions.": "为决策提供更多高质量、及时、可靠的数据。",
+};
 
 // Exact text, keyed by the English with spaces collapsed.
 const MS = {
   ...SDG_MS,  // goal names on the learning path's goal tiles
+  ...SDG_TEXT_MS,  // what each goal and target means
   // learning progress (app.js doneBox, progressHtml, pageLearn, pageProgress)
   "Your progress": "Kemajuan anda", "Done": "Selesai", "Tick when you have finished it": "Tandakan apabila anda sudah menamatkannya",
   "Learning path progress": "Kemajuan laluan pembelajaran", "My learning": "Pembelajaran saya", "Saved in this browser.": "Disimpan dalam pelayar ini.",
@@ -853,7 +919,7 @@ const PATTERNS_MS = [
   [/^Rank under each future scenario: (.+)$/, (m) => `Kedudukan dalam setiap senario masa depan: ${m[1].replace("baseline", "trend semasa").replace("fast ai", "AI pantas").replace("local demand", "permintaan Malaysia")}`],
   [/^([▲▼]) (\d+) vs current trends$/, (m) => `${m[1]} ${m[2]} berbanding trend semasa`],
   [/^Needs further study \(Job Zone (\d)\)$/, (m) => `Perlu belajar lagi (Job Zone ${m[1]})`],
-  [/^SDG (\d+\.\w+) · (.+)$/, (m) => `SDG ${m[1]} · ${SDG_MS[m[2]] || m[2]}`],  // targets like 9.5 and 9.c
+  [/^SDG (\d+(?:\.\w+)?) · (.+)$/, (m) => `SDG ${m[1]} · ${SDG_MS[m[2]] || SDG_TEXT_MS[m[2]] || m[2]}`],  // goals like 17, targets like 9.5 and 9.c
   [/^([\d.–]+) \/ 100 × weight (\d+)% = ([\d.–]+) points$/, (m) => `${m[1]} / 100 × pemberat ${m[2]}% = ${m[3]} mata`],
   [/^· importance ([\d.]+)\/5$/, (m) => `· kepentingan ${m[1]}/5`],
   [/^you ([\d.–]+) → needed ([\d.–]+) \(O\*NET level, 0–7\)$/, (m) => `anda ${m[1]} → perlu ${m[2]} (tahap O*NET, 0–7)`],
@@ -933,6 +999,7 @@ const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 // Chinese (Simplified), keyed like MS.
 const ZH = {
   ...SDG_ZH,  // goal names on the learning path's goal tiles
+  ...SDG_TEXT_ZH,  // what each goal and target means
   // learning progress (app.js doneBox, progressHtml, pageLearn, pageProgress)
   "Your progress": "你的进度", "Done": "完成", "Tick when you have finished it": "学完后打勾",
   "Learning path progress": "学习路径进度", "My learning": "我的学习", "Saved in this browser.": "保存在这个浏览器里。",
@@ -1673,7 +1740,7 @@ const PATTERNS_ZH = [
   [/^Rank under each future scenario: (.+)$/, (m) => `各未来情景下的排名：${m[1].replace("baseline", "当前趋势").replace("fast ai", "AI 快速普及").replace("local demand", "马来西亚需求主导")}`],
   [/^([▲▼]) (\d+) vs current trends$/, (m) => `${m[1]} ${m[2]}（相对当前趋势）`],
   [/^Needs further study \(Job Zone (\d)\)$/, (m) => `需要进修（Job Zone ${m[1]}）`],
-  [/^SDG (\d+\.\w+) · (.+)$/, (m) => `SDG ${m[1]} · ${SDG_ZH[m[2]] || m[2]}`],  // targets like 9.5 and 9.c
+  [/^SDG (\d+(?:\.\w+)?) · (.+)$/, (m) => `SDG ${m[1]} · ${SDG_ZH[m[2]] || SDG_TEXT_ZH[m[2]] || m[2]}`],  // goals like 17, targets like 9.5 and 9.c
   [/^([\d.–]+) \/ 100 × weight (\d+)% = ([\d.–]+) points$/, (m) => `${m[1]} / 100 × 权重 ${m[2]}% = ${m[3]} 分`],
   [/^· importance ([\d.]+)\/5$/, (m) => `· 重要性 ${m[1]}/5`],
   [/^you ([\d.–]+) → needed ([\d.–]+) \(O\*NET level, 0–7\)$/, (m) => `你 ${m[1]} → 需要 ${m[2]}（O*NET 水平，0–7）`],
