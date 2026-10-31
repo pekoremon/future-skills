@@ -104,11 +104,6 @@
       }
     }
   },
-  "review": {
-    "experts": 0,
-    "pilot_students": 0,
-    "note": "Raise these when outside experts have reviewed the bank and students have piloted it; the results page shows them."
-  },
   "selection": {
     "screen_per_domain": 3,
     "deep_domains": 2,

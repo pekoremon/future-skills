@@ -158,4 +158,4 @@ No real CVs or personal data. Each profile is the input to `scripts/matching.py`
 | refs | Public sources that back the answer |
 | exams | Optional: certification exam sections on the same topic, as `{exam, section}` keys into the top-level `exams` (team mapping, see SOURCES.md) |
 
-`scoring` holds points per stage, partial credit rules and the readiness levels. `exams` lists the certification exams (name, code, official page, section names). `review` counts outside experts who reviewed the bank and students who piloted it; the results page shows both, so raise them when that is done. `tests/test_it_assessment.py` checks every answer: it runs reference solutions against all code tests and the SQL answer in SQLite.
+`scoring` holds points per stage, partial credit rules and the readiness levels. `exams` lists the certification exams (name, code, official page, section names). `tests/test_it_assessment.py` checks every answer: it runs reference solutions against all code tests and the SQL answer in SQLite.

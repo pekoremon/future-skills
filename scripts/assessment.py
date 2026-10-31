@@ -313,7 +313,7 @@ def trust() -> dict:
     bank = load_bank()
     qs = bank["questions"]
     return {"questions": len(qs), "with_source": sum(1 for q in qs if q["refs"]),
-            "with_exam": sum(1 for q in qs if q.get("exams")), **{k: bank["review"][k] for k in ("experts", "pilot_students")}}
+            "with_exam": sum(1 for q in qs if q.get("exams"))}
 
 
 def level_for(score: float) -> dict:

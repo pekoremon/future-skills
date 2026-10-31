@@ -1865,11 +1865,10 @@ async function pageSharedResult(token) {
   pageTestResult(r);
 }
 
-// What backs the questions, from the bank: sources, exam links and (once done) review and pilot.
+// What backs the questions, from the bank: sources and exam links.
 function trustLine(t) {
   if (!t) return "";  // results saved before this line existed
-  const done = [t.experts && `reviewed by ${t.experts} IT experts`, t.pilot_students && `tried by ${t.pilot_students} students`].filter(Boolean);
-  return `<p class="small muted">Every answer is checked against a cited source, and ${t.with_exam} of ${t.questions} questions match a topic in a known IT certification exam. ${done.length ? `Questions ${done.join(" and ")}.` : "Not yet reviewed by outside experts."}</p>`;
+  return `<p class="small muted">Every answer is checked against a cited source, and ${t.with_exam} of ${t.questions} questions match a topic in a known IT certification exam.</p>`;
 }
 
 /* The student's own result, or with `sharedResult` a read-only view of someone else's. */
