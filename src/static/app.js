@@ -581,12 +581,12 @@ function matchCard(m, rank) {
           ${m.is_mycol === "yes" ? '<span class="chip">On MyCOL critical list</span>' : m.is_mycol === "near" ? '<span class="chip">Related MyCOL occupation</span>' : ""}
           ${rangeBadge(m)}
           ${flags}
+          ${sdg}
         </div>
       </div>
     </div>
     ${splitBar(m)}
-    <div class="row" style="gap: 6px">${sdg}</div>
-    <a class="btn primary learn-link" href="#/learn/${esc(m.role_id)}">How to get there: learning path &rarr;</a>
+    <a class="btn learn-link" href="#/learn/${esc(m.role_id)}">How to get there: learning path &rarr;</a>
     <details class="more">
       <summary>Why this score, and what to learn</summary>
       <div class="stack" style="gap: 14px">
@@ -819,9 +819,12 @@ async function pageResults() {
         ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === sc.id}">${esc(s.name)}</button>`).join("")}
       </div>
       <p class="small">${esc(sc.description)}</p>
-      <div class="note small"><strong>These are estimates, not predictions.</strong> Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.</div>
+      <p class="small"><strong>These are estimates, not predictions.</strong></p>
+      <details class="fold"><summary>About these estimates</summary><div class="stack" style="gap: 8px">
+      <p class="small">Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.</p>
       <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Area scores:
         ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.</p>
+      </div></details>
       <label class="row small">Study time per week
         <select id="hpw">${[3, 5, 10, 15, 20].map((h) => `<option value="${h}"${h === Number(state.hoursPerWeek) ? " selected" : ""}>${h} hours</option>`).join("")}</select>
       </label>
@@ -844,7 +847,7 @@ async function pageResults() {
       .forEach((m, i) => { (ranks[m.role_id] = ranks[m.role_id] || {})[s] = i + 1; }));
     best.forEach((m, i) => { m.scenario_ranks = ranks[m.role_id]; m.rank = i + 1; m.baseline_rank = ranks[m.role_id] && ranks[m.role_id].baseline; });
   }
-  let shown = 10;
+  let shown = 6;
   const draw = () => {
     let last = null;
     document.getElementById("list").innerHTML = best.length
@@ -886,8 +889,9 @@ async function pageResults() {
     ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     ${scenarioCard}
     <div class="card stack" style="gap: 8px">
-      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
       <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
+      <details class="fold"><summary>How the match score works</summary>
+      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p></details>
     </div>
     <div id="list" class="stack"></div>
     <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
@@ -1809,13 +1813,18 @@ async function pageLearn(roleId) {
       ${hint ? `<p class="muted small">${hint}</p>` : ""}
       ${body}
     </section>`;
-  const list = (rs) => rs.length ? `<ul class="res-list">${rs.map(resourceHtml).join("")}</ul>` : '<p class="muted small">No checked free resource in our list yet.</p>';
-  const skills = p.skills.map((s) => `
+  // The first few in view, the rest one tap away, so a long path stays easy to scan.
+  const more = (rest, html) => (rest.length ? `<details class="fold"><summary><span>Show more</span> <span class="muted">(${rest.length})</span></summary>${html}</details>` : "");
+  const list = (rs, n = 3) => (rs.length
+    ? `<ul class="res-list">${rs.slice(0, n).map(resourceHtml).join("")}</ul>${more(rs.slice(n), `<ul class="res-list">${rs.slice(n).map(resourceHtml).join("")}</ul>`)}`
+    : '<p class="muted small">No checked free resource in our list yet.</p>');
+  const skillHtml = (s) => `
     <div class="stack learn-skill" style="gap: 6px">
       <h3>${esc(s.skill_name)} <span class="muted small">· ${s.kind === "technology" ? "technology" : "skill"}${s.your_level !== undefined ? (s.rated === false ? ` · not rated yet · needed ${fmt(s.level_needed)} (O*NET 0–7)` : ` · you ${fmt(s.your_level)} → needed ${fmt(s.level_needed)} (O*NET 0–7)`) : ""}</span></h3>
       ${s.sdg && s.sdg.length ? `<div class="row" style="gap: 6px">${s.sdg.map((x) => `<span class="chip plain small" title="${esc(x.goal_name)}">SDG ${esc(x.target)}</span>`).join("")}</div>` : ""}
-      ${list(s.resources)}
-    </div>`).join("");
+      ${list(s.resources, 2)}
+    </div>`;
+  const skills = p.skills.slice(0, 3).map(skillHtml).join("") + more(p.skills.slice(3), p.skills.slice(3).map(skillHtml).join(""));
   const certs = p.certifications.length
     ? `<ul class="res-list">${p.certifications.map((c) => `<li class="res"><span class="chip plain res-kind">Certification</span>
         <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
@@ -1834,8 +1843,8 @@ async function pageLearn(roleId) {
       ${sdgRows}
     </section>` : "";
   const hrd = p.hrd_corp_options.length ? `
-    <section class="card stack" style="gap: 10px" aria-labelledby="hrd-title">
-      <h2 id="hrd-title">Working already? Courses your employer can claim</h2>
+    <details class="card fold-card" aria-labelledby="hrd-title">
+      <summary><h2 id="hrd-title">Working already? Courses your employer can claim</h2></summary>
       <p class="muted small">Paid courses whose provider page says they are claimable under HRD Corp. Only an employer registered and paying the HRD Corp levy can claim, and it must apply before the course starts. Check with the provider and your HR first. Not part of the free plan above or its hours.</p>
       <ul class="res-list">${p.hrd_corp_options.map((c) => `<li class="res">
         <span class="chip res-kind">HRD Corp claimable</span>
@@ -1843,7 +1852,7 @@ async function pageLearn(roleId) {
         <span class="muted small">${esc(c.provider)} · RM ${fmt(c.cost_myr, 0)} · for ${c.skills.map(esc).join(", ")} · checked ${esc(c.verified_date)}</span>
         ${c.notes && !/^Same course as/.test(c.notes) ? `<span class="small muted">${esc(c.notes)}</span>` : ""}
       </li>`).join("")}</ul>
-    </section>` : "";
+    </details>` : "";
   const time = p.total_hours ? `About <strong>${fmt(p.total_hours)} hours</strong> of free material, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.resources_without_hours ? `, plus ${p.resources_without_hours} self-paced course${p.resources_without_hours > 1 ? "s" : ""}` : ""}.` : "";
   render(`
   <div class="stack">

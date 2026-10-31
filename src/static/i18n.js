@@ -543,6 +543,9 @@ const MS = {
   "Least momentum": "Momentum terendah",
   "No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.": "Tiada peranan yang menurun dalam data terkini: skor terendah bermaksud isyarat mendatar, bukan menurun.",
   "The first run downloads Python into your browser (up to about 10 MB, once per visit). On mobile data, use Wi-Fi if you can.": "Larian pertama memuat turun Python ke pelayar anda (sehingga kira-kira 10 MB, sekali setiap lawatan). Jika menggunakan data mudah alih, gunakan Wi-Fi jika boleh.",
+  "About these estimates": "Tentang anggaran ini",
+  "How the match score works": "Cara skor padanan berfungsi",
+  "Show more": "Tunjuk lagi",
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
@@ -1136,6 +1139,9 @@ const ZH = {
   "Least momentum": "势头最弱",
   "No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.": "最新数据中没有职位在下降：最低分代表信号持平，而不是下降。",
   "The first run downloads Python into your browser (up to about 10 MB, once per visit). On mobile data, use Wi-Fi if you can.": "第一次运行会把 Python 下载到你的浏览器（最多约 10 MB，每次访问一次）。如果用手机流量，尽量连 Wi-Fi。",
+  "About these estimates": "关于这些估计",
+  "How the match score works": "匹配分数怎么算",
+  "Show more": "显示更多",
 };
 
 const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and tools/g, "履历与工具").replace(/preferences/g, "偏好").replace(/ and /g, "和");
