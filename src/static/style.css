@@ -402,6 +402,9 @@ details.why .raise-tips ul { margin: 4px 0 0; padding-left: 18px; }
 .sdg-why-row { display: flex; gap: 8px; align-items: flex-start; }
 .sdg-why-row .sdg-mini { margin-top: 2px; }
 .sdg-goal-text { gap: 2px; min-width: 0; }
+/* Section title > goal ("SDG 17 · …") > target lines ("SDG 17.18 · …", 13px) */
+.sdg-why > strong.small { font-size: 17px; }
+.sdg-goal-text > strong { font-size: 15px; }
 .sdg-targets { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); display: grid; gap: 6px; }
 .sdg-targets li { display: flex; flex-direction: column; gap: 1px; }
 #jobs.loading { opacity: 0.5; pointer-events: none; transition: opacity 0.15s; }
