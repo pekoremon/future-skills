@@ -1831,10 +1831,8 @@ function resourceHtml(r) {
   </li>`;
 }
 
-// The UN's colour for each of the 17 Sustainable Development Goals, for the goal tiles.
-const SDG_COLOURS = ["", "#E5243B", "#DDA63A", "#4C9F38", "#C5192D", "#FF3A21", "#26BDE2", "#FCC30B", "#A21942", "#FD6925",
-  "#DD1367", "#FD9D24", "#BF8B2E", "#3F7E44", "#0A97D9", "#56C02B", "#00689D", "#19486A"];
-const sdgTile = (goal, name) => `<span class="sdg-tile" style="background: ${SDG_COLOURS[goal] || "var(--accent)"}" role="img" aria-label="SDG ${esc(goal)}: ${esc(name)}"><b>${esc(goal)}</b><small>SDG</small></span>`;
+// The UN's official icon for each of the 17 Sustainable Development Goals (src/static/sdg/).
+const sdgTile = (goal, name) => `<img class="sdg-tile" src="/static/sdg/${encodeURIComponent(goal)}.webp" width="64" height="64" loading="lazy" alt="SDG ${esc(goal)}: ${esc(name)}">`;
 
 /* ---------- learning progress ---------- */
 
@@ -1901,7 +1899,8 @@ async function pageLearn(roleId) {
   const proveIt = `<ul class="res-list">${p.projects.map((x) => `<li class="res${progress.done[`project:${x.id}`] ? " is-done" : ""}">
       <div class="res-top"><span class="chip plain res-kind">Project</span>${doneBox(`project:${x.id}`, x.title)}</div>
       <strong>${esc(x.title)}</strong>
-      <span class="muted small">${esc(x.description)}</span></li>`).join("")}${p.certifications.map((c) => `<li class="res${progress.done[`cert:${c.cert_id}`] ? " is-done" : ""}">
+      <span class="muted small">${esc(x.description)}</span>
+      <a class="small" href="${safeUrl(x.guide.url)}" target="_blank" rel="noopener">Guide: ${esc(x.guide.name)} ↗</a></li>`).join("")}${p.certifications.map((c) => `<li class="res${progress.done[`cert:${c.cert_id}`] ? " is-done" : ""}">
       <div class="res-top"><span class="chip plain res-kind">Certification</span>${doneBox(`cert:${c.cert_id}`, c.cert_name)}</div>
       <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
       <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""}</span></li>`).join("")}</ul>`;
@@ -1920,8 +1919,8 @@ async function pageLearn(roleId) {
       ${[...goals.values()].map((g) => `<div class="sdg-goal">
         ${sdgTile(g.goal, g.name)}
         <div class="stack" style="gap: 2px">
-          <strong>${esc(g.name)}</strong>
-          <span class="small muted">${g.why ? esc(g.why) : `Built by ${esc(g.skills.slice(0, 3).join(", "))}`}</span>
+          ${LANG === "en" ? "" : `<strong>${esc(g.name)}</strong>`}
+          <span class="small">${g.why ? esc(g.why) : `Built by ${esc(g.skills.slice(0, 3).join(", "))}`}</span>
         </div>
       </div>`).join("")}
     </section>` : "";
@@ -1947,11 +1946,13 @@ async function pageLearn(roleId) {
   render(`
   <div class="stack">
     <a class="btn ghost" href="#/results" style="align-self: flex-start">&larr; Back to my jobs</a>
-    <p class="eyebrow">Learning path${p.personal ? " · built on your skill gaps" : ""}</p>
-    <h1>${esc(p.role.name)}: how to get there</h1>
-    <div class="row" style="gap: 6px">
-      <span class="chip plain">${esc(p.role.area_name || "IT")}</span>
-      <a class="chip plain" href="https://www.onetonline.org/link/summary/${esc(p.role.onet_soc)}" target="_blank" rel="noopener">What the job involves (O*NET)</a>
+    <div class="stack" style="gap: 8px">
+      <p class="eyebrow">Learning path${p.personal ? " · built on your skill gaps" : ""}</p>
+      <h1 class="job-title">${esc(p.role.name)}</h1>
+      ${p.role.summary.en ? `<p class="lead" data-no-i18n>${esc(p.role.summary[LANG] || p.role.summary.en)}</p>` : ""}
+      <div class="row" style="gap: 6px">
+        <span class="chip plain">${esc(p.role.area_name || "IT")}</span>
+      </div>
     </div>
     <section class="card stack" style="gap: 8px" aria-labelledby="progress-title">
       <h2 id="progress-title">Your progress</h2>

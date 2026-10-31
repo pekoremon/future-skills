@@ -105,9 +105,13 @@ One row per course × skill; a course that teaches several skills has one row pe
 | level | Provider's level label |
 | notes | What the page said, caveats |
 
+## role_summaries.csv — one plain line per role
+
+What the job is, in one sentence a student understands, in English, Bahasa Melayu and Chinese (`summary_en`, `summary_ms`, `summary_zh`); shown under the role name on the learning path. Written by the team.
+
 ## projects.csv — portfolio project ideas per role
 
-Two short projects per role that a student can build to show employers the role's skills, shown under "Prove it" on the learning path. Written by the team (`source_name` says so); columns `project_id`, `role_id`, `title`, `description`.
+Two short projects per role that a student can build to show employers the role's skills, shown under "Prove it" on the learning path. Written by the team (`source_name` says so); columns `project_id`, `role_id`, `title`, `description`, and a free guide to follow (`guide_name`, `guide_url`), opened and checked on `verified_date`.
 
 ## certifications.csv — licences and certifications that prove a role's skills
 

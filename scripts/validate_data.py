@@ -60,9 +60,14 @@ TABLES = {
     },
 }
 
+TABLES["role_summaries.csv"] = {
+    "columns": ["role_id", "summary_en", "summary_ms", "summary_zh"],
+    "required": ["role_id", "summary_en", "summary_ms", "summary_zh"],
+}
+
 TABLES["projects.csv"] = {
-    "columns": ["project_id", "role_id", "title", "description"],
-    "required": ["project_id", "role_id", "title", "description"],
+    "columns": ["project_id", "role_id", "title", "description", "guide_name", "guide_url", "verified_date"],
+    "required": ["project_id", "role_id", "title", "description", "guide_name", "guide_url", "verified_date"],
 }
 
 TABLES["learning_resources.csv"] = {
@@ -225,6 +230,8 @@ def check_references(tables: dict[str, list[dict]]) -> list[str]:
         ref("courses.csv", i, "skill", row.get("skill_id", ""))
     for i, row in enumerate(tables.get("certifications.csv", []), start=2):
         ref("certifications.csv", i, "role", row.get("role_id", ""))
+    for i, row in enumerate(tables.get("role_summaries.csv", []), start=2):
+        ref("role_summaries.csv", i, "role", row.get("role_id", ""))
     for i, row in enumerate(tables.get("projects.csv", []), start=2):
         ref("projects.csv", i, "role", row.get("role_id", ""))
     areas = {"all", "software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux", "it_mgmt"}

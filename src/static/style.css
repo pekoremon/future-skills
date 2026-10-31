@@ -397,10 +397,9 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 .learn-progress { height: 10px; }
 .res > strong { overflow-wrap: anywhere; }
 .sdg-goal { display: flex; gap: 12px; align-items: center; }
-.sdg-tile { flex: none; width: 56px; height: 56px; border-radius: 8px; color: #fff; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
-.sdg-tile b { font-size: 24px; font-weight: 800; }
-.sdg-tile small { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; margin-top: 3px; }
-
+.sdg-tile { flex: none; width: 64px; height: 64px; display: block; }
+.job-title { font-size: clamp(30px, 6vw, 44px); }
+.lead { font-size: 17px; color: var(--muted); }
 /* Trend pages open with the question on the left and the jobs chart on the right. */
 .viz-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
 .viz-hero-chart:empty { display: none; }

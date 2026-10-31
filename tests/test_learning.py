@@ -28,6 +28,7 @@ class TestLearning(unittest.TestCase):
             p = learning.page(role["role_id"], self.data)
             self.assertGreaterEqual(len(p["projects"]), 2, role["role_id"])
             self.assertTrue(all(x["title"] and x["description"] for x in p["projects"]))
+            self.assertTrue(all(x["guide"]["url"].startswith("https://") for x in p["projects"]))
 
     def test_path_lists_its_sdg_targets(self):
         for role in self.data["roles"]:

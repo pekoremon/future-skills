@@ -112,7 +112,10 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
     for s in skills:
         s["sdg"] = [{"target": x["target"], "goal_name": x["goal_name"]} for x in data["sdg"].get(("skill", s["skill_id"]), [])]
     certs = [c for c in matching.read_csv("certifications.csv") if c["role_id"] == role_id]
-    projects = [{"id": p["project_id"], "title": p["title"], "description": p["description"]}
+    summary = next(({k[8:]: v for k, v in s.items() if k.startswith("summary_")}
+                    for s in matching.read_csv("role_summaries.csv") if s["role_id"] == role_id), {})
+    projects = [{"id": p["project_id"], "title": p["title"], "description": p["description"],
+                 "guide": {"name": p["guide_name"], "url": p["guide_url"]}}
                 for p in matching.read_csv("projects.csv") if p["role_id"] == role_id]
 
     seen, hours, untimed = set(), 0.0, 0
@@ -127,7 +130,7 @@ def page(role_id: str, data: dict | None = None, match: dict | None = None,
     return {
         "role": {"role_id": role_id, "name": role["role_name_en"], "it_area": role["it_area"],
                  "area_name": area["name"] if area else None, "job_zone": int(role["job_zone"]),
-                 "is_mycol": role["is_mycol"], "onet_soc": role["onet_soc"]},
+                 "is_mycol": role["is_mycol"], "onet_soc": role["onet_soc"], "summary": summary},
         "personal": match is not None,
         "stages": [
             {"id": "foundations", "title": f"Foundations for {area['name'] if area else 'IT'}", "resources": foundations},
