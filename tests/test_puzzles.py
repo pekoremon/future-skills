@@ -72,6 +72,24 @@ class TestDaily(NoLLM):
             self.assertEqual(call("POST", "/api/puzzles/daily/check", {"date": "2026-11-01", "choice": 4})[0], 400)
             self.assertEqual(call("POST", "/api/puzzles/daily/check", {"date": "2026-11-02", "choice": 0})[0], 400)
 
+    def test_every_daily_is_a_code_puzzle_with_a_hint(self):
+        for d in range(1, 31):
+            day = date(2026, 11, d)
+            p = puzzles.daily_stored(day)
+            self.assertTrue(p["code"] and p["hint"], day)
+            self.assertEqual(p["area"], puzzles.daily_plan(day)[0])
+        with mock.patch.object(puzzles, "today", return_value=date(2026, 11, 1)):
+            _, a = call("GET", "/api/puzzles/daily")
+            self.assertTrue(a["puzzle"]["code"])
+            self.assertNotIn("hint", a["puzzle"])  # the page pays for it separately
+            status, h = call("POST", "/api/puzzles/daily/hint", {"date": "2026-11-01"})
+            self.assertEqual((status, h["hint"]), (200, puzzles._daily["2026-11-01"]["hint"]))
+            self.assertEqual(call("POST", "/api/puzzles/daily/hint", {"date": "2026-11-02"})[0], 400)
+
+    def test_bank_code_puzzles_have_hints(self):
+        for p in puzzles.load_bank()["puzzles"]:
+            self.assertEqual(bool(p.get("code")), bool(p.get("hint")), p["id"])
+
     def test_area_changes_every_day(self):
         days = [date(2026, 11, d) for d in range(1, 6)]
         self.assertEqual({puzzles.daily_plan(d)[0] for d in days}, set(puzzles.AREAS))
@@ -82,6 +100,11 @@ class TestDaily(NoLLM):
         for bad in ({**good, "wrong": ["B", "C"]}, {**good, "wrong": ["A", "C", "D"]}, {**good, "prompt": ""}, []):
             with self.assertRaises(ValueError):
                 puzzles.valid_puzzle(bad)
+        daily = {**good, "code": "print(1)", "hint": "Run it in your head."}
+        self.assertEqual(puzzles.valid_puzzle(daily, daily=True)["hint"], "Run it in your head.")
+        for bad in ({**daily, "code": ""}, {**daily, "hint": ""}, {**good, "code": "print(1)"}):
+            with self.assertRaises(ValueError):
+                puzzles.valid_puzzle(bad, daily=True)
 
 
 class TestVideoQuiz(NoLLM):

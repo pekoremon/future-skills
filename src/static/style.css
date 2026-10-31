@@ -73,16 +73,18 @@ button { font: inherit; }
 .lang-btn:hover { border-color: var(--accent); }
 .top-tools { display: flex; gap: 6px; align-items: center; }
 .theme-btn { min-width: 40px; padding: 6px 10px; font-size: 16px; line-height: 1; }
-/* Phones: brand and language on one line, the menu as one row that scrolls sideways */
+/* Phones: brand and tools on one line, then every menu item in two rows, none hidden off screen */
 @media (max-width: 560px) {
-  .topbar { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 8px 12px 4px; }
-  .brand { grid-row: 1; grid-column: 1; }
-  .top-tools { grid-row: 1; grid-column: 2; }
-  .lang-btn { min-height: 36px; padding: 4px 8px; font-size: 13px; }
-  .theme-btn { min-width: 36px; font-size: 15px; }
-  .topbar nav { grid-row: 2; grid-column: 1 / -1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px 4px; }
-  .topbar nav::-webkit-scrollbar { display: none; }
-  .topbar nav a { padding: 6px 10px; min-height: 36px; white-space: nowrap; }
+  /* not sticky here: a two-row menu would cover too much of a phone screen */
+  .topbar { position: static; display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; padding: 8px 12px 6px; }
+  .brand { grid-row: 1; grid-column: 1; font-size: 15px; white-space: nowrap; }
+  .top-tools { grid-row: 1; grid-column: 2; justify-content: flex-end; flex-wrap: wrap; gap: 4px; min-width: 0; }
+  .top-tools .coin-chip { display: none; }  /* coins still show on My learning */
+  .lang-btn { min-height: 34px; padding: 4px 7px; font-size: 13px; }
+  select.lang-btn { max-width: 96px; }
+  .theme-btn { min-width: 34px; font-size: 15px; }
+  .topbar nav { grid-row: 2; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+  .topbar nav a { padding: 4px 2px; min-height: 34px; justify-content: center; text-align: center; font-size: 13px; line-height: 1.15; }
 }
 .lang-note { display: none; }
 html:not([lang="en"]) .lang-note { display: block; }
