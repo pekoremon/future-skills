@@ -990,7 +990,7 @@ async function drawJobs() {
     document.getElementById("list").innerHTML = best.length
       ? groups.map(([name, ms]) => `${name && groups.length > 1 ? `<h3 class="group-head">${esc(groupTitle(g, name))}</h3>` : ""}
         <ol class="top-list">${ms.map((m) => jobCard(m, best.indexOf(m) + 1)).join("")}</ol>`).join("")
-      : '<p class="muted">No roles in your best-fit areas match your education level yet. Try a higher education level on the skills page.</p>';
+      : '<p class="muted">No roles in your best-fit areas match your education level yet. If your CV lists a higher qualification, upload it on the CV page.</p>';
     document.getElementById("more").hidden = shown >= best.length;
     jobs.querySelectorAll("details.why").forEach((d) => d.addEventListener("toggle", () => d.open && whyJob(d.closest(".top-card"))));
     prefetchLearn(list.map((m) => m.role_id));

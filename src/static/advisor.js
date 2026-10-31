@@ -152,7 +152,7 @@ async function pageAdvisor() {
           </div>
           <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
         </li>`).join("")}</ol>`
-        : '<p class="muted">No roles in your best-fit areas match your education level yet. Try a higher education level on the skills page.</p>'}
+        : '<p class="muted">No roles in your best-fit areas match your education level yet. If your CV lists a higher qualification, upload it on the CV page.</p>'}
       <p class="muted small"><span>${esc(res.scenario.name)}</span> · <span>These are estimates, not predictions.</span></p>
     </section>
     ${learn ? `<section class="card stack" style="gap: 10px">
