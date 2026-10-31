@@ -249,7 +249,7 @@ const MS = {
   "Add to my technologies": "Tambah ke teknologi saya", "Change my technologies": "Ubah teknologi saya",
   "Quick start: about 2 minutes": "Mula pantas: kira-kira 2 minit",
   "The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 2 minutes: tick your technologies, see your jobs at once, and add the rest later.": "Laluan penuh mengambil masa kira-kira 20 minit dan memberi keputusan paling tepat. Mula pantas mengambil masa kira-kira 2 minit: tandakan teknologi anda, lihat pekerjaan anda serta-merta, dan tambah yang lain kemudian.",
-  "Before you upload": "Sebelum anda muat naik", "Remove your IC number, home address and phone number.": "Buang nombor IC, alamat rumah dan nombor telefon anda.",
+  "Before you upload": "Sebelum anda muat naik", "Remove your home address. We remove IC numbers, phone numbers and emails before the AI sees your CV.": "Buang alamat rumah anda. Kami membuang nombor IC, nombor telefon dan e-mel sebelum AI melihat CV anda.",
   "Your CV goes to our server and an AI service to write the summary. It is not saved.": "CV anda dihantar ke pelayan kami dan perkhidmatan AI untuk menulis ringkasan. Ia tidak disimpan.",
   "Written by AI. It can make mistakes, so check it against your CV.": "Ditulis oleh AI. Ia boleh tersilap, jadi semak dengan CV anda.",
   "Tick at least one technology first": "Tandakan sekurang-kurangnya satu teknologi dahulu",
@@ -301,6 +301,7 @@ const MS = {
   "Scoring IT roles…": "Mengira skor peranan IT…", "Your matches": "Padanan anda",
   "Future scenario": "Senario masa depan",
   "These are estimates, not predictions.": "Ini anggaran, bukan ramalan.",
+  "The app only suggests jobs; the choice is yours.": "Aplikasi ini hanya mencadangkan pekerjaan; pilihan di tangan anda.",
   "Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.":
     "Tiada siapa tahu betapa cepat AI akan mengubah pekerjaan. Setiap senario ialah andaian berbeza tentang masa depan, dibina daripada data awam (DOSM, MyCOL, arXiv) dan pemberat yang dipilih oleh pasukan. Bandingkan senario: peranan yang berada di kedudukan tinggi dalam ketiga-tiganya ialah pilihan lebih selamat daripada yang tinggi dalam satu sahaja. Keputusan di tangan anda.",
   "Current trends": "Trend semasa", "Fast AI adoption": "Penggunaan AI pantas", "Malaysian demand leads": "Permintaan Malaysia mendahului",
@@ -526,6 +527,7 @@ const MS = {
   "See all roles and why ↓": "Lihat semua peranan dan sebabnya ↓",
   "How this job helps the world": "Bagaimana pekerjaan ini membantu dunia", "Why this job?": "Kenapa pekerjaan ini?", "Writing…": "Sedang menulis…",
   "Written by AI from your scores. It can be wrong.": "Ditulis oleh AI daripada skor anda. Ia mungkin salah.",
+  "How to raise this score": "Cara menaikkan skor ini",
   "AI not available, so this is a plain summary of your scores.": "AI tidak tersedia, jadi ini ringkasan mudah skor anda.",
   "Why these jobs? Your IT areas and how they were scored": "Kenapa pekerjaan ini? Bidang IT anda dan cara ia diberi skor",
   "See my jobs now": "Lihat pekerjaan saya sekarang",
@@ -660,6 +662,44 @@ const MS = {
   "Your hours count towards SDG 4 and 8": "Jam anda menyumbang kepada SDG 4 dan 8",
   "See what every student here adds up to →": "Lihat jumlah sumbangan semua pelajar →",
   "What every student's hours add up to →": "Jumlah jam semua pelajar →",
+  // Global goals on the matches page
+  "Global goals you care about": "Matlamat global yang anda pentingkan",
+  "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
+    "Pilih Matlamat Pembangunan Mampan PBB yang anda mahu kerja anda bantu. Pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan, jadi ia naik dalam senarai anda. Jangan pilih apa-apa untuk menyusun mengikut kesesuaian dan trend sahaja.",
+  "IT job": "pekerjaan IT", "IT jobs": "pekerjaan IT",
+  "Your global goals": "Matlamat global anda", "Supports a global goal you picked": "Menyokong matlamat global yang anda pilih",
+  "If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.":
+    "Jika anda memilih matlamat global, pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan (paling banyak 100 kesemuanya). Matlamat yang disokong setiap pekerjaan datang daripada sasaran SDG PBB dalam data kami, dengan sebab bagi setiap satu.",
+  "Supports the global goal you picked, so it gets 5 extra points": "Menyokong matlamat global yang anda pilih, jadi ia mendapat 5 mata tambahan",
+  // How this differs from job sites and course platforms (Trends page)
+  "How is this different from JobStreet, LinkedIn or Coursera?":
+    "Apakah bezanya dengan JobStreet, LinkedIn atau Coursera?",
+  "Job sites: JobStreet, Hiredly, LinkedIn Jobs":
+    "Laman kerja: JobStreet, Hiredly, LinkedIn Jobs",
+  "They list today's job ads and match the keywords on your profile.":
+    "Ia menyenaraikan iklan kerja hari ini dan memadankan kata kunci pada profil anda.",
+  "They do not say which part of IT suits you, which skills you are missing for a job, or how AI is changing demand.":
+    "Ia tidak memberitahu bahagian IT mana yang sesuai dengan anda, kemahiran apa yang anda kurang untuk sesuatu kerja, atau bagaimana AI mengubah permintaan.",
+  "Government portals: MyFutureJobs, MyMahir, TalentCorp's MyCOL list":
+    "Portal kerajaan: MyFutureJobs, MyMahir, senarai MyCOL TalentCorp",
+  "They publish official jobs and labour-market facts.":
+    "Ia menerbitkan kerja dan fakta pasaran buruh rasmi.",
+  "The facts are the same for everyone: no ranking for you, no reasons and no idea how sure they are.":
+    "Fakta itu sama untuk semua orang: tiada susunan untuk anda, tiada sebab dan tiada tanda sejauh mana ia pasti.",
+  "Course platforms: Coursera, Udemy, edX, LinkedIn Learning":
+    "Platform kursus: Coursera, Udemy, edX, LinkedIn Learning",
+  "They offer thousands of courses, many of them paid.":
+    "Ia menawarkan beribu-ribu kursus, kebanyakannya berbayar.",
+  "They do not tell you which course closes your biggest gap for a job Malaysia needs.":
+    "Ia tidak memberitahu kursus mana yang menutup jurang terbesar anda untuk kerja yang diperlukan Malaysia.",
+  "Yearly reports: LinkedIn Jobs on the Rise, WEF Future of Jobs":
+    "Laporan tahunan: LinkedIn Jobs on the Rise, WEF Future of Jobs",
+  "They name growing jobs once a year.":
+    "Ia menamakan kerja yang berkembang sekali setahun.",
+  "One list for everyone, for the world or a whole country, with no confidence and no update in between.":
+    "Satu senarai untuk semua, untuk dunia atau seluruh negara, tanpa tahap keyakinan dan tanpa kemas kini di antaranya.",
+  "What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.":
+    "Apa yang Future Skills tambah: ia menggabungkan sumber-sumber ini untuk seorang pelajar. Kesesuaian bidang dan jurang kemahiran anda datang daripada ujian, minat dan CV anda sendiri. Skor trend dibina semula daripada DOSM, MyCOL dan arXiv setiap kali anda menekan “Update data now”, setiap nombor menunjukkan sumbernya, tahap keyakinannya dan sejauh mana kedudukan anda berubah dalam tiga masa depan, dan matlamat global yang anda pilih mengubah susunan kerja anda. Kemudian ia memberi anda kursus percuma untuk jurang terbesar anda.",
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
@@ -708,10 +748,13 @@ const PATTERNS_MS = [
   [/^Show all (\d+)$/, (m) => `Tunjuk semua ${m[1]}`], [/^(\d+) picked$/, (m) => `${m[1]} dipilih`],
   [/^✓ Added (\d+) technologies to your list$/, (m) => `✓ ${m[1]} teknologi ditambah ke senarai anda`],
   [/^Reading (.+)…$/, (m) => `Sedang membaca ${m[1] === "the sample CV" ? "CV contoh" : m[1]}…`],
+  [/^Removed (\d+) personal details \(IC, phone or email\) before the AI read it\.$/, (m) => `${m[1]} butiran peribadi (IC, telefon atau e-mel) dibuang sebelum AI membacanya.`],
   [/^Read ([\d,]+) characters from (.+)\.$/, (m) => `${m[1]} aksara dibaca daripada ${m[2] === "the sample CV" ? "CV contoh" : m[2]}.`],
   [/^Could not read the CV: (.+)$/, (m) => `Tidak dapat membaca CV: ${m[1]}`],
   [/^Could not get an explanation: (.+)$/, (m) => `Tidak dapat mendapatkan penerangan: ${m[1]}`],
   [/^Could not explain: (.+)$/, (m) => `Tidak dapat menerangkan: ${m[1]}`],
+  [/^Learn (.+): your score goes from ([\d.]+) to ([\d.]+) \(\+([\d.]+)\)\.$/, (m) => `Belajar ${m[1]}: skor anda naik daripada ${m[2]} kepada ${m[3]} (+${m[4]}).`],
+  [/^Answer the interest questions to add your interest fit, worth up to ([\d.]+) of the 100 points\.$/, (m) => `Jawab soalan minat untuk menambah padanan minat anda, bernilai sehingga ${m[1]} daripada 100 mata.`],
   [/^Something went wrong: (.+)$/, (m) => `Ada masalah: ${m[1]}`],
   [/^Continue \((\d+) answered\)$/, (m) => `Sambung (${m[1]} dijawab)`],
   [/^About (\d+) min$/, (m) => `Kira-kira ${m[1]} min`], [/^(\d+) questions$/, (m) => `${m[1]} soalan`],
@@ -810,6 +853,10 @@ const PATTERNS_MS = [
   [/^\((\d+) sessions?\)$/, (m) => `(${m[1]} sesi)`],
   [/^studied, of ([\d.]+) h planned$/, (m) => `dipelajari, daripada ${m[1]} j yang dirancang`],
   [/^Lite mode: no photos, animation or charts\. Page size now: (.+)$/, (m) => `Mod ringan: tanpa foto, animasi atau carta. Saiz halaman sekarang: ${m[1]}`],
+  [/^([▲▼]) (\d+) from your goals$/, (m) => `${m[1]} ${m[2]} kerana matlamat anda`],
+  [/^Your goal: SDG (.+)$/, (m) => `Matlamat anda: SDG ${m[1]}`],
+  [/^Rank without your global goals: (\d+)$/, (m) => `Kedudukan tanpa matlamat global anda: ${m[1]}`],
+  [/^(.+)$/, (m) => SDG_MS[m[1]] || null],  // a UN goal name on its own
 ];
 
 const srcMs = (s) => s.replace(/skills test/g, "ujian kemahiran").replace(/CV and tools/g, "CV dan alat").replace(/preferences/g, "keutamaan").replace(/ and /g, " dan ");
@@ -978,7 +1025,7 @@ const ZH = {
   "Add to my technologies": "加入我的技术", "Change my technologies": "修改我的技术",
   "Quick start: about 2 minutes": "快速开始：约 2 分钟",
   "The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 2 minutes: tick your technologies, see your jobs at once, and add the rest later.": "完整流程约 20 分钟，结果最准确。快速开始约 2 分钟：勾选你用过的技术，马上就能看到适合的职位，其他步骤之后再补。",
-  "Before you upload": "上传之前", "Remove your IC number, home address and phone number.": "请删掉你的身份证号码、住家地址和电话号码。",
+  "Before you upload": "上传之前", "Remove your home address. We remove IC numbers, phone numbers and emails before the AI sees your CV.": "请删掉你的住家地址。身份证号码、电话号码和电邮会在 AI 读取履历前由我们自动删除。",
   "Your CV goes to our server and an AI service to write the summary. It is not saved.": "你的履历会发送到我们的服务器和 AI 服务来撰写摘要，不会被保存。",
   "Written by AI. It can make mistakes, so check it against your CV.": "由 AI 撰写，可能有错，请对照你的履历检查。",
   "Tick at least one technology first": "请先勾选至少一项技术",
@@ -1030,6 +1077,7 @@ const ZH = {
   "Scoring IT roles…": "正在为 IT 职位评分……", "Your matches": "你的匹配结果",
   "Future scenario": "未来情景",
   "These are estimates, not predictions.": "这些是估计，不是预测。",
+  "The app only suggests jobs; the choice is yours.": "本应用只提供职位建议，最终由你自己选择。",
   "Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.":
     "没有人知道 AI 会多快改变工作。每个情景都是对未来的不同假设，依据公开数据（DOSM、MyCOL、arXiv）和团队选定的权重。请比较一下：三个情景中都排名靠前的职位，比只在一个情景中靠前的更稳妥。最终由你决定。",
   "Current trends": "当前趋势", "Fast AI adoption": "AI 快速普及", "Malaysian demand leads": "马来西亚需求主导",
@@ -1255,6 +1303,7 @@ const ZH = {
   "See all roles and why ↓": "查看全部职位和原因 ↓",
   "How this job helps the world": "这份工作如何帮助世界", "Why this job?": "为什么适合你？", "Writing…": "正在撰写……",
   "Written by AI from your scores. It can be wrong.": "由 AI 根据你的分数撰写，可能有误。",
+  "How to raise this score": "怎样提高这个分数",
   "AI not available, so this is a plain summary of your scores.": "AI 暂时无法使用，以下是你分数的简单总结。",
   "Why these jobs? Your IT areas and how they were scored": "为什么是这些职位？你的 IT 领域和评分方法",
   "See my jobs now": "马上看我的职位",
@@ -1389,6 +1438,44 @@ const ZH = {
   "Your hours count towards SDG 4 and 8": "你的学习时数贡献于 SDG 4 和 8",
   "See what every student here adds up to →": "看看所有学生加起来的贡献 →",
   "What every student's hours add up to →": "所有学生的学习时数加起来 →",
+  // Global goals on the matches page
+  "Global goals you care about": "你关心的全球目标",
+  "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
+    "选出你希望自己的工作能帮助的联合国可持续发展目标。支持其中任一目标的工作加 5 分，在你的列表里排得更前。不选的话，只按匹配度和趋势排序。",
+  "IT job": "个 IT 职位", "IT jobs": "个 IT 职位",
+  "Your global goals": "你的全球目标", "Supports a global goal you picked": "支持你选的全球目标",
+  "If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.":
+    "选了全球目标后，支持其中任一目标的工作加 5 分（总分最多 100）。每份工作支持哪些目标来自我们数据里的联合国 SDG 具体目标，每条都附有理由。",
+  "Supports the global goal you picked, so it gets 5 extra points": "支持你选的全球目标，所以加 5 分",
+  // How this differs from job sites and course platforms (Trends page)
+  "How is this different from JobStreet, LinkedIn or Coursera?":
+    "这和 JobStreet、LinkedIn 或 Coursera 有什么不同？",
+  "Job sites: JobStreet, Hiredly, LinkedIn Jobs":
+    "求职网站：JobStreet、Hiredly、LinkedIn Jobs",
+  "They list today's job ads and match the keywords on your profile.":
+    "列出当下的招聘广告，按你资料里的关键词匹配。",
+  "They do not say which part of IT suits you, which skills you are missing for a job, or how AI is changing demand.":
+    "不会告诉你适合 IT 的哪个方向、做某份工作还缺哪些技能，也不会说 AI 正在怎样改变需求。",
+  "Government portals: MyFutureJobs, MyMahir, TalentCorp's MyCOL list":
+    "政府平台：MyFutureJobs、MyMahir、TalentCorp 的 MyCOL 名单",
+  "They publish official jobs and labour-market facts.":
+    "发布官方的职位和劳动力市场数据。",
+  "The facts are the same for everyone: no ranking for you, no reasons and no idea how sure they are.":
+    "数据对每个人都一样：不会为你排序，不说理由，也不说有多可靠。",
+  "Course platforms: Coursera, Udemy, edX, LinkedIn Learning":
+    "课程平台：Coursera、Udemy、edX、LinkedIn Learning",
+  "They offer thousands of courses, many of them paid.":
+    "提供成千上万门课程，很多要付费。",
+  "They do not tell you which course closes your biggest gap for a job Malaysia needs.":
+    "不会告诉你哪门课能补上你做马来西亚需要的工作时最大的差距。",
+  "Yearly reports: LinkedIn Jobs on the Rise, WEF Future of Jobs":
+    "年度报告：LinkedIn Jobs on the Rise、WEF Future of Jobs",
+  "They name growing jobs once a year.":
+    "每年列一次增长中的职位。",
+  "One list for everyone, for the world or a whole country, with no confidence and no update in between.":
+    "所有人同一张名单，针对全球或整个国家，没有可信度，中间也不更新。",
+  "What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.":
+    "Future Skills 多做的：把这些来源合在一起，为一个学生所用。你的方向匹配和技能差距来自你自己的测验、兴趣和履历。每次按“Update data now”，趋势分数都会用 DOSM、MyCOL 和 arXiv 重新计算；每个数字都标出来源、可信度，以及你的排名在三种未来情景下变化多少；你选的全球目标会改变职位的排序。最后为你最大的差距给出免费课程。",
 };
 
 const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and tools/g, "履历与工具").replace(/preferences/g, "偏好").replace(/ and /g, "和");
@@ -1424,10 +1511,13 @@ const PATTERNS_ZH = [
   [/^Show all (\d+)$/, (m) => `显示全部 ${m[1]} 个`], [/^(\d+) picked$/, (m) => `已选 ${m[1]} 个`],
   [/^✓ Added (\d+) technologies to your list$/, (m) => `✓ 已把 ${m[1]} 项技术加入你的列表`],
   [/^Reading (.+)…$/, (m) => `正在读取${m[1] === "the sample CV" ? "示范履历" : ` ${m[1]}`}……`],
+  [/^Removed (\d+) personal details \(IC, phone or email\) before the AI read it\.$/, (m) => `已在 AI 读取前删除 ${m[1]} 项个人资料（身份证、电话或电邮）。`],
   [/^Read ([\d,]+) characters from (.+)\.$/, (m) => `已从${m[2] === "the sample CV" ? "示范履历" : ` ${m[2]} `}读取 ${m[1]} 个字符。`],
   [/^Could not read the CV: (.+)$/, (m) => `无法读取履历：${m[1]}`],
   [/^Could not get an explanation: (.+)$/, (m) => `无法取得解释：${m[1]}`],
   [/^Could not explain: (.+)$/, (m) => `无法解释：${m[1]}`],
+  [/^Learn (.+): your score goes from ([\d.]+) to ([\d.]+) \(\+([\d.]+)\)\.$/, (m) => `学会 ${m[1]}：分数从 ${m[2]} 升到 ${m[3]}（+${m[4]}）。`],
+  [/^Answer the interest questions to add your interest fit, worth up to ([\d.]+) of the 100 points\.$/, (m) => `回答兴趣问题，就能加上兴趣匹配分，满分 100 中最多占 ${m[1]} 分。`],
   [/^Something went wrong: (.+)$/, (m) => `出了点问题：${m[1]}`],
   [/^Continue \((\d+) answered\)$/, (m) => `继续（已答 ${m[1]} 题）`],
   [/^About (\d+) min$/, (m) => `约 ${m[1]} 分钟`], [/^(\d+) questions$/, (m) => `${m[1]} 题`],
@@ -1525,6 +1615,10 @@ const PATTERNS_ZH = [
   [/^\((\d+) sessions?\)$/, (m) => `（${m[1]} 次）`],
   [/^studied, of ([\d.]+) h planned$/, (m) => `已学，计划共 ${m[1]} 小时`],
   [/^Lite mode: no photos, animation or charts\. Page size now: (.+)$/, (m) => `省流模式：不加载照片、动画和图表。当前页面大小：${m[1]}`],
+  [/^([▲▼]) (\d+) from your goals$/, (m) => `${m[1]} ${m[2]}（因你的目标）`],
+  [/^Your goal: SDG (.+)$/, (m) => `你的目标：SDG ${m[1]}`],
+  [/^Rank without your global goals: (\d+)$/, (m) => `不算你的全球目标时排第 ${m[1]} 名`],
+  [/^(.+)$/, (m) => SDG_ZH[m[1]] || null],  // a UN goal name on its own
 ];
 
 

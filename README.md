@@ -33,7 +33,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 
 ### Problem
 
-A Malaysian IT student about to graduate has to pick one part of IT (software, data and AI, cybersecurity, cloud and networking, web and interface design, or IT management) while AI changes which of those jobs are needed, and mostly picks by guesswork. AI is spreading faster than training: 56% of Malaysian professionals use AI tools at work but only 26% have had formal training (Hays Asia Salary Guide 2025), and MOSTI expects more than 600,000 workers to need reskilling within three to five years (both quoted in the Domain 1 brief). Generic career tests do not look at Malaysian demand or at how fast AI is entering each field, and course lists do not say which skills matter for which job. A wrong choice costs a graduate months of learning for a role they do not fit or that the market needs less.
+A Malaysian IT student about to graduate has to pick one part of IT (software engineering, data and AI, cybersecurity, cloud and networking, or web and interface design) while AI changes which of those jobs are needed, and mostly picks by guesswork. AI is spreading faster than training: 56% of Malaysian professionals use AI tools at work but only 26% have had formal training (Hays Asia Salary Guide 2025), and MOSTI expects more than 600,000 workers to need reskilling within three to five years (both quoted in the Domain 1 brief). Generic career tests do not look at Malaysian demand or at how fast AI is entering each field, and course lists do not say which skills matter for which job. A wrong choice costs a graduate months of learning for a role they do not fit or that the market needs less.
 
 ### Solution
 
@@ -53,7 +53,7 @@ Domain 1 requires all six:
 2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
 3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), results grouped by interest × skill ("Best fit for you" first, then "You can do this, but it may not excite you"; "Want to get there?" areas shown with their biggest gaps and learning paths, not recommended), then an explainable role score and skills gap
 4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults; students tick each course, video or certificate when done, and a "My learning" page tracks progress per path (saved in the browser, no account needed)
-5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to
+5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to. On the jobs page the student picks the UN goals they care about, and a job that supports one gets 5 extra points (`SDG_BONUS` in `scripts/matching.py`), so the goals change the order of their jobs; each job shows how many places its goals moved it
 6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads); each role shows its rank range across them, and the app says scores are estimates, not predictions. When the "Update data" job brings new trend data, the jobs page shows which recommendations moved
 
 Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend input (an IT area's arXiv AI paper count, the DOSM job ad count for Software Developers, or a role's MyCOL status), or pick a ready-made example, and the same code that builds the real scores runs on a private copy. The page shows each step: the data you changed → the signals whose direction moved (and why a small change moves nothing: it must cross a threshold) → the trend scores → your job ranking, before and after. "Show all my matches with this data" re-plans the whole jobs page until you go back to the real data. The data files and other users never see the change.
@@ -70,6 +70,17 @@ Plus **"Seeing a career advisor?"** (`#/advisor`): one page a student takes to a
 Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 25 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
 
 Plus **"Explain this for me"**: a GenAI explanation of each match, written by an LLM (live: `gpt-5.4-mini` through the SDC sponsor KrackedDevs gateway) from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
+
+### How this differs from existing platforms
+
+| Existing | What it does | What a Malaysian IT student still lacks | Future Skills |
+|---|---|---|---|
+| Job sites: JobStreet, Hiredly, LinkedIn Jobs | Today's job ads, keyword match to a profile | Which part of IT suits them, the skills missing for a job, how AI is changing demand | Area fit from their own test, interests and CV; skill gaps per role from O*NET; a trend score per IT area and role |
+| Government portals: MyFutureJobs, MyMahir, TalentCorp MyCOL | Official jobs and labour-market facts | A ranking for them, reasons, how sure the facts are | The same official sources (DOSM, OpenDOSM, MyCOL) turned into a personal, explained ranking with a confidence for every signal |
+| Course platforms: Coursera, Udemy, edX, LinkedIn Learning | Large catalogues, many paid | Which course closes their biggest gap for a job Malaysia needs | Checked free courses and videos ordered by the student's biggest gaps, with hours and weeks |
+| Yearly reports: LinkedIn Jobs on the Rise, WEF Future of Jobs | Growing jobs, once a year | A list for them, updates in between, uncertainty | "Update data now" rebuilds the trend scores from the live sources; rank range across three scenarios; "What if the trend data changed?" |
+
+Plus the student's chosen UN goals change the order of their jobs, instead of SDGs being a label. The app also has this comparison, in English, Malay and Chinese, on the Trends page.
 
 ## Tech Stack
 
@@ -171,7 +182,7 @@ python src/main.py
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
 | POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0077": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
-`/api/match`, `/api/explain` and `/api/learn` also take `trend_changes`: the result is then built from the changed copy, and `trend_data.what_if` is `true`. `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
+`/api/match`, `/api/explain` and `/api/learn` also take `trend_changes`: the result is then built from the changed copy, and `trend_data.what_if` is `true`. They also take `"sdg_goals": ["9", "16"]`, the UN goals the student cares about: each role then has `sdg_choice` (the picked goals it supports, the bonus and its total without it), and `/api/match` lists the goals to pick from in `sdg_goals`. `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
 
 ### Check the data and run tests
 

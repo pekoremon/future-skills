@@ -40,6 +40,11 @@ Two steps, so the student first sees *which part of IT* fits them, then the role
    - trend: the 0-100 trend score for the role (data/trend_scores.csv, looked up by role_id,
      then IT area, then the DOSM ICT sector generic_tech), or its value under a future
      scenario (SCENARIOS). A role with no trend data gets a neutral 50 and a flag.
+   - UN goals the student cares about (sdg_goals, optional): a role whose own SDG targets
+     (data/sdg_map.csv) include one of the picked goals gets SDG_BONUS points on top of the
+     total, capped at 100. Enough to reorder close roles, too little to lift a poor fit
+     over a good one. Each role keeps its total without the bonus, so the page can show
+     which roles moved because of the goals.
 
 3. Groups (area_groups), interest x skill per area, to put the roles in order:
      interest = the area's preference part; skill = the test and CV parts, weighted 45:25
@@ -65,7 +70,8 @@ Student profile (data/sample_profiles.json; fictional people only):
      "preferences": {"software_dev": 80, ...},  # 0-100 per area, instead of "interest"
      "cv_areas": {"software_dev": 60, ...},     # 0-100 per area (else from technologies)
      "skills": {"SK007": 4.0, ...},             # skill_id -> O*NET level 0-7
-     "technologies": ["SK130", ...]}            # skill_ids of technologies used
+     "technologies": ["SK130", ...],            # skill_ids of technologies used
+     "sdg_goals": ["9", "16"]}                  # UN goals (1-17) the student cares about
 Every part is optional.
 
 Usage:
@@ -90,6 +96,7 @@ PREFERENCE_SPLIT = {"items": 0.6, "riasec": 0.4}
 WEIGHTS = {"area": 0.4, "interest": 0.1, "skill": 0.3, "trend": 0.2}
 SKILL_SPLIT = {"rated": 0.7, "tech": 0.3}
 NEUTRAL_TREND = 50.0
+SDG_BONUS = 5.0  # match points for a role that supports a UN goal the student picked (team choice; the matches page says 5)
 SECTOR_TREND = "generic_tech"  # DOSM "Information & communication" sector, the last trend lookup
 DEFAULT_JOB_ZONE = 4  # bachelor's degree, the usual level of a graduating student
 CLEAR_LEAD = 10  # area-fit points the best area needs over the next one to be called clear
@@ -555,6 +562,8 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict, fits: 
     parts = {"area": area["fit"] if area else None, "interest": interest_fit,
              "skill": skill["score"], "trend": trend}
     total, points = weighted(parts, WEIGHTS)
+    sdg = data["sdg"].get(("role", rid), [])
+    choice = sdg_choice(profile.get("sdg_goals"), sdg, total or 0.0)
 
     flags = []
     if parts["area"] is None:
@@ -574,7 +583,7 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict, fits: 
         "riasec_code_onet": role["riasec_code_onet"],
         "it_area": role["it_area"],
         "area_name": area["name"] if area else None,
-        "total": total or 0.0,
+        "total": choice["total"],
         "components": {k: {"score": parts[k], "weight": WEIGHTS[k], "points": points[k]} for k in WEIGHTS},
         "explain": {"area": (f"{area['name']} area fit: {area['explain']}" if area
                              else "Area fit not scored: no test, preference or CV answers"),
@@ -590,8 +599,34 @@ def match_role(profile: dict, role: dict, data: dict, trend_scores: dict, fits: 
         # the two measured parts behind the trend score (None = no data), for explanations
         "trend_parts": (data["trend_parts"].get(rid) or data["trend_parts"].get(role["it_area"])) if has_trend else None,
         "flags": flags,
-        "sdg": data["sdg"].get(("role", rid), []),
+        "sdg": sdg,
+        "sdg_choice": choice,
     }
+
+
+def sdg_goal(target: str) -> str:
+    """The goal number of an SDG target: "16.a" -> "16"."""
+    return str(target).split(".")[0]
+
+
+def sdg_choice(goals, role_sdg: list[dict], total: float) -> dict:
+    """The SDG_BONUS for a role that supports one of the student's picked goals."""
+    picked = {str(g) for g in goals or []}
+    hit = sorted({sdg_goal(s["target"]) for s in role_sdg} & picked, key=int)
+    bonus = SDG_BONUS if hit else 0.0
+    return {"goals": hit, "bonus": bonus, "total_without": total,
+            "total": round(min(100.0, total + bonus), 1)}
+
+
+def sdg_goal_options(data: dict) -> list[dict]:
+    """The UN goals at least one IT role supports: what a student can pick from."""
+    goals = {}
+    for r in it_roles(data):
+        for s in data["sdg"].get(("role", r["role_id"]), []):
+            g = goals.setdefault(sdg_goal(s["target"]), {"goal": sdg_goal(s["target"]),
+                                                         "goal_name": s["goal_name"], "roles": set()})
+            g["roles"].add(r["role_id"])
+    return [{**g, "roles": len(g["roles"])} for g in sorted(goals.values(), key=lambda g: int(g["goal"]))]
 
 
 def with_interest(profile: dict) -> dict:

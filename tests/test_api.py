@@ -157,6 +157,16 @@ class TestApi(unittest.TestCase):
         bad = self.client.post("/api/match", json={"test": {"seed": "x"}})
         self.assertEqual(bad.status_code, 400)
 
+    def test_match_sdg_goals_move_supporting_roles_up(self):
+        base = self.client.post("/api/match", json={"profile_id": "P01", "top": 40}).json
+        picked = self.client.post("/api/match", json={"profile_id": "P01", "sdg_goals": [16], "top": 40}).json
+        self.assertIn("16", [g["goal"] for g in picked["sdg_goals"]])
+        before = {m["role_id"]: m["total"] for m in base["results"]}
+        for m in picked["results"]:
+            self.assertEqual(m["total"] > before[m["role_id"]], bool(m["sdg_choice"]["goals"]))
+        for bad in (["99"], "16", [0]):
+            self.assertEqual(self.client.post("/api/match", json={"profile_id": "P01", "sdg_goals": bad}).status_code, 400)
+
     def test_match_rejects_bad_area_scores(self):
         for body in ({"preferences": {"gardening": 50}}, {"cv_areas": {"data_ai": 150}},
                      {"test_areas": {"data_ai": True}}, {"preferences": [1, 2]}):
@@ -198,6 +208,16 @@ class TestApi(unittest.TestCase):
             r = self.client.post(path, json={})
             self.assertEqual((r.status_code, r.json["error"]), (400, "'role_id' is required"), path)
 
+    def test_explain_says_what_would_raise_the_score(self):
+        body = {"technologies": ["SK145"]}
+        role = self.client.post("/api/match", json=body).json["results"][0]
+        r = self.client.post("/api/explain", json={**body, "role_id": role["role_id"], "short": True})
+        tips = r.json["to_raise"]
+        self.assertEqual(tips["learn"], [t["skill_name"] for t in role["skill_detail"]["tech_missing"][:2]])
+        self.assertGreater(tips["gain"], 0)
+        self.assertAlmostEqual(tips["new_score"] - tips["gain"], role["total"], delta=0.11)
+        self.assertEqual(tips["interest_points"], 10.0)  # interest not answered: its full weight
+
     def test_match_rejects_unknown_ids(self):
         r = self.client.post("/api/match", json={"skills": {"SK999": 3}})
         self.assertEqual(r.status_code, 400)
@@ -223,6 +243,23 @@ class TestApi(unittest.TestCase):
         self.assertEqual(first.json["arxiv"], True)
         self.assertEqual(second.status_code, 409)
         main._update_lock.release()
+
+    def test_automatic_update_due_after_a_week(self):
+        status = self.client.get("/api/trends/update").json
+        last = main.last_api_fetch()
+        self.assertEqual(status["last_fetched"], last.isoformat())
+        self.assertEqual(status["next_auto_update"], (last + main.timedelta(days=main.AUTO_UPDATE_DAYS)).isoformat())
+        with mock.patch.object(main, "AUTO_UPDATE_DAYS", 0):
+            self.assertIsNone(main.next_auto_update())
+
+    def test_automatic_update_starts_when_due(self):
+        due = main.date.today()
+        with (mock.patch.object(main, "next_auto_update", return_value=due),
+              mock.patch.object(main, "start_update", return_value=True) as start,
+              mock.patch.object(main.time, "sleep", side_effect=StopIteration)):
+            with self.assertRaises(StopIteration):
+                main.auto_update_loop()
+        start.assert_called_once_with(True, "schedule")
 
 
 if __name__ == "__main__":

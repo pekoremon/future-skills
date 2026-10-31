@@ -39,6 +39,7 @@ Write 4 to 5 sentences in plain English, speaking to the student as "you":
 4. What the role's SDG target means in everyday terms.
 
 Rules:
+- area_fit, interest_fit, skill_fit and trend_points are the points each part adds to match_score, exactly as the student's job card shows them; max_points gives the most each part can add. Say them as points, e.g. "22.2 of 44.4 points", never as a score out of 100. null means the part is not scored.
 - Use only the facts given. Do not add salaries, job counts, percentages, course names, companies or any other fact that is not in the JSON.
 - Every number you write must appear exactly as it does in the facts. If you are unsure of a number, leave it out.
 - Describe the trend only with the words in trend_direction. "positive" means above the neutral 50: recent data points up, or the role is on Malaysia's critical-occupations list. "neutral" means near 50 (37.5 to 62.5): flat or no clear signal; never call it rising, growing or strong. "negative" means below 50. "no data" means it was not measured.
@@ -118,10 +119,12 @@ def build_facts(match: dict) -> dict:
         "role": match["role_name"],
         "it_area": match["area_name"] or "no IT area",
         "match_score": match["total"],
-        "area_fit": c["area"]["score"],
-        "interest_fit": c["interest"]["score"],
-        "skill_fit": c["skill"]["score"],
-        "trend_score": c["trend"]["score"],
+        # each part as the points it adds to match_score, the numbers on the student's job card
+        "area_fit": c["area"]["points"],
+        "interest_fit": c["interest"]["points"],
+        "skill_fit": c["skill"]["points"],
+        "trend_points": c["trend"]["points"],
+        "max_points": max_points(c),
         "trend_direction": {"malaysian_demand": direction((match.get("trend_parts") or {}).get("demand")),
                             "ai_momentum": direction((match.get("trend_parts") or {}).get("ai"))},
         "area_note": match["explain"]["area"],
@@ -139,7 +142,32 @@ def build_facts(match: dict) -> dict:
         "flags": match["flags"],
         "sdg": [{"target": s["target"], "goal": s["goal_name"], "why": s["rationale"]}
                 for s in match["sdg"][:2]],
+        # the student's picked UN goals this role supports, and the points they added
+        "sdg_goals_picked": (match.get("sdg_choice") or {}).get("goals", []),
+        "sdg_bonus": (match.get("sdg_choice") or {}).get("bonus", 0.0),
     }
+
+
+def max_points(components: dict) -> dict:
+    """The most points each scored part can add: its weight, scaled up when a part is skipped,
+    as in matching.weighted(). A skipped part gets None."""
+    used = sum(c["weight"] for c in components.values() if c["score"] is not None)
+    names = {"area": "area_fit", "interest": "interest_fit", "skill": "skill_fit", "trend": "trend_points"}
+    return {names[k]: None if c["score"] is None or not used else round(100 * c["weight"] / used, 1)
+            for k, c in components.items()}
+
+
+def raise_tips(before: dict, after: dict | None, learn: list[str]) -> dict:
+    """What would raise the score: the same match recomputed with the "Learn next"
+    technologies added (after), and the interest part when it is not scored yet."""
+    tips = {"learn": learn, "new_score": None, "gain": None,
+            "interest_points": None}
+    if after is not None and learn:
+        tips["new_score"] = after["total"]
+        tips["gain"] = round(after["total"] - before["total"], 1)
+    if before["components"]["interest"]["score"] is None:
+        tips["interest_points"] = round(100 * before["components"]["interest"]["weight"], 1)
+    return tips
 
 
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
@@ -179,11 +207,18 @@ def unknown_numbers(text: str, facts: dict) -> list[str]:
     return [n for n in NUMBER.findall(text) if _normalise(n) not in allowed]
 
 
+def points(facts: dict, key: str) -> str:
+    """One part as on the job card: "22.2 of 44.4 points", or "not scored"."""
+    if facts[key] is None:
+        return "not scored"
+    return f"{facts[key]:g} of {facts['max_points'][key]:g} points"
+
+
 def fallback_text(facts: dict) -> str:
     """A plain explanation written from the facts, used whenever the LLM is not."""
     parts = [f"{facts['role']} scores {facts['match_score']} out of 100 for you: {facts['it_area']} area fit "
-             f"{facts['area_fit'] if facts['area_fit'] is not None else 'not scored'}, "
-             f"skill fit {facts['skill_fit']} and AI-era trend {facts['trend_score']} "
+             f"{points(facts, 'area_fit')}, skill fit {points(facts, 'skill_fit')} and AI-era trend "
+             f"{points(facts, 'trend_points')} "
              f"(Malaysian demand {facts['trend_direction']['malaysian_demand']}, AI momentum "
              f"{facts['trend_direction']['ai_momentum']}; an estimate from recent data, not a prediction)."]
     if facts["learning_path"]:
@@ -198,6 +233,9 @@ def fallback_text(facts: dict) -> str:
     if facts["sdg"]:
         s = facts["sdg"][0]
         parts.append(f"The role links to SDG target {s['target']}: {s['why']}")
+    if facts.get("sdg_goals_picked"):
+        parts.append(f"It supports SDG {', '.join(facts['sdg_goals_picked'])}, which you picked, "
+                     f"so it gets {facts['sdg_bonus']:g} extra points.")
     return " ".join(parts)
 
 
@@ -210,12 +248,14 @@ def short_facts(facts: dict) -> dict:
 
 def short_fallback(facts: dict) -> str:
     """One sentence on why the role suits the student, used whenever the LLM is not."""
-    parts = {"IT area fit": facts["area_fit"], "interest fit": facts["interest_fit"],
-             "skill fit": facts["skill_fit"]}
-    scored = sorted(((v, k) for k, v in parts.items() if v is not None), reverse=True)
-    best = f"your strongest part is {scored[0][1]} ({scored[0][0]})" if scored else "your parts are not scored yet"
-    return (f"{facts['role']} scores {facts['match_score']} out of 100 for you: {best}, and its AI-era trend is "
-            f"{facts['trend_score']} (an estimate from recent data, not a prediction).")
+    parts = {"area_fit": "IT area fit", "interest_fit": "interest fit", "skill_fit": "skill fit"}
+    # strongest = the largest share of its own maximum, so a part with a small weight can still lead
+    scored = sorted(((facts[k] / facts["max_points"][k], k) for k in parts
+                     if facts[k] is not None and facts["max_points"][k]), reverse=True)
+    best = (f"your strongest part is {parts[scored[0][1]]} ({points(facts, scored[0][1])})" if scored
+            else "your parts are not scored yet")
+    return (f"{facts['role']} scores {facts['match_score']} out of 100 for you: {best}, and its AI-era trend "
+            f"adds {points(facts, 'trend_points')} (an estimate from recent data, not a prediction).")
 
 
 def _call_llm(facts: dict, prompt: str = SYSTEM_PROMPT) -> str:

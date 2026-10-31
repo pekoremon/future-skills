@@ -29,7 +29,7 @@ Endpoints (all JSON):
     GET  /api/scenarios              future scenarios and the trend scores under each
     GET  /api/trends                 ?area=  trend scores, the signals behind them and the inputs
     POST /api/trends/update          start the "Update data" job (OpenDOSM and arXiv; {"arxiv": false} skips arXiv)
-    GET  /api/trends/update          status of the last update job
+    GET  /api/trends/update          status of the last update job and when the next automatic one is due
     GET  /api/whatif                 the trend inputs a what-if may change, and ready-made examples
     POST /api/whatif                 same body as /api/match + trend_changes -> what changes: inputs,
                                      signals, trend scores and the student's role ranks, before and after
@@ -43,8 +43,11 @@ Endpoints (all JSON):
 
 /api/match, /api/explain and /api/learn also take "trend_changes" (scripts/whatif.py): the
 results are then built from a changed copy of the trend data, for that request only.
+They also take "sdg_goals": the UN goals the student cares about (matching.SDG_BONUS).
 
 Run locally: python src/main.py   (PORT sets the port, default 8080)
+The same update job also runs by itself once the API data is AUTO_UPDATE_DAYS old (default 7;
+0 turns it off), checked every hour while the server runs.
 """
 
 import csv
@@ -58,7 +61,8 @@ import re
 import subprocess
 import sys
 import threading
-from datetime import datetime, timezone
+import time
+from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -93,11 +97,13 @@ import puzzles  # noqa: E402
 import whatif  # noqa: E402
 
 UPDATE_TIMEOUT_S = 600
+AUTO_UPDATE_DAYS = float(os.getenv("AUTO_UPDATE_DAYS", "7"))
+AUTO_CHECK_S = 3600
 MAX_BODY = 4_000_000  # room for a base64 .docx CV
 
 _update_lock = threading.Lock()
 _update_state = {"status": "idle", "started": None, "finished": None, "arxiv": None,
-                 "returncode": None, "log": ""}
+                 "trigger": None, "returncode": None, "log": ""}
 
 
 class BadRequest(Exception):
@@ -441,20 +447,29 @@ def cv_and_tools(cv_areas: dict | None, technologies: list[str], data: dict) -> 
     return merged, why
 
 
-def match_options(req: dict, data: dict) -> tuple[dict, str]:
-    """Profile (with study hours) and scenario from a /api/match or /api/explain request."""
-    profile = build_profile(req, data["skills"])
-    if profile["profile_id"] == "request":  # sample profiles keep their fictional cv_areas as written
-        profile["cv_areas"], profile["cv_why"] = cv_and_tools(profile.get("cv_areas"), profile["technologies"], data)
+def with_cv_areas(profile: dict, sent: dict | None, data: dict) -> dict:
+    """The profile with its "CV and tools" area scores from its technologies (and the CV scores
+    the page sent). Sample profiles keep their fictional cv_areas as written."""
+    if profile["profile_id"] == "request":
+        profile["cv_areas"], profile["cv_why"] = cv_and_tools(sent, profile["technologies"], data)
     elif not profile.get("cv_areas") and profile.get("technologies"):
         profile["cv_areas"], profile["cv_why"] = matching.cv_area_scores(profile["technologies"], data)
+    return profile
+
+
+def match_options(req: dict, data: dict) -> tuple[dict, str]:
+    """Profile (with study hours) and scenario from a /api/match or /api/explain request."""
+    profile = with_cv_areas(build_profile(req, data["skills"]), req.get("cv_areas"), data)
     scenario = req.get("scenario", "baseline")
     if scenario not in matching.SCENARIOS:
         raise BadRequest(f"'scenario' must be one of {list(matching.SCENARIOS)}")
     hours = req.get("hours_per_week", matching.DEFAULT_HOURS_PER_WEEK)
     if isinstance(hours, bool) or not isinstance(hours, (int, float)) or not 1 <= hours <= 40:
         raise BadRequest("'hours_per_week' must be a number from 1 to 40")
-    return {**profile, "hours_per_week": hours}, scenario
+    goals = req.get("sdg_goals", [])
+    if not isinstance(goals, list) or not all(str(g) in {str(i) for i in range(1, 18)} for g in goals):
+        raise BadRequest("'sdg_goals' must be a list of UN goal numbers 1-17")
+    return {**profile, "hours_per_week": hours, "sdg_goals": [str(g) for g in goals]}, scenario
 
 
 def trend_data_version(changes: dict | None = None) -> dict:
@@ -525,7 +540,8 @@ def match(request):
                    skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
                              "trend_scores": matching.scenario_trend_scores(data, scenario)},
-                   trend_data=trend_data_version(changes), results=ranked[:top])
+                   trend_data=trend_data_version(changes), sdg_bonus=matching.SDG_BONUS,
+                   sdg_goals=matching.sdg_goal_options(data), results=ranked[:top])
 
 
 @route("POST", "/api/explain")
@@ -542,7 +558,15 @@ def explain_match(request):
                   if m["role_id"] == role_id), None)
     if found is None:
         raise BadRequest("'role_id' is required" if not role_id else f"unknown role_id '{role_id}'")
-    return jsonify(role_id=role_id, **explain.explain(found, short=bool(req.get("short"))))
+    # What would raise it: the same match with the card's two "Learn next" technologies added
+    learn = found["skill_detail"]["tech_missing"][:2]
+    after = None
+    if learn:
+        more = {**profile, "technologies": profile.get("technologies", []) + [t["skill_id"] for t in learn]}
+        more = with_cv_areas(more, req.get("cv_areas"), data)
+        after = next(m for m in matching.rank_roles(more, data, scenario=scenario) if m["role_id"] == role_id)
+    return jsonify(role_id=role_id, **explain.explain(found, short=bool(req.get("short"))),
+                   to_raise=explain.raise_tips(found, after, [t["skill_name"] for t in learn]))
 
 
 @route("GET", "/api/learn/<role_id>")
@@ -623,21 +647,53 @@ def run_update(arxiv: bool) -> None:
     _update_lock.release()
 
 
+def start_update(arxiv: bool, trigger: str) -> bool:
+    """Start the update job in the background; False if one is already running."""
+    if not _update_lock.acquire(blocking=False):
+        return False
+    _update_state.update(status="running", arxiv=arxiv, trigger=trigger, returncode=None, log="",
+                         finished=None, started=datetime.now(timezone.utc).isoformat())
+    threading.Thread(target=run_update, args=(arxiv,), daemon=True).start()
+    return True
+
+
+def last_api_fetch() -> date | None:
+    """Newest fetched_date of the trend inputs the update job fetches (fetch_method api)."""
+    days = [r["fetched_date"] for r in read_csv("trends.csv") if r.get("fetch_method") == "api"]
+    return date.fromisoformat(max(days)) if days else None
+
+
+def next_auto_update() -> date | None:
+    last = last_api_fetch()
+    if AUTO_UPDATE_DAYS <= 0 or last is None:
+        return None
+    return last + timedelta(days=AUTO_UPDATE_DAYS)
+
+
+def auto_update_loop() -> None:
+    """Keep the OpenDOSM and arXiv inputs fresh without anyone pressing "Update data"."""
+    while True:
+        due = next_auto_update()
+        if due and date.today() >= due and start_update(True, "schedule"):
+            print(f"Automatic trend update started (data from {last_api_fetch()})", flush=True)
+        time.sleep(AUTO_CHECK_S)
+
+
 @route("POST", "/api/trends/update")
 def trends_update(request):
     sent = request.get_json()
     arxiv = bool(sent.get("arxiv", True)) if isinstance(sent, dict) else True
-    if not _update_lock.acquire(blocking=False):
+    if not start_update(arxiv, "button"):
         return jsonify({"error": "an update is already running", **_update_state}, http_status=409)
-    _update_state.update(status="running", arxiv=arxiv, returncode=None, log="", finished=None,
-                         started=datetime.now(timezone.utc).isoformat())
-    threading.Thread(target=run_update, args=(arxiv,), daemon=True).start()
     return jsonify(dict(_update_state), http_status=202)
 
 
 @route("GET", "/api/trends/update")
 def trends_update_status(request):
-    return jsonify(dict(_update_state))
+    due = next_auto_update()
+    return jsonify({**_update_state, "auto_update_days": AUTO_UPDATE_DAYS,
+                    "last_fetched": str(last_api_fetch() or "") or None,
+                    "next_auto_update": due.isoformat() if due else None})
 
 
 @route("GET", "/api/whatif")
@@ -774,6 +830,8 @@ def main() -> None:
     print(f"Future Skills running on http://0.0.0.0:{port}", flush=True)
     print(f"Explain feature: LLM {'configured' if explain.configured() else 'NOT configured'}"
           f" (env names seen: {explain.env_names_seen() or 'none'})", flush=True)
+    if AUTO_UPDATE_DAYS > 0:
+        threading.Thread(target=auto_update_loop, daemon=True).start()
     server.serve_forever()
 
 

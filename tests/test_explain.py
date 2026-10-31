@@ -30,6 +30,16 @@ class TestExplain(unittest.TestCase):
         self.assertEqual(self.facts["match_score"], self.match["total"])
         self.assertLessEqual(len(self.facts["learning_path"]), 3)
 
+    def test_parts_are_the_card_points(self):
+        # the explanation must quote the numbers on the job card (points), not the raw 0-100 scores
+        c = self.match["components"]
+        self.assertEqual([self.facts[k] for k in ("area_fit", "interest_fit", "skill_fit", "trend_points")],
+                         [c[k]["points"] for k in ("area", "interest", "skill", "trend")])
+        self.assertAlmostEqual(sum(v for v in self.facts["max_points"].values() if v), 100, delta=0.2)
+        with mock.patch.dict(os.environ, {}, clear=True):
+            text = explain.explain(self.match)["text"]
+        self.assertIn(f"skill fit {self.facts['skill_fit']:g} of {self.facts['max_points']['skill_fit']:g} points", text)
+
     def test_trend_direction_in_words(self):
         # Data Scientists: Malaysian demand well above 50 (on MyCOL), AI momentum near 50 (+2.7% arXiv growth)
         self.assertEqual(self.match["trend_parts"], {"demand": 89.3, "ai": 53.4})

@@ -66,6 +66,22 @@ class TestSummarise(unittest.TestCase):
         with self.assertRaises(cv_reader.CVError):
             cv_reader.docx_text(b"not a zip")
 
+    def test_personal_details_removed(self):
+        text, n = cv_reader.redact("IC 900101-14-5678 | 012-345 6789 | +60 3-1234 5678 | aiman@example.com")
+        self.assertEqual(n, 4)
+        self.assertNotRegex(text, r"\d{4}")
+        self.assertEqual(cv_reader.redact("CGPA 3.62, 2022-2026, Python 3.12, 120 hours")[1], 0)
+
+    @mock.patch.object(cv_reader.explain, "api_key", return_value="test-key")
+    def test_llm_never_sees_personal_details(self, _):
+        cv = SAMPLE + "\nIC: 900101-14-5678  Phone: 012-345 6789  Email: aiman@example.com"
+        with mock.patch.object(cv_reader, "_call_llm", return_value={"summary": "", "skills": [], "qualifications": []}) as call:
+            r = cv_reader.summarise({"text": cv}, SKILLS)
+        sent = call.call_args[0][0]
+        for detail in ("900101", "345 6789", "aiman@example.com"):
+            self.assertNotIn(detail, sent)
+        self.assertEqual(r["removed"], 3)
+
     @mock.patch.object(cv_reader.explain, "api_key", return_value="")
     def test_fallback_without_key(self, _):
         r = cv_reader.summarise({"text": SAMPLE}, SKILLS)

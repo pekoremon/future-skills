@@ -17,6 +17,8 @@ CV evidence per IT area (cv_areas, 0-100, used by matching.area_fit):
   each area's most-listed In Demand tools (O*NET) the CV mentions.
 cv_areas_method says which was used.
 
+Before anything else reads it, redact() replaces Malaysian IC numbers, phone numbers and
+email addresses with placeholders, so they never reach the LLM; "removed" counts them.
 The CV text is never written to disk, logged or cached.
 """
 
@@ -100,6 +102,24 @@ QUAL_LINE = re.compile(r"\b(bachelor|master|diploma|degree|ph\.?d|b\.?sc|m\.?sc|
 
 class CVError(ValueError):
     pass
+
+
+# Personal details the app never needs (PDPA: collect only what the purpose needs).
+# IC: 900101-14-5678 or 900101145678. Phone: 012-345 6789, +60 12-345 6789, 03-1234 5678.
+REDACT = [
+    ("IC number", re.compile(r"(?<!\d)\d{6}[- ]?\d{2}[- ]?\d{4}(?!\d)")),
+    ("email", re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")),
+    ("phone number", re.compile(r"(?<![\w+])(?:\+?60[- ]?|0)(?:1\d|[3-9])[- ]?\d{3,4}[- ]?\d{4}(?!\d)")),
+]
+
+
+def redact(text: str) -> tuple[str, int]:
+    """The text with IC numbers, emails and phone numbers replaced, and how many were."""
+    total = 0
+    for label, pattern in REDACT:
+        text, n = pattern.subn(f"[{label} removed]", text)
+        total += n
+    return text, total
 
 
 def docx_text(data: bytes) -> str:
@@ -257,14 +277,14 @@ def evidence_area_scores(evidence: list[dict], area_ids: list[str]) -> tuple[dic
 def summarise(req: dict, skills: dict, data: dict | None = None) -> dict:
     """Summary, skills, qualifications, matched technologies, education level and CV
     evidence per IT area for one CV. data is matching.load_data(), for the no-LLM scores."""
-    text = cv_text(req)
+    text, removed = redact(cv_text(req))
     techs = find_technologies(text, skills)
     quals = qualification_lines(text)
     data = data or matching.load_data()
     area_ids = [a["id"] for a in data["areas"]]
     cv_areas, cv_why = matching.cv_area_scores([t["skill_id"] for t in techs], data)
     out = {"technologies": techs, "education_job_zone": education_zone(text),
-           "chars_read": len(text), **fallback(techs, quals),
+           "chars_read": len(text), "removed": removed, **fallback(techs, quals),
            "source": "fallback", "model": None, "reason": None,
            "evidence": [], "evidence_dropped": 0, "evidence_points": EVIDENCE_POINTS,
            "cv_areas": cv_areas, "cv_areas_why": cv_why,
