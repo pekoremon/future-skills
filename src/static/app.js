@@ -156,15 +156,20 @@ async function pageQuizIntro() {
   <div class="quiz stack">
     ${stepBar("quiz")}
     <p class="eyebrow">Step 2 of 4 · Interests</p>
-    <h1>What kind of work do you actually enjoy?</h1>
+    <h1>Set sail: which crew role is yours?</h1>
     <div class="row"><span class="chip">36 items</span><span class="chip">About 8 minutes</span><span class="chip">Skip any time</span></div>
+    <div class="card crew-intro">
+      ${sailorSVG({ cls: "act-nod" })}
+      <p>Every answer trains your sailor. At the end, they become one of six crew roles.</p>
+    </div>
+    <div class="crew-legend">${CREW_ORDER.map((k) => `<div><span aria-hidden="true">${CREW[k].icon}</span><span>${CREW[k].role}</span></div>`).join("")}</div>
+    <p class="muted small">Answer by what you would enjoy, not what you are already good at. No role is better than another.</p>
     <div class="card stack" style="gap: 6px">
       <h3>A proven interest test</h3>
       <p class="muted">Built on Holland's RIASEC model, the interest model career services use worldwide, including the US Department of Labor's O*NET.</p>
     </div>
-    <p class="muted small">Answer by what you would enjoy, not what you are already good at.</p>
     <div class="stack">
-      <button class="btn primary" type="button" id="start">${state.answers.some((a) => a !== null) ? "Continue questionnaire" : "Start questionnaire"}</button>
+      <button class="btn primary" type="button" id="start">${state.answers.some((a) => a !== null) ? "Continue the voyage" : "Start the voyage"}</button>
       <button class="btn" type="button" id="skip">Skip to step 3: the skills test</button>
     </div>
     <p class="attribution">Questions written by the team, based on Holland's RIASEC interest types as used by <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET</a>.</p>
@@ -176,31 +181,53 @@ async function pageQuizIntro() {
   document.getElementById("skip").onclick = () => { state.quizSkipped = true; state.demo = null; saveState(); location.hash = "#/test"; };
 }
 
+// The last answer, played back on the next item: the hexagon grows from `from` and the sailor reacts.
+let crewLast = null;
+let crewFinished = false;  // the results page plays the sailor's evolution once, right after item 36
+
 async function pageQuizItem(n) {
   const q = await cached("/api/questionnaire");
   const idx = Math.min(Math.max(n, 1), q.items.length) - 1;
   const item = q.items[idx];
+  const now = crewScores(q.items, state.answers);
+  const last = crewLast;
+  crewLast = null;
+  const acted = last && last.action === last.type;
   const opts = Object.entries(q.scale).map(([v, label]) =>
     `<button type="button" data-v="${esc(v)}" aria-pressed="${state.answers[idx] === Number(v)}">${esc(label)}</button>`).join("");
   render(`
-  <div class="quiz stack">
-    <div class="row" style="justify-content: space-between">
-      <a class="btn ghost" href="${idx ? `#/quiz/${idx}` : "#/quiz"}" aria-label="Previous item">&larr; Back</a>
-      <span class="muted small">Item ${idx + 1} of ${q.items.length}</span>
-      <a class="btn ghost" href="#/quiz">Pause</a>
+  <div class="voyage">
+    <div class="v-top stack" style="gap: 10px">
+      <div class="row" style="justify-content: space-between">
+        <a class="btn ghost" href="${idx ? `#/quiz/${idx}` : "#/quiz"}" aria-label="Previous item">&larr; Back</a>
+        <span class="muted small">Item ${idx + 1} of ${q.items.length}</span>
+        <a class="btn ghost" href="#/quiz">Pause</a>
+      </div>
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${q.items.length}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / q.items.length) * 100)}%"></div></div>
     </div>
-    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${q.items.length}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / q.items.length) * 100)}%"></div></div>
-    <p class="muted small">${esc(q.stem)}</p>
-    <div class="card item" id="item-text">${esc(item.text)}</div>
-    <div class="options" role="group" aria-labelledby="item-text">${opts}</div>
-    <p class="attribution">${esc(q.attribution)}</p>
+    <section class="v-q stack">
+      <p class="muted small">${esc(q.stem)}</p>
+      <div class="card item" id="item-text">${esc(item.text)}</div>
+      <div class="options" role="group" aria-labelledby="item-text">${opts}</div>
+    </section>
+    <aside class="card v-hex"><p class="v-label">Your interest map</p>${crewHex(now, acted ? last.type : null)}</aside>
+    <aside class="card v-crew"><p class="v-label">Your sailor</p>${sailorSVG()}
+      ${acted ? `<div class="crew-toast"><span aria-hidden="true">${CREW[last.type].icon} +</span> <span>${CREW[last.type].role}</span></div>` : ""}</aside>
+    <p class="attribution v-foot">${esc(q.attribution)}</p>
   </div>`);
+  if (last) {
+    crewHexGrow(app.querySelector(".crew-hex"), last.from, now);
+    sailorAct(app.querySelector(".v-crew .sailor"), last.action);
+  }
   app.querySelectorAll(".options button").forEach((b) => {
     b.onclick = () => {
-      state.answers[idx] = Number(b.dataset.v);
+      const v = Number(b.dataset.v);
+      crewLast = { from: crewScores(q.items, state.answers), type: item.type, action: crewReaction(item.type, v) };
+      state.answers[idx] = v;
       state.quizSkipped = false;
       state.demo = null;
       saveState();
+      crewFinished = idx + 1 >= q.items.length;
       location.hash = idx + 1 < q.items.length ? `#/quiz/${idx + 2}` : "#/interests";
     };
   });
@@ -224,11 +251,25 @@ async function pageInterests() {
       <span class="letter">${k}</span>
       <div><h3>${TYPES[k].name}</h3><p class="muted small">${TYPES[k].desc}</p></div>
     </div>`).join("");
+  const [lead, second] = top;
+  const reveal = CREW[lead] ? `
+    <section class="card crew-reveal">
+      ${sailorSVG({ role: lead, hold: second, cls: crewFinished ? "evolve" : "" })}
+      <div class="stack" style="gap: 8px">
+        <p class="muted small">Your crew role</p>
+        <h1 class="crew-title">${esc(crewTitle(lead, second))}</h1>
+        <p>${esc(CREW[lead].desc)}</p>
+        <p class="small"><strong>IT paths to look at:</strong> <span>${esc(CREW[lead].it)}</span></p>
+        <p class="muted small">No role is better than another.</p>
+      </div>
+    </section>` : "";
+  crewFinished = false;
   render(`
   <div class="quiz stack">
     ${stepBar("quiz")}
     <p class="eyebrow">Step 2 of 4 · Your interest results</p>
     ${r.warnings.map((w) => `<div class="warn">${esc(w.text)}</div>`).join("")}
+    ${reveal}
     <div><p class="muted small">Your interest code (Holland code)</p><div class="big" style="letter-spacing: 0.12em">${esc(r.code)}</div></div>
     <div class="card stack" style="gap: 12px"><h3>Which IT areas you would enjoy</h3><p class="muted small">From the 4 questions about each area (0–100).</p>${areaBars}</div>
     <div class="card stack" style="gap: 12px"><h3>Scores for the six interest types</h3>${types}</div>

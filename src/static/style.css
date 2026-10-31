@@ -134,6 +134,98 @@ main:focus-visible { outline: none; }  /* route() focuses <main> for screen read
 .options button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
 .attribution { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
+/* questionnaire as a voyage (crew.js): question, live hexagon, sailor */
+.voyage { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 270px; grid-template-areas: "top top" "q hex" "q crew" "foot foot"; gap: 14px 22px; align-items: start; }
+.v-top { grid-area: top; } .v-q { grid-area: q; } .v-hex { grid-area: hex; } .v-crew { grid-area: crew; } .v-foot { grid-area: foot; }
+.v-hex, .v-crew { padding: 10px; position: relative; text-align: center; }
+.v-crew .sailor { width: 100%; max-width: 200px; }
+.v-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+@media (max-width: 720px) {
+  .voyage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "top top" "hex crew" "q q" "foot foot"; gap: 10px; }
+  .v-hex, .v-crew { padding: 6px; }
+  .v-label { display: none; }
+  .crew-hex { max-width: 118px; }
+  .v-crew .sailor { max-width: 74px; }
+  .v-crew { padding-bottom: 26px; }
+  .v-crew .crew-toast { top: auto; bottom: 4px; font-size: 12px; padding: 2px 8px; }
+  .voyage .item { font-size: 18px; min-height: 0; }
+  .voyage .options { gap: 8px; }
+  .voyage .options button { min-height: 46px; }
+}
+.crew-hex { display: block; width: 100%; max-width: 230px; margin: 0 auto; overflow: visible; }
+.crew-ico { font-size: 17px; }
+.crew-ico.grew { animation: crew-pulse 0.7s ease-out; transform-box: fill-box; transform-origin: center; }
+.crew-toast { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); white-space: nowrap; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); font-size: 13px; font-weight: 700; animation: crew-toast 1.6s ease-out forwards; pointer-events: none; }
+.crew-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.crew-legend div { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+.crew-intro { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 14px; align-items: center; }
+.crew-intro .sailor { width: 120px; }
+.crew-reveal { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; align-items: center; }
+.crew-reveal .sailor { width: 200px; }
+.crew-title { font-size: clamp(24px, 4.5vw, 32px); }
+@media (max-width: 560px) {
+  .crew-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crew-reveal { grid-template-columns: minmax(0, 1fr); text-align: center; justify-items: center; }
+  .crew-reveal .sailor { width: 170px; }
+}
+
+/* the sailor: arms and head turn on their joints; props and outfits show by class */
+.sailor { display: block; margin: 0 auto; overflow: visible; --sleeve: #F4F1EA; }
+.s-shadow { fill: var(--track); }
+.s-sleeve { fill: var(--sleeve); }
+.s-arm, .s-head, .sailor .flag { transform-box: view-box; }
+.s-arm-l { transform-origin: 71px 121px; } .s-arm-r { transform-origin: 129px 121px; } .s-head { transform-origin: 100px 114px; }
+.sailor .flag { transform-origin: 127px 205px; }
+.sailor .o, .sailor .p, .s-fx > * { display: none; }
+.sailor .s-fx > * { opacity: 0; }
+.sailor .fx-spark, .sailor .fx-ask { fill: #E8A317; font-size: 20px; font-weight: 700; }
+.sailor .fx-note { fill: #7B4FB8; font-size: 22px; } .sailor .fx-heart { fill: #E05A6B; font-size: 20px; } .sailor .fx-coin { fill: #E8C468; stroke: #B8912A; }
+.sailor .fx-ask { font-size: 30px; fill: var(--muted); }
+.sailor .s2 { animation-delay: 0.25s !important; } .sailor .s3 { animation-delay: 0.5s !important; }
+.is-R .o-R, .is-I .o-I, .is-A .o-A, .is-S .o-S, .is-E .o-E, .is-C .o-C { display: inline; }
+.sailor[class*="is-"] .bandana { display: none; }
+.is-I { --sleeve: #2B4C8C; } .is-E { --sleeve: #B23A3A; } .is-S { --sleeve: #FAFAFA; } .is-C { --sleeve: #3E6B48; }
+.act-R .p-R, .hold-R .p-R, .act-I .p-I, .hold-I .p-I, .act-A .p-A, .hold-A .p-A, .act-S .p-S, .hold-S .p-S,
+.act-E .p-E, .hold-E .p-E, .act-C .p-C, .hold-C .p-C { display: inline; }
+.act-R .fx-spark, .act-A .fx-note, .act-S .fx-heart, .act-C .fx-coin, .act-scratch .fx-ask { display: inline; animation: crew-float 0.9s ease-out 0.2s both; }
+.act-C .fx-coin { animation-name: crew-coin; }
+.hold-R .s-arm-r { transform: rotate(-40deg); }
+.hold-I .s-arm-r { transform: rotate(-100deg); }
+.hold-A .s-arm-l, .hold-S .s-arm-l, .hold-C .s-arm-l { transform: rotate(-32deg); }
+.hold-A .s-arm-r { transform: rotate(-30deg); }
+.hold-S .s-arm-r, .hold-C .s-arm-r { transform: rotate(32deg); }
+.hold-E .s-arm-r { transform: rotate(-170deg); }
+.act-R .s-arm-r { animation: arm-hammer 1.3s ease-in-out; }
+.act-I .s-arm-r { animation: arm-spyglass 1.5s ease-in-out; } .act-I .s-head { animation: head-look 1.5s ease-in-out; }
+.act-A .s-arm-l { animation: arm-hold-l 1.5s ease-in-out; } .act-A .s-arm-r { animation: arm-bow 1.5s ease-in-out; }
+.act-S .s-arm-l, .act-C .s-arm-l { animation: arm-hold-l 1.5s ease-in-out; } .act-S .s-arm-r, .act-C .s-arm-r { animation: arm-hold-r 1.5s ease-in-out; }
+.act-E .s-arm-r { animation: arm-flag 1.6s ease-in-out; } .act-E .flag, .hold-E .flag { animation: flag-wave 0.5s ease-in-out infinite alternate; }
+.act-nod .s-head { animation: head-nod 0.8s ease-in-out; }
+.act-scratch .s-arm-l { animation: arm-scratch 1.2s ease-in-out; } .act-scratch .s-head { animation: head-tilt 1.2s ease-in-out; }
+.sailor.evolve { animation: evolve 1.4s ease-in-out; }
+.evolve .o, .evolve .p { animation: fade-in 0.4s 0.7s both; }
+@keyframes arm-hammer { 0%, 100% { transform: rotate(0); } 18%, 52% { transform: rotate(-150deg); } 34%, 70% { transform: rotate(-55deg); } 85% { transform: rotate(-40deg); } }
+@keyframes arm-spyglass { 0%, 100% { transform: rotate(0); } 25%, 80% { transform: rotate(-115deg); } }
+@keyframes head-look { 0%, 100% { transform: rotate(0); } 25%, 80% { transform: rotate(6deg); } }
+@keyframes arm-hold-l { 0%, 100% { transform: rotate(0); } 20%, 85% { transform: rotate(-32deg); } }
+@keyframes arm-hold-r { 0%, 100% { transform: rotate(0); } 20%, 85% { transform: rotate(32deg); } }
+@keyframes arm-bow { 0%, 100% { transform: rotate(0); } 20%, 50%, 80% { transform: rotate(-20deg); } 35%, 65% { transform: rotate(-50deg); } }
+@keyframes arm-flag { 0%, 100% { transform: rotate(0); } 25%, 85% { transform: rotate(-170deg); } }
+@keyframes flag-wave { from { transform: skewY(-6deg); } to { transform: skewY(6deg); } }
+@keyframes head-nod { 0%, 100% { transform: translateY(0); } 25%, 75% { transform: translateY(5px) rotate(2deg); } 50% { transform: translateY(0); } }
+@keyframes arm-scratch { 0%, 100% { transform: rotate(0); } 25%, 55% { transform: rotate(150deg); } 40%, 70% { transform: rotate(140deg); } 85% { transform: rotate(150deg); } }
+@keyframes head-tilt { 0%, 100% { transform: rotate(0); } 25%, 85% { transform: rotate(-8deg); } }
+@keyframes crew-float { 0% { opacity: 0; transform: translateY(8px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-22px); } }
+@keyframes crew-coin { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-30px); } 60% { opacity: 1; transform: translateY(-8px); } 100% { opacity: 0; transform: translateY(-14px); } }
+@keyframes crew-pulse { 0% { transform: scale(1); } 40% { transform: scale(1.6); } 100% { transform: scale(1); } }
+@keyframes crew-toast { 0% { opacity: 0; transform: translate(-50%, 6px); } 15%, 70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
+@keyframes evolve { 0% { transform: scale(1) rotateY(0); } 45% { transform: scale(1.12) rotateY(360deg); filter: brightness(1.8); } 100% { transform: scale(1) rotateY(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .sailor, .sailor *, .crew-ico.grew, .crew-toast { animation: none !important; }
+  .sailor .s-fx > * { display: none !important; }
+  .crew-toast { opacity: 1; }
+}
+
 .bar { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
 .bar > div { height: 100%; border-radius: 999px; background: var(--bar-muted); }
 .bar > div.on { background: var(--accent); }
