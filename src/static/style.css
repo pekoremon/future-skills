@@ -209,6 +209,8 @@ ol.path .step a { font-weight: 600; }
 
 /* CV reader */
 .drop { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; border: 2px dashed var(--border); border-radius: 16px; padding: 18px; background: var(--surface); }
+.privacy { margin: 0; padding-left: 20px; }
+.ok-text { color: var(--accent-strong); font-weight: 600; }
 .drop.over { border-color: var(--accent); background: var(--accent-soft); }
 .drop input[type="file"] { max-width: 100%; font: inherit; }
 .check-list { display: flex; flex-wrap: wrap; gap: 6px; }

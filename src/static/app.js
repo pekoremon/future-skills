@@ -381,7 +381,7 @@ async function cvRequestBody(file) {
 
 function cvResultHtml(r) {
   const label = r.source === "llm"
-    ? `Summary written by AI (${esc(r.model.split("/").pop())} on ${esc(r.provider || "Fireworks AI")}) from your CV. It can make mistakes, so check it against your CV.`
+    ? "Written by AI. It can make mistakes, so check it against your CV."
     : "AI summary not available right now, so this summary lists what our matcher found in your CV.";
   const quals = r.qualifications.map((q) => `<li><strong>${esc(q.title)}</strong>${q.institution ? ` · ${esc(q.institution)}` : ""}${q.year ? ` · ${esc(q.year)}` : ""}</li>`).join("");
   const zone = ZONES[r.education_job_zone];
@@ -404,7 +404,7 @@ function cvResultHtml(r) {
       <p class="small muted">Technologies found by matching words in your CV against the app's list (O*NET In Demand technologies), not by AI. Untick anything that is wrong.</p>
       ${r.technologies.length ? `<div class="check-list" id="cv-techs">${r.technologies.map((t) => `<label title="Matched “${esc(t.matched)}” in your CV"><input type="checkbox" value="${esc(t.skill_id)}" checked>${esc(t.skill_name)}</label>`).join("")}</div>` : '<p class="small">None of the tracked technologies were found.</p>'}
       ${zone ? `<label class="row small"><input type="checkbox" id="cv-zone" checked> Set highest education to <strong>${esc(zone)}</strong></label>` : ""}
-      <div class="row"><button class="btn primary" type="button" id="cv-apply">Add to my technologies</button></div>
+      <div class="row"><button class="btn primary" type="button" id="cv-apply">Add to my technologies</button><span id="cv-added" role="status" aria-live="polite"></span></div>
     </section>
     ${cvEvidenceHtml(r)}`;
 }
@@ -434,9 +434,6 @@ function cvEvidenceHtml(r) {
       <h2 id="cv-ev">Evidence per IT area</h2>
       <p class="small muted">${how}</p>
       ${rows}
-      <div class="row small">${state.cvAreas
-        ? 'Your matches use these scores as your CV evidence.<button class="btn ghost" type="button" id="cv-use" data-use="">Do not use them</button>'
-        : 'Not used in your matches.<button class="btn ghost" type="button" id="cv-use" data-use="1">Use them</button>'}</div>
     </section>`;
 }
 
@@ -448,11 +445,17 @@ async function pageCV() {
     <h1>Let AI read your CV</h1>
     <p class="muted">Upload your CV to get a short summary of your skills and qualifications. The IT areas it shows evidence for are checked in your skills test, so the test stays short.</p>
     <div class="drop" id="drop">
+      <div class="warn stack" style="gap: 6px; align-self: stretch">
+        <strong>Before you upload</strong>
+        <ul class="privacy">
+          <li>Remove your IC number, home address and phone number.</li>
+          <li>Your CV goes to our server and an AI service to write the summary. It is not saved.</li>
+        </ul>
+      </div>
       <label for="cv-file"><strong>Choose your CV</strong> <span class="muted small">PDF, Word (.docx) or text, up to 2 MB</span></label>
       <input id="cv-file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
       <button class="btn ghost" type="button" id="cv-sample">Try a sample CV (fictional)</button>
     </div>
-    <p class="small muted">Your CV is sent to our server and, when AI is on, to our AI provider to write the summary. It is not saved. Leave out your IC number, address and phone if you prefer.</p>
     <div id="cv-status" role="status" aria-live="polite"></div>
     <div id="cv-out" class="stack"></div>
     <div class="row"><a class="btn primary" href="#/skills">Next: pick your technologies</a><a class="btn ghost" href="#/skills">No CV? Skip</a></div>
@@ -461,8 +464,6 @@ async function pageCV() {
   const out = document.getElementById("cv-out");
   const show = (r) => {
     out.innerHTML = cvResultHtml(r);
-    const use = document.getElementById("cv-use");
-    if (use) use.onclick = () => { state.cvAreas = use.dataset.use ? cvAreasOf(r) : null; saveState(); show(r); };
     document.getElementById("cv-apply").onclick = () => {
       const picked = [...out.querySelectorAll("#cv-techs input:checked")].map((i) => i.value);
       state.techs = [...new Set([...state.techs, ...picked])];
@@ -470,7 +471,9 @@ async function pageCV() {
       if (z && z.checked) state.zone = r.education_job_zone;
       state.demo = null;
       saveState();
-      location.hash = "#/skills";
+      const added = document.getElementById("cv-added");
+      added.className = picked.length ? "ok-text" : "small muted";
+      added.textContent = picked.length ? `✓ Added ${picked.length} technologies to your list` : "Tick at least one technology first";
     };
   };
   const run = async (getBody, what) => {
