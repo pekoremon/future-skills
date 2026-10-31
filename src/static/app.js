@@ -169,12 +169,12 @@ async function pageQuizIntro() {
       <p class="muted">Built on Holland's RIASEC model, the interest model career services use worldwide, including the US Department of Labor's O*NET.</p>
     </div>
     <div class="stack">
-      <button class="btn primary" type="button" id="start">${state.answers.some((a) => a !== null) ? "Continue the voyage" : "Start the voyage"}</button>
+      <button class="btn primary" type="button" id="begin">${state.answers.some((a) => a !== null) ? "Continue the voyage" : "Start the voyage"}</button>
       <button class="btn" type="button" id="skip">Skip to step 3: the skills test</button>
     </div>
     <p class="attribution">Questions written by the team, based on Holland's RIASEC interest types as used by <a href="https://www.onetonline.org/find/descriptor/browse/1.B.1">O*NET</a>.</p>
   </div>`);
-  document.getElementById("start").onclick = () => {
+  document.getElementById("begin").onclick = () => {
     const first = state.answers.indexOf(null);
     location.hash = `#/quiz/${first === -1 ? 1 : first + 1}`;
   };
@@ -1389,11 +1389,11 @@ async function pageTestIntro() {
     <div class="stack">
       ${going ? `<a class="btn primary" href="#/test/${nextOpen + 1}">Continue (${answered} answered)</a>` : ""}
       ${state.test && state.test.result ? `<a class="btn primary" href="#/test/result">See your last result</a>` : ""}
-      <button class="btn${going || (state.test && state.test.result) ? "" : " primary"}" type="button" id="start">${state.test ? "Start a new test" : "Start the test"}</button>
+      <button class="btn${going || (state.test && state.test.result) ? "" : " primary"}" type="button" id="begin">${state.test ? "Start a new test" : "Start the test"}</button>
       <a class="btn ghost" href="#/results">Skip to step 4, my jobs</a>
     </div>
   </div>`);
-  document.getElementById("start").onclick = (e) => { e.target.disabled = true; startTest(plan.areas).catch(showError); };
+  document.getElementById("begin").onclick = (e) => { e.target.disabled = true; startTest(plan.areas).catch(showError); };
 }
 
 function questionBody(q) {
