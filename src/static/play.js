@@ -136,7 +136,8 @@ async function pageMyLearning() {
       <div class="card"><strong>🔥 ${daily ? streak(daily.date) : 0}</strong><span class="muted small">day streak</span></div>
     </div>
     ${dailyCard}
-    ${paths.length ? paths.map(pathMapHtml).join("") : `
+    ${paths.length ? paths.map(pathMapHtml).join("") + `
+      <a class="card impact-link" href="#/impact">${sdgTile(4, "Quality Education")}<span class="stack" style="gap: 2px"><strong>Your hours count towards SDG 4 and 8</strong><span class="small muted">See what every student here adds up to →</span></span></a>` : `
       <section class="card stack" style="gap: 10px">
         <h2>No learning path yet</h2>
         <p class="muted">Open a learning path from your jobs and tick the first thing you finish. It then shows here as a map of levels.</p>
@@ -149,6 +150,7 @@ async function pageMyLearning() {
   app.querySelectorAll("[data-level]").forEach((b) => {
     b.onclick = () => levelDialog(b.dataset.path, b.dataset.level, Number(b.dataset.n));
   });
+  app.querySelectorAll("[data-plan]").forEach((box) => wirePlan(box, () => { box.innerHTML = planHtml(box.dataset.plan); }));
   app.querySelectorAll("[data-untrack]").forEach((b) => {
     b.onclick = () => {
       delete progress.paths[b.dataset.untrack];  // ticks stay, so they come back if the path is opened again
@@ -192,6 +194,7 @@ function pathMapHtml(p) {
       ${progressHtml(p, state.hoursPerWeek)}
       ${next ? `<p class="small">Next level: <strong>${esc(next.title)}</strong></p>` : ""}
       <div class="lv-map" role="group" aria-label="Levels of ${esc(p.name)}">${rows.join("")}</div>
+      <div data-plan="${esc(p.id)}">${planHtml(p.id)}</div>
       <div class="row">
         <a class="btn" href="#/learn/${esc(p.id)}">Open the full path &rarr;</a>
         <button class="btn ghost" type="button" data-untrack="${esc(p.id)}">Stop tracking</button>
@@ -219,6 +222,7 @@ function levelDialog(pathId, key, n) {
     progress.done[key] = today();
     p.updated = today();
     saveProgress();
+    reportPath(pathId);  // the SDG impact page counts the hours studied
     pageMyLearning();
   };
   dialog.querySelector("#lv-done")?.addEventListener("click", () => {
@@ -233,6 +237,7 @@ function levelDialog(pathId, key, n) {
   dialog.querySelector("#lv-undo")?.addEventListener("click", () => {
     delete progress.done[key];
     saveProgress();
+    reportPath(pathId);
     dialog.close();
     pageMyLearning();
   });

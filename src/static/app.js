@@ -532,6 +532,22 @@ function listedRoles(results, g) {
   return g.mode === "none" ? eligible : ["best_fit", "can_do"].flatMap((name) => eligible.filter((m) => groupOf[m.it_area] === name));
 }
 
+// listedRoles with each role's rank, and its rank under every scenario within this grouped
+// list (the groups do not depend on the scenario): the jobs page and the advisor page.
+function rankedRoles(res) {
+  const g = res.groups;
+  const best = listedRoles(res.results, g);
+  if (g.mode !== "none" && best.length) {
+    const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
+    const gi = (m) => (groupOf[m.it_area] === "best_fit" ? 0 : 1);
+    const ranks = {};
+    Object.keys(best[0].scenario_ranks || {}).forEach((s) => [...best].sort((a, b) => gi(a) - gi(b) || a.scenario_ranks[s] - b.scenario_ranks[s])
+      .forEach((m, i) => { (ranks[m.role_id] = ranks[m.role_id] || {})[s] = i + 1; }));
+    best.forEach((m, i) => { m.scenario_ranks = ranks[m.role_id]; m.rank = i + 1; m.baseline_rank = ranks[m.role_id] && ranks[m.role_id].baseline; });
+  }
+  return best;
+}
+
 const hasAnswers = () => Boolean(state.demo) || testDone() || quizDone() || state.quizSkipped || skillsDone();
 
 // The /api/match request for the student's answers (or a demo student), with the page options
@@ -616,6 +632,7 @@ function learnData(roleId) {
   return learnCache[key];
 }
 async function prefetchLearn(roleIds) {
+  if (isLite()) return;  // Lite mode: a path loads when it is opened, not before
   for (const id of roleIds) await learnData(id).catch(() => {});  // one at a time; errors retry on open
 }
 
@@ -792,14 +809,7 @@ async function drawJobs() {
     ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.`;
   const g = res.groups;
   const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
-  const best = listedRoles(res.results, g);
-  if (g.mode !== "none" && best.length) {  // ranks per scenario within this grouped list (groups do not depend on the scenario)
-    const gi = (m) => (groupOf[m.it_area] === "best_fit" ? 0 : 1);
-    const ranks = {};
-    Object.keys(best[0].scenario_ranks || {}).forEach((s) => [...best].sort((a, b) => gi(a) - gi(b) || a.scenario_ranks[s] - b.scenario_ranks[s])
-      .forEach((m, i) => { (ranks[m.role_id] = ranks[m.role_id] || {})[s] = i + 1; }));
-    best.forEach((m, i) => { m.scenario_ranks = ranks[m.role_id]; m.rank = i + 1; m.baseline_rank = ranks[m.role_id] && ranks[m.role_id].baseline; });
-  }
+  const best = rankedRoles(res);
   let shown = 6;
   const draw = () => {
     const list = best.slice(0, shown);
@@ -829,6 +839,10 @@ async function drawJobs() {
       <details class="fold"><summary>How the match score works</summary>
       <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p></details>
     </section>
+    ${best.length ? `<section class="note row" style="justify-content: space-between">
+      <p><strong>Seeing a career advisor?</strong> Take one page with your top jobs, skills to work on and questions to ask.</p>
+      <a class="btn primary" href="#/advisor">Make my page</a>
+    </section>` : ""}
     ${why}
     ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     <div class="row">
@@ -1723,12 +1737,12 @@ function doneBox(key, title, format = "") {
   </label>`;
 }
 
+const resourceFacts = (r) => [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr ? `RM ${fmt(r.cost_myr, 0)}` : "", r.level ? esc(r.level) : ""].filter(Boolean).join(" · ");
 function resourceHtml(r) {
-  const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr ? `RM ${fmt(r.cost_myr, 0)}` : "", r.level ? esc(r.level) : ""].filter(Boolean);
   return `<li class="res${progress.done[r.url] ? " is-done" : ""}">
     <div class="res-top"><span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>${doneBox(r.url, r.title, r.format)}</div>
     <a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
-    <span class="muted small">${facts.join(" · ")}</span>
+    <span class="muted small">${resourceFacts(r)}</span>
   </li>`;
 }
 
@@ -1737,15 +1751,16 @@ const sdgTile = (goal, name) => `<img class="sdg-tile" src="/static/sdg/${encode
 
 /* ---------- learning progress ---------- */
 
-// { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, updated}},
-//   quizzes: {videoUrl: {score, total, date}} (the video's quiz was passed) }
+// { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, titles: {itemKey: title},
+//   updated, start, missed: [Monday "YYYY-MM-DD"]}}, quizzes: {videoUrl: {score, total, date}} (the video's quiz was passed),
+//   learner: random id for the SDG tally, calendar: {day: 0-6 from Monday, time: "HH:MM"} }
 // A path is tracked from the first item ticked on it; its item list is refreshed on every visit.
 const PROGRESS_KEY = "future-skills-progress-v1";
 let progress = loadProgress();
 
 function loadProgress() {
   const saved = readSaved(PROGRESS_KEY) || {};
-  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {} };
+  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {}, learner: saved.learner || null, calendar: saved.calendar || null };
 }
 const saveProgress = () => writeSaved(PROGRESS_KEY, progress);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -1818,6 +1833,7 @@ async function pageLearn(roleId) {
   const sdgCard = p.sdg.length ? `
     <section class="card stack" style="gap: 12px" aria-labelledby="sdg-title">
       <h2 id="sdg-title">Global goals this job supports</h2>
+      <a class="small" href="#/impact">What every student's hours add up to →</a>
       ${[...goals.values()].map((g) => `<div class="sdg-goal">
         ${sdgTile(g.goal, g.name)}
         <div class="stack" style="gap: 2px">
@@ -1838,18 +1854,21 @@ async function pageLearn(roleId) {
     </details>` : "";
   // Every item on this page that can be ticked, with its hours (projects and certifications have none).
   // meta: what My learning's level map shows for each item (title, kind and link), in path order.
-  const items = {};
-  const meta = {};
+  const items = {}, titles = {}, meta = {};
   for (const r of [...p.stages.flatMap((st) => st.resources), ...p.skills.flatMap((k) => k.resources)]) {
-    items[r.url] = r.hours || null;
+    items[r.url] = r.hours || null; titles[r.url] = r.title;
     meta[r.url] = { title: r.title, kind: r.format, url: r.url };
   }
-  for (const x of p.projects) { items[`project:${x.id}`] = null; meta[`project:${x.id}`] = { title: x.title, kind: "project", url: x.guide.url }; }
-  for (const c of p.certifications) { items[`cert:${c.cert_id}`] = null; meta[`cert:${c.cert_id}`] = { title: c.cert_name, kind: "certification", url: c.url }; }
+  for (const x of p.projects) { items[`project:${x.id}`] = null; titles[`project:${x.id}`] = x.title; meta[`project:${x.id}`] = { title: x.title, kind: "project", url: x.guide.url }; }
+  for (const c of p.certifications) { items[`cert:${c.cert_id}`] = null; titles[`cert:${c.cert_id}`] = c.cert_name; meta[`cert:${c.cert_id}`] = { title: c.cert_name, kind: "certification", url: c.url }; }
+  // start and missed weeks are kept across visits: the study plan (dates, re-planning) is built on them
   const track = () => {
-    progress.paths[roleId] = { name: p.role.name, area: p.role.area_name, personal: p.personal, items, meta, updated: today() };
+    const was = progress.paths[roleId] || {};
+    progress.paths[roleId] = { name: p.role.name, area: p.role.area_name, personal: p.personal, items, titles, meta, updated: today(),
+      start: was.start || ymd(new Date()), missed: was.missed || [] };
   };
-  if (progress.paths[roleId]) { track(); saveProgress(); }
+  if (progress.paths[roleId]) { track(); saveProgress(); reportPath(roleId); }
+  const planNow = () => (progress.paths[roleId] ? planHtml(roleId) : calendarHtml(roleId));
   render(`
   <div class="stack">
     <a class="btn ghost" href="#/results" style="align-self: flex-start">&larr; Back to my jobs</a>
@@ -1864,6 +1883,7 @@ async function pageLearn(roleId) {
     <section class="card stack" style="gap: 8px" aria-labelledby="progress-title">
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
+      <div id="learn-plan">${planNow()}</div>
       <p class="small muted">Videos count once you pass a ${VIDEO_QUIZ_SIZE}-question check. Every right answer earns 🪙 coins. <a href="#/progress">See your level map &rarr;</a></p>
     </section>
     ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
@@ -1889,17 +1909,300 @@ async function pageLearn(roleId) {
       if (box.checked) progress.done[key] = today(); else delete progress.done[key];
       track();
       saveProgress();
+      reportPath(roleId);
       // the same item can appear twice on a page (a foundation course that also teaches a skill)
       app.querySelectorAll(`[data-done="${CSS.escape(key)}"]`).forEach((b) => {
         b.checked = box.checked;
         b.closest(".res").classList.toggle("is-done", box.checked);
       });
       document.getElementById("learn-progress").innerHTML = progressHtml(pathStats(items), p.hours_per_week);
+      document.getElementById("learn-plan").innerHTML = planNow();
     };
+  });
+  // Before the first tick the path is not tracked yet: the calendar still works from this page's items.
+  learnPreview = { id: roleId, name: p.role.name, items, titles };
+  const planBox = document.getElementById("learn-plan");
+  wirePlan(planBox, () => { planBox.innerHTML = planNow(); });
+}
+
+/* ---------- study plan: finish date, missed weeks, re-planning and calendar ---------- */
+
+// A path's plan: its hours at the student's hours a week, from the day it was first tracked.
+// "I didn't study this week" moves the plan one week on; the finish date is worked out again from
+// the hours left on every visit, so falling behind (or getting ahead) shows without asking.
+const DAY_MS = 86400000;
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fromYmd = (s) => { const [y, m, d] = String(s).split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const midnight = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const weekOf = (d = new Date()) => ymd(addDays(midnight(d), -((d.getDay() + 6) % 7)));  // that week's Monday
+const dateText = (d) => d.toLocaleDateString(LANG === "zh" ? "zh-CN" : LANG === "ms" ? "ms-MY" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
+const hoursPerWeek = () => Math.max(1, Number(state.hoursPerWeek) || 5);
+let learnPreview = null;  // the learning path on screen, for its calendar before anything is ticked
+
+function studyPlan(p, hpw = hoursPerWeek()) {
+  const st = pathStats(p.items);
+  const now = midnight();
+  // paths tracked before plans existed start on their first tick
+  const ticked = Object.keys(p.items || {}).map((k) => progress.done[k]).filter(Boolean).sort()[0];
+  const start = p.start ? fromYmd(p.start) : ticked ? fromYmd(ticked) : now;
+  const missed = p.missed || [];
+  // whole weeks from Monday: the plan ends on the Sunday of its last week
+  const due = addDays(fromYmd(weekOf(start)), Math.max(1, Math.ceil(st.hoursTotal / hpw)) * 7);
+  const left = Math.max(0, st.hoursTotal - st.hoursDone);
+  const skipNow = missed.includes(weekOf());
+  const from = addDays(fromYmd(weekOf()), skipNow ? 7 : 0);
+  const finish = addDays(from, Math.ceil(left / hpw) * 7);
+  const late = Math.round((finish - due) / (7 * DAY_MS));
+  const weeksToDue = Math.floor((due - from) / (7 * DAY_MS));
+  // the hours a week that would still keep the first finish date, when that is within reach
+  const keepDue = late > 0 && weeksToDue >= 1 ? Math.ceil((left / weeksToDue) * 2) / 2 : null;
+  const keys = Object.keys(p.items || {}).filter((k) => !progress.done[k]);
+  const next = keys.find((k) => p.items[k]) || keys[0] || null;
+  return { st, start, due: addDays(due, -1), finish: addDays(finish, -1), from: from < now ? now : from, left, late, missed, skipNow,
+    keepDue: keepDue && keepDue <= 40 ? keepDue : null, next };
+}
+
+function planHtml(roleId) {
+  const p = progress.paths[roleId];
+  const hpw = hoursPerWeek();
+  const plan = studyPlan(p, hpw);
+  if (!plan.left) return `<p class="small muted plan-line">All the hours on this path are done.</p>${calendarHtml(roleId)}`;
+  const nextTitle = plan.next ? (p.titles && p.titles[plan.next]) || "the next item on your path" : "";
+  const nextLink = plan.next && /^https?:/.test(plan.next) ? `<a href="${safeUrl(plan.next)}" target="_blank" rel="noopener">${esc(nextTitle)}</a>` : `<strong>${esc(nextTitle)}</strong>`;
+  const status = plan.late > 0
+    ? `<p class="plan-line plan-behind"><strong>${plan.late === 1 ? "1 week behind" : `${plan.late} weeks behind`}</strong> · <span>New finish date:</span> <strong data-no-i18n>${esc(dateText(plan.finish))}</strong> <span class="muted">(<span>planned</span> <span data-no-i18n>${esc(dateText(plan.due))}</span>)</span></p>`
+    : `<p class="plan-line plan-ok"><strong>${plan.late < 0 ? "Ahead of plan" : "On track"}</strong> · <span>Finish by</span> <strong data-no-i18n>${esc(dateText(plan.finish))}</strong></p>`;
+  return `<div class="plan stack" style="gap: 6px" aria-live="polite">
+    ${status}
+    ${plan.late > 0 && plan.next ? `<p class="small"><span>Catch up first:</span> ${nextLink}${p.items[plan.next] ? ` <span class="muted">(${fmt(p.items[plan.next])} h)</span>` : ""}</p>` : plan.next ? `<p class="small"><span>Next up:</span> ${nextLink}</p>` : ""}
+    ${plan.keepDue ? `<p class="small muted"><span>Or keep the planned date: study</span> <strong>${fmt(plan.keepDue)} h</strong> <span>a week instead of</span> ${fmt(hpw)} h.</p>` : ""}
+    ${plan.missed.length ? `<p class="small muted"><span>Weeks without study:</span> ${plan.missed.length}</p>` : ""}
+    <div class="row" style="gap: 6px">
+      ${plan.skipNow
+        ? `<button class="btn ghost" type="button" data-missed="${esc(roleId)}" data-undo>Undo: I did study this week</button>`
+        : `<button class="btn ghost" type="button" data-missed="${esc(roleId)}">I didn't study this week</button>`}
+    </div>
+    ${calendarHtml(roleId)}
+  </div>`;
+}
+
+// Calendar: one study session a week, on the day and time the student picks, until the plan's finish.
+const CAL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const calPick = () => ({ day: 5, time: "10:00", ...(progress.calendar || {}) });  // Saturday 10:00
+
+function calendarPath(roleId) {
+  return progress.paths[roleId] || (learnPreview && learnPreview.id === roleId ? { ...learnPreview, start: ymd(new Date()) } : null);
+}
+
+function calendarWeeks(p, hpw) {
+  // Unfinished items with hours fill each week up to the student's hours; a long one runs on.
+  const weeks = [];
+  let week = [], room = hpw;
+  for (const k of Object.keys(p.items).filter((x) => !progress.done[x] && p.items[x])) {
+    let need = p.items[k];
+    while (need > 0.01) {
+      const take = Math.min(need, room);
+      week.push({ key: k, title: (p.titles && p.titles[k]) || k, hours: take, more: need - take > 0.01 });
+      need -= take; room -= take;
+      if (room <= 0.01) { weeks.push(week); week = []; room = hpw; }
+    }
+  }
+  if (week.length) weeks.push(week);
+  const rest = Object.keys(p.items).filter((x) => !progress.done[x] && !p.items[x]);
+  const title = (k) => (p.titles && p.titles[k]) || k;
+  return { weeks, selfPaced: rest.filter((k) => /^https?:/.test(k)).map(title), projects: rest.filter((k) => !/^https?:/.test(k)).map(title) };
+}
+
+function calendarFirst(plan) {
+  const { day, time } = calPick();
+  const [hh, mm] = time.split(":").map(Number);
+  const d = new Date(plan.from);
+  while ((d.getDay() + 6) % 7 !== day) d.setDate(d.getDate() + 1);
+  d.setHours(hh || 0, mm || 0, 0, 0);
+  if (d < new Date()) d.setDate(d.getDate() + 7);
+  return d;
+}
+
+const icsStamp = (d) => `${ymd(d).replace(/-/g, "")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
+const icsText = (s) => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+// Lines longer than 75 bytes (UTF-8) go on over several lines, each after the first starting with a space.
+function icsFold(line) {
+  const out = [];
+  let cur = "", bytes = 0;
+  for (const ch of line) {
+    const n = new TextEncoder().encode(ch).length;
+    if (bytes + n > 73) { out.push(cur); cur = " "; bytes = 1; }
+    cur += ch; bytes += n;
+  }
+  out.push(cur);
+  return out.join("\r\n");
+}
+
+function calendarEvents(roleId) {
+  const p = calendarPath(roleId);
+  const hpw = hoursPerWeek();
+  const plan = studyPlan(p, hpw);
+  const { weeks, selfPaced, projects } = calendarWeeks(p, hpw);
+  const first = calendarFirst(plan);
+  const sessionHours = Math.min(hpw, 8);
+  return weeks.map((w, i) => {
+    const start = addDays(first, i * 7);
+    const last = i === weeks.length - 1;
+    const lines = w.map((x) => `- ${x.title} (${fmt(x.hours)} h${x.more ? ", continues next week" : ""})${/^https?:/.test(x.key) ? `\n  ${x.key}` : ""}`);
+    if (i === 0 && selfPaced.length) lines.push("", "Self-paced, whenever you have time:", ...selfPaced.map((t) => `- ${t}`));
+    if (last && projects.length) lines.push("", "Then build and prove it:", ...projects.map((t) => `- ${t}`));
+    return { start, end: new Date(start.getTime() + sessionHours * 3600000),
+      title: `Study: ${p.name} (week ${i + 1} of ${weeks.length})`,
+      details: `Future Skills learning path, ${fmt(hpw)} h this week.\n\n${lines.join("\n")}` };
   });
 }
 
-/* ---------- my learning page: the level map, daily challenge and shop are in play.js ---------- */
+function downloadIcs(roleId) {
+  const p = calendarPath(roleId);
+  const events = calendarEvents(roleId);
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Future Skills//Learning path//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    ...events.flatMap((e, i) => ["BEGIN:VEVENT", `UID:${roleId}-${icsStamp(e.start)}-${i}@future-skills`, `DTSTAMP:${stamp}`,
+      `DTSTART:${icsStamp(e.start)}`, `DTEND:${icsStamp(e.end)}`, `SUMMARY:${icsText(e.title)}`, `DESCRIPTION:${icsText(e.details)}`,
+      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT30M", `DESCRIPTION:${icsText(e.title)}`, "END:VALARM", "END:VEVENT"]),
+    "END:VCALENDAR"];
+  const blob = new Blob([lines.map(icsFold).join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `future-skills-${String(p.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+// Google Calendar takes one event by link: the weekly session, repeated for the plan's weeks.
+function googleCalendarUrl(roleId) {
+  const events = calendarEvents(roleId);
+  if (!events.length) return "";
+  const p = calendarPath(roleId), e = events[0];
+  const q = new URLSearchParams({ action: "TEMPLATE", text: `Study: ${p.name}`, dates: `${icsStamp(e.start)}/${icsStamp(e.end)}`,
+    details: `Future Skills learning path: ${fmt(hoursPerWeek())} h a week for ${events.length} weeks.\n${location.origin}/#/learn/${encodeURIComponent(roleId)}`,
+    recur: `RRULE:FREQ=WEEKLY;COUNT=${events.length}` });
+  return `https://calendar.google.com/calendar/render?${q}`;
+}
+
+function calendarHtml(roleId) {
+  const p = calendarPath(roleId);
+  if (!p) return "";
+  const events = calendarEvents(roleId);
+  if (!events.length) return "";
+  const pick = calPick();
+  return `<details class="fold plan-cal">
+    <summary><span>Add my study plan to my calendar</span> <span class="muted">(${events.length} ${events.length === 1 ? "session" : "sessions"})</span></summary>
+    <div class="stack" style="gap: 8px; margin-top: 8px">
+      <div class="row" style="gap: 8px">
+        <label class="stack small" style="gap: 2px"><span class="muted">Day</span>
+          <select data-cal-day>${CAL_DAYS.map((d, i) => `<option value="${i}"${i === pick.day ? " selected" : ""}>${d}</option>`).join("")}</select></label>
+        <label class="stack small" style="gap: 2px"><span class="muted">Start time</span>
+          <input type="time" data-cal-time value="${esc(pick.time)}"></label>
+      </div>
+      <p class="small muted"><span>A weekly session of</span> ${fmt(Math.min(hoursPerWeek(), 8))} h, <span>first on</span> <span data-no-i18n>${esc(dateText(events[0].start))}</span>, <span>last on</span> <span data-no-i18n>${esc(dateText(events[events.length - 1].start))}</span>. <span>Each one lists what to study that week, with links.</span></p>
+      <div class="row" style="gap: 6px">
+        <a class="btn" href="${esc(googleCalendarUrl(roleId))}" target="_blank" rel="noopener">Google Calendar ↗</a>
+        <button class="btn" type="button" data-ics="${esc(roleId)}">Download .ics (Outlook, Apple)</button>
+      </div>
+    </div>
+  </details>`;
+}
+
+// Missed-week buttons and calendar choices inside a plan box; redraw() draws the box again.
+function wirePlan(root, redraw) {
+  if (!root) return;
+  root.addEventListener("click", (ev) => {
+    const missed = ev.target.closest("[data-missed]");
+    const ics = ev.target.closest("[data-ics]");
+    if (missed) {
+      const p = progress.paths[missed.dataset.missed];
+      const wk = weekOf();
+      p.missed = (p.missed || []).filter((w) => w !== wk);
+      if (missed.dataset.undo === undefined) p.missed.push(wk);
+      saveProgress();
+      redraw();
+    } else if (ics) downloadIcs(ics.dataset.ics);
+  });
+  root.addEventListener("change", (ev) => {
+    if (!ev.target.matches("[data-cal-day], [data-cal-time]")) return;
+    const box = ev.target.closest(".plan-cal");
+    progress.calendar = { day: Number(box.querySelector("[data-cal-day]").value), time: box.querySelector("[data-cal-time]").value || "10:00" };
+    saveProgress();
+    redraw();
+    root.querySelectorAll(".plan-cal").forEach((d) => { d.open = true; });
+  });
+}
+
+/* ---------- SDG contribution, added up over every student ---------- */
+
+// A random id made in this browser: no name or email, only so the server counts each path once.
+function learnerId() {
+  if (!progress.learner) {
+    progress.learner = window.crypto && crypto.randomUUID ? crypto.randomUUID()
+      : `fs-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    saveProgress();
+  }
+  return progress.learner;
+}
+function reportPath(roleId) {
+  const p = progress.paths[roleId];
+  if (!p) return;
+  const st = pathStats(p.items);
+  fetch("/api/sdg/record", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ learner: learnerId(), role_id: roleId, hours_planned: Math.round(st.hoursTotal * 10) / 10,
+      hours_done: Math.round(st.hoursDone * 10) / 10, items_done: st.done }) }).catch(() => { /* offline: sent on the next tick */ });
+}
+
+async function pageImpact() {
+  const s = await api("/api/sdg/summary");
+  const mine = trackedPaths().reduce((t, p) => t + p.hoursDone, 0);
+  const tile = (t) => `<article class="card stack impact-tile" style="gap: 8px">
+      <div class="row" style="gap: 10px; flex-wrap: nowrap">${sdgTile(t.goal, t.goal_name)}<div class="stack" style="gap: 2px"><strong>SDG ${esc(t.target)}</strong><span class="small muted">${esc(t.goal_name)}</span></div></div>
+      <p class="impact-num"><strong>${t.students}</strong> <span>${t.students === 1 ? "student" : "students"}</span></p>
+      <p class="small"><strong>${fmt(t.hours_done)} h</strong> <span>studied</span> <span class="muted">· ${fmt(t.hours_planned, 0)} h <span>planned</span></span></p>
+      <p class="small muted">${esc(t.why)}</p>
+    </article>`;
+  render(`
+  <div class="stack">
+    <div class="stack" style="gap: 8px">
+      <p class="eyebrow">SDG contribution</p>
+      <h1>What every student here adds up to</h1>
+      <p class="lead">Every learning path counts towards SDG 4.3, 4.4 and 8.5, and towards the goals of its job. These are the students following one, and the hours they have ticked off.</p>
+    </div>
+    <div class="impact-grid">${s.headline.map(tile).join("")}</div>
+    <section class="card impact-totals">
+      <div><strong>${s.students}</strong><span class="small muted">students with a learning path</span></div>
+      <div><strong>${s.students_studying}</strong><span class="small muted">have finished at least one course</span></div>
+      <div><strong>${fmt(s.hours_done)} h</strong><span class="small muted">studied, of ${fmt(s.hours_planned, 0)} h planned</span></div>
+      <div><strong>${fmt(mine)} h</strong><span class="small muted">of them are yours</span></div>
+    </section>
+    ${s.targets.length ? `<section class="card stack" style="gap: 8px" aria-labelledby="impact-all">
+      <h2 id="impact-all">Every SDG target the paths count towards</h2>
+      <div class="table-wrap"><table class="impact-table">
+        <thead><tr><th scope="col">Target</th><th scope="col">Goal</th><th scope="col">Students</th><th scope="col">Hours studied</th><th scope="col">Hours planned</th></tr></thead>
+        <tbody>${s.targets.map((t) => `<tr><th scope="row">${esc(t.target)}</th><td>${esc(t.goal_name)}</td><td>${t.students}</td><td>${fmt(t.hours_done)}</td><td>${fmt(t.hours_planned, 0)}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </section>` : ""}
+    ${s.roles.length ? `<section class="card stack" style="gap: 8px" aria-labelledby="impact-roles">
+      <h2 id="impact-roles">Jobs students are learning towards</h2>
+      <div class="table-wrap"><table class="impact-table">
+        <thead><tr><th scope="col">Job</th><th scope="col">Students</th><th scope="col">Hours studied</th></tr></thead>
+        <tbody>${s.roles.map((r) => `<tr><th scope="row"><a href="#/learn/${encodeURIComponent(r.role_id)}">${esc(r.name)}</a></th><td>${r.students}</td><td>${fmt(r.hours_done)}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </section>` : `<p class="note">No one has ticked a course yet. Open a learning path and tick what you finish: your hours count here.</p>`}
+    <details class="card fold-card">
+      <summary><h2>How this is counted</h2></summary>
+      <p class="small">${esc(s.method)}</p>
+      <p class="small muted">${s.since ? `<span>Counting since</span> <span data-no-i18n>${esc(s.since)}</span>. ` : ""}<span>Raw numbers:</span> <a href="/api/sdg/summary" target="_blank" rel="noopener">/api/sdg/summary</a></p>
+    </details>
+    <div class="row"><a class="btn primary" href="#/progress">My learning</a><a class="btn" href="#/results">My jobs</a></div>
+  </div>`);
+}
+
+/* ---------- my learning page: the level map, study plan, daily challenge and shop are in play.js ---------- */
 
 /* ---------- router ---------- */
 
@@ -1929,6 +2232,8 @@ async function route() {
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
     else if (page === "progress") await pageMyLearning();
+    else if (page === "advisor") await pageAdvisor();
+    else if (page === "impact") await pageImpact();
     else await pageTrends();
   } catch (e) {
     showError(e);
@@ -1936,6 +2241,54 @@ async function route() {
   app.focus({ preventScroll: true });
 }
 window.addEventListener("hashchange", route);
+
+/* Lite mode, for students on mobile data: no background animation, photos or line chart (fx.js
+   and dashboard.js skip them), no paths loaded ahead. The bar shows what this visit has
+   weighs, measured by the browser (Resource Timing), next to the same figure without Lite. */
+const LITE_KEY = "future-skills-lite";
+const LITE_FULL_KEY = "future-skills-full-bytes";
+const isLite = () => Boolean(document.documentElement.dataset.lite);
+// What the page weighs (compressed bytes), cached or not: a file the browser already had (304)
+// reports no body, so the size it had when it last came down is kept and counted.
+const LITE_SIZES_KEY = "future-skills-file-bytes";
+function pageBytes() {
+  const known = readSaved(LITE_SIZES_KEY) || {};
+  const entries = [...performance.getEntriesByType("navigation"), ...performance.getEntriesByType("resource")];
+  const total = entries.reduce((t, e) => {
+    if (e.encodedBodySize) known[e.name] = e.encodedBodySize;
+    return t + (e.encodedBodySize || known[e.name] || e.transferSize || 0);
+  }, 0);
+  writeSaved(LITE_SIZES_KEY, known);
+  return total;
+}
+const sizeText = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+function showLite() {
+  const btn = document.getElementById("lite"), bar = document.getElementById("lite-bar");
+  if (!btn || !bar) return;
+  btn.setAttribute("aria-pressed", String(isLite()));
+  const now = pageBytes();
+  if (!isLite()) {
+    bar.hidden = true;
+    btn.title = `Lite mode: no photos, animation or charts. Page size now: ${sizeText(now)}`;
+    return;
+  }
+  const full = Number(readSaved(LITE_FULL_KEY)) || 0;
+  bar.hidden = false;
+  bar.innerHTML = `<span><strong>Lite mode</strong> · <span>page size:</span> <strong data-no-i18n>${full > now ? `${sizeText(full)} → ${sizeText(now)}` : sizeText(now)}</strong></span>
+    <span class="muted">Photos, animation and charts off.</span>
+    <button class="btn ghost" type="button" id="lite-off">Turn off</button>`;
+  document.getElementById("lite-off").onclick = () => setLite(false);
+}
+function setLite(on) {
+  if (on) writeSaved(LITE_FULL_KEY, pageBytes());  // what the full page cost, to compare with
+  try { if (on) localStorage.setItem(LITE_KEY, "1"); else localStorage.removeItem(LITE_KEY); } catch (e) { /* storage off */ }
+  location.reload();  // start again without the photos and the animation
+}
+document.getElementById("lite")?.addEventListener("click", () => setLite(!isLite()));
+// keep the figure current as the page loads more (images, a learning path)
+window.addEventListener("load", showLite);
+window.addEventListener("hashchange", () => setTimeout(showLite, 1500));
+showLite();
 
 // Light / dark: follows the device until the student picks one; the pick is kept in this browser.
 // index.html applies the saved pick before the page draws, so there is no flash.
