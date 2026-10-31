@@ -46,6 +46,13 @@ Rules:
 - Be honest: if a part of the score is low, say so kindly.
 - No headings, lists or markdown. Plain sentences only."""
 
+# "Why this job?" on each job card: the same facts and rules, but only why the role suits the
+# student, in two sentences. No skill gaps or courses: the learning path page has those.
+SHORT_PROMPT = SYSTEM_PROMPT.split("Write 4 to 5")[0] + """Write 2 short sentences (under 50 words in all) in plain English, speaking to the student as "you": why this role suits them, using the IT area fit, interest fit, skill fit and AI-era trend. Mention the strongest part first. Do not mention skill gaps, courses or learning steps.
+
+Rules:""" + SYSTEM_PROMPT.split("Rules:")[1]
+SHORT_REPLY_CHARS = 450
+
 _cache = {}
 
 
@@ -194,9 +201,26 @@ def fallback_text(facts: dict) -> str:
     return " ".join(parts)
 
 
-def _call_llm(facts: dict) -> str:
+def short_facts(facts: dict) -> dict:
+    """The facts for "Why this job?": the score parts and SDG, without gaps or courses."""
+    return {k: v for k, v in facts.items() if k not in (
+        "biggest_gaps", "technologies_to_learn", "learning_path", "learning_path_total_hours",
+        "learning_path_weeks", "hours_per_week")}
+
+
+def short_fallback(facts: dict) -> str:
+    """One sentence on why the role suits the student, used whenever the LLM is not."""
+    parts = {"IT area fit": facts["area_fit"], "interest fit": facts["interest_fit"],
+             "skill fit": facts["skill_fit"]}
+    scored = sorted(((v, k) for k, v in parts.items() if v is not None), reverse=True)
+    best = f"your strongest part is {scored[0][1]} ({scored[0][0]})" if scored else "your parts are not scored yet"
+    return (f"{facts['role']} scores {facts['match_score']} out of 100 for you: {best}, and its AI-era trend is "
+            f"{facts['trend_score']} (an estimate from recent data, not a prediction).")
+
+
+def _call_llm(facts: dict, prompt: str = SYSTEM_PROMPT) -> str:
     body = chat_body([
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": prompt},
         {"role": "user", "content": "<facts>\n" + json.dumps(facts, ensure_ascii=False, indent=1)
                                     + "\n</facts>\nExplain this match to me."},
     ], MAX_TOKENS, 0.3)
@@ -211,19 +235,25 @@ def _call_llm(facts: dict) -> str:
     return (choice["message"].get("content") or "").strip()
 
 
-def explain(match: dict) -> dict:
-    """Return {"text", "source": "llm"|"fallback", "model", "reason"} for one match."""
+def explain(match: dict, short: bool = False) -> dict:
+    """Return {"text", "source": "llm"|"fallback", "model", "reason"} for one match.
+
+    short: two sentences on why the role suits the student ("Why this job?").
+    """
     facts = build_facts(match)
-    key = hashlib.sha256(json.dumps(facts, sort_keys=True).encode()).hexdigest()
+    if short:
+        facts = short_facts(facts)
+    key = hashlib.sha256(json.dumps([facts, short], sort_keys=True).encode()).hexdigest()
     if key in _cache:
         return {**_cache[key], "cached": True}
 
-    result = {"text": fallback_text(facts), "source": "fallback", "model": None, "reason": None}
+    result = {"text": short_fallback(facts) if short else fallback_text(facts), "source": "fallback",
+              "model": None, "reason": None}
     if not configured():
         result["reason"] = "no LLM_API_KEY set"
         return result
     try:
-        text = _call_llm(facts)
+        text = _call_llm(facts, SHORT_PROMPT if short else SYSTEM_PROMPT)
         bad = unknown_numbers(text, facts)
         future = predictions(text)
         if not text:
@@ -232,7 +262,7 @@ def explain(match: dict) -> dict:
             result["reason"] = f"reply had numbers not in the facts: {', '.join(bad[:5])}"
         elif future:
             result["reason"] = f"reply predicted the future: {future[0]!r}"
-        elif len(text) > MAX_REPLY_CHARS:
+        elif len(text) > (SHORT_REPLY_CHARS if short else MAX_REPLY_CHARS):
             result["reason"] = "reply too long"
         else:
             result = {"text": text, "source": "llm", "model": model_name(), "provider": provider(), "reason": None}

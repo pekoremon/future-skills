@@ -19,7 +19,8 @@ Endpoints (all JSON):
     GET  /api/profiles               fictional demo profiles
     POST /api/questionnaire/score    36 answers (1-5) -> RIASEC totals, code, IT-area scores, warnings
     POST /api/match                  test/preferences/CV -> IT area fit, then ranked roles with a learning path
-    POST /api/explain                same body as /api/match + role_id -> LLM explanation (or fallback)
+    POST /api/explain                same body as /api/match + role_id (+ "short": true for the
+                                     two-sentence "Why this job?") -> LLM explanation (or fallback)
     GET  /api/learn/<role_id>        learning path page for a role: free resources by stage, with links
     POST /api/learn                  same body as /api/match + role_id -> the same, built on the student's gaps
     GET  /api/explain/status         whether the LLM is configured, and which model
@@ -519,7 +520,7 @@ def explain_match(request):
                   if m["role_id"] == role_id), None)
     if found is None:
         raise BadRequest("'role_id' is required" if not role_id else f"unknown role_id '{role_id}'")
-    return jsonify(role_id=role_id, **explain.explain(found))
+    return jsonify(role_id=role_id, **explain.explain(found, short=bool(req.get("short"))))
 
 
 @route("GET", "/api/learn/<role_id>")

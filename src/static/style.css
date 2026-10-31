@@ -277,7 +277,13 @@ tr.hl td { background: var(--accent-soft); }
 /* Top jobs first (results page) and the example result on the home page */
 .top-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .top-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
-.top-list .top-card:first-child { border-color: var(--accent); }
+.top-card.first { border-color: var(--accent); }
+.job-parts { flex: 1 1 100%; display: flex; flex-direction: column; gap: 6px; }
+.legend.parts { gap: 4px 14px; font-size: 12px; }
+details.why { flex: 1 1 100%; border-top: 1px solid var(--line); }
+details.why > summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 40px; display: flex; align-items: center; }
+details.why .explain-out { padding-bottom: 4px; }
+#jobs.loading { opacity: 0.5; pointer-events: none; transition: opacity 0.15s; }
 .top-main { display: flex; flex-direction: column; gap: 6px; flex: 1 1 260px; min-width: 0; }
 .top-side { display: flex; align-items: center; gap: 14px; }
 .trust .chip { font-weight: 600; }

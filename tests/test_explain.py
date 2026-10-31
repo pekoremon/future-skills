@@ -82,6 +82,27 @@ class TestExplain(unittest.TestCase):
         self.assertTrue(second.get("cached"))
         self.assertEqual(call.call_count, 1)
 
+    def test_short_why_this_job(self):
+        reply = f"Data Scientists suits you: your match score is {self.facts['match_score']}."
+        with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "test"}), \
+                mock.patch.object(explain, "_call_llm", return_value=reply) as call:
+            r = explain.explain(self.match, short=True)
+        self.assertEqual((r["source"], r["text"]), ("llm", reply))
+        facts, prompt = call.call_args.args
+        self.assertIs(prompt, explain.SHORT_PROMPT)
+        self.assertNotIn("biggest_gaps", facts)
+        self.assertNotIn("learning_path", facts)
+        self.assertIn("Do not predict the future", explain.SHORT_PROMPT)
+        explain._cache.clear()
+        with mock.patch.dict(os.environ, {}, clear=True):
+            r = explain.explain(self.match, short=True)
+        self.assertEqual(r["source"], "fallback")
+        self.assertIn("strongest part", r["text"])
+        self.assertEqual(explain.unknown_numbers(r["text"], self.facts), [])
+        with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "test"}), \
+                mock.patch.object(explain, "_call_llm", return_value="word " * 120):
+            self.assertEqual(explain.explain(self.match, short=True)["reason"], "reply too long")
+
     def test_llm_reply_with_invented_number_is_rejected(self):
         with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "test"}), \
                 mock.patch.object(explain, "_call_llm", return_value="Data scientists earn RM 9123."):

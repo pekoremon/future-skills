@@ -517,57 +517,35 @@ function matchBody(demo = state.demo) {
   return { test, interest_answers: quizDone() ? state.answers : undefined, skill_ratings: state.ratings, technologies: state.techs, cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, education_job_zone: Number(state.zone), ...options };
 }
 
-function matchCard(m, rank) {
-  const d = m.skill_detail;
+// One job: rank, name, IT area, SDG, the score and its parts, and "Why this job?" in short.
+// Learn next lists technologies only: the student no longer rates skills.
+function jobCard(m, rank) {
   const flags = m.flags.filter((f) => !QUIET_FLAGS.includes(f)).map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
   const sdg = m.sdg.map((s) => `<span class="chip sdg-chip" title="${esc(s.rationale)}"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">SDG ${esc(s.target)} · ${esc(s.goal_name)}</span>`).join("");
-  const gaps = d.gaps.slice(0, 6).map((g) => `
-    <div class="gap-row">
-      <span>${esc(g.skill_name)} <span class="muted small">· importance ${fmt(g.importance, 2)}/5</span></span>
-      <span class="stack" style="gap: 2px">
-        <span class="levels" aria-hidden="true"><span class="have" style="width: ${(g.your_level / 7) * 100}%"></span><span class="need" style="left: calc(${(g.level_needed / 7) * 100}% - 1px)"></span></span>
-        <span class="muted small">you ${fmt(g.your_level)} → needed ${fmt(g.level_needed)} (O*NET level, 0–7)</span>
-      </span>
-    </div>`).join("");
+  const next = m.skill_detail.tech_missing.slice(0, 2).map((t) => t.skill_name);
   const parts = ORDER_PARTS.map((k) => {
     const c = m.components[k];
-    return `<li><strong>${PART_LABEL[k]}:</strong> ${c.score === null ? "not scored" : `${fmt(c.score)} / 100 × weight ${Math.round(c.weight * 100)}% = ${fmt(c.points)} points`}</li>`;
+    return `<span title="${PART_LABEL[k]}: ${c.score === null ? "not scored" : `${fmt(c.score)} / 100 × ${Math.round(c.weight * 100)}%`}"><i class="k-${k}"></i>${PART_LABEL[k]} <strong>${c.score === null ? "–" : fmt(c.points)}</strong></span>`;
   }).join("");
   return `
-  <article class="card match" data-role="${esc(m.role_id)}">
-    <div class="match-head">
-      <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
-      <div class="stack" style="gap: 6px; flex: 1">
+    <li class="top-card${rank === 1 ? " first" : ""}" data-role="${esc(m.role_id)}">
+      <div class="top-main">
         <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)}</h3>
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
           ${rangeBadge(m)}
           ${flags}
-          ${sdg}
         </div>
+        ${sdg ? `<div class="row" style="gap: 6px">${sdg}</div>` : ""}
+        ${next.length ? `<p class="small"><span class="muted">Learn next:</span> ${next.map(esc).join(", ")}</p>` : ""}
       </div>
-    </div>
-    ${splitBar(m)}
-    <a class="btn learn-link" href="#/learn/${esc(m.role_id)}">How to get there: learning path${pathProgressLabel(m.role_id)} &rarr;</a>
-    <details class="more">
-      <summary>Why this score, and what to learn</summary>
-      <div class="stack" style="gap: 14px">
-        <div class="explain stack" style="gap: 8px">
-          <button class="btn" type="button" data-explain="${esc(m.role_id)}">Explain this for me</button>
-          <div class="explain-out" aria-live="polite" hidden></div>
-        </div>
-        <ul style="margin: 0; padding-left: 18px">${parts}</ul>
-        <p class="small muted">${esc(m.explain.area)}. ${esc(m.explain.interest)}. ${esc(m.explain.trend)}. Skill fit = 70% rated skills (${fmt(d.rated_score)}) + 30% technologies (${fmt(d.tech_score)}).</p>
-        ${gaps ? `<div><h3>Biggest skill gaps</h3>${gaps}</div>` : '<p class="note">You meet the level O*NET lists for every rated skill of this role.</p>'}
-        ${d.tech_missing.length ? `<div class="stack" style="gap: 8px"><h3>Technologies to learn</h3><div class="row" style="gap: 6px">${d.tech_missing.map((t) => `<span class="chip plain">${esc(t.skill_name)}</span>`).join("")}</div></div>` : ""}
-        ${d.tech_used.length ? `<p class="small muted">You already use: ${d.tech_used.map((t) => esc(t.skill_name)).join(", ")}</p>` : ""}
-        ${pathHtml(m.pathway)}
-        <a class="btn" href="#/learn/${esc(m.role_id)}">See the full learning path, with videos</a>
-        <div class="role-extra small muted">Loading role details…</div>
-        ${m.sdg.map((s) => `<p class="small"><strong>SDG ${esc(s.target)}</strong> (${esc(s.link_strength)} link): ${esc(s.rationale)}</p>`).join("")}
+      <div class="top-side">
+        <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
+        <a class="btn primary" href="#/learn/${esc(m.role_id)}">Learning path${pathProgressLabel(m.role_id)} &rarr;</a>
       </div>
-    </details>
-  </article>`;
+      <div class="job-parts">${splitBar(m)}<div class="legend parts">${parts}</div></div>
+      <details class="why"><summary>Why this job?</summary><div class="explain-out small" aria-live="polite"></div></details>
+    </li>`;
 }
 
 // How much the rank depends on the scenario: the same rank in all three, or a range.
@@ -586,90 +564,24 @@ function moveBadge(m) {
   return `<span class="chip ${up > 0 ? "" : "plain"}" title="Rank under current trends: ${m.baseline_rank}">${up > 0 ? "▲" : "▼"} ${Math.abs(up)} vs current trends</span>`;
 }
 
-// What to learn next for a role, in the learning path's own order: the biggest gap in a skill
-// the student rated or showed in the test, then the first missing technology. Skills nobody
-// rated are left out here: an unrated skill always looks like a big gap.
-function learnNext(m) {
-  const d = m.skill_detail;
-  const gap = d.gaps.find((x) => x.rated !== false && x.level_needed - x.your_level >= 0.5);
-  return [gap, d.tech_missing[0]].filter(Boolean).map((x) => x.skill_name);
-}
-
-// One job in short: the summary at the top of the results page and the home page example.
-function topCard(m, rank) {
-  const next = learnNext(m);
-  return `
-    <li class="top-card">
-      <div class="top-main">
-        <h3>${rank}. ${esc(m.role_name)}</h3>
-        <div class="row" style="gap: 6px">
-          <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
-          ${rangeBadge(m)}
-        </div>
-        ${next.length ? `<p class="small"><span class="muted">Learn next:</span> ${next.map(esc).join(", ")}</p>` : ""}
-      </div>
-      <div class="top-side">
-        <div class="score" aria-label="Match score ${fmt(m.total)} out of 100">${fmt(m.total)}<small>/ 100</small></div>
-        <a class="btn primary" href="#/learn/${esc(m.role_id)}">Learning path &rarr;</a>
-      </div>
-    </li>`;
-}
-
-function pathHtml(p) {
-  if (!p.steps.length && !p.gaps_without_course.length) return "";
-  const steps = p.steps.map((s) => `
-    <li class="step">
-      <a href="${safeUrl(s.url)}" rel="noopener" target="_blank">${esc(s.title)}</a>
-      <span class="muted small">${esc(s.provider)} · ${s.hours ? `${fmt(s.hours)} h` : "self-paced, no stated length"} · ${s.cost_myr === 0 ? "Free" : `RM ${fmt(s.cost_myr, 0)}`} · checked ${esc(s.verified_date)}</span>
-      <span class="small">Covers: ${s.skills.map(esc).join(", ")}</span>
-    </li>`).join("");
-  const time = p.total_hours
-    ? `About <strong>${fmt(p.total_hours)} hours</strong>, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.steps_without_hours ? ` (plus ${p.steps_without_hours} self-paced resource${p.steps_without_hours > 1 ? "s" : ""})` : ""}.`
-    : "";
-  return `<div class="stack" style="gap: 8px">
-    <h3>Your learning path</h3>
-    ${p.steps.length ? `<p class="small">${time} Ordered by the biggest gap first; all free.</p><ol class="path">${steps}</ol>` : ""}
-    ${p.gaps_without_course.length ? `<p class="small muted">No verified free course in our list yet for: ${p.gaps_without_course.map((g) => esc(g.skill_name)).join(", ")}.</p>` : ""}
-    ${p.hrd_corp_options && p.hrd_corp_options.length ? `<p class="small muted">Working already? ${p.hrd_corp_options.length} paid course${p.hrd_corp_options.length > 1 ? "s" : ""} your employer can claim under HRD Corp ${p.hrd_corp_options.length > 1 ? "are" : "is"} on the full learning path page.</p>` : ""}
-  </div>`;
-}
-
 let lastMatchBody = null;
 
-async function explainRole(button) {
-  const out = button.parentElement.querySelector(".explain-out");
-  button.disabled = true;
-  out.hidden = false;
+// "Why this job?": two sentences from the AI on why the role suits the student, loaded on open.
+async function whyJob(card) {
+  const out = card.querySelector(".explain-out");
+  if (out.dataset.done) return;
+  out.dataset.done = "1";
   out.className = "explain-out small muted";
-  out.textContent = "Writing a plain-language explanation…";
+  out.textContent = "Writing…";
   try {
-    const r = await api("/api/explain", { body: JSON.stringify({ ...lastMatchBody, role_id: button.dataset.explain }) });
-    out.className = "explain-out note";
-    const label = r.source === "llm"
-      ? `Written by AI (${esc(r.model.split("/").pop())} on ${esc(r.provider || "Fireworks AI")}) from your scores above. It may still be wrong; the numbers above are the source of truth.`
-      : "AI explanation not available right now, so this is a plain summary of your scores.";
-    out.innerHTML = `<p>${esc(r.text)}</p><p class="small" style="margin-top: 6px; opacity: 0.85" title="${esc(r.reason || "")}">${label}</p>`;
-    button.textContent = "Explain again";
+    const r = await api("/api/explain", { body: JSON.stringify({ ...lastMatchBody, role_id: card.dataset.role, short: true }) });
+    const label = r.source === "llm" ? "Written by AI from your scores. It can be wrong." : "AI not available, so this is a plain summary of your scores.";
+    out.className = "explain-out small";
+    out.innerHTML = `<p>${esc(r.text)}</p><p class="muted" style="margin-top: 4px" title="${esc(r.reason || "")}">${label}</p>`;
   } catch (e) {
-    out.className = "explain-out warn";
-    out.textContent = `Could not get an explanation: ${e.message}`;
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function loadRoleExtra(card) {
-  const box = card.querySelector(".role-extra");
-  if (!box || box.dataset.done) return;
-  box.dataset.done = "1";
-  try {
-    const r = await cached(`/api/roles/${encodeURIComponent(card.dataset.role)}`);
-    const certs = r.certifications.map((c) => `<li><a href="${safeUrl(c.url)}">${esc(c.cert_name)}</a> · ${esc(c.issuer)}${c.required_to_practise_my === "yes" ? " · <strong>required to practise in Malaysia</strong>" : ""}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""}</li>`).join("");
-    box.innerHTML = `
-      ${certs ? `<h3 style="color: var(--text)">Licences and certifications</h3><ul style="margin: 4px 0 0; padding-left: 18px">${certs}</ul>` : ""}
-      <p style="margin-top: 8px">O*NET occupation: <a href="https://www.onetonline.org/link/summary/${encodeURIComponent(r.role.onet_soc)}">${esc(r.role.onet_title || r.role.role_name_en)} (${esc(r.role.onet_soc)})</a>${r.role.mycol_occupation ? ` · MyCOL: ${esc(r.role.masco_4digit_mycol)} ${esc(r.role.mycol_occupation)}` : ""}</p>`;
-  } catch (e) {
-    box.textContent = "Could not load role details.";
+    delete out.dataset.done;
+    out.className = "explain-out small warn";
+    out.textContent = `Could not explain: ${e.message}`;
   }
 }
 
@@ -768,33 +680,63 @@ async function pageResults() {
     return;
   }
   render('<p class="muted" role="status">Scoring IT roles…</p>');
-  const body = matchBody();
-  const [res, scenarios] = await Promise.all([api("/api/match", { body: JSON.stringify(body) }), cached("/api/scenarios")]);
-  lastMatchBody = body;
-  const replan = replanNote(body, res);
-  const sc = res.scenario;
-  const scenarioCard = `
-    <section class="card stack" style="gap: 10px" aria-labelledby="sc-title">
-      <h2 id="sc-title">Future scenario</h2>
-      <div class="tabs" role="group" aria-label="Future scenario">
-        ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === sc.id}">${esc(s.name)}</button>`).join("")}
-      </div>
-      <p class="small">${esc(sc.description)}</p>
-      <p class="small"><strong>These are estimates, not predictions.</strong></p>
-      <details class="fold"><summary>About these estimates</summary><div class="stack" style="gap: 8px">
-      <p class="small">Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.</p>
-      <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Area scores:
-        ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.</p>
-      </div></details>
-      <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
-    </section>`;
+  const [scenarios, profiles] = await Promise.all([cached("/api/scenarios"), demo ? cached("/api/profiles") : []]);
+  const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
   const whatIfBanner = state.trendChanges ? `
     <section class="warn stack" style="gap: 8px" role="status">
       <p><strong>You are looking at changed trend data</strong> (a what-if). Only your copy changed; the real data stay the same.</p>
       <div class="row"><a class="btn" href="#/whatif">Change it again</a><button class="btn" type="button" id="wi-off">Back to the real data</button></div>
     </section>` : "";
-  const profiles = demo ? await cached("/api/profiles") : [];
-  const who = demo ? profiles.find((p) => p.profile_id === demo) : null;
+  // The scenario comes first; switching it only redraws the jobs below it (#jobs).
+  render(`
+  <div class="stack">
+    ${demo ? "" : stepBar("results")}
+    <p class="eyebrow">${demo ? "" : "Step 4 of 4 · "}Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
+    <h1>Best matches for your level</h1>
+    ${whatIfBanner}
+    <section class="card stack" style="gap: 10px" aria-labelledby="sc-title">
+      <h2 id="sc-title">Future scenario</h2>
+      <div class="tabs" role="group" aria-label="Future scenario">
+        ${scenarios.map((s) => `<button type="button" data-scenario="${esc(s.id)}" aria-pressed="${s.id === state.scenario}">${esc(s.name)}</button>`).join("")}
+      </div>
+      <p class="small" id="sc-desc"></p>
+      <p class="small"><strong>These are estimates, not predictions.</strong></p>
+      <details class="fold"><summary>About these estimates</summary><div class="stack" style="gap: 8px">
+      <p class="small">Nobody knows how fast AI will change jobs. Each scenario is a different assumption about the future, built from public data (DOSM, MyCOL, arXiv) and weights the team chose. Compare them: a role that ranks high in all three is a safer choice than one that ranks high in only one. The decision is yours.</p>
+      <p class="small muted" id="sc-weights"></p>
+      </div></details>
+      <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
+    </section>
+    <div id="jobs" class="stack"></div>
+  </div>`);
+  app.querySelectorAll("[data-scenario]").forEach((b) => {
+    b.onclick = () => {
+      if (state.scenario === b.dataset.scenario) return;
+      state.scenario = b.dataset.scenario;
+      saveState();
+      app.querySelectorAll("[data-scenario]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      drawJobs().catch(showError);
+    };
+  });
+  const off = document.getElementById("wi-off");
+  if (off) off.onclick = () => { delete state.trendChanges; whatIfEdits = null; saveState(); pageResults().catch(showError); };
+  await drawJobs();
+}
+
+// The jobs part of the results page, for the chosen scenario.
+async function drawJobs() {
+  const demo = state.demo;
+  const jobs = document.getElementById("jobs");
+  jobs.classList.add("loading");
+  const body = matchBody();
+  const res = await api("/api/match", { body: JSON.stringify(body) });
+  if (body.scenario !== state.scenario || !jobs.isConnected) return;  // switched again, or left the page
+  lastMatchBody = body;
+  const replan = replanNote(body, res);
+  const sc = res.scenario;
+  document.getElementById("sc-desc").textContent = sc.description;
+  document.getElementById("sc-weights").innerHTML = `Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Area scores:
+    ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.`;
   const g = res.groups;
   const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
   const best = listedRoles(res.results, g);
@@ -807,65 +749,40 @@ async function pageResults() {
   }
   let shown = 6;
   const draw = () => {
-    let last = null;
+    const list = best.slice(0, shown);
+    const groups = g.mode === "none" ? [[null, list]]
+      : ["best_fit", "can_do"].map((name) => [name, list.filter((m) => groupOf[m.it_area] === name)]).filter(([, ms]) => ms.length);
     document.getElementById("list").innerHTML = best.length
-      ? best.slice(0, shown).map((m, i) => {
-        const head = g.mode !== "none" && groupOf[m.it_area] !== last ? `<h2 class="group-head">${esc(groupTitle(g, groupOf[m.it_area]))}</h2>` : "";
-        last = groupOf[m.it_area];
-        return head + matchCard(m, i + 1);
-      }).join("")
+      ? groups.map(([name, ms]) => `${name && groups.length > 1 ? `<h3 class="group-head">${esc(groupTitle(g, name))}</h3>` : ""}
+        <ol class="top-list">${ms.map((m) => jobCard(m, best.indexOf(m) + 1)).join("")}</ol>`).join("")
       : '<p class="muted">No roles in your best-fit areas match your education level yet. Try a higher education level on the skills page.</p>';
     document.getElementById("more").hidden = shown >= best.length;
-    app.querySelectorAll("details.more").forEach((d) => d.addEventListener("toggle", () => d.open && loadRoleExtra(d.closest(".match"))));
-    app.querySelectorAll("[data-explain]").forEach((b) => { b.onclick = () => explainRole(b); });
+    jobs.querySelectorAll("details.why").forEach((d) => d.addEventListener("toggle", () => d.open && whyJob(d.closest(".top-card"))));
   };
-  // The jobs come first; how the IT areas were placed and scored is one tap away.
-  const topJobs = best.length ? `
-    <section class="card stack" style="gap: 10px" aria-labelledby="top-title">
-      <div class="row" style="justify-content: space-between">
-        <h2 id="top-title">Your top jobs</h2>
-        <button class="btn ghost" type="button" id="to-list">See all roles and why &darr;</button>
-      </div>
-      <ol class="top-list">${best.slice(0, 3).map((m, i) => topCard(m, i + 1)).join("")}</ol>
-    </section>` : "";
   const scored = `<h3>How your IT areas were scored</h3>${res.areas.map((a) => `<p class="small"><strong>${esc(a.name)}</strong> ${a.fit === null ? "not scored" : fmt(a.fit)} <span class="muted">· ${esc(a.explain)}</span></p>`).join("")}${res.insights.map((i) => `<p class="note">${esc(i.text)}</p>`).join("")}`;
   const why = g.mode === "none" ? groupsHtml(g) : `
     <details class="group">
       <summary><span>Why these jobs? Your IT areas and how they were scored</span></summary>
       <div class="group-body stack" style="gap: 12px">${groupsHtml(g)}${scored}</div>
     </details>`;
-  render(`
-  <div class="stack">
-    ${demo ? "" : stepBar("results")}
-    <p class="eyebrow">${demo ? "" : "Step 4 of 4 · "}Your matches${who ? ` · demo: ${esc(who.name)}` : ""}</p>
-    <h1>Best matches for your level</h1>
-    ${whatIfBanner}
-    ${topJobs}
+  jobs.innerHTML = `
     ${accuracyNote(g)}
     ${replan}
-    ${why}
-    ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
-    ${scenarioCard}
-    <div class="card stack" style="gap: 8px">
-      <div class="legend"><span><i class="k-area"></i>IT area fit</span><span><i class="k-interest"></i>Interest fit</span><span><i class="k-skill"></i>Skill fit</span><span><i class="k-trend"></i>AI-era trend</span></div>
+    <section class="card stack" style="gap: 10px" aria-labelledby="top-title">
+      <h2 id="top-title">Your top jobs</h2>
+      <div id="list" class="stack"></div>
+      <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
       <details class="fold"><summary>How the match score works</summary>
       <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p></details>
-    </div>
-    <div id="list" class="stack"></div>
-    <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
+    </section>
+    ${why}
+    ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     <div class="row">
       ${demo ? '<a class="btn primary" href="#/cv">Start with your own answers</a>' : `<a class="btn" href="#/skills">Change my technologies</a>${testDone() ? "" : '<a class="btn" href="#/test">Take the skills test</a>'}`}
       <a class="btn ghost" href="#/trends">How the trend score works</a>
-    </div>
-  </div>`);
+    </div>`;
+  jobs.classList.remove("loading");
   document.getElementById("more").onclick = () => { shown = best.length; draw(); };
-  const toList = document.getElementById("to-list");
-  if (toList) toList.onclick = () => document.getElementById("list").scrollIntoView({ behavior: "smooth", block: "start" });
-  app.querySelectorAll("[data-scenario]").forEach((b) => {
-    b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
-  });
-  const off = document.getElementById("wi-off");
-  if (off) off.onclick = () => { delete state.trendChanges; whatIfEdits = null; saveState(); pageResults().catch(showError); };
   wireMoreAreas("#/results");
   draw();
 }
