@@ -50,7 +50,9 @@
       const hero = root.querySelector(":scope > section:first-child");
       if (hero) {
         hero.classList.add("fx-hero");
-        hero.insertAdjacentHTML("beforeend", '<div class="fx-hero-tags" aria-hidden="true"><span>#AI</span><span>#DOSM</span><span>#MyCOL</span><span>#arXiv</span><span>#SDG4</span><span>#SDG8</span></div>');
+        // tags above the start buttons, so the buttons stay last
+        const start = hero.querySelector(".hero-start");
+        (start || hero).insertAdjacentHTML(start ? "beforebegin" : "beforeend", '<div class="fx-hero-tags" aria-hidden="true"><span>#AI</span><span>#DOSM</span><span>#MyCOL</span><span>#arXiv</span><span>#SDG4</span><span>#SDG8</span></div>');
         hero.insertAdjacentHTML("afterend", `<div class="fx-areas">${AREAS.map(([name, id]) =>
           `<div class="fx-area" style="--fx-photo: url('${photo(id, 600)}')"><span>${name}</span></div>`).join("")}</div>`);
       }

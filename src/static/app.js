@@ -125,8 +125,8 @@ function startCard() {
       <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
       <div class="row">
         <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
-        <a class="btn" href="#/skills" id="quick">Quick start: about 2 minutes</a>
-        <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
+        <a class="btn" href="#/skills" data-start="quick">Quick start: about 2 minutes</a>
+        <button class="btn" type="button" data-start="demo">Try the demo student (fictional)</button>
       </div>
       <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 2 minutes: tick your technologies, see your jobs at once, and add the rest later.</p>
       <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
@@ -136,9 +136,21 @@ function startCard() {
 `;
 }
 
+// The same way in on the landing page's first screen, so a first-time student sees where to start
+// without scrolling: quick start first (jobs in about 2 minutes), or carry on where they stopped.
+function heroStart() {
+  const started = JOURNEY.some((st) => st.done() || skipped(st));
+  const next = (JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href;
+  return `<div class="row hero-start">
+      ${started ? `<a class="btn primary" href="${next}">Continue where I left off</a>` : '<a class="btn primary" href="#/skills" data-start="quick">Quick start: about 2 minutes</a>'}
+      ${started ? "" : '<a class="btn" href="#/cv">Start: step 1, your CV</a>'}
+      <button class="btn ghost" type="button" data-start="demo">Try the demo student</button>
+    </div>`;
+}
+
 function wireStartCard() {
-  document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; };
-  document.getElementById("quick").onclick = () => { state.quick = true; saveState(); };
+  document.querySelectorAll('[data-start="demo"]').forEach((b) => { b.onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; }; });
+  document.querySelectorAll('[data-start="quick"]').forEach((b) => { b.onclick = () => { state.quick = true; saveState(); }; });
   const forget = document.getElementById("forget");
   if (forget) forget.onclick = () => {
     if (!confirm("Clear your answers, test and learning progress from this browser? This cannot be undone.")) return;
@@ -962,6 +974,7 @@ async function pageTrends() {
     <section class="stack" style="gap: 6px">
     <h1>Malaysia’s IT Students: What’s Next?</h1>
     <p class="muted" style="font-size: 14px">Many IT students in Malaysia are unsure which career path suits them, which tech fields will be in demand, and how AI may affect their future jobs. Our platform helps students understand their interests and skills, explore Malaysia’s IT job market trends, and find a career direction that fits them.</p>
+    ${heroStart()}
     </section>
     <div class="viz-hero">
     <section class="stack" style="gap: 10px">
