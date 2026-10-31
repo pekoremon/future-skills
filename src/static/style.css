@@ -733,3 +733,7 @@ html[data-lite] body::before, html[data-lite] .topbar::after { display: none; }
 .sc-change .up { color: var(--accent); font-weight: 600; }
 .sc-change .down { color: #b45309; font-weight: 600; }
 @media (max-width: 560px) { .sc-change ul { columns: 1; } }
+/* "Why this job?": what each part of the score is made of */
+.score-why { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 10px; }
+.score-why li { display: flex; gap: 10px; align-items: flex-start; }
+.score-why li > i { flex: none; width: 10px; height: 10px; border-radius: 3px; margin-top: 6px; }

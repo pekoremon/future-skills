@@ -627,7 +627,7 @@ const MS = {
   "Next up:": "Seterusnya:",
   "Or keep the planned date: study": "Atau kekalkan tarikh asal: belajar",
   "a week instead of": "seminggu, bukan",
-  "Weeks without study:": "Minggu tanpa belajar:",
+  "Weeks without study:": "Minggu tanpa belajar:", "Test": "Ujian",
   "I didn't study this week": "Saya tidak belajar minggu ini",
   "Undo: I did study this week": "Batal: saya belajar minggu ini",
   "All the hours on this path are done.": "Semua jam dalam laluan ini sudah selesai.",
@@ -721,6 +721,10 @@ const MS = {
     "Satu senarai untuk semua, untuk dunia atau seluruh negara, tanpa tahap keyakinan dan tanpa kemas kini di antaranya.",
   "What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.":
     "Apa yang Future Skills tambah: ia menggabungkan sumber-sumber ini untuk seorang pelajar. Kesesuaian bidang dan jurang kemahiran anda datang daripada ujian, minat dan CV anda sendiri. Skor trend dibina semula daripada DOSM, MyCOL dan arXiv setiap kali anda menekan “Update data now”, setiap nombor menunjukkan sumbernya, tahap keyakinannya dan sejauh mana kedudukan anda berubah dalam tiga masa depan, dan matlamat global yang anda pilih mengubah susunan kerja anda. Kemudian ia memberi anda kursus percuma untuk jurang terbesar anda.",
+  // "Why this job?": what makes up the score
+  "What makes up the score": "Apa yang membentuk skor", "You": "Anda", "This job": "Kerja ini", "Shared": "Sama",
+  "You have": "Anda ada", "Missing": "Belum ada", "high": "tinggi", "average": "sederhana", "low": "rendah",
+  "Not scored yet.": "Belum diberi skor.", "From recent data, not a prediction.": "Daripada data terkini, bukan ramalan.",
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
@@ -740,6 +744,7 @@ const HELD = /^(.+) also scored (.+) in the quick check, but (?:was|were) not te
 
 // Text built from numbers or names: [pattern, (match) => BM].
 const PATTERNS_MS = [
+  [/^(Skills test|Interests|CV and tools) (\d+)$/, (m) => `${tr(m[1])} ${m[2]}`],
   // learning progress
   [/^(\d+) \/ (\d+) done$/, (m) => `${m[1]} / ${m[2]} selesai`],
   [/^about (\d+) weeks left at ([\d.]+) h a week$/, (m) => `kira-kira ${m[1]} minggu lagi pada ${m[2]} jam seminggu`],
@@ -1433,7 +1438,7 @@ const ZH = {
   "Next up:": "下一项：",
   "Or keep the planned date: study": "或保持原定日期：每周学习",
   "a week instead of": "，而不是",
-  "Weeks without study:": "没学习的周数：",
+  "Weeks without study:": "没学习的周数：", "Test": "测试",
   "I didn't study this week": "这周没学",
   "Undo: I did study this week": "撤销：这周有学",
   "All the hours on this path are done.": "这条路径的学习时数已全部完成。",
@@ -1527,12 +1532,17 @@ const ZH = {
     "所有人同一张名单，针对全球或整个国家，没有可信度，中间也不更新。",
   "What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.":
     "Future Skills 多做的：把这些来源合在一起，为一个学生所用。你的方向匹配和技能差距来自你自己的测验、兴趣和履历。每次按“Update data now”，趋势分数都会用 DOSM、MyCOL 和 arXiv 重新计算；每个数字都标出来源、可信度，以及你的排名在三种未来情景下变化多少；你选的全球目标会改变职位的排序。最后为你最大的差距给出免费课程。",
+  // "Why this job?": what makes up the score
+  "What makes up the score": "分数怎么来的", "You": "你", "This job": "这份工作", "Shared": "相同",
+  "You have": "你已具备", "Missing": "还缺", "high": "高", "average": "中等", "low": "低",
+  "Not scored yet.": "尚未评分。", "From recent data, not a prediction.": "根据近期数据，不是预测。",
 };
 
 const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and tools/g, "履历与工具").replace(/preferences/g, "偏好").replace(/ and /g, "和");
 
 // Same shapes as PATTERNS_MS, in Chinese word order.
 const PATTERNS_ZH = [
+  [/^(Skills test|Interests|CV and tools) (\d+)$/, (m) => `${tr(m[1])} ${m[2]}`],
   // learning progress
   [/^(\d+) \/ (\d+) done$/, (m) => `已完成 ${m[1]} / ${m[2]}`],
   [/^about (\d+) weeks left at ([\d.]+) h a week$/, (m) => `按每周 ${m[2]} 小时，约还需 ${m[1]} 周`],

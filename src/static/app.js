@@ -717,6 +717,7 @@ function drawGoalPick(res) {
 }
 
 let lastMatchBody = null;
+let lastMatchRes = null;  // the jobs page's last /api/match answer, for "Why this job?"
 
 // Learning paths, kept per role and match body. The jobs page loads its listed roles' paths in
 // the background, so "Learning path" opens at once even when the host is slow to answer.
@@ -746,6 +747,31 @@ function raiseTips(t) {
 }
 
 // "Why this job?": two sentences from the AI on why the role suits the student, loaded on open.
+// Under the AI summary: what each part of the match score is made of, straight from the scores.
+function scoreBreakdown(m) {
+  const c = m.components;
+  const used = ORDER_PARTS.reduce((t, k) => t + (c[k].score === null ? 0 : c[k].weight), 0);
+  const area = lastMatchRes && lastMatchRes.areas.find((a) => a.id === m.it_area);
+  const code = /code (\w+) vs the role's O\*NET code (\w+); shared: (\w*)/.exec(m.explain.interest || "");
+  const have = [...m.skill_detail.tech_used, ...m.skill_detail.strengths].map((s) => s.skill_name).slice(0, 4);
+  const missing = m.skill_detail.tech_missing.map((s) => s.skill_name).slice(0, 3);
+  const level = (v) => (v === null || v === undefined ? "no data" : v >= 62.5 ? "high" : v <= 37.5 ? "low" : "average");
+  const chips = (names) => names.map((n) => `<span class="chip plain">${esc(n)}</span>`).join("");
+  const sources = area ? [["Skills test", area.parts.test.score], ["Interests", area.parts.preference.score], ["CV and tools", area.parts.cv.score]]
+    .filter(([, v]) => v !== null).map(([n, v]) => `<span class="chip plain">${n} ${fmt(v, 0)}</span>`).join("") : "";
+  const tp = m.trend_parts || {};
+  const why = {
+    area: area && area.fit !== null ? `<strong>${esc(area.name)}</strong> <span>${fmt(area.fit)} / 100</span> ${sources}` : "<span>Not scored yet.</span>",
+    interest: c.interest.score === null || !code ? "<span>Not scored yet.</span>"
+      : `<span>You</span> <strong>${esc(code[1])}</strong> · <span>This job</span> <strong>${esc(code[2])}</strong> · <span>Shared</span> <strong>${esc(code[3] || "–")}</strong>`,
+    skill: `${have.length ? `<span>You have</span> ${chips(have)}` : ""} ${missing.length ? `<span>Missing</span> ${chips(missing)}` : ""}`,
+    trend: `<span>Malaysian demand</span> <strong>${level(tp.demand)}</strong> · <span>AI momentum</span> <strong>${level(tp.ai)}</strong> · <span>From recent data, not a prediction.</span>`,
+  };
+  return `<p><strong>What makes up the score</strong></p><ul class="score-why">${ORDER_PARTS.map((k) => `<li><i class="k-${k}"></i>
+    <div class="stack" style="gap: 4px"><div><strong>${PART_LABEL[k]}</strong> <span class="muted">${c[k].score === null ? "–" : `${fmt(c[k].points)} / ${fmt(100 * c[k].weight / used)}`}</span></div>
+    <div class="row muted" style="gap: 6px">${why[k]}</div></div></li>`).join("")}</ul>`;
+}
+
 async function whyJob(card) {
   const out = card.querySelector(".explain-out");
   if (out.dataset.done) return;
@@ -756,7 +782,8 @@ async function whyJob(card) {
     const r = await api("/api/explain", { body: JSON.stringify({ ...lastMatchBody, role_id: card.dataset.role, short: true }) });
     const label = r.source === "llm" ? "Written by AI from your scores. It can be wrong." : "AI not available, so this is a plain summary of your scores.";
     out.className = "explain-out small";
-    out.innerHTML = `<p>${esc(r.text)}</p><p class="muted" style="margin-top: 4px" title="${esc(r.reason || "")}">${label}</p>${raiseTips(r.to_raise)}`;
+    const m = lastMatchRes && lastMatchRes.results.find((x) => x.role_id === card.dataset.role);
+    out.innerHTML = `<p>${esc(r.text)}</p><p class="muted" style="margin-top: 4px" title="${esc(r.reason || "")}">${label}</p>${m ? scoreBreakdown(m) : ""}${raiseTips(r.to_raise)}`;
   } catch (e) {
     delete out.dataset.done;
     out.className = "explain-out small warn";
@@ -937,6 +964,7 @@ async function drawJobs() {
   const res = await api("/api/match", { body: JSON.stringify(body) });
   if (body.scenario !== state.scenario || String(body.sdg_goals || []) !== String(state.sdgGoals || []) || !jobs.isConnected) return;  // switched again, or left the page
   lastMatchBody = body;
+  lastMatchRes = res;
   drawGoalPick(res);
   const replan = replanNote(body, res);
   const sc = res.scenario;
@@ -1956,7 +1984,7 @@ function doneBox(key, title, format = "") {
   const quiz = VIDEO_FORMATS.includes(format);
   return `<label class="done-box" title="${quiz ? `Tick when you have finished it, then pass a ${VIDEO_QUIZ_SIZE}-question check` : "Tick when you have finished it"}">
     <input type="checkbox" data-done="${esc(key)}"${quiz ? ` data-quiz="${esc(title)}"` : ""}${progress.done[key] ? " checked" : ""}>
-    <span class="visually-hidden">Finished: ${esc(title)}</span><span aria-hidden="true">Done</span>
+    <span class="visually-hidden">${quiz ? "Test" : "Finished"}: ${esc(title)}</span><span aria-hidden="true">${quiz ? "Test" : "Done"}</span>
   </label>`;
 }
 
@@ -2151,7 +2179,7 @@ async function pageLearn(roleId) {
 /* ---------- study plan: finish date, missed weeks, re-planning and calendar ---------- */
 
 // A path's plan: its hours at the student's hours a week, from the day it was first tracked.
-// "I didn't study this week" moves the plan one week on; the finish date is worked out again from
+// Weeks marked missed (the old "I didn't study this week" button) still move the plan on; the finish date is worked out again from
 // the hours left on every visit, so falling behind (or getting ahead) shows without asking.
 const DAY_MS = 86400000;
 const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -2201,11 +2229,6 @@ function planHtml(roleId) {
     ${plan.late > 0 && plan.next ? `<p class="small"><span>Catch up first:</span> ${nextLink}${p.items[plan.next] ? ` <span class="muted">(${fmt(p.items[plan.next])} h)</span>` : ""}</p>` : plan.next ? `<p class="small"><span>Next up:</span> ${nextLink}</p>` : ""}
     ${plan.keepDue ? `<p class="small muted"><span>Or keep the planned date: study</span> <strong>${fmt(plan.keepDue)} h</strong> <span>a week instead of</span> ${fmt(hpw)} h.</p>` : ""}
     ${plan.missed.length ? `<p class="small muted"><span>Weeks without study:</span> ${plan.missed.length}</p>` : ""}
-    <div class="row" style="gap: 6px">
-      ${plan.skipNow
-        ? `<button class="btn ghost" type="button" data-missed="${esc(roleId)}" data-undo>Undo: I did study this week</button>`
-        : `<button class="btn ghost" type="button" data-missed="${esc(roleId)}">I didn't study this week</button>`}
-    </div>
     ${calendarHtml(roleId)}
   </div>`;
 }
@@ -2334,20 +2357,12 @@ function calendarHtml(roleId) {
   </details>`;
 }
 
-// Missed-week buttons and calendar choices inside a plan box; redraw() draws the box again.
+// Calendar choices inside a plan box; redraw() draws the box again.
 function wirePlan(root, redraw) {
   if (!root) return;
   root.addEventListener("click", (ev) => {
-    const missed = ev.target.closest("[data-missed]");
     const ics = ev.target.closest("[data-ics]");
-    if (missed) {
-      const p = progress.paths[missed.dataset.missed];
-      const wk = weekOf();
-      p.missed = (p.missed || []).filter((w) => w !== wk);
-      if (missed.dataset.undo === undefined) p.missed.push(wk);
-      saveProgress();
-      redraw();
-    } else if (ics) downloadIcs(ics.dataset.ics);
+    if (ics) downloadIcs(ics.dataset.ics);
   });
   root.addEventListener("change", (ev) => {
     if (!ev.target.matches("[data-cal-day], [data-cal-time]")) return;
