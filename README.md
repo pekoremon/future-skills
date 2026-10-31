@@ -50,10 +50,10 @@ Every number shown to the user carries its source and date. The system never inv
 
 Domain 1 requires all six:
 
-1. **Skills profile intake** — in this order: CV (optional), a 36-item IT interest questionnaire (RIASEC + IT area), then a focused IT skills test graded in the browser that checks only the 3–5 IT areas the CV and interests point to (15–21 questions, and the page says why these areas; afterwards any left-out area can be added with its own 3-question quick check), CV reading (an AI summary, and evidence per IT area: the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off)
-2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
+1. **Skills profile intake** — in this order: CV (optional; PDF, .docx or text), a 36-item IT interest questionnaire (RIASEC + IT area), then an IT skills test that checks only the 3–5 IT areas the CV and interests point to (15–21 questions: 3 quick questions per area, then harder ones and a hands-on task, such as Python code or an SQL query, in the 2 strongest areas; any left-out area can be added later with its own 3-question quick check). CV reading: an AI summary, and evidence per IT area (the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off); the student unticks any technology that is wrong
+2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role; the live sources refresh on their own every 7 days (`AUTO_UPDATE_DAYS`) or with the "Update data" button
 3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), results grouped by interest × skill ("Best fit for you" first, then "You can do this, but it may not excite you"; "Want to get there?" areas shown with their biggest gaps and learning paths, not recommended), then an explainable role score and skills gap
-4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults; students tick each course, video or certificate when done, and a "My learning" page tracks progress per path (saved in the browser, no account needed)
+4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults. A video or course counts as done only after a 5-question check on its topic (4 right); a "Prove it" project counts once its upload passes a check against the project brief; certifications are ticked. Progress is saved in the browser (no account needed), and "My learning" reopens the student's current path
 5. **SDG mapping** — every role and skill tagged to at least one SDG target with a reason; the learning path sums up which targets the chosen path contributes to. On the jobs page the student picks the UN goals they care about, and a job that supports one gets 5 extra points (`SDG_BONUS` in `scripts/matching.py`), so the goals change the order of their jobs; each job shows how many places its goals moved it
 6. **Handling uncertainty** — three future scenarios (current trends, fast AI adoption, Malaysian demand leads); each role shows its rank range across them, and the app says scores are estimates, not predictions. When the "Update data" job brings new trend data, the jobs page shows which recommendations moved
 
@@ -62,15 +62,17 @@ Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend inpu
 Plus, for students who learn on their own time and phone data:
 
 - **Lite mode** (the "Lite" switch in the top bar): no background animation, photos or line chart (its numbers show as a table), and no learning paths loaded ahead. A bar shows the page size the browser measured, for example "1.0 MB → 147 KB" on the Trends page.
-- **Study plan with re-planning** (My learning and each learning path): a finish date from the path's hours at the student's hours a week. Falling behind is spotted from the hours ticked off; "I didn't study this week" moves the plan a week. The page then shows the new finish date next to the planned one, the item to catch up on first, and the hours a week that would still keep the planned date.
+- **Study plan with re-planning** (each learning path): a finish date from the path's hours at the student's hours a week, worked out again from the hours left on every visit. When the student falls behind, the page shows the new finish date next to the planned one, the item to catch up on first, and the hours a week that would still keep the planned date.
 - **Calendar export:** one weekly study session on the day and time the student picks, each listing what to study that week with links, as a Google Calendar link or an `.ics` file for Outlook and Apple Calendar.
 - **SDG contribution, added up** (`#/impact`, `GET /api/sdg/summary`): how many students follow a learning path and the hours they have ticked off, towards SDG 4.3, 4.4 and 8.5 and towards each target their paths list. Browsers send only a random id, the role and the hours (`scripts/impact.py`).
 
-Plus **"Seeing a career advisor?"** (`#/advisor`): a profile a student takes to a career talk, for example at their university's career centre, laid out for the advisor. It shows which parts the student did (CV, interests, skills test), with a warning when skills were not checked, plus their education level. A table gives interest, skills test, CV and fit for each of the 5 IT areas, with the agreements and mismatches between sources. Then come the skills test areas with readiness and the skills answered well or still to work on, the technologies and self-rated strong skills, and the Holland interest code. After that: the top 3 jobs with their score parts and rank range across the three scenarios, the top job's first three skill gaps with a free course each, learning progress, and up to three questions to ask, built from the results. It prints with space for notes, saves as a PDF, or is shared as text (WhatsApp, email). It always uses the real trend data, and nothing is saved on our server.
+Plus **learning as a game**: the interest questionnaire is a pirate voyage (a sailor acts out each answer, the RIASEC hexagon fills in live, and the student ends with a crew role such as Navigator or Captain), and the skills test is a treasure hunt with one island per IT area on a sea chart ("I don't know yet" is a fine answer). Exploring islands, finishing the test and each right answer in a learning check earn coins, which buy page colours, cursors and themes in the Shop. The game is decoration only: the questions and scoring stay the same.
 
-Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 25 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
+Plus **"Seeing a career advisor?"** (`#/advisor`): a profile a student takes to a career talk, for example at their university's career centre, laid out for the advisor. It shows which parts the student did (CV, interests, skills test), with a warning when skills were not checked, plus their education level. A table gives interest, skills test, CV and fit for each of the 5 IT areas, with the agreements and mismatches between sources. Then come the skills test areas with readiness and the skills answered well or still to work on, the technologies from the CV, and the Holland interest code. After that: the top 3 jobs with their score parts and rank range across the three scenarios, the top job's first three skill gaps with a free course each, learning progress, and up to three questions to ask, built from the results. It prints with space for notes, saves as a PDF, or is shared as text (WhatsApp, email). It always uses the real trend data, and nothing is saved on our server.
 
-Plus **"Explain this for me"**: a GenAI explanation of each match, written by an LLM (live: `gpt-5.4-mini` through the SDC sponsor KrackedDevs gateway) from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
+Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions, the 25 role names and summaries, and the SDG goals and targets (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
+
+Plus **"Why this job?"** on each job card: two sentences written by an LLM (live: `gpt-5.4-mini` through the SDC sponsor KrackedDevs gateway) from that match's computed facts only, then what makes up the score part by part (IT area, interest, skills, trend) and "How to raise this score", worked out by our code: the technologies to learn next and the score they would give. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
 ### How this differs from existing platforms
 
@@ -87,7 +89,7 @@ Plus the student's chosen UN goals change the order of their jobs, instead of SD
 
 | Layer | Technology |
 |---|---|
-| Frontend | HTML, CSS and plain JavaScript (`src/static/`), no build step |
+| Frontend | HTML, CSS and plain JavaScript (`src/static/`), no build step; Pyodide (runs the Python test tasks in the browser) and PDF.js (reads PDF CVs and uploads in the browser), loaded from a CDN when first needed |
 | Backend | Python 3.12 standard library only (`http.server` JSON API in `src/main.py`); no packages to install |
 | Data | CSV tables in `data/`, validated by `scripts/validate_data.py` |
 | Hosting / Dev | Replit |
@@ -109,10 +111,15 @@ Plus the student's chosen UN goals change the order of their jobs, instead of SD
 │   ├── sdg_map.csv
 │   ├── courses.csv
 │   ├── learning_resources.csv # 158 free videos and courses, each link checked
-│   ├── interest_items.json  # 36 team-written RIASEC items, 24 tagged with an IT area
+│   ├── projects.csv         # "Prove it" project briefs per role, each with a guide
+│   ├── puzzles.json         # Bank questions for the learning checks when the AI is off
+│   ├── role_summaries.csv   # One-line role summaries in English, Malay and Chinese
+│   ├── onet/                # O*NET extracts behind role_skills.csv
+│   ├── interest_items.json  # 36 team-written RIASEC items, 20 tagged with an IT area
 │   └── sample_profiles.json # Fictional demo profiles only
-├── docs/                    # Screenshots, diagrams
-├── raw/                     # Raw downloads (git-ignored; listed in SOURCES.md)
+├── docs/                    # Architecture diagram, role-skills overview
+├── raw/                     # Raw downloads (large files git-ignored; listed in SOURCES.md)
+├── samples/prove_it/        # Sample "Prove it" uploads: one that passes, one incomplete
 ├── scripts/
 │   ├── onet_extract.py      # Extract role skills and RIASEC codes from O*NET
 │   ├── build_role_skills.py # Build role_skills.csv from O*NET
@@ -125,12 +132,20 @@ Plus the student's chosen UN goals change the order of their jobs, instead of SD
 │   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
 │   ├── whatif.py            # Run signals -> scores -> matching on a changed copy of the trend data
 │   ├── impact.py            # SDG contribution: anonymous learning-path hours added up per SDG target
+│   ├── cv_reader.py         # CV summary and evidence per IT area (personal details removed first)
+│   ├── explain.py           # "Why this job?" text, rejected if it has a number not in the facts
+│   ├── puzzles.py           # 5-question checks for learning-path videos and courses
+│   ├── project_check.py     # Check a "Prove it" upload against its project brief
+│   ├── kpi.py               # Phase 1 KPIs (pathway and SDG coverage) from the data files
+│   ├── clarity_kpi.py       # KPI 1 (career clarity) from the pilot survey's answers
 │   ├── validate_data.py     # Check every row has a source and date
 │   ├── fairness_check.py    # Same CV, different personal details -> same recommendations
 │   └── check_links.py       # Check every course, video and project link still opens
 ├── src/
 │   ├── main.py              # Web server and JSON API (Replit entry point)
-│   └── static/              # Web app: index.html, app.js, style.css
+│   └── static/              # Web app: index.html, app.js (pages), dashboard.js (trend charts),
+│                            # crew.js (interest voyage), play.js (coins, shop, learning checks),
+│                            # advisor.js, i18n.js (Malay, Chinese), fx.js (visual effects)
 ├── submission/              # Required submission PDFs
 ├── tests/
 ├── .env.example
@@ -168,19 +183,21 @@ python src/main.py
 | GET | `/api/health` | Health check |
 | GET | `/api/questionnaire` | The 36 interest items (RIASEC type + IT area), answer scale and attribution |
 | GET / POST | `/api/assessment/plan`, `/start`, `/next`, `/more`, `/sql`, `/result` | IT skills test: which 3–5 areas to test (from CV + interests) and why, questions for those areas (`areas`, and `added` for areas tested later, travel with the seed), the 2 strongest areas, read-only SQL runs, graded report |
-| GET | `/api/skills?type=` | Skills for the intake form (`general`, `domain_knowledge`, `technology`) |
+| GET | `/api/skills?type=` | Skill list by type (`general`, `domain_knowledge`, `technology`) |
 | GET | `/api/roles`, `/api/roles/<role_id>` | Roles; one role's skills, technologies, SDG targets and certifications |
 | GET | `/api/profiles` | Fictional demo profiles |
 | POST | `/api/questionnaire/score` | `{"answers": [36 numbers 1–5]}` → RIASEC totals (6–30), code, IT-area scores (0–100), warnings |
 | POST | `/api/match` | `{"interest_answers": [...36], "test": {"seed", "responses"}, "cv_areas": {...}, "skill_ratings": {"SK020": 4}, "technologies": ["SK145"], "education_job_zone": 4, "scenario": "baseline", "hours_per_week": 5, "top": 10}` (every part optional) or `{"profile_id": "P01", ...}` → IT area fit with insights, then ranked roles with score breakdown, gaps, learning path, SDG and the rank under current trends |
-| POST | `/api/explain` | Same body as `/api/match` plus `role_id` → a plain-language explanation (`source`: `llm` or `fallback`) |
+| POST | `/api/explain` | Same body as `/api/match` plus `role_id` (and `"short": true` for the two sentences of "Why this job?") → a plain-language explanation (`source`: `llm` or `fallback`) and `to_raise`: the technologies to learn next and the score they would give |
 | GET / POST | `/api/learn/<role_id>`, `/api/learn` | Learning path page for a role (POST: same body as `/api/match` plus `role_id`, built on the student's gaps) |
 | GET | `/api/explain/status` | Whether the LLM is configured, and which model |
 | POST | `/api/cv/summary` | `{"text"}` or `{"docx_base64"}` → summary, skills, qualifications, technologies found, evidence items with quotes, and `cv_areas` (0–100 per IT area, to send to `/api/match`) with `cv_areas_method` (`llm_evidence` or `technologies`). The CV is not stored |
 | POST | `/api/project/check` | `{"project_id", "zip_base64"}` or `{"project_id", "file": {"name", "text"}}` → `passed`, basic checks (readable files, README, tests when the brief asks), the AI's requirement checks with the file that shows each, and `method` (`llm` or `basic`). Limits: 2 MB upload, 300 files, 8 MB unpacked text; `.env` and key files are never read. Not stored |
+| POST | `/api/puzzles/video`, `/api/puzzles/video/check` | Learning check: 5 questions on a learning-path video's or course's topic (written by the LLM, or from the bank) / grade the answers, passed at 4 right |
+| POST / GET | `/api/sdg/record`, `/api/sdg/summary` | Record one browser's learning-path hours (random id, role, planned and done hours) / students, paths and study hours per SDG target, over every student |
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
-| POST / GET | `/api/trends/update` | Start the "Update data" job (OpenDOSM and arXiv, about a minute; `{"arxiv": false}` skips arXiv) / check its status; `fetched_by_source` gives each live source's own fetch date |
+| POST / GET | `/api/trends/update` | Start the "Update data" job (OpenDOSM and arXiv, about a minute; `{"arxiv": false}` skips arXiv) / check its status and when the next automatic update is due; `fetched_by_source` gives each live source's own fetch date |
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
 | POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"data_ai:arxiv_ai_papers": 14630}, "mycol": {"IT01": "no"}}` (input ids as listed by `GET /api/whatif`, e.g. `<area>:arxiv_ai_papers`) → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
@@ -219,7 +236,7 @@ python scripts/fairness_check.py  # the same CV as 8 different students gives th
 
 ## AI Disclosure
 
-- **In the product:** `gpt-5.4-mini` (OpenAI) through the **KrackedDevs** LiteLLM gateway (SDC sponsor keys, `LLM_BASE_URL=https://litellm.rapidscreen.io/v1`) since 31 Oct 2026; before that `gpt-oss-120b` (open-weight, Apache 2.0) on **Fireworks AI** (team's own account). Any OpenAI-compatible API works. Used for two features only: the "Explain this for me" text (`scripts/explain.py`), which receives one match's computed facts and no personal data, and the CV summary (`scripts/cv_reader.py`), which receives the CV text the student uploads. It also checks "Prove it" project uploads against the project brief (`scripts/project_check.py`); a requirement counts as met only when the file the model names is really in the upload, and the upload is never stored. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. CV evidence items are kept only when their quote is really in the CV, and our code, not the model, turns them into area scores. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
+- **In the product:** `gpt-5.4-mini` (OpenAI) through the **KrackedDevs** LiteLLM gateway (SDC sponsor keys, `LLM_BASE_URL=https://litellm.rapidscreen.io/v1`) since 31 Oct 2026; before that `gpt-oss-120b` (open-weight, Apache 2.0) on **Fireworks AI** (team's own account). Any OpenAI-compatible API works. Used for four things: the "Why this job?" text (`scripts/explain.py`), which receives one match's computed facts and no personal data; the CV summary (`scripts/cv_reader.py`), which receives the CV text after IC numbers, phone numbers and emails are removed; the 5-question checks on learning-path videos and courses (`scripts/puzzles.py`), written from the title and the skills it teaches (bank questions when the AI is off); and checking "Prove it" project uploads against the project brief (`scripts/project_check.py`), where a requirement counts as met only when the file the model names is really in the upload, and the upload is never stored. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. CV evidence items are kept only when their quote is really in the CV, and our code, not the model, turns them into area scores. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
 - **In development:** Claude Code (Anthropic) for writing and testing code, data checks, source research and documentation drafts (major); ChatGPT (OpenAI) for discussion only, not code (minor); Replit Agent for deployment settings (minor). The team set the direction, IT areas, questionnaire items and weights, and reviewed every change with automated tests, the data validator and manual checks in the browser.
 
 ## Challenges & Learnings
