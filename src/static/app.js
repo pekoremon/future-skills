@@ -1511,7 +1511,7 @@ async function pageTestIntro() {
     ${stepBar("test")}
     <p class="eyebrow">Step 3 of 4 · IT skills test</p>
     <h1>Test your IT skills</h1>
-    ${plan.areas.length === 6 && missing.length ? `<div class="warn stack" role="status" style="gap: 4px">
+    ${plan.areas.length === Object.keys(AREA_NAMES).length && missing.length ? `<div class="warn stack" role="status" style="gap: 4px">
       <strong>${missing.length === 2 ? "No CV or interest answers yet, so the test covers all 5 areas." : "The test covers all 5 areas."}</strong>
       <span>${missing.join(" or ")} to make it shorter.</span>
     </div>` : ""}
