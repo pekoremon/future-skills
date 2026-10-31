@@ -810,9 +810,6 @@ async function pageResults() {
       <p class="small muted">Trend score weights: Malaysian demand ${Math.round(sc.demand * 100)}% · AI momentum ${Math.round(sc.ai * 100)}%. Area scores:
         ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.</p>
       </div></details>
-      <label class="row small">Study time per week
-        <select id="hpw">${[3, 5, 10, 15, 20].map((h) => `<option value="${h}"${h === Number(state.hoursPerWeek) ? " selected" : ""}>${h} hours</option>`).join("")}</select>
-      </label>
       <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
     </section>`;
   const whatIfBanner = state.trendChanges ? `
@@ -891,7 +888,6 @@ async function pageResults() {
   app.querySelectorAll("[data-scenario]").forEach((b) => {
     b.onclick = () => { state.scenario = b.dataset.scenario; saveState(); pageResults().catch(showError); };
   });
-  document.getElementById("hpw").onchange = (e) => { state.hoursPerWeek = Number(e.target.value); saveState(); pageResults().catch(showError); };
   const off = document.getElementById("wi-off");
   if (off) off.onclick = () => { delete state.trendChanges; whatIfEdits = null; saveState(); pageResults().catch(showError); };
   wireMoreAreas("#/results");
@@ -921,15 +917,7 @@ async function pageTrends() {
       <p class="small muted">Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.</p>
       <label class="row small"><input type="checkbox" id="arxiv"> Also refresh arXiv paper counts</label>
       <div class="row"><button class="btn primary" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
-      <pre class="log" id="log" hidden></pre>
     </div>
-    <details class="group"><summary><span>How the trend score works</span></summary>
-      <div class="group-body stack" style="gap: 8px">
-        <p class="small">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
-        <p class="small">Each signal has a strength from −1 (falling) through 0 (flat) to +1 (rising) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average strength. <strong>Malaysian demand</strong>: the share of the area's roles on MyCOL (a related MyCOL title counts half), DOSM online ads where DOSM has a series, and, for a role, its own MyCOL status. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories, where +40% or more counts in full. Trend score = 50% demand + 50% AI momentum; a part with no data counts as 50 (flat). The weights are team choices; the future scenarios on the Matches page change them.</p>
-        <p class="small muted">Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked "composition effect".</p>
-      </div>
-    </details>
   </div>`);
   const dash = document.getElementById("trend-dash"), jobs = document.getElementById("trend-jobs");
   jobs.innerHTML = trendHeroChart(t);
@@ -941,15 +929,12 @@ async function pageTrends() {
     const label = { idle: "", running: "Updating…", done: `Updated ${s.finished ? new Date(s.finished).toLocaleString() : ""}. Your jobs page will re-check your plan with the new data.`, failed: "Update failed; previous data kept." };
     document.getElementById("upd-status").textContent = s.status in label ? label[s.status] : s.status;
     btn.disabled = s.status === "running";
-    const log = document.getElementById("log");
-    log.hidden = !s.log;
-    log.textContent = s.log || "";
   };
   const poll = async () => {
     const s = await api("/api/trends/update");
     show(s);
     if (s.status === "running") setTimeout(poll, 2000);
-    else if (location.hash.startsWith("#/trends")) { delete cache["/api/match"]; setTimeout(() => pageTrends().catch(showError), 1500); }
+    else if (location.hash.startsWith("#/trends")) { delete cache["/api/match"]; delete cache["/api/whatif"]; setTimeout(() => pageTrends().catch(showError), 1500); }
   };
   show(status);
   if (status.status === "running") setTimeout(poll, 2000);
@@ -1277,6 +1262,8 @@ function pyRepr(v) {
 if (state.test && !state.test.selection) state.test = null;
 // Tests saved while the app still had the IT Management area cannot be graded any more.
 if (state.test && state.test.domains.some((d) => !(d.id in AREA_NAMES))) state.test = null;
+// What-ifs saved when inputs were named by trend_id: "Update data" renumbers those, so drop them.
+if (state.trendChanges && Object.keys(state.trendChanges.inputs || {}).some((k) => !k.includes(":"))) delete state.trendChanges;
 if (state.test && !state.test.areas) state.test.areas = state.test.domains.map((d) => d.id);  // saved before areas were chosen: the full test
 // extending: answering the quick checks of areas added after the result; the old result
 // stays in use until the new one is graded.

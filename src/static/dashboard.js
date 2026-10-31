@@ -180,7 +180,7 @@ function vizAreaChart(t) {
   const body = `
     <div class="viz-split">
       <div class="stack" style="gap: 10px">
-    <div class="viz-legend"><span><i class="viz-key refline"></i>50 = flat</span></div>
+    <div class="viz-legend"><span><i class="viz-key refline"></i>above 50 = growing, below 50 = shrinking</span></div>
     ${vizColumns(rows.map((r) => ({ label: vizAreaLabel(r.area), value: fmt(r.score), from: 0, to: Math.max(0, Math.min(100, r.score)),
     tip: vizTipAttr(AREA_NAMES[r.area], [[fmt(r.score), "Trend score"], [part(r.demand), "Malaysian demand"], [part(r.ai), "AI momentum"]]) })),
     [{ at: 0, cls: "zero" }, { at: 50 }])}
@@ -191,7 +191,7 @@ function vizAreaChart(t) {
         <ul>
           <li><span aria-hidden="true">📊</span> <strong>Malaysian Demand:</strong> Based on TalentCorp MyCOL shortages and DOSM job ad data. Higher scores mean greater local vacancy and urgency.</li>
           <li><span aria-hidden="true">🚀</span> <strong>Global AI Momentum:</strong> Based on the growth rate of AI papers on arXiv, latest 6 months against the 6 before. Higher scores mean faster technological disruption.</li>
-          <li><span aria-hidden="true">💡</span> <strong>50 Means Flat:</strong> Above 50 indicates accelerating growth; below 50 indicates a slowdown.</li>
+          <li><span aria-hidden="true">💡</span> <strong>The 50 Line:</strong> Above 50 means growth; below 50 means negative growth.</li>
         </ul>
       </aside>
     </div>`;
@@ -226,7 +226,7 @@ function vizAiChart(t) {
   const pos = (v) => ((v - lo) * 100) / (hi - lo);
   const zero = pos(0);
   const body = `
-    <div class="viz-legend"><span><i class="viz-key accent"></i>rising</span><span><i class="viz-key muted"></i>${known.some((r) => r.direction === "down") ? "flat or falling" : "flat"}</span><span><i class="viz-key refline"></i>+${fmt(thr, 0)}% = rising</span></div>
+    <div class="viz-legend"><span><i class="viz-key accent"></i>rising</span><span><i class="viz-key muted"></i>${known.some((r) => r.direction === "down") ? "flat or falling" : "flat"}</span></div>
     ${vizColumns(rows.map((r) => (r.growth === null
     ? { label: vizAreaLabel(r.area), value: "no data", from: zero, to: null }
     : { label: vizAreaLabel(r.area), value: `${vizSigned(r.growth)}%`, from: zero, to: pos(r.growth), cls: r.direction === "up" ? "" : "muted",

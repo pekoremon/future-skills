@@ -13,7 +13,10 @@ Only the raw inputs that scored signals use can be changed:
 The copy lives for one request: the data files, the "Update data" job and other users never
 see it.
 
-    changes = {"inputs": {trend_id: new value}, "mycol": {role_id: "yes" | "near" | "no"}}
+    changes = {"inputs": {"<area>:<metric>": new value}, "mycol": {role_id: "yes" | "near" | "no"}}
+
+An input is named by its IT area and metric, not its trend_id: "Update data" renumbers
+trends.csv, so a trend_id held by an open page or a saved what-if would point at another row.
 """
 
 import csv
@@ -52,7 +55,7 @@ def read(name: str) -> list[dict]:
 
 def _number(t, area: str, metric: str, scope: str, before: tuple, now: tuple, limit: float, rule: dict) -> dict:
     row, prev = t.by_id[now[1]], t.by_id[before[1]]
-    return {"id": now[1], "kind": "number", "area": area, "metric": metric, "scope": scope,
+    return {"id": f"{area}:{metric}", "trend_id": now[1], "kind": "number", "area": area, "metric": metric, "scope": scope,
             "value": now[0], "period_start": row["period_start"], "period_end": row["period_end"],
             "previous": {"value": before[0], "period_start": prev["period_start"], "period_end": prev["period_end"]},
             "max": limit, "rule": rule,
@@ -143,12 +146,14 @@ def changed(changes: dict | None) -> bool:
     return bool(changes and (changes["inputs"] or changes["mycol"]))
 
 
-def run(changes: dict) -> tuple[list[dict], list[dict], list[dict]]:
+def run(changes: dict, items: list[dict] | None = None) -> tuple[list[dict], list[dict], list[dict]]:
     """Signals, trend score rows and roles built from the changed copy (validated changes)."""
+    found = {i["id"]: i for i in (items or editable())}
+    values = {found[k]["trend_id"]: v for k, v in changes["inputs"].items()}
     rows = read("trends.csv")
     for r in rows:
-        if r["trend_id"] in changes["inputs"]:
-            r["value"] = f"{changes['inputs'][r['trend_id']]:g}"
+        if r["trend_id"] in values:
+            r["value"] = f"{values[r['trend_id']]:g}"
     roles = trend_signals.clean_roles(read("roles.csv"))
     for r in roles:
         r["is_mycol"] = changes["mycol"].get(r["role_id"], r["is_mycol"])
