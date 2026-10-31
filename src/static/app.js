@@ -801,6 +801,7 @@ async function pageTrends() {
     <h2>MALAYSIA IT STUDENT MARKET INSIGHTS</h2>
     <div class="row"><button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button><button class="btn" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
     <div class="note small">Malaysia’s IT sector is demonstrating strong, positive momentum, driven by superior job growth that outperforms the national average, highly competitive graduate median wages and rapid AI integration, creating an expanding pool of high-value opportunities for tech graduates.</div>
+    <p class="small muted">Based on recent data, not a forecast.</p>
     </section>
     <div id="trend-jobs" class="viz-hero-chart"></div>
     </div>
