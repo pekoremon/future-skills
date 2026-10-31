@@ -320,6 +320,7 @@ const MS = {
   "Your plan was re-checked with new trend data": "Pelan anda telah disemak semula dengan data trend baharu",
   "Learning paths below now follow the new ranking.": "Laluan pembelajaran di bawah kini mengikut kedudukan baharu.", "Nothing in your ranking changed.": "Tiada perubahan dalam kedudukan anda.",
   // trends
+  "Malaysia’s IT Students: What’s Next?": "Pelajar IT Malaysia: Apa Seterusnya?",
   "AI-era trend signals": "Isyarat trend era AI",
   "Which IT areas does Malaysia need, and how fast is AI entering them?": "Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya?",
   "These signals describe the recent past; they do not predict the future.": "Isyarat ini menggambarkan masa lalu terdekat; ia tidak meramal masa depan.",
@@ -944,6 +945,7 @@ const ZH = {
   "Your plan was re-checked with new trend data": "已用新的趋势数据重新检查你的计划",
   "Learning paths below now follow the new ranking.": "下面的学习路径已按新排名更新。", "Nothing in your ranking changed.": "你的排名没有变化。",
   // trends
+  "Malaysia’s IT Students: What’s Next?": "马来西亚 IT 学生：下一步去哪？",
   "AI-era trend signals": "AI 时代趋势信号",
   "Which IT areas does Malaysia need, and how fast is AI entering them?": "马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？",
   "These signals describe the recent past; they do not predict the future.": "这些信号描述的是最近的过去，不是预测未来。",

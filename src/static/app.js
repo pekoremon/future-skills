@@ -791,10 +791,11 @@ async function pageTrends() {
   const [t, status, roles] = await Promise.all([api("/api/trends"), api("/api/trends/update"), cached("/api/roles")]);
   render(`
   <div class="stack">
+    <h1>Malaysia’s IT Students: What’s Next?</h1>
     <div class="viz-hero">
     <section class="stack" style="gap: 10px">
     <p class="eyebrow">AI-era trend signals</p>
-    <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
+    <h2>Which IT areas does Malaysia need, and how fast is AI entering them?</h2>
     <div class="row"><button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button><button class="btn" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
     <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.</div>
     </section>
