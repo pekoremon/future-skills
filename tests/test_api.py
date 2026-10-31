@@ -208,6 +208,13 @@ class TestApi(unittest.TestCase):
             r = self.client.post(path, json={})
             self.assertEqual((r.status_code, r.json["error"]), (400, "'role_id' is required"), path)
 
+    def test_match_gives_baseline_for_scenario_changes(self):
+        body = {"technologies": ["SK145"]}
+        base = {m["role_id"]: m["total"] for m in self.client.post("/api/match", json=body).json["results"]}
+        r = self.client.post("/api/match", json={**body, "scenario": "fast_ai"}).json
+        self.assertTrue(all(m["baseline_total"] == base[m["role_id"]] for m in r["results"] if m["role_id"] in base))
+        self.assertNotEqual(r["scenario"]["trend_scores"], r["scenario"]["baseline_trend_scores"])
+
     def test_explain_says_what_would_raise_the_score(self):
         body = {"technologies": ["SK145"]}
         role = self.client.post("/api/match", json=body).json["results"][0]

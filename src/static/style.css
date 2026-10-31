@@ -681,3 +681,10 @@ html[data-lite] body::before, html[data-lite] .topbar::after { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .sea .ship, .sea .ship > path, .chest, .chest * { animation: none !important; transition: none !important; }
 }
+
+/* "What changed vs Current trends" under the scenario buttons */
+.sc-change { border-left: 3px solid var(--accent, #0f766e); padding: 6px 0 6px 12px; }
+.sc-change ul { margin: 4px 0; padding-left: 18px; columns: 2; column-gap: 24px; }
+.sc-change .up { color: var(--accent); font-weight: 600; }
+.sc-change .down { color: #b45309; font-weight: 600; }
+@media (max-width: 560px) { .sc-change ul { columns: 1; } }
