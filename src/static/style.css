@@ -116,6 +116,8 @@ main:focus-visible { outline: none; }  /* route() focuses <main> for screen read
   font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent-strong);
 }
 .chip.warn-chip { background: var(--warn-bg); color: var(--warn-text); }
+.chip.sdg-chip { padding-left: 4px; }
+.sdg-mini { flex: none; width: 20px; height: 20px; border-radius: 4px; display: block; }
 .chip.plain { background: var(--track); color: var(--text); }
 
 .steps { counter-reset: s; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }

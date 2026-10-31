@@ -544,7 +544,7 @@ function matchBody(demo = state.demo) {
 function matchCard(m, rank) {
   const d = m.skill_detail;
   const flags = m.flags.filter((f) => !QUIET_FLAGS.includes(f)).map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
-  const sdg = m.sdg.map((s) => `<span class="chip" title="${esc(s.rationale)}">SDG ${esc(s.target)} · ${esc(s.goal_name)}</span>`).join("");
+  const sdg = m.sdg.map((s) => `<span class="chip sdg-chip" title="${esc(s.rationale)}"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">SDG ${esc(s.target)} · ${esc(s.goal_name)}</span>`).join("");
   const gaps = d.gaps.slice(0, 6).map((g) => `
     <div class="gap-row">
       <span>${esc(g.skill_name)} <span class="muted small">· importance ${fmt(g.importance, 2)}/5</span></span>
