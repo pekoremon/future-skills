@@ -220,6 +220,18 @@ ol.path .step a { font-weight: 600; }
 .ok-text { color: var(--accent-strong); font-weight: 600; }
 .drop.over { border-color: var(--accent); background: var(--accent-soft); }
 .drop input[type="file"] { max-width: 100%; font: inherit; }
+.drop.busy { opacity: 0.6; }
+.cv-wait { display: flex; align-items: flex-start; gap: 14px; background: var(--accent-soft); color: var(--accent-strong); border-radius: 14px; padding: 14px 16px; }
+.spinner { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--accent); border-right-color: transparent; animation: spin 0.8s linear infinite; }
+.wait-bar { height: 6px; border-radius: 999px; background: var(--surface); overflow: hidden; }
+.wait-bar > div { width: 35%; height: 100%; border-radius: 999px; background: var(--accent); animation: slide 1.4s ease-in-out infinite; }
+#cv-stage { animation: fade-in 0.4s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner, .wait-bar > div { animation-duration: 3s; }
+}
 .check-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .check-list label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 999px; cursor: pointer; font-size: 14px; }
 .check-list label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
@@ -284,6 +296,9 @@ tr.hl td { background: var(--accent-soft); }
 details.why { flex: 1 1 100%; border-top: 1px solid var(--line); }
 details.why > summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 40px; display: flex; align-items: center; }
 details.why .explain-out { padding-bottom: 4px; }
+.sdg-why { gap: 8px; border-top: 1px dashed var(--line); padding: 10px 0 8px; margin-top: 6px; }
+.sdg-why-row { display: flex; gap: 8px; align-items: flex-start; }
+.sdg-why-row .sdg-mini { margin-top: 2px; }
 #jobs.loading { opacity: 0.5; pointer-events: none; transition: opacity 0.15s; }
 .top-main { display: flex; flex-direction: column; gap: 6px; flex: 1 1 260px; min-width: 0; }
 .top-side { display: flex; align-items: center; gap: 14px; }

@@ -453,15 +453,40 @@ async function pageCV() {
       added.textContent = picked.length ? `✓ Added ${picked.length} technologies to your list` : "Tick at least one technology first";
     };
   };
+  const drop = document.getElementById("drop");
+  const busy = (on) => {
+    drop.classList.toggle("busy", on);
+    drop.querySelectorAll("input, button").forEach((el) => { el.disabled = on; });
+  };
+  let stageTimer = null;
   const run = async (getBody, what) => {
-    status.className = "small muted";
-    status.textContent = `Reading ${what}…`;
+    clearInterval(stageTimer);
+    busy(true);
+    status.className = "cv-wait";
+    status.innerHTML = `<span class="spinner" aria-hidden="true"></span>
+      <div class="stack" style="gap: 6px; flex: 1">
+        <strong id="cv-what"></strong>
+        <span class="small" id="cv-stage">Opening your file</span>
+        <div class="wait-bar" aria-hidden="true"><div></div></div>
+      </div>`;
+    document.getElementById("cv-what").textContent = `Reading ${what}…`;
+    const stages = ["Opening your file", "Finding your skills", "Writing your summary", "Almost done"];
+    let i = 0;
+    stageTimer = setInterval(() => {
+      const el = document.getElementById("cv-stage");
+      if (!el || i >= stages.length - 1) return;
+      el.textContent = stages[++i];
+      el.style.animation = "none";
+      void el.offsetWidth;  // restart the fade so each new stage is noticed
+      el.style.animation = "";
+    }, 2500);
     out.innerHTML = "";
     cvResult = null;
     state.cvAreas = null;  // a new CV replaces the old evidence, even if reading it fails
     saveState();
     try {
       cvResult = await api("/api/cv/summary", { body: JSON.stringify(await getBody()) });
+      status.className = "small muted";
       status.textContent = `Read ${cvResult.chars_read.toLocaleString()} characters from ${what}.`;
       state.cvAreas = cvAreasOf(cvResult);
       if (state.cvAreas) state.demo = null;
@@ -470,19 +495,21 @@ async function pageCV() {
     } catch (e) {
       status.className = "warn";
       status.textContent = `Could not read the CV: ${e.message}`;
+    } finally {
+      clearInterval(stageTimer);
+      busy(false);
     }
   };
   const input = document.getElementById("cv-file");
   input.onchange = () => input.files[0] && run(() => cvRequestBody(input.files[0]), input.files[0].name);
   document.getElementById("cv-sample").onclick = () => run(async () => ({ text: await (await fetch("/static/sample_cv.txt")).text() }), "the sample CV");
-  const drop = document.getElementById("drop");
   drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
   drop.ondragleave = () => drop.classList.remove("over");
   drop.ondrop = (e) => {
     e.preventDefault();
     drop.classList.remove("over");
     const f = e.dataTransfer.files[0];
-    if (f) run(() => cvRequestBody(f), f.name);
+    if (f && !drop.classList.contains("busy")) run(() => cvRequestBody(f), f.name);
   };
   if (cvResult) show(cvResult);
 }
@@ -544,8 +571,18 @@ function jobCard(m, rank) {
         <a class="btn primary" href="#/learn/${esc(m.role_id)}">Learning path${pathProgressLabel(m.role_id)} &rarr;</a>
       </div>
       <div class="job-parts">${splitBar(m)}<div class="legend parts">${parts}</div></div>
-      <details class="why"><summary>Why this job?</summary><div class="explain-out small" aria-live="polite"></div></details>
+      <details class="why"><summary>Why this job?</summary><div class="explain-out small" aria-live="polite"></div>${sdgWhy(m.sdg)}</details>
     </li>`;
+}
+
+// Under "Why this job?": one line per UN goal on how this job helps, so the SDG chips mean something.
+function sdgWhy(sdg) {
+  if (!sdg.length) return "";
+  return `<div class="sdg-why stack">
+    <strong class="small">How this job helps the world</strong>
+    ${sdg.map((s) => `<div class="sdg-why-row"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">
+      <span class="small"><strong>SDG ${esc(s.target)} · ${esc(s.goal_name)}</strong><br><span class="muted">${esc(s.rationale)}</span></span></div>`).join("")}
+  </div>`;
 }
 
 // How much the rank depends on the scenario: the same rank in all three, or a range.
