@@ -1714,30 +1714,12 @@ function hexagonChart(items, caption) {
 
 /* Share link for a test result: the seed, tested areas and answers, base64url-encoded in the
    hash. Whoever opens it gets the result re-graded by the server; nothing is stored, and the
-   hash never reaches the server. Links made before areas were chosen have no areas: all 5. */
-function shareToken(t) {
-  const g = gradedTest(t);
-  const bytes = new TextEncoder().encode(JSON.stringify({ s: g.seed, a: g.areas, x: g.added, r: g.responses }));
-  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+   hash never reaches the server. Links made before areas were chosen have no areas: all 5.
+   The result page no longer makes these links; links already sent still open. */
 function readShareToken(token) {
   const b64 = token.replace(/-/g, "+").replace(/_/g, "/");
   const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))));
   return { seed: data.s, areas: data.a, added: data.x, responses: data.r };
-}
-
-async function shareResult(button) {
-  const url = `${location.origin}${location.pathname}#/shared/${shareToken(state.test)}`;
-  const box = document.getElementById("share-box");
-  box.hidden = false;
-  box.querySelector("input").value = url;
-  try {
-    if (navigator.share) { await navigator.share({ title: "My IT skills test result", url }); return; }
-    await navigator.clipboard.writeText(url);
-    button.textContent = "Link copied";
-  } catch (e) {
-    box.querySelector("input").select();  // share sheet closed or clipboard blocked: the link is in the box
-  }
 }
 
 async function pageSharedResult(token) {
@@ -1851,11 +1833,6 @@ function pageTestResult(sharedResult = null) {
     ${treasureHtml(r)}
     <p class="muted">${esc(r.disclaimer)}</p>
     ${trustLine(r.trust)}
-    <div class="row"><button class="btn" type="button" id="share">Share my result</button></div>
-    <div class="card stack" id="share-box" style="gap: 6px" hidden>
-      <label class="small muted" for="share-url">Anyone with this link sees your IT profile, top 2 areas and skills to work on; the page does not show your answers, but the link itself carries them (that is how the result is rebuilt), so share it only with people you choose. Nothing is saved on our server.</label>
-      <input class="search" id="share-url" type="text" readonly>
-    </div>
     <div class="card stack" style="gap: 12px"><h2>Your IT profile</h2>
       <p class="muted small">Quick-check score in each tested area (0–100): the same number of questions per area, so you can compare them. Your top 2 (bold) were then tested in depth.</p>
       <p class="muted small">Each score comes from 3 questions, so one lucky or unlucky answer moves it by 33 points.</p>
@@ -1863,7 +1840,6 @@ function pageTestResult(sharedResult = null) {
     <h2>Your top 2, tested in depth</h2>
     <p class="muted small">Readiness counts the in-depth and hands-on questions in that area. Your strongest area has the highest area score; an area seen only in the quick check is never ranked above these two, here or on your jobs page. Right answers also count as skills in your job matches.</p>
     <div class="grid">${deep.map(domainCard).join("")}</div>
-    <div class="card stack" style="gap: 10px"><h2>Skills to work on</h2>${gaps}</div>
     ${moreAreasHtml(r)}
     <div class="note stack" style="gap: 8px">
       <p><strong>Next: step 4, your jobs.</strong> Your areas grouped by what you enjoy and what you can do, with ranked roles and the skills you still need.</p>
@@ -1873,9 +1849,7 @@ function pageTestResult(sharedResult = null) {
     <div class="row"><a class="btn primary" href="#/results">Next: step 4, my jobs</a><a class="btn" href="#/test">Take a new test</a><a class="btn ghost" href="#/">Home</a></div>
   </div>`);
   chestsClosed = false;
-  document.getElementById("share").onclick = (e) => shareResult(e.target);
   wireMoreAreas("#/test/result");
-  document.getElementById("share-url").onfocus = (e) => e.target.select();
 }
 
 /* ---------- learning path page ---------- */
