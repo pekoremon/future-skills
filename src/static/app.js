@@ -1996,4 +1996,30 @@ async function route() {
   app.focus({ preventScroll: true });
 }
 window.addEventListener("hashchange", route);
+
+// Light / dark: follows the device until the student picks one; the pick is kept in this browser.
+// index.html applies the saved pick before the page draws, so there is no flash.
+const THEME_KEY = "future-skills-theme";
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === "dark" : darkQuery.matches;
+}
+function showThemeButton() {
+  const btn = document.getElementById("theme");
+  if (!btn) return;
+  const dark = isDark();
+  btn.textContent = dark ? "☀︎" : "☾︎";
+  const label = dark ? "Light mode" : "Dark mode";
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+document.getElementById("theme")?.addEventListener("click", () => {
+  const next = isDark() ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* storage off: this page only */ }
+  showThemeButton();
+});
+darkQuery.addEventListener("change", showThemeButton);
+showThemeButton();
 route();

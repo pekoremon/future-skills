@@ -120,7 +120,7 @@ const MS = {
   // header, footer, steps
   "Skills": "Kemahiran", "Interests": "Minat", "IT Test": "Ujian IT", "Matches": "Padanan", "Trends": "Trend",
   "Your CV": "CV anda", "Skills test": "Ujian kemahiran", "Your jobs": "Kerjaya anda", "(done)": "(selesai)",
-  "Language": "Bahasa", "Data:": "Data:", "UN SDG targets": "sasaran SDG PBB", "All profiles shown are fictional. Full list in SOURCES.md.": "Semua profil yang dipaparkan adalah rekaan. Senarai penuh dalam SOURCES.md.",
+  "Language": "Bahasa", "Dark mode": "Mod gelap", "Light mode": "Mod cerah", "Data:": "Data:", "UN SDG targets": "sasaran SDG PBB", "All profiles shown are fictional. Full list in SOURCES.md.": "Semua profil yang dipaparkan adalah rekaan. Senarai penuh dalam SOURCES.md.",
   "(CC BY 4.0, modified by the team; USDOL/ETA has not approved or endorsed it),": "(CC BY 4.0, diubah suai oleh pasukan; USDOL/ETA tidak meluluskan atau menyokongnya),",
   // errors
   "Cannot reach the Future Skills server. It may have stopped or be restarting.": "Tidak dapat menghubungi pelayan Future Skills. Ia mungkin terhenti atau sedang dimulakan semula.",
@@ -740,7 +740,7 @@ const ZH = {
   // header, footer, steps
   "Skills": "技能", "Interests": "兴趣", "IT Test": "IT 测验", "Matches": "职位匹配", "Trends": "趋势",
   "Your CV": "你的履历", "Skills test": "技能测验", "Your jobs": "你的职位", "(done)": "（已完成）",
-  "Language": "语言", "Data:": "数据：", "UN SDG targets": "联合国 SDG 目标", "All profiles shown are fictional. Full list in SOURCES.md.": "所有示范资料均为虚构。完整来源见 SOURCES.md。",
+  "Language": "语言", "Dark mode": "深色模式", "Light mode": "浅色模式", "Data:": "数据：", "UN SDG targets": "联合国 SDG 目标", "All profiles shown are fictional. Full list in SOURCES.md.": "所有示范资料均为虚构。完整来源见 SOURCES.md。",
   "(CC BY 4.0, modified by the team; USDOL/ETA has not approved or endorsed it),": "（CC BY 4.0，经团队修改；USDOL/ETA 未审核或认可），",
   // errors
   "Cannot reach the Future Skills server. It may have stopped or be restarting.": "无法连接 Future Skills 服务器，它可能已停止或正在重新启动。",
