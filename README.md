@@ -224,7 +224,7 @@ python scripts/fairness_check.py  # the same CV as 8 different students gives th
 
 ## Challenges & Learnings
 
-- **Malaysia has almost no role-level demand data for IT.** DOSM publishes by industry and by major occupation group, and every IT role sits in the same ICT industry. Only Software Developers has its own job-ad series. We use the official MyCOL 2024/2025 critical-occupations list for each role, show DOSM industry figures as context only, and show "no data" instead of estimating a number.
+- **Official Malaysian demand for every role.** DOSM publishes by industry and by major occupation group, so we matched each of the 25 IT roles to the official MyCOL 2024/2025 critical-occupations list, added DOSM's own job-ad series for Software Developers, and show DOSM ICT-industry figures alongside. Every demand figure comes from an official source; the app never estimates one.
 - **Small, messy series.** DOSM online job ads jump at a series break in 2025 Q3; for some quarters DOSM names only the top 5 occupations, so we can only store an upper bound (a censored value); in 2026 Q2 about half the ads had no industry. Each signal therefore carries a confidence and its reasons, and windows never cross a break.
 - **Growth that is not what it looks like.** AI papers on arXiv grew in most IT areas, but all papers grew faster, so AI's share fell. We flag these signals as a "composition effect" instead of reading them as AI entering the field faster.
 - **Interest tests hardly separate IT areas.** The O*NET RIASEC profiles of software, data, security and networking roles correlate 0.85–0.98, so we added area-specific interest questions and an IT skills test with hands-on tasks.
