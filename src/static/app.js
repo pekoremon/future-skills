@@ -1979,12 +1979,13 @@ const FORMAT_LABEL = { video: "▶ YouTube video", playlist: "▶ YouTube playli
 
 // A tick box for one item on a learning path. The same course ticked on one path counts on
 // every path that lists it, so items are keyed by URL (certifications by their id).
-// Videos and playlists only count as done after a short quiz on their topic (play.js).
+// Videos, playlists and courses only count as done after a short quiz on their topic (play.js):
+// the box reads "Test" until it is passed, then "Done".
 function doneBox(key, title, format = "") {
-  const quiz = VIDEO_FORMATS.includes(format);
-  return `<label class="done-box" title="${quiz ? `Tick when you have finished it, then pass a ${VIDEO_QUIZ_SIZE}-question check` : "Tick when you have finished it"}">
+  const quiz = QUIZ_FORMATS.includes(format);
+  return `<label class="done-box" title="${quiz ? `Pass a ${VIDEO_QUIZ_SIZE}-question check to mark it done` : "Tick when you have finished it"}">
     <input type="checkbox" data-done="${esc(key)}"${quiz ? ` data-quiz="${esc(title)}"` : ""}${progress.done[key] ? " checked" : ""}>
-    <span class="visually-hidden">${quiz ? "Test" : "Finished"}: ${esc(title)}</span><span aria-hidden="true">${quiz ? "Test" : "Done"}</span>
+    <span class="visually-hidden">${quiz ? "Test" : "Finished"}: ${esc(title)}</span>${quiz ? '<span aria-hidden="true" class="if-off">Test</span><span aria-hidden="true" class="if-on">Done</span>' : '<span aria-hidden="true">Done</span>'}
   </label>`;
 }
 
@@ -2135,7 +2136,7 @@ async function pageLearn(roleId) {
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
       <div id="learn-plan">${planNow()}</div>
-      <p class="small muted">Videos count once you pass a ${VIDEO_QUIZ_SIZE}-question check. Every right answer earns 🪙 coins. <a href="#/progress">See your level map &rarr;</a></p>
+      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns 🪙 coins. <a href="#/progress">See your level map &rarr;</a></p>
     </section>
     ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "", list(p.stages[1].resources)) : ""}
@@ -2148,7 +2149,7 @@ async function pageLearn(roleId) {
   app.querySelectorAll("[data-done]").forEach((box) => {
     box.onchange = () => {
       const key = box.dataset.done;
-      if (box.checked && box.dataset.quiz !== undefined && !progress.quizzes[key]) {  // a video: done once its quiz is passed
+      if (box.checked && box.dataset.quiz !== undefined && !progress.quizzes[key]) {  // done once its quiz is passed
         box.checked = false;
         videoQuiz(key, box.dataset.quiz, (result) => {
           progress.quizzes[key] = { score: result.score, total: result.total, date: today() };

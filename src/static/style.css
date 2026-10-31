@@ -565,6 +565,8 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 .done-box { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
 .done-box input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
 .done-box:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.done-box .if-on, .done-box:has(input:checked) .if-off { display: none; }
+.done-box:has(input:checked) .if-on { display: inline; }
 .res.is-done { background: var(--accent-soft); border-color: var(--accent); }
 .res.is-done > a { text-decoration: line-through; text-decoration-thickness: 1px; }
 .learn-progress { height: 10px; }

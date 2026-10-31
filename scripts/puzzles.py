@@ -297,10 +297,10 @@ def video_quiz(url) -> dict:
     questions, source, reason = None, "bank", None
     if explain.configured():
         try:
-            user = (f"A student says they finished this free learning video:\n"
+            user = (f"A student says they finished this free learning video or course:\n"
                     f"Title: {r['title']}\nChannel: {r['provider']}\nLevel: {r['level'] or 'any'}\n"
                     f"Skills it teaches: {', '.join(skills) or area_names().get(area, area)}\n\n"
-                    f"Write {VIDEO_QUESTIONS} multiple-choice questions that check they understood the main ideas a video "
+                    f"Write {VIDEO_QUESTIONS} multiple-choice questions that check they understood the main ideas a resource "
                     f"with this title would teach. Start easy and end with one that applies the idea to a small example. "
                     f"Reply with a JSON array of {VIDEO_QUESTIONS} puzzles.\n\n" + PUZZLE_RULES)
             got = _llm_json("You write short, correct quiz questions for IT students.", user)

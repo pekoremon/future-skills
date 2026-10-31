@@ -6,6 +6,7 @@
 "use strict";
 
 const VIDEO_FORMATS = ["video", "playlist"];
+const QUIZ_FORMATS = [...VIDEO_FORMATS, "course"];  // these only count as done after the check
 const VIDEO_QUIZ_SIZE = 5;
 const VIDEO_PASS_MARK = 4;
 const PLAY_KEY = "future-skills-puzzles-v1";
@@ -215,16 +216,17 @@ function levelDialog(pathId, key, n) {
   const m = (p.meta || {})[key] || { title: `Level ${n}`, kind: "", url: "" };
   const kind = KIND[m.kind] || { icon: "•", label: "Item" };
   const isVideo = VIDEO_FORMATS.includes(m.kind);
+  const checked = QUIZ_FORMATS.includes(m.kind);
   const done = Boolean(progress.done[key]);
   const { dialog, frame } = openDialog();
   frame(`Level ${n} · ${kind.label}`, m.title, `
     ${done
       ? `<div class="note">Cleared on ${esc(progress.done[key])} ★${progress.quizzes[key] ? ` · check ${progress.quizzes[key].score}/${progress.quizzes[key].total}` : ""}</div>`
-      : `<p class="small muted">${isVideo ? `Watch it, then pass a ${VIDEO_QUIZ_SIZE}-question check (${VIDEO_PASS_MARK} right) to clear this level. Every right answer earns 🪙 ${COINS.perRight}; all ${VIDEO_QUIZ_SIZE} right earns 🪙 ${COINS.perfect} more.` : "Finish it, then mark the level as cleared."}</p>`}
+      : `<p class="small muted">${checked ? `${isVideo ? "Watch" : "Finish"} it, then pass a ${VIDEO_QUIZ_SIZE}-question check (${VIDEO_PASS_MARK} right) to clear this level. Every right answer earns 🪙 ${COINS.perRight}; all ${VIDEO_QUIZ_SIZE} right earns 🪙 ${COINS.perfect} more.` : "Finish it, then mark the level as cleared."}</p>`}
     <div class="row">
       ${/^https?:\/\//i.test(m.url || "") ? `<a class="btn" href="${safeUrl(m.url)}" target="_blank" rel="noopener">Open ${isVideo ? "video" : "it"} ↗</a>` : ""}
       ${done ? '<button class="btn ghost" type="button" id="lv-undo">Mark as not done</button>'
-        : `<button class="btn primary" type="button" id="lv-done">${isVideo && !progress.quizzes[key] ? "I've watched it: start the check" : "Mark as cleared"}</button>`}
+        : `<button class="btn primary" type="button" id="lv-done">${checked && !progress.quizzes[key] ? "Start the test" : "Mark as cleared"}</button>`}
     </div>`);
   const finish = () => {
     progress.done[key] = today();
@@ -234,7 +236,7 @@ function levelDialog(pathId, key, n) {
     pageMyLearning();
   };
   dialog.querySelector("#lv-done")?.addEventListener("click", () => {
-    if (isVideo && !progress.quizzes[key]) {
+    if (checked && !progress.quizzes[key]) {
       dialog.close();
       videoQuiz(key, m.title, (r) => { progress.quizzes[key] = { score: r.score, total: r.total, date: today() }; finish(); });
     } else {
@@ -480,7 +482,7 @@ function videoQuiz(url, title, onPass) {
     }
     const answers = Array(quiz.questions.length).fill(null);
     frame(eyebrow, title, `
-      <p class="small muted">${quiz.questions.length} questions on this video's topic${quiz.skills.length ? ` (${esc(quiz.skills.slice(0, 3).join(", "))})` : ""}. Get ${quiz.pass_mark} right to clear it. Each right answer earns 🪙 ${COINS.perRight}; all ${quiz.questions.length} earns 🪙 ${COINS.perfect} more.</p>
+      <p class="small muted">${quiz.questions.length} questions on this topic${quiz.skills.length ? ` (${esc(quiz.skills.slice(0, 3).join(", "))})` : ""}. Get ${quiz.pass_mark} right to clear it. Each right answer earns 🪙 ${COINS.perRight}; all ${quiz.questions.length} earns 🪙 ${COINS.perfect} more.</p>
       ${quiz.questions.map((q, i) => `<section class="stack quiz-q" style="gap: 10px" data-q="${i}">${puzzleHtml(q, i + 1)}</section>`).join("")}
       <div class="row"><button class="btn primary" type="button" id="quiz-submit" disabled>Check my answers</button><span class="muted small" id="quiz-left">${quiz.questions.length} left</span></div>`);
     dialog.querySelectorAll("[data-q]").forEach((sec) => {
