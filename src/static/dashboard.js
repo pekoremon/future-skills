@@ -4,8 +4,8 @@
    job writes. Plain HTML bars and one small SVG line chart, no chart library, so the page
    stays light on mobile data. Chart rules: one accent hue for the series that matters and
    gray for context, colours checked for colour
-   blindness and contrast in light and dark mode (style.css, --viz-*). Every chart has a
-   table view and direct labels, so hover details never hold the only copy of a number.
+   blindness and contrast in light and dark mode (style.css, --viz-*). Every chart has
+   direct labels, so hover details never hold the only copy of a number.
    Uses esc, fmt, AREA_NAMES and SUBFIELD_AREA from app.js (loaded after this file). */
 "use strict";
 
@@ -77,21 +77,13 @@ window.addEventListener("scroll", vizHideTip, { passive: true });
 
 /* ---------- pieces ---------- */
 
-function vizCard(title, sub, body, source, table, wide = false) {
+function vizCard(title, sub, body, source, wide = false) {
   return `
   <figure class="card viz-card${wide ? " viz-wide" : ""}">
     <figcaption class="viz-head"><h3>${title}</h3>${sub ? `<p class="small muted">${sub}</p>` : ""}</figcaption>
     ${body}
     <p class="viz-source small muted">${source}</p>
-    ${table}
   </figure>`;
-}
-
-function vizTable(head, rows) {
-  return `<details class="viz-table"><summary>Show as a table</summary><div class="table-wrap"><table>
-    <thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
-    <tbody>${rows.map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("")}</tbody>
-  </table></div></details>`;
 }
 
 // A horizontal bar row: label, bar on a 0-100 track (left and width in %), value at the tip.
@@ -104,13 +96,29 @@ function vizBarRow(label, bar, value, tip, extra = "") {
     </div>`;
 }
 
-function vizSpark(values) {
-  const w = 120, h = 30, lo = Math.min(...values), hi = Math.max(...values), n = values.length;
-  const x = (i) => 4 + (i * (w - 8)) / Math.max(1, n - 1);
-  const y = (v) => 4 + ((hi - v) * (h - 8)) / (hi - lo || 1);
-  const d = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
-  return `<svg class="viz-spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
-    <path class="viz-path muted" d="${d}"/><circle class="viz-dot accent" cx="${x(n - 1)}" cy="${y(values[n - 1])}" r="4"/></svg>`;
+// IT area names under a column: translated here, with soft hyphens where long words may break, so a
+// narrow column on a phone splits "Cyber-security" rather than "Cybersec-urity".
+const VIZ_SHY = Object.fromEntries(["Cyber|security", "Infra|structure", "Engin|eering", "Manage|ment", "Network|ing",
+  "Inter|face", "Infra|struktur", "Kejuru|teraan", "Kese|lamatan", "Peng|urusan", "Rang|kaian"].map((w) => [w.replace("|", ""), w.replace("|", "­")]));
+const vizAreaLabel = (area) => `<span data-no-i18n>${esc(trName(AREA_NAMES[area])).replace(/[A-Za-z]{9,}/g, (w) => VIZ_SHY[w] || w)}</span>`;
+
+// A vertical column chart. cols: { label, value (shown at the bar's tip), from, to (bar ends as % of the plot
+// height; to = null draws no bar), cls, tip }. lines: { at (% of the plot height), cls } across every column.
+function vizColumns(cols, lines = []) {
+  const grid = `style="grid-template-columns: repeat(${cols.length}, minmax(0, 1fr))"`;
+  return `
+    <div class="viz-colchart">
+      <div class="viz-plot">
+        ${lines.map((l) => `<span class="viz-hline ${l.cls || ""}" style="bottom: ${l.at}%"></span>`).join("")}
+        <div class="viz-cols" ${grid}>${cols.map((c) => `
+          <div class="viz-col"${c.tip ? ` data-tip="${c.tip}"` : ""}>${c.to === null
+    ? `<span class="viz-col-value muted" style="bottom: ${c.from}%">${c.value}</span>`
+    : `<span class="viz-col-bar ${c.cls || ""}${c.to < c.from ? " neg" : ""}" style="bottom: ${Math.min(c.from, c.to)}%; height: ${Math.abs(c.to - c.from)}%"><span class="viz-col-value">${c.value}</span></span>`}
+          </div>`).join("")}
+        </div>
+      </div>
+      <div class="viz-cols viz-col-labels" ${grid}>${cols.map((c) => `<span>${c.label}</span>`).join("")}</div>
+    </div>`;
 }
 
 /* ---------- data shaping ---------- */
@@ -129,11 +137,11 @@ function vizAiGrowth(t) {
 /* ---------- the headline numbers ---------- */
 
 function vizKpis(t, roles) {
-  const tile = (label, value, lines, extra = "") => `
+  const tile = (label, value, lines) => `
     <div class="card viz-tile">
       <p class="small muted">${label}</p>
       <p class="viz-tile-value">${value}</p>
-      ${lines.filter(Boolean).map((l) => `<p class="small">${l}</p>`).join("")}${extra}
+      ${lines.filter(Boolean).map((l) => `<p class="small">${l}</p>`).join("")}
     </div>`;
   const tiles = [];
   const ict = vizSeries(t.inputs, "sector", "ict", "employment_growth_yoy");
@@ -142,8 +150,7 @@ function vizKpis(t, roles) {
     const last = ict[ict.length - 1], same = all.find((r) => r.period_start === last.period_start);
     tiles.push(tile("ICT jobs, growth in a year", `${vizSigned(vizNum(last.value))}%`, [
       same ? `<span class="muted">All sectors:</span> ${vizSigned(vizNum(same.value))}%` : "",
-      `<span class="muted">${esc(vizQuarter(last.period_start))}</span>`,
-    ], ict.length > 2 ? vizSpark(ict.map((r) => vizNum(r.value))) : ""));
+    ]));
   }
   const wage = vizSeries(t.inputs, "sector", "ict", "median_monthly_wage").pop();
   const wageAll = vizSeries(t.inputs, "sector", "overall", "median_monthly_wage").pop();
@@ -170,16 +177,26 @@ function vizAreaChart(t) {
     .filter((r) => r.score !== null).sort((a, b) => b.score - a.score);
   if (!rows.length) return "";
   const part = (v) => (v === null ? "no data" : fmt(v));
-  const body = `<div class="viz-rows">${rows.map((r) => vizBarRow(esc(AREA_NAMES[r.area]),
-    `<span class="viz-bar" style="left: 0; width: ${Math.max(0, Math.min(100, r.score))}%"></span>`, fmt(r.score),
-    vizTipAttr(AREA_NAMES[r.area], [[fmt(r.score), "Trend score"], [part(r.demand), "Malaysian demand"], [part(r.ai), "AI momentum"]]),
-    '<span class="viz-ref" style="left: 50%"></span>')).join("")}</div>
-    <p class="small muted">0 = every signal falling · 50 = flat · 100 = every signal rising</p>`;
+  const body = `
+    <div class="viz-split">
+      <div class="stack" style="gap: 10px">
+    <div class="viz-legend"><span><i class="viz-key refline"></i>50 = flat</span></div>
+    ${vizColumns(rows.map((r) => ({ label: vizAreaLabel(r.area), value: fmt(r.score), from: 0, to: Math.max(0, Math.min(100, r.score)),
+    tip: vizTipAttr(AREA_NAMES[r.area], [[fmt(r.score), "Trend score"], [part(r.demand), "Malaysian demand"], [part(r.ai), "AI momentum"]]) })),
+    [{ at: 0, cls: "zero" }, { at: 50 }])}
+      </div>
+      <aside class="viz-explain">
+        <h4>What is a trend score?</h4>
+        <p>A number from 0 to 100 for how much an IT area is growing, built from recent data.</p>
+        <p>Half is Malaysian demand: whether TalentCorp's MyCOL lists its jobs as ones Malaysia is short of, and whether DOSM job ads for it are rising.</p>
+        <p>Half is AI momentum: whether AI research papers in the area are growing on arXiv.</p>
+        <p>50 means flat. Above 50, more of its signals are rising; below 50, more are falling.</p>
+        <p class="muted">It shows the recent past, not a forecast.</p>
+      </aside>
+    </div>`;
   return vizCard("Trend score by IT area",
     "Malaysian demand (MyCOL, DOSM job ads) and AI momentum (arXiv) count equally. Each bar is a score from 0 to 100.",
-    body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`,
-    vizTable(["IT area", "Trend score", "Malaysian demand", "AI momentum"],
-      rows.map((r) => [esc(AREA_NAMES[r.area]), fmt(r.score), part(r.demand), part(r.ai)])), true);
+    body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`, true);
 }
 
 function vizJobsChart(t) {
@@ -192,15 +209,12 @@ function vizJobsChart(t) {
     { name: "ICT sector", cls: "accent", values: ict.map((r) => vizNum(r.value)) },
     { name: "All sectors", cls: "muted", values: quarters.map((q) => (q in allBy ? allBy[q] : null)) },
   ] };
-  const pctOrDash = (v) => (v === null ? "–" : `${vizSigned(v)}%`);
   const body = `
     <div class="viz-legend">${data.series.map((s) => `<span><i class="viz-key line ${s.cls}"></i>${esc(s.name)}</span>`).join("")}</div>
     <div class="viz-line" data-line="${esc(JSON.stringify(data))}"></div>`;
   return vizCard("Jobs in Malaysia: growth in a year",
     "People employed in the ICT sector compared with all sectors, change against the same quarter a year earlier.",
-    body, `<span>Source:</span> OpenDOSM productivity_qtr (DOSM) · <span>released</span> ${esc(vizLatestRelease([...ict, ...all]))}`,
-    vizTable(["Quarter", "ICT sector", "All sectors"],
-      quarters.map((q, i) => [esc(vizQuarter(q)), pctOrDash(data.series[0].values[i]), pctOrDash(data.series[1].values[i])])));
+    body, `<span>Source:</span> OpenDOSM productivity_qtr (DOSM) · <span>released</span> ${esc(vizLatestRelease([...ict, ...all]))}`);
 }
 
 function vizAiChart(t) {
@@ -213,24 +227,19 @@ function vizAiChart(t) {
   const pos = (v) => ((v - lo) * 100) / (hi - lo);
   const zero = pos(0);
   const body = `
-    <div class="viz-legend"><span><i class="viz-key refline"></i>+${fmt(thr, 0)}% = rising</span></div>
-    <div class="viz-rows">${rows.map((r) => (r.growth === null
-    ? `<div class="viz-row"><span class="viz-label">${esc(AREA_NAMES[r.area])}</span><span class="viz-track"></span><span class="viz-value muted">no data</span></div>`
-    : vizBarRow(esc(AREA_NAMES[r.area]),
-      `<span class="viz-bar${r.direction === "up" ? "" : " muted"}${r.growth < 0 ? " neg" : ""}" style="left: ${Math.min(zero, pos(r.growth))}%; width: ${Math.abs(pos(r.growth) - zero)}%"></span>`,
-      `${vizSigned(r.growth)}% <span class="muted">${VIZ_DIRECTION[r.direction] || ""}</span>`,
-      vizTipAttr(AREA_NAMES[r.area], [
+    <div class="viz-legend"><span><i class="viz-key accent"></i>rising</span><span><i class="viz-key muted"></i>${known.some((r) => r.direction === "down") ? "flat or falling" : "flat"}</span><span><i class="viz-key refline"></i>+${fmt(thr, 0)}% = rising</span></div>
+    ${vizColumns(rows.map((r) => (r.growth === null
+    ? { label: vizAreaLabel(r.area), value: "no data", from: zero, to: null }
+    : { label: vizAreaLabel(r.area), value: `${vizSigned(r.growth)}%`, from: zero, to: pos(r.growth), cls: r.direction === "up" ? "" : "muted",
+      tip: vizTipAttr(AREA_NAMES[r.area], [
         ...(r.before && r.after ? [[`${vizInt(r.before.value)} → ${vizInt(r.after.value)}`, "AI papers"]] : []),
-        [`${vizSigned(r.growth)}%`, VIZ_DIRECTION[r.direction] || ""]]),
-      `<span class="viz-ref" style="left: ${pos(thr)}%"></span>${lo < 0 ? `<span class="viz-zero" style="left: ${zero}%"></span>` : ""}`))).join("")}</div>`;
+        [`${vizSigned(r.growth)}%`, VIZ_DIRECTION[r.direction] || ""]]) })),
+    [{ at: zero, cls: "zero" }, { at: pos(thr) }])}`;
   const ref = known.find((r) => r.before && r.after);
   const win = ref ? `${esc(ref.before.period_start.slice(0, 7))} – ${esc(ref.before.period_end.slice(0, 7))} → ${esc(ref.after.period_start.slice(0, 7))} – ${esc(ref.after.period_end.slice(0, 7))}` : "";
   return vizCard("How fast AI research is growing in each IT area",
     "Papers on arXiv that mention AI, latest 6 months against the 6 before. A global research signal, not Malaysian hiring.",
-    body, `<span>Source:</span> arXiv API · ${win} · <span>fetched</span> ${esc(ref ? ref.after.fetched_date : "")}`,
-    vizTable(["IT area", "AI papers before", "AI papers latest", "Growth", "Direction"],
-      rows.map((r) => [esc(AREA_NAMES[r.area]), r.before ? vizInt(r.before.value) : "–", r.after ? vizInt(r.after.value) : "–",
-        r.growth === null ? "no data" : `${vizSigned(r.growth)}%`, VIZ_DIRECTION[r.direction] || "no data"])), true);
+    body, `<span>Source:</span> arXiv API · ${win} · <span>fetched</span> ${esc(ref ? ref.after.fetched_date : "")}`, true);
 }
 
 function vizRolesChart(t, roles) {
@@ -254,10 +263,7 @@ function vizRolesChart(t, roles) {
   const body = `<div class="viz-pair">${list("Most momentum", most, "")}${list("Least momentum", least, "muted")}</div>
     ${falling ? "" : '<p class="small muted">No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.</p>'}`;
   return vizCard("Rising and flat IT roles", "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.",
-    body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`,
-    vizTable(["Role", "IT area", "Trend score", "Malaysian demand", "AI momentum"],
-      [...rs].sort((a, b) => b.score - a.score || name(a).localeCompare(name(b)))
-        .map((r) => [esc(name(r)), esc(AREA_NAMES[role[r.id].it_area]), fmt(r.score), part(r.demand), part(r.ai)])), true);
+    body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`, true);
 }
 
 /* ---------- the line chart (SVG, drawn at the container's width) ---------- */

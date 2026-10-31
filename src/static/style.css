@@ -298,7 +298,6 @@ tr.hl td { background: var(--accent-soft); }
 .viz-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .viz-tile { display: flex; flex-direction: column; gap: 4px; }
 .viz-tile-value { font-size: 30px; font-weight: 800; line-height: 1.15; }
-.viz-spark { margin-top: 4px; overflow: visible; }
 .viz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 760px) { .viz-grid { grid-template-columns: minmax(0, 1fr); } }
 .viz-card { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -312,11 +311,32 @@ tr.hl td { background: var(--accent-soft); }
 .viz-track { position: relative; height: 16px; }
 .viz-bar { position: absolute; top: 0; bottom: 0; background: var(--viz-accent); border-radius: 0 4px 4px 0; }
 .viz-bar.muted { background: var(--viz-muted); }
-.viz-bar.neg { border-radius: 4px 0 0 4px; }
-.viz-ref, .viz-zero { position: absolute; top: -5px; bottom: -5px; width: 1px; background: var(--muted); opacity: 0.55; }
-.viz-zero { opacity: 0.9; }
 .viz-value { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .viz-row[data-tip]:hover .viz-bar, .viz-seg:hover { filter: brightness(1.15); }
+.viz-colchart { display: flex; flex-direction: column; gap: 8px; }
+/* Columns and their reference lines share one box; the margin leaves room for the value above a full bar. */
+.viz-plot { position: relative; height: 200px; margin-top: 22px; }
+.viz-plot .viz-cols { height: 100%; }
+.viz-hline { position: absolute; left: 0; right: 0; height: 1px; background: var(--muted); opacity: 0.55; z-index: 1; pointer-events: none; }
+.viz-hline.zero { opacity: 0.9; }
+.viz-cols { display: grid; gap: 12px; }
+.viz-col { position: relative; height: 100%; }
+.viz-col-bar { position: absolute; left: 50%; width: min(28px, 70%); transform: translateX(-50%); background: var(--viz-accent); border-radius: 4px 4px 0 0; }
+.viz-col-bar.muted { background: var(--viz-muted); }
+.viz-col-bar.neg { border-radius: 0 0 4px 4px; }
+.viz-col-value { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 4px;
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
+.viz-col > .viz-col-value { margin-bottom: 4px; font-weight: 400; }
+.viz-col-value.muted { color: var(--muted); }
+.viz-col-bar.neg .viz-col-value { bottom: auto; top: 100%; margin: 4px 0 0; }
+.viz-col-labels > span { font-size: 12px; line-height: 1.3; text-align: center; hyphens: manual; overflow-wrap: anywhere; }
+.viz-col[data-tip]:hover .viz-col-bar { filter: brightness(1.15); }
+/* A chart with its explanation beside it; stacked on narrow screens. */
+.viz-split { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+@media (max-width: 760px) { .viz-split { grid-template-columns: minmax(0, 1fr); } }
+.viz-explain { background: var(--accent-soft); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; }
+.viz-explain h4 { color: var(--accent-strong); }
+.viz-explain p { margin: 0; }
 .viz-stack { display: flex; gap: 2px; height: 20px; }
 .viz-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; min-width: 0; }
 .viz-seg:last-child { border-radius: 0 4px 4px 0; }
@@ -333,8 +353,6 @@ tr.hl td { background: var(--accent-soft); }
 .viz-key.muted, .viz-key.line.muted { background: var(--viz-muted); }
 .viz-key.l1 { background: var(--viz-l1); } .viz-key.l2 { background: var(--viz-l2); } .viz-key.l3 { background: var(--viz-l3); }
 .viz-source { font-size: 12px; }
-.viz-table > summary { cursor: pointer; font-size: 13px; color: var(--accent); width: max-content; }
-.viz-table .table-wrap { margin-top: 8px; }
 .viz-svg { display: block; overflow: visible; }
 .viz-gridline { stroke: var(--line); stroke-width: 1; }
 .viz-axis { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -358,11 +376,14 @@ tr.hl td { background: var(--accent-soft); }
   .viz-row.no-value { grid-template-columns: minmax(0, 1fr); }
   .viz-row .viz-label { grid-column: 1 / -1; }
   .viz-tile-value { font-size: 26px; }
+  .viz-plot { height: 160px; }
+  .viz-cols { gap: 4px; }
+  .viz-col-value { font-size: 11px; }
+  .viz-col-labels > span { font-size: 11px; }
 }
 
 /* Touch screens: every control at least 40 px tall, checkboxes big enough to hit. */
 input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
-.viz-table > summary { min-height: 40px; display: flex; align-items: center; }
 @media (pointer: coarse), (max-width: 560px) {
   .brand { display: inline-flex; align-items: center; min-height: 40px; }
   .topbar nav a, .lang-btn { min-height: 40px; }
@@ -374,7 +395,6 @@ input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent);
   .viz-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .viz-tile { padding: 12px; }
   .viz-tile-value { font-size: 22px; }
-  .viz-spark { width: 100%; height: auto; }
 }
 
 /* Folded details: secondary information one tap away, so pages stay short. */
