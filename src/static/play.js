@@ -12,6 +12,7 @@ const VIDEO_PASS_MARK = 4;
 const PLAY_KEY = "future-skills-puzzles-v1";
 const LETTERS = "ABCD";
 const COINS = { perRight: 10, perfect: 30 };
+const START_COINS = 5000;  // a new player's coins, before any are earned
 // The shop. Coins come up to 80 a video, so the first colour takes a few videos and a
 // special theme a few weeks. Colours tint the background
 // (play.css); cursors swap the mouse pointer, and trails add an effect behind it; a special
@@ -57,7 +58,7 @@ function playStore() {
     const s = readSaved(PLAY_KEY) || {};
     const sold = (list, id) => list.some((b) => b.id === id);  // items the shop no longer sells are dropped
     const all = [...BACKGROUNDS, ...CURSORS, ...SPECIALS];
-    play = { coins: s.coins || 0, earned: s.earned || 0, video: s.video || {},
+    play = { coins: s.coins ?? START_COINS, earned: s.earned || 0, video: s.video || {},
       owned: [...new Set(["classic", "arrow", ...(s.owned || []).filter((id) => sold(all, id))])],
       bg: sold(BACKGROUNDS, s.bg) ? s.bg : "classic", cursor: sold(CURSORS, s.cursor) ? s.cursor : "arrow",
       special: sold(SPECIALS, s.special) ? s.special : null };
