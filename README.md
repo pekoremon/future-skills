@@ -27,6 +27,7 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | Replit Project | https://future-skills.replit.app (published from Replit) |
 | Live Demo | https://future-skills.replit.app |
 | Slide Deck (preliminary) | [Pitch deck (Google Drive)](https://drive.google.com/file/d/1ZcFFKKtm1UjylE6r0XQ_gE3tUY09VYbC/view?usp=sharing) |
+| Demo Video (final, backup) | https://youtu.be/gBkuoCRChHI |
 | Demo Video (preliminary) | https://youtu.be/QdBmTyO73JM |
 
 ## Overview
@@ -270,7 +271,7 @@ python scripts/fairness_check.py  # the same CV as 8 different students gives th
 - [ ] Updated PRD
 - [ ] Updated technology declaration (`SDC2026_HandsOffOurRights_TechDeclaration.pdf`)
 - [ ] Final slides (.pptx, plus a flattened PDF)
-- [ ] Backup recorded pitch video (YouTube)
+- [x] Backup recorded demo video (YouTube): https://youtu.be/gBkuoCRChHI
 - [x] Live prototype: https://future-skills.replit.app
 - [x] Public repo, Apache-2.0 LICENSE, continuous commits
 
