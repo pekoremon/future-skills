@@ -110,14 +110,16 @@ function sailorAct(svg, action) {
   svg.classList.add(`act-${action}`);
 }
 
-/* The live hexagon, drawn small next to the question. Corners are crew icons; `grew` gets a pulse. */
+/* The live hexagon, drawn small next to the question. Corners are crew icons with their RIASEC
+   letter above; `grew` gets a pulse. */
 function crewHex(values, grew) {
-  const W = 220, H = 210, cx = 110, cy = 105, R = 72;
+  const W = 220, H = 232, cx = 110, cy = 122, R = 72;
   const at = (i, r) => { const a = -Math.PI / 2 + (Math.PI / 3) * i; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
   const pts = (rs) => rs.map((r, i) => at(i, r).map((v) => v.toFixed(1)).join(",")).join(" ");
   const rings = [1 / 3, 2 / 3, 1].map((f) => `<polygon class="hex-ring" points="${pts(CREW_ORDER.map(() => R * f))}"/>`).join("");
   const spokes = CREW_ORDER.map((_, i) => { const [x, y] = at(i, R); return `<line class="hex-ring" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join("");
-  const icons = CREW_ORDER.map((k, i) => { const [x, y] = at(i, R + 20); return `<text class="crew-ico${k === grew ? " grew" : ""}" x="${x.toFixed(1)}" y="${(y + 6).toFixed(1)}" text-anchor="middle">${CREW[k].icon}</text>`; }).join("");
+  const icons = CREW_ORDER.map((k, i) => { const [x, y] = at(i, R + 26); return `<text class="crew-ico${k === grew ? " grew" : ""}" x="${x.toFixed(1)}" y="${(y + 6).toFixed(1)}" text-anchor="middle">${CREW[k].icon}</text>`
+    + `<text class="crew-letter" x="${x.toFixed(1)}" y="${(y - 11).toFixed(1)}" text-anchor="middle">${k}</text>`; }).join("");
   const label = CREW_ORDER.map((k) => `${CREW[k].role} ${Math.round(values[k])}`).join(", ");
   return `<svg class="crew-hex" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${rings}${spokes}
     <polygon class="hex-shape" points="${pts(CREW_ORDER.map((k) => (R * values[k]) / 100))}"/>${icons}</svg>`;
@@ -127,7 +129,7 @@ function crewHex(values, grew) {
 function crewHexGrow(svg, from, to) {
   const shape = svg && svg.querySelector(".hex-shape");
   if (!shape || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const R = 72, cx = 110, cy = 105, t0 = performance.now(), ms = 600;
+  const R = 72, cx = 110, cy = 122, t0 = performance.now(), ms = 600;
   const draw = (f) => shape.setAttribute("points", CREW_ORDER.map((k, i) => {
     const r = (R * (from[k] + (to[k] - from[k]) * f)) / 100, a = -Math.PI / 2 + (Math.PI / 3) * i;
     return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
