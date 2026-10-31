@@ -587,7 +587,9 @@ function matchBody(demo = state.demo) {
 function jobCard(m, rank) {
   const flags = m.flags.filter((f) => !QUIET_FLAGS.includes(f)).map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
   // Short SDG chips on the same row as the IT area; the goal names and reasons are under "Why this job?"
-  const sdg = m.sdg.map((s) => `<span class="chip sdg-chip" title="${esc(s.goal_name)}: ${esc(s.rationale)}"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">SDG ${esc(s.target)}</span>`).join("");
+  // Chips show the goal number only (17, not 17.18); two targets under one goal share a chip.
+  const goalOf = (s) => String(s.target).split(".")[0];
+  const sdg = m.sdg.filter((s, i) => m.sdg.findIndex((o) => goalOf(o) === goalOf(s)) === i).map((s) => `<span class="chip sdg-chip" title="${esc(s.goal_name)}: ${esc(s.rationale)}"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(goalOf(s))}.webp" width="20" height="20" loading="lazy" alt="">SDG ${esc(goalOf(s))}</span>`).join("");
   const next = m.skill_detail.tech_missing.slice(0, 2).map((t) => t.skill_name);
   const parts = ORDER_PARTS.map((k) => {
     const c = m.components[k];
@@ -620,10 +622,61 @@ function sdgWhy(sdg) {
   if (!sdg.length) return "";
   return `<div class="sdg-why stack">
     <strong class="small">How this job helps the world</strong>
-    ${sdg.map((s) => `<div class="sdg-why-row"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">
-      <span class="small"><strong>SDG ${esc(s.target)} · ${esc(s.goal_name)}</strong><br><span class="muted">${esc(s.rationale)}</span></span></div>`).join("")}
+    ${sdgByGoal(sdg).map((g) => `<div class="sdg-why-row"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(g.goal)}.webp" width="20" height="20" loading="lazy" alt="">
+      <div class="small stack sdg-goal-text">${sdgGoalHead(g.goal, g.name)}${sdgTargets(g.targets.map((s) => ({ target: s.target, why: s.rationale })))}</div></div>`).join("")}
   </div>`;
 }
+
+// Plain-language summaries of the UN goals and targets in data/sdg_map.csv, so "SDG 17.18" says what it means.
+const SDG_GOAL_TEXT = {
+  "3": "Healthy lives and well-being for everyone, at every age.",
+  "4": "Fair, good-quality education and lifelong learning for everyone.",
+  "8": "Steady, inclusive economic growth and decent jobs for everyone.",
+  "9": "Strong infrastructure, sustainable industry and more innovation.",
+  "10": "Less inequality within and between countries.",
+  "12": "Using natural resources wisely and producing goods sustainably.",
+  "16": "Peaceful, fair societies with justice for all and accountable institutions.",
+  "17": "Countries and organisations working together to reach the goals.",
+};
+const SDG_TARGET_TEXT = {
+  "3.4": "Fewer early deaths from non-communicable diseases, and better mental health.",
+  "4.3": "Equal access to affordable technical, vocational and university education.",
+  "4.4": "More young people and adults with job-ready skills, including digital skills.",
+  "4.6": "All young people and most adults able to read, write and do maths.",
+  "4.c": "More qualified teachers, through better teacher training.",
+  "8.2": "Higher productivity through technology, innovation and new kinds of work.",
+  "8.3": "More decent jobs, entrepreneurship, creativity and small businesses.",
+  "8.5": "Full employment and decent work for all, with equal pay for equal work.",
+  "8.10": "Stronger financial institutions and wider access to banking and finance.",
+  "9.1": "Reliable, sustainable infrastructure that everyone can use.",
+  "9.4": "Industry upgraded with clean, resource-efficient technology.",
+  "9.5": "More scientific research and better technology in industry.",
+  "9.c": "Much wider access to the internet and information technology.",
+  "10.2": "Everyone included in social, economic and political life, whatever their background.",
+  "12.2": "Natural resources managed sustainably and used efficiently.",
+  "16.3": "Rule of law and equal access to justice for all.",
+  "16.4": "Less illegal money and arms flows, and less organised crime.",
+  "16.6": "Effective, accountable and transparent institutions.",
+  "16.10": "Public access to information and protection of basic freedoms.",
+  "16.a": "Stronger national institutions to prevent violence and fight crime.",
+  "17.6": "More international cooperation on science, technology and innovation.",
+  "17.18": "More high-quality, timely and reliable data for decisions.",
+};
+const sdgGoalOf = (target) => String(target).split(".")[0];
+// Targets grouped under their goal, in the order given: [{ goal, name, targets }].
+function sdgByGoal(list) {
+  const goals = new Map();
+  for (const t of list) {
+    const goal = sdgGoalOf(t.target);
+    if (!goals.has(goal)) goals.set(goal, { goal, name: t.goal_name, targets: [] });
+    goals.get(goal).targets.push(t);
+  }
+  return [...goals.values()];
+}
+// "SDG 17 · Partnerships for the Goals" and what the goal is about.
+const sdgGoalHead = (goal, name) => `<strong>SDG ${esc(goal)} · ${esc(name)}</strong>${SDG_GOAL_TEXT[goal] ? `<span class="muted">${esc(SDG_GOAL_TEXT[goal])}</span>` : ""}`;
+// Under the goal, one line per target: "SDG 17.18 · what it means", then how this job helps.
+const sdgTargets = (rows) => `<ul class="sdg-targets">${rows.map((r) => `<li><strong>SDG ${esc(r.target)}${SDG_TARGET_TEXT[r.target] ? ` · ${esc(SDG_TARGET_TEXT[r.target])}` : ""}</strong>${r.why ? `<span class="muted">${esc(r.why)}</span>` : ""}</li>`).join("")}</ul>`;
 
 // How much the rank depends on the scenario: the same rank in all three, or a range.
 function rangeBadge(m) {
@@ -2032,24 +2085,17 @@ async function pageLearn(roleId) {
       <div class="res-top"><span class="chip plain res-kind">Certification</span>${doneBox(`cert:${c.cert_id}`, c.cert_name)}</div>
       <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
       <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""}</span></li>`).join("")}</ul>`;
-  // One row per goal: the goal's icon tile, its name and one line on how this job helps.
-  const goals = new Map();  // keeps the server's order: the job's own goals first
-  for (const t of p.sdg) {
-    const goal = t.target.split(".")[0];
-    if (!goals.has(goal)) goals.set(goal, { goal, name: t.goal_name, why: null, skills: [] });
-    const g = goals.get(goal);
-    if (t.role && !g.why) g.why = t.role.rationale;
-    for (const k of t.skills) if (!g.skills.includes(k.skill_name)) g.skills.push(k.skill_name);
-  }
+  // One block per goal (the server's order: the job's own goals first): the goal and what it is
+  // about, then each target with how this job, or the skills on this path, helps it.
   const sdgCard = p.sdg.length ? `
     <section class="card stack" style="gap: 12px" aria-labelledby="sdg-title">
       <h2 id="sdg-title">Global goals this job supports</h2>
       <a class="small" href="#/impact">What every student's hours add up to →</a>
-      ${[...goals.values()].map((g) => `<div class="sdg-goal">
+      ${sdgByGoal(p.sdg).map((g) => `<div class="sdg-goal">
         ${sdgTile(g.goal, g.name)}
-        <div class="stack" style="gap: 2px">
-          ${LANG === "en" ? "" : `<strong>${esc(g.name)}</strong>`}
-          <span class="small">${g.why ? esc(g.why) : `Built by ${esc(g.skills.slice(0, 3).join(", "))}`}</span>
+        <div class="small stack sdg-goal-text">
+          ${sdgGoalHead(g.goal, g.name)}
+          ${sdgTargets(g.targets.map((t) => ({ target: t.target, why: t.role ? t.role.rationale : `Built by ${t.skills.slice(0, 3).map((k) => k.skill_name).join(", ")}` })))}
         </div>
       </div>`).join("")}
     </section>` : "";
@@ -2367,7 +2413,8 @@ async function pageImpact() {
   const s = await api("/api/sdg/summary");
   const mine = trackedPaths().reduce((t, p) => t + p.hoursDone, 0);
   const tile = (t) => `<article class="card stack impact-tile" style="gap: 8px">
-      <div class="row" style="gap: 10px; flex-wrap: nowrap">${sdgTile(t.goal, t.goal_name)}<div class="stack" style="gap: 2px"><strong>SDG ${esc(t.target)}</strong><span class="small muted">${esc(t.goal_name)}</span></div></div>
+      <div class="row" style="gap: 10px; flex-wrap: nowrap">${sdgTile(t.goal, t.goal_name)}<div class="small stack sdg-goal-text">${sdgGoalHead(t.goal, t.goal_name)}</div></div>
+      ${sdgTargets([{ target: t.target }])}
       <p class="impact-num"><strong>${t.students}</strong> <span>${t.students === 1 ? "student" : "students"}</span></p>
       <p class="small"><strong>${fmt(t.hours_done)} h</strong> <span>studied</span> <span class="muted">· ${fmt(t.hours_planned, 0)} h <span>planned</span></span></p>
       <p class="small muted">${esc(t.why)}</p>
@@ -2390,7 +2437,7 @@ async function pageImpact() {
       <h2 id="impact-all">Every SDG target the paths count towards</h2>
       <div class="table-wrap"><table class="impact-table">
         <thead><tr><th scope="col">Target</th><th scope="col">Goal</th><th scope="col">Students</th><th scope="col">Hours studied</th><th scope="col">Hours planned</th></tr></thead>
-        <tbody>${s.targets.map((t) => `<tr><th scope="row">${esc(t.target)}</th><td>${esc(t.goal_name)}</td><td>${t.students}</td><td>${fmt(t.hours_done)}</td><td>${fmt(t.hours_planned, 0)}</td></tr>`).join("")}</tbody>
+        <tbody>${s.targets.map((t) => `<tr><th scope="row">SDG ${esc(t.target)}${SDG_TARGET_TEXT[t.target] ? `<br><span class="small muted">${esc(SDG_TARGET_TEXT[t.target])}</span>` : ""}</th><td>SDG ${esc(sdgGoalOf(t.target))} · ${esc(t.goal_name)}</td><td>${t.students}</td><td>${fmt(t.hours_done)}</td><td>${fmt(t.hours_planned, 0)}</td></tr>`).join("")}</tbody>
       </table></div>
     </section>` : ""}
     ${s.roles.length ? `<section class="card stack" style="gap: 8px" aria-labelledby="impact-roles">

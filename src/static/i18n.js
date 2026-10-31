@@ -612,6 +612,7 @@ const MS = {
   "Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.": "Ubah bilangan kertas kajian arXiv atau bilangan iklan kerja DOSM, dan lihat isyarat, skor trend dan kedudukan pekerjaan anda bergerak. Hanya salinan anda yang berubah.",
   // Lite mode, study plan, calendar and SDG contribution
   "Lite": "Ringan",
+  "Shop": "Kedai",
   "Lite mode: no photos, animation or charts, for mobile data": "Mod ringan: tanpa foto, animasi atau carta, untuk data mudah alih",
   "Lite mode": "Mod ringan",
   "page size:": "saiz halaman:",
@@ -678,7 +679,6 @@ const MS = {
   "What every student's hours add up to →": "Jumlah jam semua pelajar →",
   // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
   "Global goals you care about":
-  "Shop": "Kedai",
     "Matlamat global yang anda pentingkan",
   "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
     "Pilih Matlamat Pembangunan Mampan PBB yang anda mahu kerja anda bantu. Pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan, jadi ia naik dalam senarai anda. Jangan pilih apa-apa untuk menyusun mengikut kesesuaian dan trend sahaja.",
@@ -1445,6 +1445,7 @@ const ZH = {
   "Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.": "修改 arXiv 论文数或 DOSM 招聘广告数，看看信号、趋势分数和你的职位排名怎么变。只有你的副本会改变。",
   // Lite mode, study plan, calendar and SDG contribution
   "Lite": "省流",
+  "Shop": "商店",
   "Lite mode: no photos, animation or charts, for mobile data": "省流模式：不加载照片、动画和图表，适合用手机流量",
   "Lite mode": "省流模式",
   "page size:": "页面大小：",
@@ -1512,7 +1513,6 @@ const ZH = {
   // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
   "Global goals you care about":
     "你关心的全球目标",
-  "Shop": "商店",
   "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
     "选出你希望自己的工作能帮助的联合国可持续发展目标。支持其中任一目标的工作加 5 分，在你的列表里排得更前。不选的话，只按匹配度和趋势排序。",
   "IT job":

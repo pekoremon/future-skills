@@ -401,6 +401,9 @@ details.why .raise-tips ul { margin: 4px 0 0; padding-left: 18px; }
 .sdg-why { gap: 8px; border-top: 1px dashed var(--line); padding: 10px 0 8px; margin-top: 6px; }
 .sdg-why-row { display: flex; gap: 8px; align-items: flex-start; }
 .sdg-why-row .sdg-mini { margin-top: 2px; }
+.sdg-goal-text { gap: 2px; min-width: 0; }
+.sdg-targets { list-style: none; margin: 6px 0 0; padding: 0 0 0 12px; border-left: 2px solid var(--line); display: grid; gap: 6px; }
+.sdg-targets li { display: flex; flex-direction: column; gap: 1px; }
 #jobs.loading { opacity: 0.5; pointer-events: none; transition: opacity 0.15s; }
 .top-main { display: flex; flex-direction: column; gap: 6px; flex: 1 1 260px; min-width: 0; }
 .top-side { display: flex; align-items: center; gap: 14px; }
@@ -569,7 +572,7 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 .res.is-done > a { text-decoration: line-through; text-decoration-thickness: 1px; }
 .learn-progress { height: 10px; }
 .res > strong { overflow-wrap: anywhere; }
-.sdg-goal { display: flex; gap: 12px; align-items: center; }
+.sdg-goal { display: flex; gap: 12px; align-items: flex-start; }
 .sdg-tile { flex: none; width: 64px; height: 64px; display: block; }
 .job-title { font-size: clamp(30px, 6vw, 44px); }
 .lead { font-size: 17px; color: var(--muted); }
