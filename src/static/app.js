@@ -150,6 +150,7 @@ function stepBar(current) {
 function pageHome() {
   render(`
   <div class="stack">
+    <div class="viz-hero">
     <section class="stack" style="gap: 10px">
       <p class="eyebrow">AI-era job trends for IT students in Malaysia</p>
       <h1>Where IT jobs are heading</h1>
@@ -159,6 +160,8 @@ function pageHome() {
         <a class="btn ghost" href="#/trends">All signals, data and sources &rarr;</a>
       </div>
     </section>
+    <div id="home-jobs" class="viz-hero-chart"></div>
+    </div>
     <div id="home-dash" class="stack"><p class="muted" role="status">Loading the trend data…</p></div>
     <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
     <section class="card stack" id="start" style="gap: 12px">
@@ -191,7 +194,10 @@ function pageHome() {
   Promise.all([api("/api/trends"), cached("/api/roles")]).then(([t, roles]) => {
     const dash = document.getElementById("home-dash");
     if (!dash) return;  // the student has moved on to another page
+    const jobs = document.getElementById("home-jobs");
+    jobs.innerHTML = trendHeroChart(t);
     dash.innerHTML = trendDashboard(t, roles);
+    wireDashboard(jobs);
     wireDashboard(dash);
   }).catch(() => {
     const dash = document.getElementById("home-dash");
@@ -955,9 +961,14 @@ async function pageTrends() {
   const head = "<tr><th>For</th><th>Signal</th><th>Direction</th><th>Confidence</th><th>Detail</th></tr>";
   render(`
   <div class="stack">
+    <div class="viz-hero">
+    <section class="stack" style="gap: 10px">
     <p class="eyebrow">AI-era trend signals</p>
     <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
     <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.</div>
+    </section>
+    <div id="trend-jobs" class="viz-hero-chart"></div>
+    </div>
     <div id="trend-dash" class="stack"></div>
     <section class="card stack" style="gap: 8px">
       <h2>What if this data changed?</h2>
@@ -989,8 +1000,10 @@ async function pageTrends() {
     <details class="group"><summary><span>All input data with sources <span class="muted small">(${t.inputs.length})</span></span></summary>
       <div class="group-body"><div class="table-wrap"><table><thead><tr><th>Entity</th><th>Metric</th><th>Value</th><th>Period</th><th>Source</th></tr></thead><tbody>${inRows}</tbody></table></div></div></details>
   </div>`);
-  const dash = document.getElementById("trend-dash");
+  const dash = document.getElementById("trend-dash"), jobs = document.getElementById("trend-jobs");
+  jobs.innerHTML = trendHeroChart(t);
   dash.innerHTML = trendDashboard(t, roles);
+  wireDashboard(jobs);
   wireDashboard(dash);
   app.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => { trendTab = b.dataset.tab; trendSignalsOpen = true; pageTrends().catch(showError); }; });
   const btn = document.getElementById("update");

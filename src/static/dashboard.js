@@ -179,7 +179,7 @@ function vizAreaChart(t) {
     "Malaysian demand (MyCOL, DOSM job ads) and AI momentum (arXiv) count equally. Each bar is a score from 0 to 100.",
     body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`,
     vizTable(["IT area", "Trend score", "Malaysian demand", "AI momentum"],
-      rows.map((r) => [esc(AREA_NAMES[r.area]), fmt(r.score), part(r.demand), part(r.ai)])));
+      rows.map((r) => [esc(AREA_NAMES[r.area]), fmt(r.score), part(r.demand), part(r.ai)])), true);
 }
 
 function vizJobsChart(t) {
@@ -329,12 +329,16 @@ function vizDrawLine(el) {
 
 /* ---------- the whole dashboard ---------- */
 
+// The page's opening chart, next to its heading: is Malaysia hiring in ICT?
+function trendHeroChart(t) {
+  return vizJobsChart(t);
+}
+
 function trendDashboard(t, roles) {
   return `
     <div class="viz-kpis">${vizKpis(t, roles)}</div>
     <div class="viz-grid">
       ${vizAreaChart(t)}
-      ${vizJobsChart(t)}
       ${vizAiChart(t)}
       ${vizRolesChart(t, roles)}
     </div>`;

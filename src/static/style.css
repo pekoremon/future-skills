@@ -400,3 +400,8 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 .sdg-tile { flex: none; width: 56px; height: 56px; border-radius: 8px; color: #fff; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
 .sdg-tile b { font-size: 24px; font-weight: 800; }
 .sdg-tile small { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; margin-top: 3px; }
+
+/* Trend pages open with the question on the left and the jobs chart on the right. */
+.viz-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.viz-hero-chart:empty { display: none; }
+@media (max-width: 820px) { .viz-hero { grid-template-columns: minmax(0, 1fr); } }
