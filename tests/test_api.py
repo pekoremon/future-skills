@@ -220,7 +220,7 @@ class TestApi(unittest.TestCase):
             first = self.client.post("/api/trends/update", json={})
             second = self.client.post("/api/trends/update", json={})
         self.assertEqual(first.status_code, 202)
-        self.assertEqual(first.json["arxiv"], False)
+        self.assertEqual(first.json["arxiv"], True)
         self.assertEqual(second.status_code, 409)
         main._update_lock.release()
 

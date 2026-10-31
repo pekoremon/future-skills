@@ -27,7 +27,7 @@ Endpoints (all JSON):
                                      evidence per IT area (cv_areas, to send to /api/match)
     GET  /api/scenarios              future scenarios and the trend scores under each
     GET  /api/trends                 ?area=  trend scores, the signals behind them and the inputs
-    POST /api/trends/update          start the "Update data" job (OpenDOSM, optional arXiv)
+    POST /api/trends/update          start the "Update data" job (OpenDOSM and arXiv; {"arxiv": false} skips arXiv)
     GET  /api/trends/update          status of the last update job
     GET  /api/whatif                 the trend inputs a what-if may change, and ready-made examples
     POST /api/whatif                 same body as /api/match + trend_changes -> what changes: inputs,
@@ -606,7 +606,7 @@ def run_update(arxiv: bool) -> None:
 @route("POST", "/api/trends/update")
 def trends_update(request):
     sent = request.get_json()
-    arxiv = bool(sent.get("arxiv", False)) if isinstance(sent, dict) else False
+    arxiv = bool(sent.get("arxiv", True)) if isinstance(sent, dict) else True
     if not _update_lock.acquire(blocking=False):
         return jsonify({"error": "an update is already running", **_update_state}, http_status=409)
     _update_state.update(status="running", arxiv=arxiv, returncode=None, log="", finished=None,

@@ -334,9 +334,9 @@ const MS = {
   ": growth in AI papers in the area's arXiv categories, where +40% or more counts in full. Trend score = 50% demand + 50% AI momentum; a part with no data counts as 50 (flat). The weights are team choices; the future scenarios on the Matches page change them.":
     ": pertumbuhan kertas AI dalam kategori arXiv bidang itu; pertumbuhan +40% atau lebih dikira penuh. Skor trend = 50% permintaan + 50% momentum AI; bahagian tanpa data dikira 50 (mendatar). Pemberat ini pilihan pasukan; senario masa depan di halaman Padanan mengubahnya.",
   "Update data": "Kemas kini data",
-  "Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.":
-    "Mengambil angka OpenDOSM terkini (dan arXiv jika dipilih, kira-kira 2 minit), kemudian mengira semula isyarat dan skor. Jika sesuatu sumber gagal, data sebelumnya dikekalkan.",
-  "Also refresh arXiv paper counts": "Juga kemas kini bilangan kertas arXiv", "Update data now": "Kemas kini data sekarang", "Updating…": "Sedang mengemas kini…",
+  "Fetches the latest OpenDOSM figures and arXiv paper counts (about a minute), then recomputes the signals and scores. If a source fails, its previous data is kept.":
+    "Mengambil angka OpenDOSM dan bilangan kertas arXiv terkini (kira-kira seminit), kemudian mengira semula isyarat dan skor. Jika sesuatu sumber gagal, data sebelumnya dikekalkan.",
+  "Update data now": "Kemas kini data sekarang", "Updating…": "Sedang mengemas kini…",
   "Update failed; previous data kept.": "Kemas kini gagal; data sebelumnya dikekalkan.",
   "For": "Untuk", "Signal": "Isyarat", "Direction": "Arah", "Confidence": "Keyakinan", "Detail": "Butiran", "Entity": "Entiti", "Metric": "Metrik", "Value": "Nilai", "Period": "Tempoh", "Source": "Sumber",
   "composition effect": "kesan komposisi",
@@ -954,9 +954,9 @@ const ZH = {
   ": growth in AI papers in the area's arXiv categories, where +40% or more counts in full. Trend score = 50% demand + 50% AI momentum; a part with no data counts as 50 (flat). The weights are team choices; the future scenarios on the Matches page change them.":
     "：该领域 arXiv 类别中 AI 论文的增长，增长 40% 或以上算满分。趋势分 = 50% 需求 + 50% AI 势头；没有数据的部分算 50（持平）。权重由团队选定；职位匹配页上的未来情景会改变权重。",
   "Update data": "更新数据",
-  "Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.":
-    "获取最新的 OpenDOSM 数据（可选择同时更新 arXiv，约 2 分钟），然后重新计算信号和分数。某个来源失败时，会保留它之前的数据。",
-  "Also refresh arXiv paper counts": "同时更新 arXiv 论文数量", "Update data now": "立即更新数据", "Updating…": "正在更新……",
+  "Fetches the latest OpenDOSM figures and arXiv paper counts (about a minute), then recomputes the signals and scores. If a source fails, its previous data is kept.":
+    "获取最新的 OpenDOSM 数据和 arXiv 论文数量（约一分钟），然后重新计算信号和分数。若某个来源失败，会保留它之前的数据。",
+  "Update data now": "立即更新数据", "Updating…": "正在更新……",
   "Update failed; previous data kept.": "更新失败，已保留之前的数据。",
   "For": "对象", "Signal": "信号", "Direction": "方向", "Confidence": "可信度", "Detail": "详情", "Entity": "实体", "Metric": "指标", "Value": "数值", "Period": "期间", "Source": "来源",
   "composition effect": "结构效应",

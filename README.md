@@ -155,7 +155,7 @@ python src/main.py
 | POST | `/api/cv/summary` | `{"text"}` or `{"docx_base64"}` → summary, skills, qualifications, technologies found, evidence items with quotes, and `cv_areas` (0–100 per IT area, to send to `/api/match`) with `cv_areas_method` (`llm_evidence` or `technologies`). The CV is not stored |
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
-| POST / GET | `/api/trends/update` | Start the "Update data" job (`{"arxiv": true}` also refreshes arXiv, ~2 min) / check its status |
+| POST / GET | `/api/trends/update` | Start the "Update data" job (OpenDOSM and arXiv, about a minute; `{"arxiv": false}` skips arXiv) / check its status |
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
 | POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0077": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
@@ -181,7 +181,7 @@ python -m unittest discover tests
 - **Hosting.** The live demo, https://future-skills.replit.app, is a Replit Deployment (`deploymentTarget = "cloudrun"` in `.replit`) that runs `python src/main.py`. The app uses only the Python standard library, so there is no build step and nothing to install.
 - **Development and preview.** The **Run** button starts the `Start application` workflow (`PORT=5000 python src/main.py`), and we test each change in Replit's Preview before publishing. The repository is synced with GitHub: we pull the latest `main` into Replit, check it in Preview, then publish.
 - **Secrets.** `LLM_API_KEY`, `LLM_BASE_URL` and `LLM_MODEL` (any OpenAI-compatible API; the older `FIREWORKS_API_KEY` / `FIREWORKS_MODEL` still work) are kept in Replit Secrets and never committed; `.env.example` lists them. Without the key the app still works and shows a rule-based explanation instead of the AI one.
-- **Live data refresh.** On the deployed app, the "Update data" button on the Trends page runs `scripts/update_trends.py` on Replit: it fetches OpenDOSM (and optionally arXiv) and recomputes the signals and scores. Data written this way lasts until the deployment restarts; the committed CSVs are the baseline.
+- **Live data refresh.** On the deployed app, the "Update data" button on the Trends page runs `scripts/update_trends.py` on Replit: it fetches OpenDOSM and arXiv and recomputes the signals and scores. Data written this way lasts until the deployment restarts; the committed CSVs are the baseline.
 - **Replit Agent.** Used for deployment settings only (the `.replit` workflows and publishing). We check every change it makes to `.replit` into GitHub. See `replit.md` for why the repo has `pyproject.toml` and `uv.lock` but no `requirements.txt`.
 
 📄 Proof of use: [`submission/SDC2026_HandsOffOurRights_Replit_POU.pdf`](submission/SDC2026_HandsOffOurRights_Replit_POU.pdf)

@@ -345,19 +345,32 @@ def six_month_windows():
     return prev, last
 
 
+_arxiv_last_call = 0.0
+
+
 def arxiv_count(query):
+    # Wait only what is left of the 3 s since the previous call started, not 3 s after it.
+    global _arxiv_last_call
+    wait = ARXIV_DELAY_S - (time.monotonic() - _arxiv_last_call)
+    if wait > 0:
+        time.sleep(wait)
+    _arxiv_last_call = time.monotonic()
     # max_results=0 returns a wrong totalResults; 1 is correct.
     url = f"{ARXIV_API}?" + urllib.parse.urlencode({"search_query": query, "max_results": 1})
     xml = http_get(url, timeout=30)
     m = re.search(r"<opensearch:totalResults[^>]*>(\d+)<", xml)
     if not m:
         raise ValueError("arXiv response has no totalResults")
-    time.sleep(ARXIV_DELAY_S)
     return int(m.group(1)), url
 
 
-def arxiv_rows():
+def arxiv_rows(old=()):
     prev, last = six_month_windows()
+    # The earlier window ended 6 months ago, so its counts are settled: when the previous
+    # run fetched the same window, keep those rows (with their fetch date) and halve the calls.
+    kept = {(r["entity_id"], r["metric"], r["period_start"], r["period_end"]): r
+            for r in old if r["source_name"] == "arXiv API" and r["value"] != "no data"
+            and (r["period_start"], r["period_end"]) == (prev[0].isoformat(), prev[1].isoformat())}
     rows = []
     for sd in read_subdomains():
         cats = [c for c in sd["arxiv_categories"].split(";") if c]
@@ -378,6 +391,12 @@ def arxiv_rows():
                  "papers whose abstract mentions AI or large language models"),
                 ("arxiv_all_papers", f"{cat_q} AND {date_q}", "all papers"),
             ):
+                key = (sd["subdomain_id"], metric, start.isoformat(), end.isoformat())
+                if key in kept:
+                    print(f"  {sd['subdomain_id']:<24} {metric:<17} {start:%Y-%m}..{end:%Y-%m}: "
+                          f"{kept[key]['value']} (kept, fetched {kept[key]['fetched_date']})")
+                    rows.append(kept[key])
+                    continue
                 n, url = arxiv_count(q)
                 print(f"  {sd['subdomain_id']:<24} {metric:<17} {start:%Y-%m}..{end:%Y-%m}: {n}")
                 rows.append({**base, "metric": metric, "value": n,
@@ -466,6 +485,11 @@ def main():
     def skipped():
         raise RuntimeError("skipped by --no-arxiv")
 
+    old = []
+    if OUT.exists():
+        with OUT.open(encoding="utf-8-sig", newline="") as f:
+            old = [{k: r.get(k, "") for k in FIELDS if k != "trend_id"} for r in csv.DictReader(f)]
+
     # (label, fetch function, test that picks this step's rows from the previous run)
     steps = [
         ("OpenDOSM employment growth", employment_growth, lambda r: "productivity_qtr" in r["source_name"]),
@@ -474,14 +498,9 @@ def main():
         ("DOSM releases (manual)", manual_rows,
          lambda r: r["fetch_method"] == "manual_snapshot" and r["entity_type"] != "mycol_occupation"),
         ("MyCOL 2024/2025", mycol_rows, lambda r: r["entity_type"] == "mycol_occupation"),
-        ("arXiv AI papers per sub-domain", skipped if args.no_arxiv else arxiv_rows,
+        ("arXiv AI papers per sub-domain", skipped if args.no_arxiv else lambda: arxiv_rows(old),
          lambda r: r["source_name"] == "arXiv API"),
     ]
-
-    old = []
-    if OUT.exists():
-        with OUT.open(encoding="utf-8-sig", newline="") as f:
-            old = [{k: r.get(k, "") for k in FIELDS if k != "trend_id"} for r in csv.DictReader(f)]
 
     rows = []
     for name, fn, was_mine in steps:

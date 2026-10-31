@@ -116,24 +116,9 @@ function stepBar(current) {
 
 /* ---------- pages ---------- */
 
-// The first page: where IT jobs are heading (dashboard.js), then where the student fits in.
-function pageHome() {
-  render(`
-  <div class="stack">
-    <div class="viz-hero">
-    <section class="stack" style="gap: 10px">
-      <p class="eyebrow">AI-era job trends for IT students in Malaysia</p>
-      <h1>Where IT jobs are heading</h1>
-      <p class="muted">Official Malaysian data and global AI research in one place. The charts follow the data, and every number shows its source and date.</p>
-      <div class="row">
-        <button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button>
-        <a class="btn ghost" href="#/trends">All signals, data and sources &rarr;</a>
-      </div>
-    </section>
-    <div id="home-jobs" class="viz-hero-chart"></div>
-    </div>
-    <div id="home-dash" class="stack"><p class="muted" role="status">Loading the trend data…</p></div>
-    <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
+// "Where do you fit in?": the way into the student path, shown on the Trends page (the landing page).
+function startCard() {
+  return `
     <section class="card stack" id="start" style="gap: 12px">
       <h2>Where do you fit in?</h2>
       <p class="muted">Find the IT area that suits you and which of 25 IT roles to aim for, with the skills you still need and free courses to learn them.</p>
@@ -148,7 +133,10 @@ function pageHome() {
       <p class="muted small">Your progress is saved in this browser.</p>
       ${JOURNEY.some((st) => st.done() || skipped(st)) || trackedPaths().length ? '<div class="row"><button class="btn ghost small" type="button" id="forget">Clear my saved answers and progress</button></div>' : ""}
     </section>
-  </div>`);
+`;
+}
+
+function wireStartCard() {
   document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; };
   document.getElementById("quick").onclick = () => { state.quick = true; saveState(); };
   const forget = document.getElementById("forget");
@@ -158,21 +146,9 @@ function pageHome() {
     state = loadState();
     progress = loadProgress();
     cvResult = null;
-    pageHome();
+    route();
   };
   document.getElementById("to-start").onclick = () => document.getElementById("start").scrollIntoView({ behavior: "smooth", block: "start" });
-  Promise.all([api("/api/trends"), cached("/api/roles")]).then(([t, roles]) => {
-    const dash = document.getElementById("home-dash");
-    if (!dash) return;  // the student has moved on to another page
-    const jobs = document.getElementById("home-jobs");
-    jobs.innerHTML = trendHeroChart(t);
-    dash.innerHTML = trendDashboard(t, roles);
-    wireDashboard(jobs);
-    wireDashboard(dash);
-  }).catch(() => {
-    const dash = document.getElementById("home-dash");
-    if (dash) dash.innerHTML = '<p class="warn">Could not load the trend data. <a href="#/trends">Open the Trends page</a></p>';
-  });
 }
 
 async function pageQuizIntro() {
@@ -902,11 +878,13 @@ async function pageTrends() {
     <section class="stack" style="gap: 10px">
     <p class="eyebrow">AI-era trend signals</p>
     <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
+    <div class="row"><button class="btn primary" type="button" id="to-start">Find where I fit &darr;</button></div>
     <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.</div>
     </section>
     <div id="trend-jobs" class="viz-hero-chart"></div>
     </div>
     <div id="trend-dash" class="stack"></div>
+${startCard()}
     <section class="card stack" style="gap: 8px">
       <h2>What if this data changed?</h2>
       <p class="small">Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
@@ -914,8 +892,7 @@ async function pageTrends() {
     </section>
     <div class="card stack" style="gap: 10px">
       <h2>Update data</h2>
-      <p class="small muted">Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.</p>
-      <label class="row small"><input type="checkbox" id="arxiv"> Also refresh arXiv paper counts</label>
+      <p class="small muted">Fetches the latest OpenDOSM figures and arXiv paper counts (about a minute), then recomputes the signals and scores. If a source fails, its previous data is kept.</p>
       <div class="row"><button class="btn primary" type="button" id="update">Update data now</button><span class="small muted" id="upd-status" role="status"></span></div>
     </div>
   </div>`);
@@ -924,6 +901,7 @@ async function pageTrends() {
   dash.innerHTML = trendDashboard(t, roles);
   wireDashboard(jobs);
   wireDashboard(dash);
+  wireStartCard();
   const btn = document.getElementById("update");
   const show = (s) => {
     const label = { idle: "", running: "Updating…", done: `Updated ${s.finished ? new Date(s.finished).toLocaleString() : ""}. Your jobs page will re-check your plan with the new data.`, failed: "Update failed; previous data kept." };
@@ -941,7 +919,7 @@ async function pageTrends() {
   btn.onclick = async () => {
     btn.disabled = true;
     try {
-      show(await api("/api/trends/update", { body: JSON.stringify({ arxiv: document.getElementById("arxiv").checked }) }));
+      show(await api("/api/trends/update", { body: JSON.stringify({ arxiv: true }) }));
       setTimeout(poll, 2000);
     } catch (e) {
       document.getElementById("upd-status").textContent = e.message;
@@ -1937,7 +1915,7 @@ function pageProgress() {
 
 async function route() {
   const parts = location.hash.replace(/^#\/?/, "").split("/");
-  const page = parts[0] || "";
+  const page = parts[0] || "trends";  // the Trends page is the landing page
   document.querySelectorAll("[data-nav]").forEach((a) => {
     const on = a.dataset.nav === page || (page === "interests" && a.dataset.nav === "quiz");
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
@@ -1960,7 +1938,7 @@ async function route() {
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
     else if (page === "progress") pageProgress();
-    else pageHome();
+    else await pageTrends();
   } catch (e) {
     showError(e);
   }
