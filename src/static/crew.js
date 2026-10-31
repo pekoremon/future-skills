@@ -38,12 +38,13 @@ function crewScores(items, answers) {
 const crewReaction = (type, answer) => (answer >= 4 ? type : answer === 3 ? "nod" : "scratch");
 
 let sailorCount = 0;
-/* opts: { role: top type once evolved, hold: type whose prop is held, cls: extra classes } */
+/* opts: { role: top type once evolved, hold: type whose prop is held, cls: extra classes,
+   size: true to draw at 200 x 240 inside another SVG } */
 function sailorSVG(opts = {}) {
   const id = `sailor-${++sailorCount}`;
   const role = opts.role || "";
   const hold = opts.hold ? ` hold-${opts.hold}` : "";
-  return `<svg class="sailor${role ? ` is-${role}` : ""}${hold}${opts.cls ? ` ${opts.cls}` : ""}" viewBox="0 0 200 240" aria-hidden="true" focusable="false">
+  return `<svg class="sailor${role ? ` is-${role}` : ""}${hold}${opts.cls ? ` ${opts.cls}` : ""}" viewBox="0 0 200 240"${opts.size ? ' width="200" height="240"' : ""} aria-hidden="true" focusable="false">
   <defs><clipPath id="${id}-torso"><rect x="70" y="112" width="60" height="66" rx="18"/></clipPath></defs>
   <ellipse cx="100" cy="228" rx="46" ry="7" class="s-shadow"/>
   <g class="s-fx">
@@ -138,3 +139,86 @@ function crewHexGrow(svg, from, to) {
 
 // "The Curious Captain": the second type's word, then the top type's role.
 const crewTitle = (top, second) => (second ? `The ${CREW[second].adj} ${CREW[top].role}` : `The ${CREW[top].role}`);
+
+/* ---------- IT skills test as a treasure hunt ----------
+   Each tested IT area is an island. The quick check scouts every island (a flag when its
+   questions are answered); the 2 strongest become treasure islands, dug into by the in-depth
+   and hands-on questions; the result opens one chest per treasure island, its metal set by
+   the level. Right or wrong is never shown before the result. */
+const ISLANDS = {
+  software_dev: { icon: "💻", short: "Software" },
+  data_ai: { icon: "📊", short: "Data & AI" },
+  cybersecurity: { icon: "🔐", short: "Security" },
+  cloud_infra: { icon: "☁️", short: "Cloud" },
+  web_ux: { icon: "🎨", short: "Web & UX" },
+};
+const CHEST = { gold: ["#F2C230", "#B8860B"], silver: ["#D5DBE3", "#8A96A6"], wood: ["#B07A4A", "#6B4423"] };
+const chestTier = (level) => (level.min >= 75 ? "gold" : level.min >= 50 ? "silver" : "wood");
+
+let seaShipX = null;  // where the ship was on the last question, so it sails from there
+
+function seaMap(t, idx) {
+  const ids = [...t.areas, ...(t.added || [])];
+  const W = 40 + ids.length * 100, cx = (i) => 70 + i * 100, cy = 58;
+  const q = t.questions[idx];
+  const islands = ids.map((id, i) => {
+    const qs = t.questions.filter((x) => x.domain === id);
+    const screen = qs.filter((x) => x.stage === "screen"), deep = qs.filter((x) => x.stage !== "screen");
+    const done = (list) => list.length && list.every((x) => x.id in t.responses);
+    const treasure = (t.deepDomains || []).includes(id);
+    const here = q.domain === id, x = cx(i);
+    const dots = screen.map((s, k) => `<circle cx="${x - 12 + k * 12}" cy="${cy + 32}" r="3.5" class="${s.id in t.responses ? "dot-on" : "dot"}"/>`).join("");
+    return `<g class="isle${here ? " here" : ""}${done(screen) ? " explored" : ""}">
+      <ellipse cx="${x}" cy="${cy + 10}" rx="38" ry="13" class="sand"/><ellipse cx="${x}" cy="${cy + 4}" rx="26" ry="12" class="grass"/>
+      <text x="${x}" y="${cy + 8}" text-anchor="middle" class="isle-ico">${ISLANDS[id].icon}</text>
+      ${done(screen) ? `<g class="isle-flag"><rect x="${x + 18}" y="${cy - 26}" width="2.5" height="30" fill="#5A3A1A"/><path d="M${x + 20.5} ${cy - 26} h16 l-5 6 l5 6 h-16z" fill="#C0392B"/></g>` : ""}
+      ${treasure ? (done(deep) ? `<text x="${x}" y="${cy - 14}" text-anchor="middle" class="isle-mark">💰</text>` : `<text x="${x}" y="${cy - 14}" text-anchor="middle" class="isle-mark x">✕</text>`) : ""}
+      ${dots}
+      <text x="${x}" y="${cy + 54}" text-anchor="middle" class="isle-name">${ISLANDS[id].short}</text></g>`;
+  }).join("");
+  const shipX = cx(ids.indexOf(q.domain)) - 50;
+  const from = seaShipX === null ? shipX : seaShipX;
+  seaShipX = shipX;
+  const crew = state.crew || {};
+  return `<svg class="sea" viewBox="0 0 ${W} 120" role="img" aria-label="Map of your ${ids.length} IT areas">
+    <rect x="0" y="0" width="${W}" height="120" rx="14" class="sea-bg"/>
+    <path d="M14 22 q8 -5 16 0 t16 0 M${W - 70} 104 q8 -5 16 0 t16 0 M${W / 2} 14 q8 -5 16 0 t16 0" class="wave"/>
+    ${islands}
+    <g class="ship" style="transform: translateX(${from}px)" data-to="${shipX}">
+      <path d="M2 74 h34 l-6 11 h-22z" fill="#7A4E2D"/><rect x="18" y="38" width="2.5" height="36" fill="#5A3A1A"/>
+      <path d="M21 40 l14 26 h-14z" fill="#F4F1EA"/>
+      <g transform="translate(-1 48) scale(0.13)">${sailorSVG({ role: crew.lead, size: true })}</g>
+    </g></svg>`;
+}
+
+// Sails the ship from the last island to this question's island.
+function seaSail(svg) {
+  const ship = svg && svg.querySelector(".ship");
+  if (!ship) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => { ship.style.transform = `translateX(${ship.dataset.to}px)`; }));
+}
+
+function chestSVG(tier, open) {
+  const [main, dark] = CHEST[tier];
+  return `<svg class="chest${open ? " opening" : ""}" viewBox="0 0 120 100" aria-hidden="true" focusable="false">
+    <ellipse cx="60" cy="92" rx="44" ry="6" class="s-shadow"/>
+    <g class="glow"><circle cx="60" cy="44" r="30" fill="${main}" opacity="0.35"/><text x="30" y="24" class="spark">✦</text><text x="84" y="30" class="spark">✦</text></g>
+    <rect x="18" y="46" width="84" height="42" rx="6" fill="${main}" stroke="${dark}" stroke-width="3"/>
+    <rect x="18" y="58" width="84" height="6" fill="${dark}"/><rect x="52" y="54" width="16" height="16" rx="3" fill="${dark}"/>
+    <g class="lid"><path d="M18 48 v-12 a20 14 0 0 1 20 -14 h44 a20 14 0 0 1 20 14 v12z" fill="${main}" stroke="${dark}" stroke-width="3"/>
+    <rect x="54" y="38" width="12" height="12" rx="2" fill="${dark}"/></g>
+  </svg>`;
+}
+
+// Coins for the test: once per island ever explored and once for the first finished test,
+// so taking the test again (or answering "I don't know yet" to everything) pays nothing more.
+const TEST_COINS_KEY = "future-skills-test-coins-v1";
+const TEST_COINS = { island: 20, finish: 30 };
+function testCoins(kind, id) {
+  const got = readSaved(TEST_COINS_KEY) || {};
+  const key = `${kind}:${id}`;
+  if (got[key] || typeof addCoins !== "function") return;
+  got[key] = true;
+  writeSaved(TEST_COINS_KEY, got);
+  addCoins(TEST_COINS[kind], kind === "island" ? "island explored" : "test finished");
+}

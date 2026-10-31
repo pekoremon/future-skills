@@ -162,6 +162,11 @@ const MS = {
   "IT support, training, education technology": "Sokongan IT, latihan, teknologi pendidikan",
   "Project and product management, starting a business": "Pengurusan projek dan produk, memulakan perniagaan",
   "Databases, cybersecurity, IT operations": "Pangkalan data, keselamatan siber, operasi IT",
+  // IT test treasure hunt (crew.js)
+  "I don't know yet": "Saya belum tahu", "Not learned yet": "Belum dipelajari", "Your treasure": "Harta karun anda",
+  "Quick check only": "Semakan pantas sahaja",
+  "Gold chest: job-ready. Silver: developing. Wood: build the basics first.": "Peti emas: sedia bekerja. Perak: sedang berkembang. Kayu: bina asas dahulu.",
+  "Software": "Perisian", "Security": "Keselamatan", "Cloud": "Awan", "Web & UX": "Web & UX",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "Soalan ditulis oleh pasukan, berdasarkan jenis minat RIASEC Holland seperti yang digunakan oleh",
   // interest items
   "← Back": "← Kembali", "Pause": "Jeda", "I would enjoy...": "Saya akan seronok...",
@@ -697,6 +702,9 @@ const PATTERNS_MS = [
   [/^Item (\d+) of (\d+)$/, (m) => `Item ${m[1]} daripada ${m[2]}`],
   [/^The (Handy|Curious|Creative|Caring|Bold|Organised) (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => `${MS[m[2]]} yang ${CREW_ADJ_MS[m[1]]}`],
   [/^The (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => MS[m[1]]],
+  [/^Map of your (\d+) IT areas$/, (m) => `Peta ${m[1]} bidang IT anda`],
+  [/^\+(\d+) 🪙 island explored$/, (m) => `+${m[1]} 🪙 pulau diterokai`],
+  [/^\+(\d+) 🪙 test finished$/, (m) => `+${m[1]} 🪙 ujian selesai`],
   [/^([RIASEC]) · (\w+)$/, (m) => (MS[m[2]] ? `${m[1]} · ${MS[m[2]]}` : null)],
   [/^(.+\.) Type descriptions written by the team, based on$/, (m) => `${tr(m[1])} ${MS["Type descriptions written by the team, based on"]}`],
   [/^Question (\d+) of (\d+)$/, (m) => `Soalan ${m[1]} daripada ${m[2]}`],
@@ -891,6 +899,11 @@ const ZH = {
   "IT support, training, education technology": "IT 支持、培训、教育科技",
   "Project and product management, starting a business": "项目与产品管理、创业",
   "Databases, cybersecurity, IT operations": "数据库、网络安全、IT 运维",
+  // IT test treasure hunt (crew.js)
+  "I don't know yet": "我还不会", "Not learned yet": "还没学过", "Your treasure": "你的宝藏",
+  "Quick check only": "只做了快速检测",
+  "Gold chest: job-ready. Silver: developing. Wood: build the basics first.": "金箱：可胜任。银箱：发展中。木箱：先打好基础。",
+  "Software": "软件", "Security": "网络安全", "Cloud": "云端", "Web & UX": "Web 与界面",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "题目由团队编写，依据 Holland 的 RIASEC 兴趣类型，参考",
   // interest items
   "← Back": "← 返回", "Pause": "暂停", "I would enjoy...": "我会喜欢……",
@@ -1413,6 +1426,9 @@ const PATTERNS_ZH = [
   [/^Item (\d+) of (\d+)$/, (m) => `第 ${m[1]} 题，共 ${m[2]} 题`],
   [/^The (Handy|Curious|Creative|Caring|Bold|Organised) (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => `${CREW_ADJ_ZH[m[1]]}${ZH[m[2]]}`],
   [/^The (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => ZH[m[1]]],
+  [/^Map of your (\d+) IT areas$/, (m) => `你的 ${m[1]} 个 IT 领域地图`],
+  [/^\+(\d+) 🪙 island explored$/, (m) => `+${m[1]} 🪙 探索了一座岛`],
+  [/^\+(\d+) 🪙 test finished$/, (m) => `+${m[1]} 🪙 完成测验`],
   [/^([RIASEC]) · (\w+)$/, (m) => (ZH[m[2]] ? `${m[1]} · ${ZH[m[2]]}` : null)],
   [/^(.+\.) Type descriptions written by the team, based on$/, (m) => `${tr(m[1])}${ZH["Type descriptions written by the team, based on"]}`],
   [/^Question (\d+) of (\d+)$/, (m) => `第 ${m[1]} 题，共 ${m[2]} 题`],

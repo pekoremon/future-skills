@@ -264,6 +264,10 @@ async function pageInterests() {
       </div>
     </section>` : "";
   crewFinished = false;
+  if (CREW[lead] && (!state.crew || state.crew.lead !== lead || state.crew.second !== second)) {
+    state.crew = { lead, second };  // the sailor sails the IT test in this outfit
+    saveState();
+  }
   render(`
   <div class="quiz stack">
     ${stepBar("quiz")}
@@ -1513,10 +1517,11 @@ async function nextFromItem(idx, button) {
   const t = state.test;
   const q = t.questions[idx];
   button.disabled = true;
-  if (q.type === "code" && (!t.runs[q.id] || t.runs[q.id].code !== (t.code[q.id] ?? q.starter))) {
+  if (q.type === "code" && t.responses[q.id] !== null && (!t.runs[q.id] || t.runs[q.id].code !== (t.code[q.id] ?? q.starter))) {
     button.textContent = "Running your tests…";
     await runCode(q);  // grade the latest code, not an older run
   }
+  if (t.questions.filter((x) => x.domain === q.domain && x.stage === "screen").every((x) => x.id in t.responses)) testCoins("island", q.domain);
   try {
     if (idx + 1 < t.questions.length) {
       location.hash = `#/test/${idx + 2}`;
@@ -1533,6 +1538,8 @@ async function nextFromItem(idx, button) {
       const back = t.extending && t.returnTo;
       t.extending = false;
       saveState();
+      testCoins("finish", "first");
+      chestsClosed = !back;
       location.hash = back || "#/test/result";
     }
   } catch (e) {
@@ -1555,16 +1562,28 @@ function pageTestItem(n) {
       <a class="btn ghost" href="#/test">Pause</a>
     </div>
     <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${idx + 1}"><div style="width: ${Math.round(((idx + 1) / total) * 100)}%"></div></div>
+    ${seaMap(t, idx)}
     ${(t.added || []).includes(q.domain) && !(t.added || []).includes((t.questions[idx - 1] || {}).domain) ? `<p class="note">Extra quick check: <strong>${esc(nameList(t.added.filter((a) => !(t.result && (t.result.added || []).includes(a)))))}</strong>. Your earlier answers stay as they are.</p>` : ""}
     ${idx === screenCount(t) && t.deepDomains ? `<p class="note">Your strongest areas so far: <strong>${t.deepDomains.map((d) => esc(domainName(d))).join(" and ")}</strong>. These questions go deeper.</p>` : ""}
     <div class="row"><span class="chip">${esc(domainName(q.domain))}</span><span class="chip plain">${esc(STAGE_LABEL[q.stage])}</span><span class="muted small">about ${Math.max(1, Math.round(q.time_s / 60))} min</span></div>
     <h2 id="q-text" data-no-i18n>${esc(q.prompt)}</h2>
     ${q.code ? `<pre class="code" aria-label="Code or log for this question">${esc(q.code)}</pre>` : ""}
     ${questionBody(q)}
-    <div class="sticky-actions"><button class="btn primary" type="button" id="next" style="width: 100%">${idx + 1 === total ? "See my result" : lastScreen ? "Continue to in-depth questions" : "Next"}</button></div>
+    <div class="sticky-actions row" style="flex-wrap: nowrap">
+      <button class="btn dunno" type="button" id="dunno" aria-pressed="${t.responses[q.id] === null}">I don't know yet</button>
+      <button class="btn primary" type="button" id="next" style="flex: 1">${idx + 1 === total ? "See my result" : lastScreen ? "Continue to in-depth questions" : "Next"}</button>
+    </div>
   </div>`);
+  seaSail(app.querySelector(".sea"));
   wireAnswer(q);
-  document.getElementById("next").onclick = (e) => nextFromItem(idx, e.currentTarget);
+  const next = document.getElementById("next");
+  next.onclick = () => nextFromItem(idx, next);
+  // Counts as a wrong answer (the server scores an empty answer 0), without a guess.
+  document.getElementById("dunno").onclick = () => {
+    t.responses[q.id] = null;
+    saveState();
+    nextFromItem(idx, next);
+  };
 }
 
 function answerText(i) {
@@ -1665,6 +1684,21 @@ function trustLine(t) {
 }
 
 /* The student's own result, or with `sharedResult` a read-only view of someone else's. */
+let chestsClosed = false;  // right after the last question the chests open in front of the student
+
+// One chest per area tested in depth (gold, silver or wood by level); quick-check-only areas get a flag.
+function treasureHtml(r) {
+  const tested = r.domains.filter((d) => d.tested !== false);
+  const cell = (d) => (d.tested_in_depth
+    ? `<div class="chest-cell">${chestSVG(chestTier(d.level), chestsClosed)}<strong>${esc(d.name)}</strong><span class="chip${d.level.min >= 75 ? "" : d.level.min >= 50 ? " plain" : " warn-chip"}">${esc(d.level.label)}</span></div>`
+    : `<div class="chest-cell scouted"><span class="flag-ico" aria-hidden="true">🚩</span><strong>${esc(d.name)}</strong><span class="muted small">Quick check only</span></div>`);
+  return `<section class="card stack treasure" style="gap: 10px">
+    <h2>Your treasure</h2>
+    <div class="chests">${tested.sort((a, b) => b.tested_in_depth - a.tested_in_depth).map(cell).join("")}</div>
+    <p class="muted small">Gold chest: job-ready. Silver: developing. Wood: build the basics first.</p>
+  </section>`;
+}
+
 function pageTestResult(sharedResult = null) {
   const isShared = Boolean(sharedResult);
   const r = sharedResult || (state.test && state.test.result);
@@ -1718,9 +1752,10 @@ function pageTestResult(sharedResult = null) {
   </div>`);
     return;
   }
+  const dunno = (i) => state.test.responses[i.id] === null;  // "I don't know yet"
   const review = r.items.map((i, n) => `
     <details class="more card review">
-      <summary><span class="${i.correct ? "pass" : "fail"}">${i.correct ? "Right" : i.points > 0 ? "Partly right" : "Wrong"}</span>&nbsp;· Q${n + 1} · ${esc(i.skill)} <span class="muted small">&nbsp;${i.points} / ${i.max}</span></summary>
+      <summary><span class="${i.correct ? "pass" : "fail"}">${i.correct ? "Right" : i.points > 0 ? "Partly right" : dunno(i) ? "Not learned yet" : "Wrong"}</span>&nbsp;· Q${n + 1} · ${esc(i.skill)} <span class="muted small">&nbsp;${i.points} / ${i.max}</span></summary>
       <div class="stack" style="gap: 8px">
         <p data-no-i18n>${esc(i.prompt)}</p>
         ${i.answered ? "" : '<p class="muted small">Not answered.</p>'}
@@ -1735,6 +1770,7 @@ function pageTestResult(sharedResult = null) {
     ${stepBar("test")}
     <p class="eyebrow">Step 3 of 4 · IT skills test result</p>
     <h1>Your strongest IT area: ${esc(best.name)}</h1>
+    ${treasureHtml(r)}
     <p class="muted">${esc(r.disclaimer)}</p>
     ${trustLine(r.trust)}
     <div class="row"><button class="btn" type="button" id="share">Share my result</button></div>
@@ -1758,6 +1794,7 @@ function pageTestResult(sharedResult = null) {
     <div class="stack" style="gap: 10px"><h2>Review every answer</h2>${review}</div>
     <div class="row"><a class="btn primary" href="#/results">Next: step 4, my jobs</a><a class="btn" href="#/test">Take a new test</a><a class="btn ghost" href="#/">Home</a></div>
   </div>`);
+  chestsClosed = false;
   document.getElementById("share").onclick = (e) => shareResult(e.target);
   wireMoreAreas("#/test/result");
   document.getElementById("share-url").onfocus = (e) => e.target.select();

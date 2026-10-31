@@ -614,3 +614,42 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 .impact-link .sdg-tile { width: 48px; height: 48px; }
 html[data-lite] *, html[data-lite] *::before, html[data-lite] *::after { animation: none !important; transition: none !important; }
 html[data-lite] body::before, html[data-lite] .topbar::after { display: none; }
+
+/* IT test as a treasure hunt (crew.js): sea map, "I don't know yet", chests */
+.sea { display: block; width: 100%; max-height: 150px; overflow: visible; --sea: #CFE8F3; --sea-line: #9CCBE0; }
+:root[data-theme="dark"] .sea { --sea: #12324A; --sea-line: #1F4E6E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sea { --sea: #12324A; --sea-line: #1F4E6E; } }
+.sea-bg { fill: var(--sea); }
+.sea .wave { fill: none; stroke: var(--sea-line); stroke-width: 2; stroke-linecap: round; }
+.sea .sand { fill: #E9D5A1; } .sea .grass { fill: #6BAF5B; }
+.sea .isle { opacity: 0.55; transition: opacity 0.3s; }
+.sea .isle.here, .sea .isle.explored { opacity: 1; }
+.sea .isle-ico { font-size: 18px; }
+.sea .isle-name { font-size: 14px; font-weight: 700; fill: var(--text); }
+.sea .isle-mark { font-size: 18px; } .sea .isle-mark.x { fill: #C0392B; font-weight: 800; }
+.sea .dot { fill: none; stroke: var(--text); stroke-opacity: 0.45; stroke-width: 1.5; } .sea .dot-on { fill: var(--accent); }
+.sea .isle-flag { animation: fade-in 0.5s; }
+.sea .ship { transition: transform 0.9s ease-in-out; }
+.sea .ship > path:first-child { animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(2px); } }
+.btn.dunno { flex: none; }
+.btn.dunno[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-strong); font-weight: 700; }
+.chests { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.chest-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.chest-cell .chest { width: 110px; overflow: visible; }
+.chest-cell.scouted { justify-content: center; opacity: 0.8; }
+.flag-ico { font-size: 34px; line-height: 1.6; }
+.chest .lid { transform-box: view-box; transform-origin: 18px 48px; transform: rotate(-24deg); }
+.chest .spark { fill: #E8A317; font-size: 16px; }
+.chest.opening .lid { animation: lid-open 1.2s ease-out both; }
+.chest.opening .glow { animation: fade-in 0.6s 0.7s both; }
+.chest.opening { animation: chest-shake 0.6s ease-in-out; }
+@keyframes lid-open { 0%, 45% { transform: rotate(0); } 100% { transform: rotate(-24deg); } }
+@keyframes chest-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+@media (max-width: 560px) {
+  .sea .isle-name { font-size: 17px; }
+  .chests { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sea .ship, .sea .ship > path, .chest, .chest * { animation: none !important; transition: none !important; }
+}
