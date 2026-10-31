@@ -38,7 +38,7 @@
   --c-trend: #F0A04B; --c-sdg: #F06292; --focus: #8AB4F8; color-scheme: dark;
 }
 
-html { zoom: 1.15; }  /* whole site drawn 1.15x larger */
+html { zoom: 1.15; --zoom: 1.15; }  /* whole site drawn 1.15x larger; --zoom lets vh/vw sizes undo it */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }  /* classes like .stack set display, which would override it */
 body {
@@ -604,7 +604,7 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
     --accent: #0F6E66; --accent-strong: #0A4F49; --accent-soft: #E3F1EF; --on-accent: #FFFFFF; --track: #E1E6ED; color-scheme: light;
     --fx-card: #FFFFFF; --fx-edge: #C9D0D9;  /* fx.css glass cards */
   }
-  html { zoom: 1; }
+  html { zoom: 1; --zoom: 1; }
   html body { background: #FFFFFF; font-size: 12px; }
   body::before, .topbar, .no-print { display: none !important; }
   main { max-width: none; padding: 0; }

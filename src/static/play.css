@@ -48,7 +48,7 @@ html[data-bg] body { background-color: var(--bg); background-attachment: fixed; 
   :root:not([data-theme="light"]) .puzzle-options button.is-right { background: #143A26; color: #A6E3BF; }
   :root:not([data-theme="light"]) .puzzle-options button.is-wrong { background: #3D1A17; color: #F2B1A9; }
 }
-.quiz-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--text); }
+.quiz-dialog { width: min(680px, calc((100vw - 32px) / var(--zoom, 1))); max-height: calc((100vh - 120px) / var(--zoom, 1)); max-height: calc((100dvh - 120px) / var(--zoom, 1)); margin: auto; overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--text); }
 .quiz-dialog::backdrop { background: rgba(15, 20, 25, 0.55); }
 .quiz-q { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 @media (max-width: 520px) {
