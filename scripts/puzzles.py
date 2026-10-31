@@ -1,7 +1,8 @@
 """The daily challenge and the video check quizzes on My learning.
 
-Daily challenge: one puzzle per day (Malaysia time), the same for every student. The area
-and level rotate by date. The LLM configured for explain.py writes a fresh puzzle; without
+Daily challenge: one code puzzle per day (Malaysia time), the same for every student: it
+always has a snippet, log or command output to read. The area and level rotate by date, and
+the puzzle carries a hint (what to check or try first) that the page pays coins to see. The LLM configured for explain.py writes a fresh puzzle; without
 an API key, or when its reply fails the format check, the day's puzzle comes from the bank
 in data/puzzles.json. Puzzles are kept in memory and in .cache/daily_puzzles.json, so a
 restart keeps the answer.
@@ -95,6 +96,10 @@ PUZZLE_RULES = """Each puzzle is a JSON object with these keys:
   "explain": 1-2 sentences saying why the right answer is right
 Rules: exactly one answer is right; check it twice before you reply, and run any code in your head step by step. The wrong answers must differ from the right one and from each other, and be about as long as the right one, so length gives nothing away. Plain text only, no markdown. Do not mention real companies, people or universities by name. Reply with JSON only."""
 
+DAILY_RULES = """Extra rules for the daily challenge:
+  "code" must NOT be empty: the question is about a real snippet (code, SQL, a config file, a log or command output) that the student has to read.
+  "hint": one sentence, at most 25 words, telling the student what to check or try first, without giving the answer away."""
+
 LEVEL_HINT = {"easy": "a first-year IT student can answer it in under a minute",
               "medium": "it needs a final-year IT student to think for a minute or two",
               "hard": "it tricks someone who only half understands the topic; a junior professional should get it"}
@@ -118,8 +123,8 @@ def _llm_json(system: str, user: str) -> object:
     return json.loads(text[start:end + 1])
 
 
-def valid_puzzle(p) -> dict:
-    """A puzzle from the LLM with every field checked, or ValueError."""
+def valid_puzzle(p, daily: bool = False) -> dict:
+    """A puzzle from the LLM with every field checked, or ValueError. A daily one also needs code and a hint."""
     if not isinstance(p, dict):
         raise ValueError("puzzle is not an object")
     out = {}
@@ -132,6 +137,13 @@ def valid_puzzle(p) -> dict:
     if not isinstance(wrong, list) or len(wrong) != 3 or not all(isinstance(w, str) and w.strip() and len(w) <= 220 for w in wrong):
         raise ValueError("'wrong' must be 3 short strings")
     out["wrong"] = [w.strip() for w in wrong]
+    if daily:
+        hint = p.get("hint")
+        if not out["code"]:
+            raise ValueError("the daily puzzle needs code")
+        if not isinstance(hint, str) or not hint.strip() or len(hint) > 220:
+            raise ValueError("bad 'hint'")
+        out["hint"] = hint.strip()
     if len({o.lower() for o in [out["correct"], *out["wrong"]]}) != 4:
         raise ValueError("options repeat")
     return out
@@ -162,7 +174,10 @@ def daily_plan(day: date) -> tuple[str, str]:
 
 
 def bank_daily(day: date, area: str, level: str) -> dict:
-    pool = [p for p in load_bank()["puzzles"] if p["area"] == area and p["level"] == level]
+    """A bank puzzle with code: the day's area and level, or the nearest level that has one."""
+    coded = [p for p in load_bank()["puzzles"] if p.get("code") and p["area"] == area]
+    by_distance = sorted(LEVELS, key=lambda lv: abs(LEVELS.index(lv) - LEVELS.index(level)))
+    pool = next(pl for lv in by_distance if (pl := [p for p in coded if p["level"] == lv]))
     pick = pool[int(hashlib.sha256(day.isoformat().encode()).hexdigest(), 16) % len(pool)]
     return {**pick, "source": "bank", "model": None}
 
@@ -191,17 +206,17 @@ def daily_stored(day: date) -> dict:
         if key in _daily:
             return _daily[key]
         cached = _read_cache().get(key)
-        if cached:
+        if cached and cached.get("code") and cached.get("hint"):  # days saved before hints are written again
             _daily[key] = cached
             return cached
         area, level = daily_plan(day)
         stored, reason = None, None
         if explain.configured():
             try:
-                user = (f"Write one IT puzzle for today's daily challenge for final-year IT students in Malaysia.\n"
+                user = (f"Write one IT code puzzle for today's daily challenge for final-year IT students in Malaysia.\n"
                         f"IT area: {area_names().get(area, area)}. Level: {level} ({LEVEL_HINT[level]}).\n"
-                        f"Make it different from a textbook definition question, and do not mention the date. Variety seed: {key}.\n\n" + PUZZLE_RULES)
-                p = valid_puzzle(_llm_json("You write short, correct IT puzzles for students.", user))
+                        f"Make it different from a textbook definition question, and do not mention the date. Variety seed: {key}.\n\n" + PUZZLE_RULES + "\n" + DAILY_RULES)
+                p = valid_puzzle(_llm_json("You write short, correct IT code puzzles for students.", user), daily=True)
                 stored = {"id": f"daily-{key}", "area": area, "level": level, **p,
                           "source": "llm", "model": explain.model_name()}
             except Exception as e:  # noqa: BLE001  any failure falls back to the bank
@@ -234,6 +249,12 @@ def parse_day(value) -> date:
     if day > today():
         raise PuzzleError("that day's challenge is not out yet")
     return day
+
+
+def daily_hint(value) -> dict:
+    day = parse_day(value)
+    s = daily_stored(day)
+    return {"date": s["date"], "hint": s["hint"]}
 
 
 def check_daily(value, choice) -> dict:

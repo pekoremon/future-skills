@@ -35,6 +35,7 @@ Endpoints (all JSON):
                                      signals, trend scores and the student's role ranks, before and after
     GET  /api/puzzles/daily          today's daily challenge (LLM-written, or from the bank)
     POST /api/puzzles/daily/check    date + chosen option -> right or wrong, and why
+    POST /api/puzzles/daily/hint     date -> the hint for that day's puzzle (the page charges coins)
     POST /api/puzzles/video          learning-path video URL -> 5 questions on its topic
     POST /api/puzzles/video/check    quiz id + 5 answers -> score, and passed when 4 or more are right
     GET  /api/sdg/summary            students, paths and study hours per SDG target, over every student
@@ -684,6 +685,11 @@ def puzzle_daily(request):
 def puzzle_daily_check(request):
     data = body(request)
     return puzzle_call(puzzles.check_daily, data.get("date"), data.get("choice"))
+
+
+@route("POST", "/api/puzzles/daily/hint")
+def puzzle_daily_hint(request):
+    return puzzle_call(puzzles.daily_hint, body(request).get("date"))
 
 
 @route("POST", "/api/puzzles/video")
