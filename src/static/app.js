@@ -2140,7 +2140,7 @@ async function pageLearn(roleId) {
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
       <div id="learn-plan">${planNow()}</div>
-      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns 🪙 coins.</p>
+      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns ${COIN_ICO} coins.</p>
     </section>
     ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "", list(p.stages[1].resources)) : ""}

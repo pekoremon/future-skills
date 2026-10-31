@@ -13,6 +13,8 @@ const PLAY_KEY = "future-skills-puzzles-v1";
 const LETTERS = "ABCD";
 const COINS = { perRight: 10, perfect: 30 };
 const START_COINS = 5000;  // a new player's coins, before any are earned
+// The gold coin shown next to every coin amount (the same one as the top bar's coin chip).
+const COIN_ICO = '<svg class="coin-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#E9A800"/><circle cx="10" cy="10" r="6.5" fill="#FFD43B" stroke="#C98A00" stroke-width="1.2"/><path d="M8 7.2h3.2M8 10h3.6M8 12.8h3.2" stroke="#B07800" stroke-width="1.4" stroke-linecap="round"/></svg>';
 // The shop. Coins come up to 80 a video, so the first colour takes a few videos and a
 // special theme a few weeks. Colours tint the background
 // (play.css); cursors swap the mouse pointer, and trails add an effect behind it; a special
@@ -58,7 +60,8 @@ function playStore() {
     const s = readSaved(PLAY_KEY) || {};
     const sold = (list, id) => list.some((b) => b.id === id);  // items the shop no longer sells are dropped
     const all = [...BACKGROUNDS, ...CURSORS, ...SPECIALS];
-    play = { coins: s.coins ?? START_COINS, earned: s.earned || 0, video: s.video || {},
+    // started: saves from before the 5000 start are topped up to it once.
+    play = { coins: s.started ? s.coins : Math.max(s.coins ?? 0, START_COINS), started: true, earned: s.earned || 0, video: s.video || {},
       owned: [...new Set(["classic", "arrow", ...(s.owned || []).filter((id) => sold(all, id))])],
       bg: sold(BACKGROUNDS, s.bg) ? s.bg : "classic", cursor: sold(CURSORS, s.cursor) ? s.cursor : "arrow",
       special: sold(SPECIALS, s.special) ? s.special : null };
@@ -82,7 +85,7 @@ function addCoins(n, why) {
   const t = document.createElement("div");
   t.className = "coin-toast";
   t.setAttribute("role", "status");
-  t.textContent = `+${n} 🪙 ${why}`;
+  t.innerHTML = `${COIN_ICO}<span>+${n} ${esc(why)}</span>`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2600);
 }
@@ -140,7 +143,7 @@ function openShop(tab = "colours") {
     const preview = (kind, it) => (kind === "colours" ? `<div class="bg-swatch bg-${it.id}" aria-hidden="true"></div>`
       : kind === "cursors" ? `<div class="shop-icon" aria-hidden="true">${it.icon}</div>`
       : `<div class="special-thumb" aria-hidden="true" style="background-image: url('/static/themes/${it.id}.svg')"><span style="font-family: '${it.sample}', serif">Aa ${it.cursor}</span></div>`);
-    frame("Shop", `🪙 ${s.coins} coins`, `
+    frame("Shop", `${s.coins} coins`, `
       <div class="shop-tabs" role="tablist">${SHOP_TABS.map((x) => `<button type="button" role="tab" aria-selected="${x.id === current}" data-tab="${x.id}">${esc(x.label)}</button>`).join("")}</div>
       ${current === "colours" && s.special ? '<p class="small warn">A special theme is on, so colours are hidden. Turn it off on the Special themes tab.</p>' : ""}
       <div class="shop-grid">${t.items.map((it) => {
@@ -148,9 +151,10 @@ function openShop(tab = "colours") {
         const on = equipped(current, it.id);
         const action = on ? (current === "specials" ? `<button class="btn" type="button" data-off>Turn off</button>` : '<span class="chip">In use</span>')
           : owned ? `<button class="btn" type="button" data-use="${it.id}">Use</button>`
-          : `<button class="btn${s.coins >= it.price ? " primary" : ""}" type="button" data-buy="${it.id}"${s.coins >= it.price ? "" : " disabled"}>🪙 ${it.price}</button>`;
+          : `<button class="btn${s.coins >= it.price ? " primary" : ""}" type="button" data-buy="${it.id}"${s.coins >= it.price ? "" : " disabled"}>${COIN_ICO} ${it.price}</button>`;
         return `<div class="shop-item${on ? " using" : ""}">${preview(current, it)}<strong>${esc(it.name)}</strong>${it.desc ? `<span class="muted small">${esc(it.desc)}</span>` : ""}${action}</div>`;
       }).join("")}</div>`);
+    dialog.querySelector("#quiz-title").insertAdjacentHTML("afterbegin", `${COIN_ICO} `);
     const use = (id) => {
       if (current === "colours") { s.bg = id; s.special = null; } else if (current === "cursors") s.cursor = id; else s.special = id;
       savePlay();
@@ -235,7 +239,7 @@ function videoQuiz(url, title, onPass) {
     }
     const answers = Array(quiz.questions.length).fill(null);
     frame(eyebrow, title, `
-      <p class="small muted">${quiz.questions.length} questions on this topic${quiz.skills.length ? ` (${esc(quiz.skills.slice(0, 3).join(", "))})` : ""}. Get ${quiz.pass_mark} right to clear it. Each right answer earns 🪙 ${COINS.perRight}; all ${quiz.questions.length} earns 🪙 ${COINS.perfect} more.</p>
+      <p class="small muted">${quiz.questions.length} questions on this topic${quiz.skills.length ? ` (${esc(quiz.skills.slice(0, 3).join(", "))})` : ""}. Get ${quiz.pass_mark} right to clear it. Each right answer earns ${COIN_ICO} ${COINS.perRight}; all ${quiz.questions.length} earns ${COIN_ICO} ${COINS.perfect} more.</p>
       ${quiz.questions.map((q, i) => `<section class="stack quiz-q" style="gap: 10px" data-q="${i}">${puzzleHtml(q, i + 1)}</section>`).join("")}
       <div class="row"><button class="btn primary" type="button" id="quiz-submit" disabled>Check my answers</button><span class="muted small" id="quiz-left">${quiz.questions.length} left</span></div>`);
     dialog.querySelectorAll("[data-q]").forEach((sec) => {
@@ -272,7 +276,7 @@ function videoQuiz(url, title, onPass) {
       if (gain) { s.video[url] = worth; savePlay(); addCoins(gain, "video check"); }
       e.target.parentElement.outerHTML = `
         <div class="${r.passed ? "note" : "warn"} quiz-verdict" role="status">
-          <strong>${r.score} of ${r.total} right${gain ? ` · +${gain} 🪙` : ""}.</strong>
+          <strong>${r.score} of ${r.total} right${gain ? ` · +${gain} ${COIN_ICO}` : ""}.</strong>
           ${r.passed ? "Level cleared ★" : `You need ${r.pass_mark} to clear it. Look again at the parts you missed, then try a new set of questions.`}
           ${!gain && r.score ? '<span class="small">(Coins only come from beating your best try on this video.)</span>' : ""}
         </div>

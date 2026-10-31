@@ -252,7 +252,7 @@ function clearedScene(id, deep, coins) {
   return scene(`${isleScene(id, deep ? "dig" : "flag")}
     <h2>${deep ? "Treasure dug up!" : "Island explored!"}</h2>
     <p class="muted">${esc(ISLANDS[id].short)}</p>
-    ${coins ? `<p class="scene-coins">+${coins} 🪙</p>` : ""}`, 2300);
+    ${coins ? `<p class="scene-coins">+${coins} ${COIN_ICO}</p>` : ""}`, 2300);
 }
 
 // After the quick check: an old map where the 2 strongest islands get a red X.
