@@ -1405,44 +1405,28 @@ const testPlan = () => api("/api/assessment/plan", { body: JSON.stringify({
   cv_areas: state.cvAreas ? state.cvAreas.scores : undefined, technologies: state.techs,
   interest_answers: quizDone() ? state.answers : undefined }) });
 
-// "Your CV shows X, your interests point to Y — we'll check these N areas (about M minutes)."
-function planText(p) {
-  const hasCv = p.cv_scores && Object.keys(p.cv_scores).length;
-  const said = [];
-  if (p.from_cv.length) said.push(`your CV shows ${nameList(p.from_cv)}`);
-  else if (hasCv) said.push(`your CV shows no IT area at ${p.cv_min_score} or more yet`);
-  if (p.from_interest.length) said.push(`your interests point to ${nameList(p.from_interest)}`);
-  let text = said.length ? said.join(", ") : "you have not added a CV or answered the interest questions, so nothing narrows the test down yet";
-  if (p.filled.length) text += `; to compare at least ${p.min_areas} areas we add ${nameList(p.filled)}`;
-  const n = p.areas.length === 6 ? "all 6" : `these ${p.areas.length}`;
-  return `${text[0].toUpperCase()}${text.slice(1)} — we'll check ${n} areas (${p.question_count} questions, about ${p.minutes} minutes).`;
-}
-
 async function pageTestIntro() {
   const going = testInProgress();
   const answered = going ? Object.keys(state.test.responses).length : 0;
   const open = going ? state.test.questions.findIndex((q) => !(q.id in state.test.responses)) : -1;
   const nextOpen = going ? (open === -1 ? state.test.questions.length - 1 : open) : 0;
   const plan = await testPlan();
-  const missing = [!skillsDone() && '<a href="#/cv">add your CV</a>', !quizDone() && '<a href="#/quiz">answer the interest questions</a>'].filter(Boolean);
-  const others = Object.keys(AREA_NAMES).filter((id) => !plan.areas.includes(id));
+  const missing = [!skillsDone() && ["#/cv", "add your CV"], !quizDone() && ["#/quiz", "answer the interest questions"]].filter(Boolean)
+    .map(([href, text], i) => `<a href="${href}">${i ? text : text[0].toUpperCase() + text.slice(1)}</a>`);
   render(`
   <div class="quiz stack">
     ${stepBar("test")}
     <p class="eyebrow">Step 3 of 4 · IT skills test</p>
-    <h1>Can you do the work in the areas that fit you?</h1>
-    <div class="note stack" style="gap: 8px">
-      <p><strong>${esc(planText(plan))}</strong></p>
+    <h1>Test your IT skills</h1>
+    ${plan.areas.length === 6 && missing.length ? `<div class="warn stack" role="status" style="gap: 4px">
+      <strong>${missing.length === 2 ? "No CV or interest answers yet, so the test covers all 6 areas." : "The test covers all 6 areas."}</strong>
+      <span>${missing.join(" or ")} to make it shorter.</span>
+    </div>` : ""}
+    <div class="card stack" style="gap: 10px">
+      <p class="big">About ${plan.minutes} min</p>
+      <p class="muted">${plan.question_count} questions</p>
       <div class="row" style="gap: 6px">${plan.areas.map((id) => `<span class="chip">${esc(AREA_NAMES[id] || id)}</span>`).join("")}</div>
-      ${others.length ? `<p class="small muted">Not checked: ${esc(nameList(others))}. They get no test score; your results use your CV and interests for them.</p>` : ""}
-      ${missing.length ? `<p class="small">To focus the test, first ${missing.join(" or ")}.</p>` : ""}
     </div>
-    <div class="card stack">
-      <div><h3>1 · Quick check</h3><p class="muted">${plan.areas.length * 3} questions: 3 in each of these ${plan.areas.length} areas, so each gets the same fair chance.</p></div>
-      <div><h3>2 · In depth</h3><p class="muted">Your 2 strongest of these get 2 harder questions and 1 hands-on task each: write code or SQL, analyse logs, or plan a project.</p></div>
-      <div><h3>3 · Your result</h3><p class="muted">These areas ranked for you, a readiness score for your top 2, the skills to work on, and an explanation for every answer.</p></div>
-    </div>
-    <p class="muted small">Code runs in your browser, in Python. The first coding question downloads Python (about 10 MB) once.</p>
     <div class="stack">
       ${going ? `<a class="btn primary" href="#/test/${nextOpen + 1}">Continue (${answered} answered)</a>` : ""}
       ${state.test && state.test.result ? `<a class="btn primary" href="#/test/result">See your last result</a>` : ""}

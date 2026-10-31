@@ -349,13 +349,10 @@ const MS = {
   "Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked \"composition effect\".":
     "Had: DOSM menerbitkan iklan bagi satu pekerjaan IT sahaja (Pembangun Perisian), MyCOL hanya satu edisi (status, bukan trend), dan arXiv bersifat global. Jika kertas AI bertambah hanya kerana semua kertas bertambah, isyarat ditanda \"kesan komposisi\".",
   // test
-  "Can you do the work in the areas that fit you?": "Bolehkah anda melakukan kerja dalam bidang yang sesuai dengan anda?",
-  "1 · Quick check": "1 · Semakan pantas", "2 · In depth": "2 · Mendalam", "3 · Your result": "3 · Keputusan anda",
-  "Your 2 strongest of these get 2 harder questions and 1 hands-on task each: write code or SQL, analyse logs, or plan a project.":
-    "2 bidang terkuat anda mendapat 2 soalan lebih sukar dan 1 tugasan amali setiap satu: menulis kod atau SQL, menganalisis log, atau merancang projek.",
-  "These areas ranked for you, a readiness score for your top 2, the skills to work on, and an explanation for every answer.":
-    "Bidang ini disusun untuk anda, skor kesediaan bagi 2 teratas, kemahiran untuk diperbaiki, dan penerangan bagi setiap jawapan.",
-  "Code runs in your browser, in Python. The first coding question downloads Python (about 10 MB) once.": "Kod dijalankan dalam pelayar anda, dalam Python. Soalan pengekodan pertama memuat turun Python (kira-kira 10 MB) sekali sahaja.",
+  "Test your IT skills": "Uji kemahiran IT anda",
+  "No CV or interest answers yet, so the test covers all 6 areas.": "Belum ada CV atau jawapan minat, jadi ujian merangkumi kesemua 6 bidang.",
+  "The test covers all 6 areas.": "Ujian merangkumi kesemua 6 bidang.", "or": "atau", "to make it shorter.": "untuk memendekkannya.",
+  "Answer the interest questions": "Jawab soalan minat",
   "See your last result": "Lihat keputusan terakhir anda", "Start a new test": "Mula ujian baharu", "Start the test": "Mula ujian", "Skip to step 4, my jobs": "Langkau ke langkah 4, kerjaya saya",
   "Quick check": "Semakan pantas", "In depth": "Mendalam", "Hands-on": "Amali",
   "Select all that apply.": "Pilih semua yang berkenaan.", "Your answer": "Jawapan anda", "Your Python code": "Kod Python anda", "Run tests": "Jalankan ujian",
@@ -609,13 +606,11 @@ const PATTERNS_MS = [
   [/^Could not get an explanation: (.+)$/, (m) => `Tidak dapat mendapatkan penerangan: ${m[1]}`],
   [/^Something went wrong: (.+)$/, (m) => `Ada masalah: ${m[1]}`],
   [/^Continue \((\d+) answered\)$/, (m) => `Sambung (${m[1]} dijawab)`],
+  [/^About (\d+) min$/, (m) => `Kira-kira ${m[1]} min`], [/^(\d+) questions$/, (m) => `${m[1]} soalan`],
   [/^Test this area too \(about (\d+) min\)$/, (m) => `Uji bidang ini juga (kira-kira ${m[1]} min)`],
   [/^Test all remaining areas \(about (\d+) min\)$/, (m) => `Uji semua bidang yang tinggal (kira-kira ${m[1]} min)`],
   [/^Your test left out (this area|these (\d+) areas)\. Add a (\d+)-question quick check for any of them: your earlier answers stay, and your result groups are worked out again with the new scores\.$/,
     (m) => `Ujian anda tidak merangkumi ${m[2] ? `${m[2]} bidang ini` : "bidang ini"}. Tambah semakan pantas ${m[3]} soalan bagi mana-mana bidang: jawapan awal anda kekal, dan kumpulan keputusan anda dikira semula dengan skor baharu.`],
-  [/^(\d+) questions: 3 in each of these (\d+) areas, so each gets the same fair chance\.$/, (m) => `${m[1]} soalan: 3 bagi setiap ${m[2]} bidang ini, jadi setiap bidang mendapat peluang yang sama adil.`],
-  [/^Not checked: (.+)\. They get no test score; your results use your CV and interests for them\.$/, (m) => `Tidak disemak: ${names(m[1])}. Bidang ini tiada skor ujian; keputusan anda menggunakan CV dan minat anda untuknya.`],
-  [/^To focus the test, first$/, () => "Untuk memfokuskan ujian, sila"],
   [/^Not tested: (.+)\. No test score\.$/, (m) => `Tidak diuji: ${names(m[1])}. Tiada skor ujian.`],
   [/^(Your strongest|Strongest) IT area: (.+)$/, (m) => `${m[1] === "Strongest" ? "Bidang IT terkuat" : "Bidang IT terkuat anda"}: ${names(m[2])}`],
   [/^= 40% quick check \((\d+)\) \+ 60% readiness \((\d+)\)$/, (m) => `= 40% semakan pantas (${m[1]}) + 60% kesediaan (${m[2]})`],
@@ -628,8 +623,6 @@ const PATTERNS_MS = [
   [/^(\d+) of your (\d+) sources rank (.+) first(.*)$/, (m) => `${m[1]} daripada ${m[2]} sumber anda meletakkan ${names(m[3])} di tempat pertama${srcMs(m[4])}`],
   [/^Your (skills test|preferences|CV and tools) result points to (.+), but your (skills test|preferences|CV and tools) result points to (.+)\.$/, (m) => `Keputusan ${srcMs(m[1])} anda menghala ke ${names(m[2])}, tetapi keputusan ${srcMs(m[3])} anda menghala ke ${names(m[4])}.`],
   [/^Only your (skills test|preferences|CV and tools) result was used\. Add the other parts for a more reliable result\.$/, (m) => `Hanya keputusan ${srcMs(m[1])} anda digunakan. Tambah bahagian lain untuk keputusan yang lebih boleh dipercayai.`],
-  // planText on the test intro
-  [/ — we'll check /, (m) => planMs(m.input)],
   // results page
   [/^Match score = (\d+)% fit with the role's IT area \+ (\d+)% interest fit with the role \+ (\d+)% skill fit \+ (\d+)% AI-era trend of the role\. The weights are the team's design choice\. Roles are ranked by match score, highest first\. Roles that need a higher qualification than yours, or a professional licence, are not shown\.$/,
     (m) => `Skor padanan = ${m[1]}% kesesuaian dengan bidang IT peranan + ${m[2]}% kesesuaian minat dengan peranan + ${m[3]}% kesesuaian kemahiran + ${m[4]}% trend era AI peranan. Pemberat ini pilihan reka bentuk pasukan. Peranan disusun mengikut skor padanan, tertinggi dahulu. Peranan yang memerlukan kelayakan lebih tinggi daripada anda, atau lesen profesional, tidak ditunjukkan.`],
@@ -704,16 +697,6 @@ const PATTERNS_MS = [
 ];
 
 const srcMs = (s) => s.replace(/skills test/g, "ujian kemahiran").replace(/CV and tools/g, "CV dan alat").replace(/preferences/g, "keutamaan").replace(/ and /g, " dan ");
-
-function planMs(s) {
-  return names(s)
-    .replace(/^Your CV shows /, "CV anda menunjukkan ").replace(/, your interests point to /, ", minat anda menghala ke ").replace(/^Your interests point to /, "Minat anda menghala ke ")
-    .replace(/^Your CV shows no IT area at (\d+) or more yet/, "CV anda belum menunjukkan bidang IT dengan skor $1 atau lebih").replace(/your CV shows no IT area at (\d+) or more yet/, "CV anda belum menunjukkan bidang IT dengan skor $1 atau lebih")
-    .replace(/^You have not added a CV or answered the interest questions, so nothing narrows the test down yet/, "Anda belum menambah CV atau menjawab soalan minat, jadi ujian belum dapat difokuskan")
-    .replace(/; to compare at least (\d+) areas we add /, "; untuk membandingkan sekurang-kurangnya $1 bidang kami tambah ")
-    .replace(/ — we'll check all 6 areas/, " — kami akan menyemak kesemua 6 bidang").replace(/ — we'll check these (\d+) areas/, " — kami akan menyemak $1 bidang ini")
-    .replace(/\((\d+) questions, about (\d+) minutes\)\./, "($1 soalan, kira-kira $2 minit).");
-}
 
 function groupWhyMs(s) {
   const part = (x) => x.replace(/^interest not checked$/, "minat belum disemak").replace(/^skill not checked$/, "kemahiran belum disemak")
@@ -971,13 +954,10 @@ const ZH = {
   "Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked \"composition effect\".":
     "限制：DOSM 只公布一个 IT 职业（软件开发人员）的招聘广告，MyCOL 只有一期（是状态，不是趋势），arXiv 是全球数据。如果 AI 论文增加只是因为所有论文都在增加，该信号会标为“结构效应”。",
   // test
-  "Can you do the work in the areas that fit you?": "在适合你的领域里，你做得来吗？",
-  "1 · Quick check": "1 · 快速检测", "2 · In depth": "2 · 深入", "3 · Your result": "3 · 你的结果",
-  "Your 2 strongest of these get 2 harder questions and 1 hands-on task each: write code or SQL, analyse logs, or plan a project.":
-    "其中你最强的 2 个领域各有 2 道较难的题和 1 项实作：写代码或 SQL、分析日志，或规划项目。",
-  "These areas ranked for you, a readiness score for your top 2, the skills to work on, and an explanation for every answer.":
-    "为你排列这些领域、给前 2 名一个准备度分数、列出要加强的技能，并解释每一道题的答案。",
-  "Code runs in your browser, in Python. The first coding question downloads Python (about 10 MB) once.": "代码在你的浏览器里用 Python 运行。第一道编程题会下载一次 Python（约 10 MB）。",
+  "Test your IT skills": "测测你的 IT 技能",
+  "No CV or interest answers yet, so the test covers all 6 areas.": "还没有履历或兴趣答案，所以测验涵盖全部 6 个领域。",
+  "The test covers all 6 areas.": "测验涵盖全部 6 个领域。", "or": "或", "to make it shorter.": "可以让测验更短。",
+  "Answer the interest questions": "回答兴趣问题",
   "See your last result": "查看上次结果", "Start a new test": "开始新的测验", "Start the test": "开始测验", "Skip to step 4, my jobs": "跳到第 4 步，我的职位",
   "Quick check": "快速检测", "In depth": "深入", "Hands-on": "实作",
   "Select all that apply.": "选出所有适用的答案。", "Your answer": "你的答案", "Your Python code": "你的 Python 代码", "Run tests": "运行测试",
@@ -1221,13 +1201,11 @@ const PATTERNS_ZH = [
   [/^Could not get an explanation: (.+)$/, (m) => `无法取得解释：${m[1]}`],
   [/^Something went wrong: (.+)$/, (m) => `出了点问题：${m[1]}`],
   [/^Continue \((\d+) answered\)$/, (m) => `继续（已答 ${m[1]} 题）`],
+  [/^About (\d+) min$/, (m) => `约 ${m[1]} 分钟`], [/^(\d+) questions$/, (m) => `${m[1]} 题`],
   [/^Test this area too \(about (\d+) min\)$/, (m) => `也测这个领域（约 ${m[1]} 分钟）`],
   [/^Test all remaining areas \(about (\d+) min\)$/, (m) => `测试其余所有领域（约 ${m[1]} 分钟）`],
   [/^Your test left out (this area|these (\d+) areas)\. Add a (\d+)-question quick check for any of them: your earlier answers stay, and your result groups are worked out again with the new scores\.$/,
     (m) => `你的测验没有包括${m[2] ? `这 ${m[2]} 个领域` : "这个领域"}。可以为任何一个领域加做 ${m[3]} 题的快速检测：之前的答案会保留，结果分组会用新分数重新计算。`],
-  [/^(\d+) questions: 3 in each of these (\d+) areas, so each gets the same fair chance\.$/, (m) => `${m[1]} 题：这 ${m[2]} 个领域各 3 题，每个领域机会均等。`],
-  [/^Not checked: (.+)\. They get no test score; your results use your CV and interests for them\.$/, (m) => `未检查：${list(m[1])}。这些领域没有测验分数；结果会改用你的履历和兴趣。`],
-  [/^To focus the test, first$/, () => "想让测验更聚焦，请先"],
   [/^Not tested: (.+)\. No test score\.$/, (m) => `未测验：${list(m[1])}。没有测验分数。`],
   [/^(Your strongest|Strongest) IT area: (.+)$/, (m) => `${m[1] === "Strongest" ? "最强的 IT 领域" : "你最强的 IT 领域"}：${names(m[2])}`],
   [/^= 40% quick check \((\d+)\) \+ 60% readiness \((\d+)\)$/, (m) => `= 40% 快速检测（${m[1]}）+ 60% 准备度（${m[2]}）`],
@@ -1240,8 +1218,6 @@ const PATTERNS_ZH = [
   [/^(\d+) of your (\d+) sources rank (.+) first(.*)$/, (m) => `你的 ${m[2]} 个来源中有 ${m[1]} 个把${names(m[3])}排第一${m[4].replace(/^ \((.+)\)\.$/, (x, a) => `（${srcZh(a)}）。`).replace(/^\.$/, "。")}`],
   [/^Your (skills test|preferences|CV and tools) result points to (.+), but your (skills test|preferences|CV and tools) result points to (.+)\.$/, (m) => `你的${srcZh(m[1])}结果指向${names(m[2])}，但你的${srcZh(m[3])}结果指向${names(m[4])}。`],
   [/^Only your (skills test|preferences|CV and tools) result was used\. Add the other parts for a more reliable result\.$/, (m) => `只用到你的${srcZh(m[1])}结果。加入其他部分，结果会更可靠。`],
-  // planText on the test intro
-  [/ — we'll check /, (m) => planZh(m.input)],
   // results page
   [/^Match score = (\d+)% fit with the role's IT area \+ (\d+)% interest fit with the role \+ (\d+)% skill fit \+ (\d+)% AI-era trend of the role\. The weights are the team's design choice\. Roles are ranked by match score, highest first\. Roles that need a higher qualification than yours, or a professional licence, are not shown\.$/,
     (m) => `匹配分 = ${m[1]}% 职位所属 IT 领域契合度 + ${m[2]}% 与职位的兴趣契合度 + ${m[3]}% 技能契合度 + ${m[4]}% 职位的 AI 时代趋势。权重由团队设计。职位按匹配分从高到低排列。需要比你更高学历或专业执照的职位不会显示。`],
@@ -1314,18 +1290,6 @@ const PATTERNS_ZH = [
     (m) => `每个部分 = 50 + 50 × 其信号按可信度加权的平均方向。趋势分数 = 马来西亚需求 × ${m[1]}% + AI 势头 × ${m[2]}%。`],
 ];
 
-function planZh(s) {
-  const [said, rest] = s.split(" — we'll check ");
-  const head = said
-    .replace(/^You have not added a CV or answered the interest questions, so nothing narrows the test down yet/, "你还没加入履历或回答兴趣问题，所以测验还无法聚焦")
-    .replace(/[Yy]our CV shows no IT area at (\d+) or more yet/, "你的履历还没有哪个 IT 领域达到 $1 分")
-    .replace(/[Yy]our CV shows (.+?)(?=, your interests point to |; to compare |$)/, (x, l) => `你的履历显示${list(l)}`)
-    .replace(/(^|, )[Yy]our interests point to (.+?)(?=; to compare |$)/, (x, sep, l) => `${sep ? "，" : ""}你的兴趣指向${list(l)}`)
-    .replace(/; to compare at least (\d+) areas we add (.+)$/, (x, n, l) => `；为了至少比较 ${n} 个领域，我们加入${list(l)}`);
-  const tail = rest.replace(/^all 6 areas/, "全部 6 个领域").replace(/^these (\d+) areas/, "这 $1 个领域")
-    .replace(/ \((\d+) questions, about (\d+) minutes\)\.$/, "（$1 题，约 $2 分钟）。");
-  return `${head}——我们会检查${tail}`;
-}
 
 function groupWhyZh(s) {
   const part = (x) => x.replace(/^interest not checked$/, "兴趣尚未检查").replace(/^skill not checked$/, "技能尚未检查")
