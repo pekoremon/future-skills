@@ -26,8 +26,8 @@ Future Skills helps IT students find the part of IT that suits them. An interest
 | GitHub Repository | https://github.com/pekoremon/future-skills |
 | Replit Project | https://future-skills.replit.app (published from Replit) |
 | Live Demo | https://future-skills.replit.app |
-| Slide Deck | [Pitch deck (Google Drive)](https://drive.google.com/file/d/1ZcFFKKtm1UjylE6r0XQ_gE3tUY09VYbC/view?usp=sharing) |
-| Demo Video | https://youtu.be/QdBmTyO73JM |
+| Slide Deck (preliminary) | [Pitch deck (Google Drive)](https://drive.google.com/file/d/1ZcFFKKtm1UjylE6r0XQ_gE3tUY09VYbC/view?usp=sharing) |
+| Demo Video (preliminary) | https://youtu.be/QdBmTyO73JM |
 
 ## Overview
 
@@ -209,7 +209,7 @@ python -m unittest discover tests
 - **Employer and HR view:** a skills-gap heatmap and reskilling plan for a whole team.
 - **Test questions and AI explanations** in Bahasa Melayu and Chinese, not only the interface.
 - **More HRD Corp-claimable programmes,** checked against HRD Corp's own records, not only provider pages.
-- **Progress tracking** along the learning path, and keeping refreshed trend data across deployment restarts.
+- **Keep refreshed trend data across deployment restarts** (today the committed CSVs come back after a restart).
 - **A fairness check:** the app collects no age, gender or background, and a test could show that recommendations depend only on interests, skills and the CV.
 
 ## Team
@@ -233,6 +233,16 @@ python -m unittest discover tests
 - [x] Repository set to public before the deadline
 - [x] "How to Run" steps verified
 - [x] No API keys or secrets committed
+
+**Final round (due 1 Nov 2026, 07:59 MYT)**
+
+- [ ] Final Solution Report (`SDC2026_HandsOffOurRights_Final.pdf`, 9-page finalist template)
+- [ ] Updated PRD
+- [ ] Updated technology declaration (`SDC2026_HandsOffOurRights_TechDeclaration.pdf`)
+- [ ] Final slides (.pptx, plus a flattened PDF)
+- [ ] Backup recorded pitch video (YouTube)
+- [x] Live prototype: https://future-skills.replit.app
+- [x] Public repo, Apache-2.0 LICENSE, continuous commits
 
 ## License
 
