@@ -493,3 +493,32 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
   .print-only { display: block; }
   .sheet-notes { min-height: 32mm; }
 }
+
+/* ---------- Lite mode (app.js): the top-bar switch and the size bar under it ---------- */
+.lite-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 600; }
+.lite-bar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: center; padding: 8px 16px; font-size: 13px;
+  background: var(--accent-soft); color: var(--accent-strong); border-bottom: 1px solid var(--border); }
+.lite-bar[hidden] { display: none; }
+.lite-bar .btn { min-height: 32px; padding: 0 12px; font-size: 13px; }
+
+/* ---------- study plan on My learning and the learning path ---------- */
+.plan { border-top: 1px solid var(--border); padding-top: 10px; }
+.plan-line { font-size: 14px; }
+.plan-behind > strong:first-child { color: var(--warn-text); }
+.plan-ok > strong:first-child { color: var(--accent-strong); }
+.plan .btn { min-height: 40px; padding: 0 14px; font-size: 14px; }
+.plan-cal select, .plan-cal input { min-height: 40px; padding: 4px 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+
+/* ---------- SDG contribution page ---------- */
+.impact-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.impact-num { font-size: 15px; }
+.impact-num strong { font-size: 32px; line-height: 1; margin-right: 4px; }
+.impact-totals { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.impact-totals > div { display: flex; flex-direction: column; gap: 2px; }
+.impact-totals strong { font-size: 22px; }
+.impact-table th[scope="row"] { text-align: left; font-weight: 600; }
+.impact-link { display: flex; gap: 12px; align-items: center; color: var(--text); text-decoration: none; }
+.impact-link:hover { border-color: var(--accent); }
+.impact-link .sdg-tile { width: 48px; height: 48px; }
+html[data-lite] *, html[data-lite] *::before, html[data-lite] *::after { animation: none !important; transition: none !important; }
+html[data-lite] body::before, html[data-lite] .topbar::after { display: none; }

@@ -40,6 +40,8 @@ Endpoints (all JSON):
     POST /api/puzzles/daily/check    date + chosen option -> right or wrong, and why
     POST /api/puzzles/video          learning-path video URL -> 5 questions on its topic
     POST /api/puzzles/video/check    quiz id + 5 answers -> score, and passed when 4 or more are right
+    GET  /api/sdg/summary            students, paths and study hours per SDG target, over every student
+    POST /api/sdg/record             anonymous browser id + role + planned/done hours of its learning path
 
 /api/match, /api/explain and /api/learn also take "trend_changes" (scripts/whatif.py): the
 results are then built from a changed copy of the trend data, for that request only.
@@ -85,6 +87,7 @@ def load_env_file(path: Path = ROOT / ".env") -> None:
 import assessment  # noqa: E402  (scripts/ is added to the path above)
 import cv_reader  # noqa: E402
 import explain  # noqa: E402
+import impact  # noqa: E402
 import interest  # noqa: E402
 import learning  # noqa: E402
 import matching  # noqa: E402
@@ -716,6 +719,21 @@ def puzzle_video(request):
 def puzzle_video_check(request):
     data = body(request)
     return puzzle_call(puzzles.check_video_quiz, data.get("quiz_id"), data.get("answers"))
+
+
+@route("GET", "/api/sdg/summary")
+def sdg_summary(request):
+    return jsonify(impact.summary())
+
+
+@route("POST", "/api/sdg/record")
+def sdg_record(request):
+    data = body(request)
+    try:
+        return jsonify(impact.record(data.get("learner"), data.get("role_id"), data.get("hours_planned"),
+                                     data.get("hours_done"), data.get("items_done", 0)))
+    except impact.ImpactError as e:
+        raise BadRequest(str(e)) from None
 
 
 def low_data(res: Response, method: str, headers) -> tuple[int, bytes, dict]:

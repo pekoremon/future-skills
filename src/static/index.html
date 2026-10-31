@@ -9,7 +9,8 @@
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/fx.css">
 <link rel="stylesheet" href="/static/play.css">
-<script>try { var t = localStorage.getItem("future-skills-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>try { var t = localStorage.getItem("future-skills-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}
+try { if (localStorage.getItem("future-skills-lite") === "1") document.documentElement.dataset.lite = "1"; } catch (e) {}</script>
 </head>
 <body>
 <header class="topbar">
@@ -31,9 +32,11 @@
       <option value="ms" lang="ms">Bahasa Melayu</option>
       <option value="zh" lang="zh-Hans">中文</option>
     </select>
+    <button type="button" class="lang-btn lite-btn" id="lite" aria-pressed="false" title="Lite mode: no photos, animation or charts, for mobile data">Lite</button>
     <button type="button" class="lang-btn theme-btn" id="theme" aria-label="Dark mode" title="Dark mode"></button>
   </div>
 </header>
+<div class="lite-bar" id="lite-bar" role="status" hidden></div>
 <main id="app" tabindex="-1"></main>
 <script src="/static/i18n.js"></script>
 <script src="/static/dashboard.js"></script>
