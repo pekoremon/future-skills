@@ -40,6 +40,7 @@ async function pageAdvisor() {
   const best = res.areas.find((a) => a.id === res.best);
   const said = (type) => (res.insights.find((i) => i.type === type) || {}).text;
   const paths = trackedPaths().slice(0, 3);
+  const questions = advisorQuestions(res, top);
   const skill = (s) => {
     const r = s.resources[0];
     return `<li class="stack" style="gap: 2px">
@@ -54,7 +55,9 @@ async function pageAdvisor() {
     <div class="row no-print">
       <a class="btn ghost" href="#/results">&larr; Back to my jobs</a>
       <button class="btn primary" type="button" id="print">Print or save as PDF</button>
+      <button class="btn" type="button" id="share-plan">Share</button>
     </div>
+    <p class="muted small no-print" id="share-status" role="status" hidden></p>
     <div class="stack" style="gap: 4px">
       <p class="eyebrow">For your career advisor</p>
       <h1>Your IT career plan</h1>
@@ -91,12 +94,34 @@ async function pageAdvisor() {
     </section>` : ""}
     <section class="card stack" style="gap: 8px">
       <h2>Questions to ask</h2>
-      <ol class="sheet-list">${advisorQuestions(res, top).map((q) => `<li>${esc(q)}</li>`).join("")}</ol>
+      <ol class="sheet-list">${questions.map((q) => `<li>${esc(q)}</li>`).join("")}</ol>
     </section>
     <section class="card sheet-notes print-only"><h2>Notes</h2></section>
     <p class="muted small"><span>Made with Future Skills</span> · <a href="${esc(location.origin)}">${esc(location.host)}</a></p>
   </div>`);
   document.getElementById("print").onclick = () => window.print();
+  // Share: the plan as plain text in the page's language, through the phone's share sheet
+  // (WhatsApp, email…), or copied where there is none.
+  const t = (s) => (LANG === "en" ? s : tr(s));
+  const text = [
+    t("Your IT career plan"), today(), "",
+    ...(best ? [`${t("Your best IT area")}: ${t(best.name)}`, ""] : []),
+    `${t("Your top jobs")}:`, ...top.map((m, i) => `${i + 1}. ${t(m.role_name)} (${fmt(m.total)} / 100)`), "",
+    ...(path ? [`${t("Skills to work on first")}:`, ...path.skills.slice(0, 3).map((s) => `- ${s.skill_name}${s.resources[0] ? `: ${s.resources[0].title} ${s.resources[0].url}` : ""}`), ""] : []),
+    `${t("Questions to ask")}:`, ...questions.map((q, i) => `${i + 1}. ${t(q)}`),
+  ].join("\n");
+  document.getElementById("share-plan").onclick = async () => {
+    const status = document.getElementById("share-status");
+    try {
+      if (navigator.share) { await navigator.share({ title: t("Your IT career plan"), text }); return; }
+      await navigator.clipboard.writeText(text);
+      status.textContent = "Copied. Paste it into WhatsApp or an email to your advisor.";
+    } catch (e) {
+      if (e.name === "AbortError") return;  // share sheet closed
+      status.textContent = "Could not share here. Use Print or save as PDF instead.";
+    }
+    status.hidden = false;
+  };
 }
 
 // This page's words in Bahasa Melayu and Chinese, added to i18n.js's tables.
@@ -108,7 +133,9 @@ Object.assign(MS, {
   "Your IT career plan": "Pelan kerjaya IT anda", "Built on the real trend data, not your what-if.": "Dibina daripada data trend sebenar, bukan senario bagaimana-jika anda.",
   "Your best IT area": "Bidang IT terbaik anda", "Based on": "Berdasarkan", "Skills to work on first": "Kemahiran untuk diusahakan dahulu",
   "Your learning so far": "Pembelajaran anda setakat ini", "Questions to ask": "Soalan untuk ditanya", "Notes": "Catatan",
-  "Made with Future Skills": "Dibuat dengan Future Skills",
+  "Made with Future Skills": "Dibuat dengan Future Skills", "Share": "Kongsi",
+  "Copied. Paste it into WhatsApp or an email to your advisor.": "Disalin. Tampal dalam WhatsApp atau e-mel kepada penasihat anda.",
+  "Could not share here. Use Print or save as PDF instead.": "Tidak dapat dikongsi di sini. Gunakan Cetak atau simpan sebagai PDF.",
 });
 PATTERNS_MS.push(
   [/^My results point to (.+) and to (.+)\. Which jobs use both\?$/, (m) => `Keputusan saya menunjuk kepada ${names(m[1])} dan ${names(m[2])}. Pekerjaan mana yang menggunakan kedua-duanya?`],
@@ -126,7 +153,9 @@ Object.assign(ZH, {
   "Your IT career plan": "你的 IT 职业规划", "Built on the real trend data, not your what-if.": "按真实趋势数据生成，不是你的假设情况。",
   "Your best IT area": "最适合你的 IT 领域", "Based on": "依据", "Skills to work on first": "先补这些技能",
   "Your learning so far": "目前的学习进度", "Questions to ask": "可以问顾问的问题", "Notes": "笔记",
-  "Made with Future Skills": "由 Future Skills 生成",
+  "Made with Future Skills": "由 Future Skills 生成", "Share": "分享",
+  "Copied. Paste it into WhatsApp or an email to your advisor.": "已复制。贴到 WhatsApp 或电邮里发给你的顾问。",
+  "Could not share here. Use Print or save as PDF instead.": "这里无法分享。请改用「打印或存为 PDF」。",
 });
 PATTERNS_ZH.push(
   [/^My results point to (.+) and to (.+)\. Which jobs use both\?$/, (m) => `我的结果同时指向${names(m[1])}和${names(m[2])}。哪些职位两者都用得上？`],

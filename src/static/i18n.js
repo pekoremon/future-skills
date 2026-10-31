@@ -162,6 +162,11 @@ const MS = {
   "IT support, training, education technology": "Sokongan IT, latihan, teknologi pendidikan",
   "Project and product management, starting a business": "Pengurusan projek dan produk, memulakan perniagaan",
   "Databases, cybersecurity, IT operations": "Pangkalan data, keselamatan siber, operasi IT",
+  // IT test treasure hunt (crew.js)
+  "I don't know yet": "Saya belum tahu", "Not learned yet": "Belum dipelajari", "Your treasure": "Harta karun anda",
+  "Quick check only": "Semakan pantas sahaja",
+  "Gold chest: job-ready. Silver: developing. Wood: build the basics first.": "Peti emas: sedia bekerja. Perak: sedang berkembang. Kayu: bina asas dahulu.",
+  "Software": "Perisian", "Security": "Keselamatan", "Cloud": "Awan", "Web & UX": "Web & UX",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "Soalan ditulis oleh pasukan, berdasarkan jenis minat RIASEC Holland seperti yang digunakan oleh",
   // interest items
   "← Back": "← Kembali", "Pause": "Jeda", "I would enjoy...": "Saya akan seronok...",
@@ -662,16 +667,23 @@ const MS = {
   "Your hours count towards SDG 4 and 8": "Jam anda menyumbang kepada SDG 4 dan 8",
   "See what every student here adds up to →": "Lihat jumlah sumbangan semua pelajar →",
   "What every student's hours add up to →": "Jumlah jam semua pelajar →",
-  // Global goals on the matches page
-  "Global goals you care about": "Matlamat global yang anda pentingkan",
+  // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
+  "Global goals you care about":
+    "Matlamat global yang anda pentingkan",
   "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
     "Pilih Matlamat Pembangunan Mampan PBB yang anda mahu kerja anda bantu. Pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan, jadi ia naik dalam senarai anda. Jangan pilih apa-apa untuk menyusun mengikut kesesuaian dan trend sahaja.",
-  "IT job": "pekerjaan IT", "IT jobs": "pekerjaan IT",
-  "Your global goals": "Matlamat global anda", "Supports a global goal you picked": "Menyokong matlamat global yang anda pilih",
+  "IT job":
+    "pekerjaan IT",
+  "IT jobs":
+    "pekerjaan IT",
+  "Your global goals":
+    "Matlamat global anda",
+  "Supports a global goal you picked":
+    "Menyokong matlamat global yang anda pilih",
   "If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.":
     "Jika anda memilih matlamat global, pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan (paling banyak 100 kesemuanya). Matlamat yang disokong setiap pekerjaan datang daripada sasaran SDG PBB dalam data kami, dengan sebab bagi setiap satu.",
-  "Supports the global goal you picked, so it gets 5 extra points": "Menyokong matlamat global yang anda pilih, jadi ia mendapat 5 mata tambahan",
-  // How this differs from job sites and course platforms (Trends page)
+  "Supports the global goal you picked, so it gets 5 extra points":
+    "Menyokong matlamat global yang anda pilih, jadi ia mendapat 5 mata tambahan",
   "How is this different from JobStreet, LinkedIn or Coursera?":
     "Apakah bezanya dengan JobStreet, LinkedIn atau Coursera?",
   "Job sites: JobStreet, Hiredly, LinkedIn Jobs":
@@ -737,6 +749,9 @@ const PATTERNS_MS = [
   [/^Item (\d+) of (\d+)$/, (m) => `Item ${m[1]} daripada ${m[2]}`],
   [/^The (Handy|Curious|Creative|Caring|Bold|Organised) (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => `${MS[m[2]]} yang ${CREW_ADJ_MS[m[1]]}`],
   [/^The (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => MS[m[1]]],
+  [/^Map of your (\d+) IT areas$/, (m) => `Peta ${m[1]} bidang IT anda`],
+  [/^\+(\d+) 🪙 island explored$/, (m) => `+${m[1]} 🪙 pulau diterokai`],
+  [/^\+(\d+) 🪙 test finished$/, (m) => `+${m[1]} 🪙 ujian selesai`],
   [/^([RIASEC]) · (\w+)$/, (m) => (MS[m[2]] ? `${m[1]} · ${MS[m[2]]}` : null)],
   [/^(.+\.) Type descriptions written by the team, based on$/, (m) => `${tr(m[1])} ${MS["Type descriptions written by the team, based on"]}`],
   [/^Question (\d+) of (\d+)$/, (m) => `Soalan ${m[1]} daripada ${m[2]}`],
@@ -938,6 +953,11 @@ const ZH = {
   "IT support, training, education technology": "IT 支持、培训、教育科技",
   "Project and product management, starting a business": "项目与产品管理、创业",
   "Databases, cybersecurity, IT operations": "数据库、网络安全、IT 运维",
+  // IT test treasure hunt (crew.js)
+  "I don't know yet": "我还不会", "Not learned yet": "还没学过", "Your treasure": "你的宝藏",
+  "Quick check only": "只做了快速检测",
+  "Gold chest: job-ready. Silver: developing. Wood: build the basics first.": "金箱：可胜任。银箱：发展中。木箱：先打好基础。",
+  "Software": "软件", "Security": "网络安全", "Cloud": "云端", "Web & UX": "Web 与界面",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "题目由团队编写，依据 Holland 的 RIASEC 兴趣类型，参考",
   // interest items
   "← Back": "← 返回", "Pause": "暂停", "I would enjoy...": "我会喜欢……",
@@ -1438,16 +1458,23 @@ const ZH = {
   "Your hours count towards SDG 4 and 8": "你的学习时数贡献于 SDG 4 和 8",
   "See what every student here adds up to →": "看看所有学生加起来的贡献 →",
   "What every student's hours add up to →": "所有学生的学习时数加起来 →",
-  // Global goals on the matches page
-  "Global goals you care about": "你关心的全球目标",
+  // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
+  "Global goals you care about":
+    "你关心的全球目标",
   "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
     "选出你希望自己的工作能帮助的联合国可持续发展目标。支持其中任一目标的工作加 5 分，在你的列表里排得更前。不选的话，只按匹配度和趋势排序。",
-  "IT job": "个 IT 职位", "IT jobs": "个 IT 职位",
-  "Your global goals": "你的全球目标", "Supports a global goal you picked": "支持你选的全球目标",
+  "IT job":
+    "个 IT 职位",
+  "IT jobs":
+    "个 IT 职位",
+  "Your global goals":
+    "你的全球目标",
+  "Supports a global goal you picked":
+    "支持你选的全球目标",
   "If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.":
     "选了全球目标后，支持其中任一目标的工作加 5 分（总分最多 100）。每份工作支持哪些目标来自我们数据里的联合国 SDG 具体目标，每条都附有理由。",
-  "Supports the global goal you picked, so it gets 5 extra points": "支持你选的全球目标，所以加 5 分",
-  // How this differs from job sites and course platforms (Trends page)
+  "Supports the global goal you picked, so it gets 5 extra points":
+    "支持你选的全球目标，所以加 5 分",
   "How is this different from JobStreet, LinkedIn or Coursera?":
     "这和 JobStreet、LinkedIn 或 Coursera 有什么不同？",
   "Job sites: JobStreet, Hiredly, LinkedIn Jobs":
@@ -1500,6 +1527,9 @@ const PATTERNS_ZH = [
   [/^Item (\d+) of (\d+)$/, (m) => `第 ${m[1]} 题，共 ${m[2]} 题`],
   [/^The (Handy|Curious|Creative|Caring|Bold|Organised) (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => `${CREW_ADJ_ZH[m[1]]}${ZH[m[2]]}`],
   [/^The (Shipwright|Navigator|Bard|Ship's Doctor|Captain|Quartermaster)$/, (m) => ZH[m[1]]],
+  [/^Map of your (\d+) IT areas$/, (m) => `你的 ${m[1]} 个 IT 领域地图`],
+  [/^\+(\d+) 🪙 island explored$/, (m) => `+${m[1]} 🪙 探索了一座岛`],
+  [/^\+(\d+) 🪙 test finished$/, (m) => `+${m[1]} 🪙 完成测验`],
   [/^([RIASEC]) · (\w+)$/, (m) => (ZH[m[2]] ? `${m[1]} · ${ZH[m[2]]}` : null)],
   [/^(.+\.) Type descriptions written by the team, based on$/, (m) => `${tr(m[1])}${ZH["Type descriptions written by the team, based on"]}`],
   [/^Question (\d+) of (\d+)$/, (m) => `第 ${m[1]} 题，共 ${m[2]} 题`],
