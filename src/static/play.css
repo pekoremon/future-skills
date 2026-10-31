@@ -1,5 +1,9 @@
 /* The level map (play.js): stats, level map, shop, coin toast and dialogs. */
 .coin-chip { text-decoration: none; color: var(--text); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+.coin-ico { width: 18px; height: 18px; flex: none; }
+.shop-top { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.shop-ico { width: 18px; height: 18px; flex: none; }
+@media (max-width: 560px) { .shop-label { display: none; } }  /* phones: the bag icon alone */
 .play-stats { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
 .play-stats .card { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
 .play-stats strong { font-size: 22px; line-height: 1.2; }
@@ -27,8 +31,7 @@
   .lv-row.rev.more::after { left: 20px; }
 }
 
-/* shop: a small button on My learning opens the shop dialog */
-.shop-btn { font-weight: 700; }
+/* shop: the bag button in the top bar opens the shop dialog */
 .shop-dialog { width: min(820px, calc(100vw - 32px)); }
 .shop-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .shop-tabs button { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer; }

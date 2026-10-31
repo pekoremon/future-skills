@@ -100,12 +100,9 @@ async function pageMyLearning() {
   const cleared = Object.keys(progress.done).length;
   render(`
   <div class="stack">
-    <div class="row" style="justify-content: space-between; align-items: flex-end; gap: 10px">
-      <div class="stack" style="gap: 6px">
-        <p class="eyebrow">Your learning journey</p>
-        <h1>My level map</h1>
-      </div>
-      <button class="btn shop-btn" type="button" id="shop-open">🛍️ Shop</button>
+    <div class="stack" style="gap: 6px">
+      <p class="eyebrow">Your learning journey</p>
+      <h1>My level map</h1>
     </div>
     <div class="play-stats">
       <div class="card"><strong>🪙 ${s.coins}</strong><span class="muted small">coins</span></div>
@@ -120,7 +117,6 @@ async function pageMyLearning() {
       </section>`}
     <p class="muted small">Coins, levels and shop items are saved in this browser.</p>
   </div>`);
-  document.getElementById("shop-open").onclick = () => openShop();
   app.querySelectorAll("[data-level]").forEach((b) => {
     b.onclick = () => levelDialog(b.dataset.path, b.dataset.level, Number(b.dataset.n));
   });
@@ -498,4 +494,7 @@ function projectCheck(key, title, onPass) {
 }
 
 // The coin count and the shop look, once app.js has loaded (readSaved is defined there).
-window.addEventListener("DOMContentLoaded", showCoins);
+window.addEventListener("DOMContentLoaded", () => {
+  showCoins();
+  document.getElementById("shop-top").onclick = () => openShop();
+});

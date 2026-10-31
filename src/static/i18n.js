@@ -678,6 +678,7 @@ const MS = {
   "What every student's hours add up to →": "Jumlah jam semua pelajar →",
   // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
   "Global goals you care about":
+  "Shop": "Kedai",
     "Matlamat global yang anda pentingkan",
   "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
     "Pilih Matlamat Pembangunan Mampan PBB yang anda mahu kerja anda bantu. Pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan, jadi ia naik dalam senarai anda. Jangan pilih apa-apa untuk menyusun mengikut kesesuaian dan trend sahaja.",
@@ -1511,6 +1512,7 @@ const ZH = {
   // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
   "Global goals you care about":
     "你关心的全球目标",
+  "Shop": "商店",
   "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
     "选出你希望自己的工作能帮助的联合国可持续发展目标。支持其中任一目标的工作加 5 分，在你的列表里排得更前。不选的话，只按匹配度和趋势排序。",
   "IT job":
