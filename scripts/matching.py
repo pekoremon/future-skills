@@ -279,6 +279,9 @@ def test_area_scores(report: dict) -> dict:
     return {d["id"]: d["area_score"] for d in report["domains"] if d.get("tested", True)}
 
 
+test_area_scores.__test__ = False  # a helper, not a test: stops pytest collecting it when imported into tests
+
+
 def weighted(parts: dict, weights: dict) -> tuple[float | None, dict]:
     """Weighted mean of the parts that have a value, and each part's share of the result."""
     used = {k: v for k, v in parts.items() if v is not None}
