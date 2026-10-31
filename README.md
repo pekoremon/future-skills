@@ -181,7 +181,7 @@ python src/main.py
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
 | POST / GET | `/api/trends/update` | Start the "Update data" job (OpenDOSM and arXiv, about a minute; `{"arxiv": false}` skips arXiv) / check its status; `fetched_by_source` gives each live source's own fetch date |
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
-| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0077": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
+| POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"data_ai:arxiv_ai_papers": 14630}, "mycol": {"IT01": "no"}}` (input ids as listed by `GET /api/whatif`, e.g. `<area>:arxiv_ai_papers`) → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 
 `/api/match`, `/api/explain` and `/api/learn` also take `trend_changes`: the result is then built from the changed copy, and `trend_data.what_if` is `true`. They also take `"sdg_goals": ["9", "16"]`, the UN goals the student cares about: each role then has `sdg_choice` (the picked goals it supports, the bonus and its total without it), and `/api/match` lists the goals to pick from in `sdg_goals`. `skill_ratings` are 1–5 self-ratings; `skills` takes O*NET levels (0–7) directly. On a Replit deployment, data written by the update job lasts until the next restart.
 
