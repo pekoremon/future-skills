@@ -605,7 +605,8 @@ function matchBody(demo = state.demo) {
 // Learn next lists technologies only: the student no longer rates skills.
 function jobCard(m, rank) {
   const flags = m.flags.filter((f) => !QUIET_FLAGS.includes(f)).map((f) => `<span class="chip warn-chip">${esc(FLAGS[f] || f)}${f === "needs_extra_education" ? ` (Job Zone ${m.job_zone})` : ""}</span>`).join("");
-  const sdg = m.sdg.map((s) => `<span class="chip sdg-chip" title="${esc(s.rationale)}"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">SDG ${esc(s.target)} · ${esc(s.goal_name)}</span>`).join("");
+  // Short SDG chips on the same row as the IT area; the goal names and reasons are under "Why this job?"
+  const sdg = m.sdg.map((s) => `<span class="chip sdg-chip" title="${esc(s.goal_name)}: ${esc(s.rationale)}"><img class="sdg-mini" src="/static/sdg/${encodeURIComponent(String(s.target).split(".")[0])}.webp" width="20" height="20" loading="lazy" alt="">SDG ${esc(s.target)}</span>`).join("");
   const next = m.skill_detail.tech_missing.slice(0, 2).map((t) => t.skill_name);
   const parts = ORDER_PARTS.map((k) => {
     const c = m.components[k];
@@ -618,9 +619,9 @@ function jobCard(m, rank) {
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
           ${rangeBadge(m)}
+          ${sdg}
           ${flags}
         </div>
-        ${sdg ? `<div class="row" style="gap: 6px">${sdg}</div>` : ""}
         ${next.length ? `<p class="small"><span class="muted">Learn next:</span> ${next.map(esc).join(", ")}</p>` : ""}
       </div>
       <div class="top-side">
