@@ -1,7 +1,7 @@
 {
   "name": "IT Career Interest Profiler",
   "version": 2,
-  "description": "36 statements written by the team, based on Holland's RIASEC interest types. Each item measures one RIASEC type (6 per type); 24 items also point to one of the 6 IT areas (4 per area).",
+  "description": "36 statements written by the team, based on Holland's RIASEC interest types. Each item measures one RIASEC type (6 per type); 20 items also point to one of the 5 IT areas (4 per area).",
   "stem": "I would enjoy...",
   "scale": {
     "1": "Strongly disagree",
@@ -48,7 +48,7 @@
     {
       "n": 5,
       "type": "E",
-      "area": "it_mgmt",
+      "area": null,
       "text": "Leading a group project and making sure it finishes on time."
     },
     {
@@ -93,7 +93,7 @@
     {
       "n": 12,
       "type": "E",
-      "area": "it_mgmt",
+      "area": null,
       "text": "Pitching an app idea and convincing others to support it."
     },
     {
@@ -154,7 +154,7 @@
     {
       "n": 22,
       "type": "E",
-      "area": "it_mgmt",
+      "area": null,
       "text": "Deciding which features a product should have first."
     },
     {
@@ -172,7 +172,7 @@
     {
       "n": 25,
       "type": "E",
-      "area": "it_mgmt",
+      "area": null,
       "text": "Meeting clients to find out what they want and agreeing on a deal."
     },
     {

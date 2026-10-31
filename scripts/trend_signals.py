@@ -20,8 +20,10 @@ Layers (column `layer`):
 
 Each signal is a descriptive comparison of 1-4 points, not a fitted trend and not a
 0-100 score. It gives direction / direction_code (+1 / 0 / -1, by the draft threshold
-in direction_rule), confidence with the reasons, and the trend_ids it used. If matching
-needs a number, use direction_code weighted by confidence.
+in direction_rule), a strength from -1 to 1 for scoring, confidence with the reasons, and
+the trend_ids it used. trend_score.py weights strength by confidence. Strength equals
+direction_code except for arXiv growth (growth / ARXIV_FULL_PCT, capped at -1 and 1) and
+MyCOL (yes = 1, near = 0.5, no = 0; a sub-domain gets the mean over its roles).
 
 Rules
   - Windows start at the latest series break (series_break_flag); trends never cross it.
@@ -50,12 +52,14 @@ COUNT_PCT = 5.0    # ad count change: > +5% up, < -5% down
 SHARE_PP = 0.25    # ad share change: > +0.25pp up, < -0.25pp down
 GAP_PP = 0.5       # gap vs national: > +0.5pp above, < -0.5pp below
 ARXIV_PCT = 10.0   # AI paper growth: > +10% up, < -10% down
+ARXIV_FULL_PCT = 40.0  # AI paper growth with full strength: +40% or more -> 1, -40% or less -> -1
+MYCOL_STRENGTH = {"yes": 1.0, "near": 0.5, "no": 0.0}  # near: a related title in the same MyCOL occupation
 UNCLASSIFIED_MAX = 25.0  # % of ads without an industry before industry shares are low confidence
 
 FIELDS = [
     "signal_id", "layer", "scored", "entity_type", "entity_id", "entity_label", "signal",
     "window_start", "window_end", "n_points", "value", "unit",
-    "count_change_pct", "total_change_pct", "direction", "direction_code", "direction_rule",
+    "count_change_pct", "total_change_pct", "direction", "direction_code", "strength", "direction_rule",
     "composition_effect", "confidence", "confidence_reason", "is_proxy", "series_break_in_window",
     "detail", "input_trend_ids", "formula_version", "computed_date",
 ]
@@ -147,6 +151,8 @@ def row(**kw):
     base = {k: "" for k in FIELDS}
     base.update(series_break_in_window="FALSE", composition_effect="", is_proxy="FALSE")
     base.update(kw)
+    if base["strength"] == "":
+        base["strength"] = base["direction_code"]
     return base
 
 
@@ -314,8 +320,9 @@ def arxiv_signal(t, sd):
                signal="arxiv_ai_paper_growth", window_start=p1, window_end=t.by_id[ai[p2][1]]["period_end"],
                n_points=2, value=round(growth, 2), unit="percent",
                count_change_pct=round(growth, 2), total_change_pct=round(all_growth, 2),
-               direction=d, direction_code=code,
-               direction_rule=f"AI paper growth > +{ARXIV_PCT}% up; < -{ARXIV_PCT}% down; else flat (draft threshold)",
+               direction=d, direction_code=code, strength=round(max(-1.0, min(1.0, growth / ARXIV_FULL_PCT)), 3),
+               direction_rule=f"AI paper growth > +{ARXIV_PCT}% up; < -{ARXIV_PCT}% down; else flat (draft threshold); "
+                              f"strength = growth / {ARXIV_FULL_PCT}%, capped at -1 and 1",
                composition_effect="TRUE" if comp else "FALSE", confidence=conf, confidence_reason=why,
                detail=detail, input_trend_ids=";".join(ids))
 
@@ -341,11 +348,13 @@ def mycol_signal(t, sd, roles):
     near = [r["role_id"] for r in mine if r["is_mycol"] == "near"]
     no = [r["role_id"] for r in mine if r["is_mycol"] == "no"]
     d, code = ("on_mycol", 1) if yes else ("near_mycol", 0) if near else ("not_on_mycol", 0)
+    coverage = sum(MYCOL_STRENGTH[r["is_mycol"]] for r in mine) / len(mine)
     return row(layer="subdomain", scored="TRUE", entity_type=ent[0], entity_id=ent[1], entity_label=sd["label_en"],
                signal="mycol_coverage", window_start="2024-01-01", window_end="2025-12-31", n_points=1,
-               value=round(100 * len(yes) / len(mine), 1), unit="percent of roles (is_mycol = yes)",
-               direction=d, direction_code=code,
-               direction_rule="any role is_mycol = yes -> on_mycol; else any near -> near_mycol; else not_on_mycol",
+               value=round(100 * coverage, 1), unit="percent of roles (yes = 1, near = 0.5)",
+               direction=d, direction_code=code, strength=round(coverage, 3),
+               direction_rule="any role is_mycol = yes -> on_mycol; else any near -> near_mycol; else not_on_mycol; "
+                              "strength = share of roles on MyCOL, near counted as half",
                confidence="medium",
                confidence_reason="official Malaysian list (status, not a trend; one edition); "
                                  "role-to-occupation match by B (data/roles.csv)",
@@ -380,6 +389,7 @@ def role_signals(roles, t):
                        entity_label=r["role_name_en"], signal="mycol_status", n_points=1,
                        window_start="2024-01-01", window_end="2025-12-31", value=status, unit="yes/near/no",
                        direction=status, direction_code={"yes": 1, "near": 0, "no": 0}[status],
+                       strength=MYCOL_STRENGTH[status],
                        direction_rule="is_mycol from data/roles.csv (B): yes = MyCOL lists this job title; "
                                       "near = a similar or related title in that MyCOL occupation; no = neither",
                        confidence="medium", confidence_reason="official list; role-to-occupation match by B",

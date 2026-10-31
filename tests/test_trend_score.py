@@ -8,8 +8,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import trend_score  # noqa: E402
 
 
-def sig(signal, code, confidence, sid="S1"):
-    return {"signal_id": sid, "signal": signal, "direction_code": str(code), "confidence": confidence}
+def sig(signal, strength, confidence, sid="S1"):
+    return {"signal_id": sid, "signal": signal, "strength": str(strength), "confidence": confidence}
 
 
 class TestTrendScore(unittest.TestCase):
@@ -22,16 +22,31 @@ class TestTrendScore(unittest.TestCase):
         self.assertEqual(r["trend_score"], round((83.3333 + 50) / 2, 1))
         self.assertEqual(r["input_signal_ids"], "S1;S2;S3")
 
-    def test_no_data_is_left_out_not_filled(self):
+    def test_a_part_with_no_data_counts_as_flat(self):
         r = trend_score.score([sig("mycol_coverage", 1, "medium"), sig("arxiv_ai_paper_growth", 0, "none")])
         self.assertEqual(r["ai_momentum_score"], "no data")
         self.assertEqual(r["missing"], "ai_momentum")
-        self.assertEqual(r["trend_score"], 100.0)
+        self.assertEqual(r["trend_score"], 75.0)  # (100 + 50) / 2, not 100 from demand alone
+
+    def test_strength_is_continuous(self):
+        r = trend_score.score([sig("mycol_coverage", 0.6, "medium"), sig("arxiv_ai_paper_growth", 0.47, "medium")])
+        self.assertEqual((r["my_demand_score"], r["ai_momentum_score"]), (80.0, 73.5))
+
+    def test_mycol_coverage_counts_near_as_half_and_arxiv_growth_is_scaled(self):
+        import trend_signals
+        rows = {(s["entity_id"], s["signal"]): s for s in trend_signals.build(
+            trend_signals.Trends(trend_score.read("trends.csv")), trend_score.read("subdomains.csv"),
+            trend_signals.clean_roles(trend_score.read("roles.csv")))}
+        cloud = rows[("cloud_infra_networks", "mycol_coverage")]  # 1 yes, 4 near of 5 roles
+        self.assertEqual((cloud["value"], cloud["strength"]), (60.0, 0.6))
+        cyber = rows[("cybersecurity", "arxiv_ai_paper_growth")]  # +31.25% of the +40% that counts in full
+        self.assertEqual(cyber["strength"], round(31.25 / 40, 3))
+        self.assertEqual(rows[("IT11", "mycol_status")]["strength"], 0.5)  # near
 
     def test_every_area_and_role_has_a_score(self):
         rows = trend_score.build()
         self.assertEqual({r["it_area"] for r in rows if not r["role_id"]}, set(trend_score.SUBFIELD_AREA.values()))
-        self.assertEqual(len([r for r in rows if r["role_id"]]), 28)
+        self.assertEqual(len([r for r in rows if r["role_id"]]), 25)
         for r in rows:
             self.assertTrue(0 <= r["trend_score"] <= 100)
 

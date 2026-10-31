@@ -345,6 +345,7 @@ tr.hl td { background: var(--accent-soft); }
 .viz-explain { background: var(--accent-soft); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; }
 .viz-explain h4 { color: var(--accent-strong); }
 .viz-explain p { margin: 0; }
+.viz-explain ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .viz-stack { display: flex; gap: 2px; height: 20px; }
 .viz-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; min-width: 0; }
 .viz-seg:last-child { border-radius: 0 4px 4px 0; }

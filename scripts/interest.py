@@ -1,6 +1,6 @@
 """Score the IT Career Interest Profiler (data/interest_items.json).
 
-Each of the 36 items measures one RIASEC type (6 per type) and 24 of them also point to
+Each of the 36 items measures one RIASEC type (6 per type) and 20 of them also point to
 one IT area (4 per area). One set of answers gives two results:
 - riasec: total per type, 6-30, compared later with each role's O*NET interest scores;
 - area_items: 0-100 per IT area, from the mean answer of the area's 4 items.
@@ -58,7 +58,7 @@ def score(answers) -> dict:
                                  "interests apart. It is left out of your matches."})
     elif max(area_items.values()) - min(area_items.values()) < FLAT_SPREAD:
         warnings.append({"type": "flat",
-                         "text": "Your interest in the six IT areas is very even. You may still be "
+                         "text": "Your interest in the five IT areas is very even. You may still be "
                                  "exploring: treat this part of the result as a light hint."})
     return {"riasec": totals,
             "percent": {k: round((v - 6) / 24 * 100) for k, v in totals.items()},

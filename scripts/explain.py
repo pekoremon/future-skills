@@ -41,7 +41,7 @@ Write 4 to 5 sentences in plain English, speaking to the student as "you":
 Rules:
 - Use only the facts given. Do not add salaries, job counts, percentages, course names, companies or any other fact that is not in the JSON.
 - Every number you write must appear exactly as it does in the facts. If you are unsure of a number, leave it out.
-- Describe the trend only with the words in trend_direction. "positive" means above the neutral 50: recent data points up, or the role is on Malaysia's critical-occupations list. "neutral" means exactly 50: flat or no clear signal; never call it rising, growing or strong. "negative" means below 50. "no data" means it was not measured.
+- Describe the trend only with the words in trend_direction. "positive" means above the neutral 50: recent data points up, or the role is on Malaysia's critical-occupations list. "neutral" means near 50 (37.5 to 62.5): flat or no clear signal; never call it rising, growing or strong. "negative" means below 50. "no data" means it was not measured.
 - Do not predict the future. Never say that demand, jobs or opportunities will grow, keep growing, are likely to or are expected to. The trend score describes recent data and is an estimate; say so.
 - Be honest: if a part of the score is low, say so kindly.
 - No headings, lists or markdown. Plain sentences only."""
@@ -147,11 +147,14 @@ PREDICTION = re.compile(
     re.IGNORECASE)
 
 
+NEUTRAL_BAND = 12.5  # points around 50 read as flat: the +-10% arXiv flat band on the 0-100 scale
+
+
 def direction(score: float | None) -> str:
-    """A trend part in words: above, at or below the neutral 50, or not measured."""
+    """A trend part in words: clearly above, near or clearly below the neutral 50, or not measured."""
     if score is None:
         return "no data"
-    return "positive" if score > 50 else "negative" if score < 50 else "neutral"
+    return "positive" if score >= 50 + NEUTRAL_BAND else "negative" if score <= 50 - NEUTRAL_BAND else "neutral"
 
 
 def predictions(text: str) -> list[str]:

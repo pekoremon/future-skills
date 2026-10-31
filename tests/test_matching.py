@@ -108,7 +108,7 @@ class TestMatching(unittest.TestCase):
         cls.data = load_data()
         cls.profile = {"profile_id": "T", "name": "Test", "education_job_zone": 4,
                        "test_areas": {"software_dev": 90, "data_ai": 40, "cybersecurity": 30,
-                                      "cloud_infra": 30, "web_ux": 30, "it_mgmt": 30},
+                                      "cloud_infra": 30, "web_ux": 30},
                        "skills": {"SK020": 4.0}, "technologies": ["SK145"]}
 
     def test_skill_score_weights_importance_and_skips_suppressed_level(self):
@@ -195,16 +195,16 @@ class TestMatching(unittest.TestCase):
     def test_baseline_scenario_matches_trend_score_file(self):
         self.assertEqual(scenario_trend_scores(self.data, "baseline"), self.data["trend_scores"])
 
-    def test_scenarios_reweight_only_measured_parts(self):
-        for name in SCENARIOS:
+    def test_scenarios_count_a_missing_part_as_flat(self):
+        for name, s in SCENARIOS.items():
             scores = scenario_trend_scores(self.data, name)
             for key, parts in self.data["trend_parts"].items():
-                if None in parts.values():  # one part only: same score in every scenario
-                    self.assertEqual(scores[key], self.data["trend_scores"][key])
+                if parts["ai"] is None:  # an area with no arXiv category: AI momentum counts as 50
+                    self.assertEqual(scores[key], round(s["demand"] * parts["demand"] + s["ai"] * 50, 1))
 
     def test_match_student_lists_areas_and_top_roles(self):
         result = match_student(self.profile, self.data)
-        self.assertEqual(len(result["areas"]), 6)
+        self.assertEqual(len(result["areas"]), 5)
         self.assertEqual(result["best"], "software_dev")
         ids = {m["role_id"] for m in result["roles"]}
         for a in result["areas"]:

@@ -67,7 +67,7 @@ def editable() -> list[dict]:
     for sd in read("subdomains.csv"):
         area = matching.SUBFIELD_AREA.get(sd["subfield_code"])
         if not area:
-            continue  # not one of the six IT areas, so no score uses it
+            continue  # not one of the five IT areas, so no score uses it
         ai = t.series("subdomain", sd["subdomain_id"], "arxiv_ai_papers")
         allp = t.series("subdomain", sd["subdomain_id"], "arxiv_all_papers")
         periods = sorted(p for p in ai if p in allp)[-2:]

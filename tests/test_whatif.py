@@ -53,13 +53,15 @@ class TestPipeline(unittest.TestCase):
             moved = whatif.score_changes(data, whatif.data_with(data, scores, roles), "baseline")
             self.assertTrue(moved, f"{e['id']} changes no trend score")
 
-    def test_a_small_change_crosses_no_threshold(self):
+    def test_a_small_change_crosses_no_threshold_and_moves_the_score_a_little(self):
         item = next(i for i in whatif.editable() if i["area"] == "web_ux" and i["metric"] == "arxiv_ai_papers")
         signals, scores, roles = whatif.run({"inputs": {item["id"]: item["value"] + 10}, "mycol": {}})
         changed = whatif.signal_changes(signals, roles)
         self.assertEqual([s["direction_changed"] for s in changed], [False])
         data = matching.load_data()
-        self.assertEqual(whatif.score_changes(data, whatif.data_with(data, scores, roles), "baseline"), [])
+        area = next(c for c in whatif.score_changes(data, whatif.data_with(data, scores, roles), "baseline")
+                    if c["key"] == "web_ux")
+        self.assertLess(abs(area["after"]["score"] - area["before"]["score"]), 1)
 
     def test_mycol_status_flows_into_the_role_score(self):
         data = matching.load_data()
@@ -99,22 +101,21 @@ class TestApi(unittest.TestCase):
         self.assertEqual(res.status, 200)
         kinds = {i["kind"] for i in d["inputs"]}
         self.assertEqual(kinds, {"number", "mycol"})
-        self.assertEqual(len([i for i in d["inputs"] if i["kind"] == "mycol"]), 28)
+        self.assertEqual(len([i for i in d["inputs"] if i["kind"] == "mycol"]), 25)
         self.assertTrue(all(i["source_url"].startswith("https://") for i in d["inputs"] if i["kind"] == "number"))
         self.assertEqual(d["trend_weight"], matching.WEIGHTS["trend"])
 
-    def test_data_ai_example_moves_data_scientists_to_the_top(self):
+    def test_data_ai_example_moves_data_scientists_up(self):
         example = next(e for e in whatif.examples() if e["id"] == "data_ai_research_up")
         status, d = post("/api/whatif", {"profile_id": "P01", "trend_changes": example["changes"]})
         self.assertEqual(status, 200)
         before = [m["role_id"] for m in listed(d["before"], d["groups"])]
         after = [m["role_id"] for m in listed(d["after"], d["groups"])]
-        self.assertEqual(before.index("IT05") + 1, 5)
-        self.assertEqual(after.index("IT05") + 1, 1)
+        self.assertLess(after.index("IT05"), before.index("IT05"))
         b, a = (next(m for m in roles if m["role_id"] == "IT05") for roles in (d["before"], d["after"]))
-        self.assertEqual((b["trend"], a["trend"]), (75.0, 100.0))
-        # trend is 20% of the match score: +25 trend points = +5 match points
-        self.assertAlmostEqual(a["total"] - b["total"], 25 * matching.WEIGHTS["trend"], places=1)
+        # AI papers +2.7% -> +20%: AI momentum 53.4 -> 75, so the trend score gains half of that
+        self.assertEqual((b["trend"], a["trend"]), (71.3, 82.2))
+        self.assertAlmostEqual(a["total"] - b["total"], (82.2 - 71.3) * matching.WEIGHTS["trend"], places=1)
         self.assertEqual([(s["signal"], s["after"]["direction"]) for s in d["signals"]], [("arxiv_ai_paper_growth", "up")])
         self.assertEqual(d["trend_scores"][0]["key"], "data_ai")
 

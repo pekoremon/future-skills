@@ -31,11 +31,11 @@ class TestExplain(unittest.TestCase):
         self.assertLessEqual(len(self.facts["learning_path"]), 3)
 
     def test_trend_direction_in_words(self):
-        # Data Scientists: Malaysian demand above 50 (on MyCOL), AI momentum exactly 50 (flat arXiv growth)
-        self.assertEqual(self.match["trend_parts"], {"demand": 100.0, "ai": 50.0})
+        # Data Scientists: Malaysian demand well above 50 (on MyCOL), AI momentum near 50 (+2.7% arXiv growth)
+        self.assertEqual(self.match["trend_parts"], {"demand": 89.3, "ai": 53.4})
         self.assertEqual(self.facts["trend_direction"], {"malaysian_demand": "positive", "ai_momentum": "neutral"})
-        self.assertEqual([explain.direction(v) for v in (None, 20, 50, 80)],
-                         ["no data", "negative", "neutral", "positive"])
+        self.assertEqual([explain.direction(v) for v in (None, 20, 40, 50, 60, 80)],
+                         ["no data", "negative", "neutral", "neutral", "neutral", "positive"])
         self.assertIn("AI momentum neutral", explain.fallback_text(self.facts))
         self.assertIn("never call it rising", explain.SYSTEM_PROMPT)
         self.assertIn("Do not predict the future", explain.SYSTEM_PROMPT)

@@ -11,8 +11,8 @@ const TYPES = {
 };
 const ORDER = ["R", "I", "A", "S", "E", "C"];
 const AREA_NAMES = { software_dev: "Software Engineering", data_ai: "Data & AI", cybersecurity: "Cybersecurity",
-  cloud_infra: "Cloud, Infrastructure & Networking", web_ux: "Web & Interface Design", it_mgmt: "IT Management & Analysis" };
-const SUBFIELD_AREA = { SE: "software_dev", DA: "data_ai", CS: "cybersecurity", CI: "cloud_infra", WD: "web_ux", IM: "it_mgmt" };
+  cloud_infra: "Cloud, Infrastructure & Networking", web_ux: "Web & Interface Design" };
+const SUBFIELD_AREA = { SE: "software_dev", DA: "data_ai", CS: "cybersecurity", CI: "cloud_infra", WD: "web_ux" };
 const ZONES = { 3: "Diploma", 4: "Bachelor's degree", 5: "Master's degree or higher" };
 const FLAGS = {
   needs_extra_education: "Needs further study",
@@ -46,6 +46,8 @@ function loadState() {
   try {
     const saved = Object.assign(base, readSaved(STORE_KEY) || {});
     if (saved.answers.length !== QUIZ_ITEMS) saved.answers = Array(QUIZ_ITEMS).fill(null);  // older 30-item questionnaire
+    const scores = saved.cvAreas && saved.cvAreas.scores;  // saved with an area the app no longer has
+    if (scores) for (const a of Object.keys(scores)) if (!(a in AREA_NAMES)) delete scores[a];
     return saved;
   } catch (e) {
     return base;
@@ -134,7 +136,7 @@ function pageHome() {
     <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
     <section class="card stack" id="start" style="gap: 12px">
       <h2>Where do you fit in?</h2>
-      <p class="muted">Find the IT area that suits you and which of 28 IT roles to aim for, with the skills you still need and free courses to learn them.</p>
+      <p class="muted">Find the IT area that suits you and which of 25 IT roles to aim for, with the skills you still need and free courses to learn them.</p>
       <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
       <div class="row">
         <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
@@ -896,29 +898,15 @@ async function pageResults() {
   draw();
 }
 
-let trendTab = "software_dev";
-let trendSignalsOpen = false;  // keep "Signals by IT area" open when the student switches its tabs
 async function pageTrends() {
   const [t, status, roles] = await Promise.all([api("/api/trends"), api("/api/trends/update"), cached("/api/roles")]);
-  const sub = t.subdomains.find((d) => SUBFIELD_AREA[d.subfield_code] === trendTab) || {};
-  const roleIds = new Set(t.scores.filter((s) => s.role_id && s.it_area === trendTab).map((s) => s.role_id));
-  const signals = t.signals.filter((r) => (r.layer === "subdomain" && r.entity_id === sub.subdomain_id) || (r.layer === "role" && roleIds.has(r.entity_id)));
-  const context = t.signals.filter((r) => r.scored !== "TRUE");
-  const sigRows = (list) => list.map((r) => `
-    <tr><td>${esc(r.entity_label)}</td><td>${esc(r.signal.replace(/_/g, " "))}</td><td>${esc(r.direction.replace(/_/g, " "))}${r.composition_effect === "TRUE" ? ' <span class="chip warn-chip" title="All papers in the category grew faster, so the AI share did not rise">composition effect</span>' : ""}</td>
-    <td>${esc(r.confidence)}</td><td class="small">${esc(r.detail)}<br><span class="muted">${esc(r.confidence_reason)}</span></td></tr>`).join("");
-  const inRows = t.inputs.map((r) => `
-    <tr><td>${esc(r.entity_type)} · ${esc(r.entity_id)}</td><td>${esc(r.metric.replace(/_/g, " "))}</td><td class="num">${r.value ? esc(r.value) : `≤ ${esc(r.upper_bound)}`} ${esc(r.unit === "percent" ? "%" : r.unit)}</td>
-    <td>${esc(r.period_start)}${r.period_end && r.period_end !== r.period_start ? ` – ${esc(r.period_end)}` : ""}</td>
-    <td><a href="${safeUrl(r.source_url)}">${esc(r.source_name)}</a><br><span class="muted">released ${esc(r.release_date)} · fetched ${esc(r.fetched_date)}</span></td></tr>`).join("");
-  const head = "<tr><th>For</th><th>Signal</th><th>Direction</th><th>Confidence</th><th>Detail</th></tr>";
   render(`
   <div class="stack">
     <div class="viz-hero">
     <section class="stack" style="gap: 10px">
     <p class="eyebrow">AI-era trend signals</p>
     <h1>Which IT areas does Malaysia need, and how fast is AI entering them?</h1>
-    <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.</div>
+    <div class="note small"><strong>These signals describe the recent past; they do not predict the future.</strong> Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.</div>
     </section>
     <div id="trend-jobs" class="viz-hero-chart"></div>
     </div>
@@ -938,27 +926,16 @@ async function pageTrends() {
     <details class="group"><summary><span>How the trend score works</span></summary>
       <div class="group-body stack" style="gap: 8px">
         <p class="small">Malaysian demand comes from the official MyCOL 2024/2025 critical-occupations list (TalentCorp) and DOSM online job ads; AI momentum from arXiv paper counts (global research). Every signal lists its source and dates. Scores computed ${esc(t.computed_date)}.</p>
-        <p class="small">Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction. <strong>Malaysian demand</strong>: MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.</p>
+        <p class="small">Each signal has a strength from −1 (falling) through 0 (flat) to +1 (rising) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average strength. <strong>Malaysian demand</strong>: the share of the area's roles on MyCOL (a related MyCOL title counts half), DOSM online ads where DOSM has a series, and, for a role, its own MyCOL status. <strong>AI momentum</strong>: growth in AI papers in the area's arXiv categories, where +40% or more counts in full. Trend score = 50% demand + 50% AI momentum; a part with no data counts as 50 (flat). The weights are team choices; the future scenarios on the Matches page change them.</p>
         <p class="small muted">Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked "composition effect".</p>
       </div>
     </details>
-    <details class="group"${trendSignalsOpen ? " open" : ""}><summary><span>Signals by IT area</span></summary>
-      <div class="group-body stack" style="gap: 10px">
-        <div class="tabs" role="group" aria-label="IT area">${Object.keys(AREA_NAMES).map((d) => `<button type="button" data-tab="${d}" aria-pressed="${d === trendTab}">${esc(AREA_NAMES[d])}</button>`).join("")}</div>
-        <div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(signals)}</tbody></table></div>
-      </div>
-    </details>
-    <details class="group"><summary><span>ICT sector background (not scored) <span class="muted small">(${context.length})</span></span></summary>
-      <div class="group-body"><div class="table-wrap"><table><thead>${head}</thead><tbody>${sigRows(context)}</tbody></table></div></div></details>
-    <details class="group"><summary><span>All input data with sources <span class="muted small">(${t.inputs.length})</span></span></summary>
-      <div class="group-body"><div class="table-wrap"><table><thead><tr><th>Entity</th><th>Metric</th><th>Value</th><th>Period</th><th>Source</th></tr></thead><tbody>${inRows}</tbody></table></div></div></details>
   </div>`);
   const dash = document.getElementById("trend-dash"), jobs = document.getElementById("trend-jobs");
   jobs.innerHTML = trendHeroChart(t);
   dash.innerHTML = trendDashboard(t, roles);
   wireDashboard(jobs);
   wireDashboard(dash);
-  app.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => { trendTab = b.dataset.tab; trendSignalsOpen = true; pageTrends().catch(showError); }; });
   const btn = document.getElementById("update");
   const show = (s) => {
     const label = { idle: "", running: "Updating…", done: `Updated ${s.finished ? new Date(s.finished).toLocaleString() : ""}. Your jobs page will re-check your plan with the new data.`, failed: "Update failed; previous data kept." };
@@ -1298,6 +1275,8 @@ function pyRepr(v) {
 
 // Tests saved by an older version of this page (no selection) are dropped.
 if (state.test && !state.test.selection) state.test = null;
+// Tests saved while the app still had the IT Management area cannot be graded any more.
+if (state.test && state.test.domains.some((d) => !(d.id in AREA_NAMES))) state.test = null;
 if (state.test && !state.test.areas) state.test.areas = state.test.domains.map((d) => d.id);  // saved before areas were chosen: the full test
 // extending: answering the quick checks of areas added after the result; the old result
 // stays in use until the new one is graded.
@@ -1372,7 +1351,7 @@ async function pageTestIntro() {
     <p class="eyebrow">Step 3 of 4 · IT skills test</p>
     <h1>Test your IT skills</h1>
     ${plan.areas.length === 6 && missing.length ? `<div class="warn stack" role="status" style="gap: 4px">
-      <strong>${missing.length === 2 ? "No CV or interest answers yet, so the test covers all 6 areas." : "The test covers all 6 areas."}</strong>
+      <strong>${missing.length === 2 ? "No CV or interest answers yet, so the test covers all 5 areas." : "The test covers all 5 areas."}</strong>
       <span>${missing.join(" or ")} to make it shorter.</span>
     </div>` : ""}
     <div class="card stack" style="gap: 10px">
@@ -1586,7 +1565,7 @@ function wrapLabel(label, max) {
   }, []);
 }
 
-/* Radar chart of 3-6 0-100 scores (one corner each), first item at the top, then clockwise.
+/* Radar chart of 3-5 0-100 scores (one corner each), first item at the top, then clockwise.
    items: [{ label, value, on }]; `on` items get a filled dot and a bold label.
    On a phone the chart is drawn smaller inside a narrower box, so the labels stay readable. */
 function hexagonChart(items, caption) {
@@ -1617,7 +1596,7 @@ function hexagonChart(items, caption) {
 
 /* Share link for a test result: the seed, tested areas and answers, base64url-encoded in the
    hash. Whoever opens it gets the result re-graded by the server; nothing is stored, and the
-   hash never reaches the server. Links made before areas were chosen have no areas: all 6. */
+   hash never reaches the server. Links made before areas were chosen have no areas: all 5. */
 function shareToken(t) {
   const g = gradedTest(t);
   const bytes = new TextEncoder().encode(JSON.stringify({ s: g.seed, a: g.areas, x: g.added, r: g.responses }));
@@ -1683,7 +1662,7 @@ function pageTestResult(sharedResult = null) {
       <div><p class="muted small">Jobs in this area (O*NET):</p>
         <ul class="quals small">${d.roles.map((x) => `<li><a href="https://www.onetonline.org/link/summary/${esc(x.onet_soc)}" target="_blank" rel="noopener">${esc(x.title)}</a></li>`).join("")}</ul></div>
     </div>`;
-  const tested = r.domains.filter((d) => d.tested !== false);  // results from before areas were chosen tested all 6
+  const tested = r.domains.filter((d) => d.tested !== false);  // results from before areas were chosen tested all 5
   const untested = r.domains.filter((d) => d.tested === false);
   // Bank order, not sorted, so the chart keeps the same shape from one attempt to the next.
   // One corner per tested area (3 = triangle ... 6 = hexagon); an untested area is never drawn as a 0.

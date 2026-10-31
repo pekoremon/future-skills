@@ -78,7 +78,7 @@ TABLES["learning_resources.csv"] = {
 }
 
 ALLOWED = {
-    ("roles.csv", "subfield_code"): {"SE", "DA", "CS", "CI", "WD", "IM"},  # the 6 IT areas
+    ("roles.csv", "subfield_code"): {"SE", "DA", "CS", "CI", "WD"},  # the 5 IT areas
     ("roles.csv", "job_zone"): {"1", "2", "3", "4", "5"},
     ("roles.csv", "is_mycol"): {"yes", "near", "no", ""},
     ("roles.csv", "it_reachable_draft"): {"yes", "needs_extra_qualification", "no", ""},
@@ -234,7 +234,7 @@ def check_references(tables: dict[str, list[dict]]) -> list[str]:
         ref("role_summaries.csv", i, "role", row.get("role_id", ""))
     for i, row in enumerate(tables.get("projects.csv", []), start=2):
         ref("projects.csv", i, "role", row.get("role_id", ""))
-    areas = {"all", "software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux", "it_mgmt"}
+    areas = {"all", "software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux"}
     for i, row in enumerate(tables.get("learning_resources.csv", []), start=2):
         for target in filter(None, row.get("targets", "").split(";")):
             kind, _, value = target.partition(":")
@@ -262,10 +262,10 @@ def check_profiles(path: Path) -> list[str]:
         return [f"{path.name}: must be a JSON list of profiles"]
     errors = []
     for p in profiles:
-        # The skills test checks 3-6 areas; untested areas have no test score (scripts/assessment.py).
+        # The skills test checks 3-5 areas; untested areas have no test score (scripts/assessment.py).
         tested = p.get("test_areas")
-        if tested is not None and not 3 <= len(tested) <= 6:
-            errors.append(f"{path.name}: {p.get('profile_id')}: test_areas must cover 3-6 tested areas")
+        if tested is not None and not 3 <= len(tested) <= 5:
+            errors.append(f"{path.name}: {p.get('profile_id')}: test_areas must cover 3-5 tested areas")
         if not set(p.get("test_in_depth", [])) <= set(tested or {}):
             errors.append(f"{path.name}: {p.get('profile_id')}: test_in_depth must be tested areas")
     return errors

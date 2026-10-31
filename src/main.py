@@ -7,7 +7,7 @@ Endpoints (all JSON):
     GET  /api                        list of endpoints
     GET  /api/health
     GET  /api/questionnaire          the 36 interest items (RIASEC type + IT area), scale and attribution
-    POST /api/assessment/plan        CV evidence/tools + interest answers -> the 3-6 IT areas to test, and why
+    POST /api/assessment/plan        CV evidence/tools + interest answers -> the 3-5 IT areas to test, and why
     GET  /api/assessment/start       ?areas=a,b,c  IT skills test: a seed, the screen questions and the rules
     POST /api/assessment/next        seed + areas + screen answers -> the 2 strongest areas and their questions
     POST /api/assessment/more        seed + areas + added areas -> quick-check questions for the added areas
@@ -260,7 +260,7 @@ def tested_areas(areas) -> list:
 
 def assessment_input(data) -> tuple[int, dict, list, list]:
     """Seed, answers, tested areas and areas added later from an assessment request body,
-    every id checked. No 'areas' means all 6 (the full test, and share links made before
+    every id checked. No 'areas' means all 5 (the full test, and share links made before
     areas existed); no 'added' means none."""
     if not isinstance(data, dict):
         raise BadRequest("send a JSON object with 'seed', 'areas' and 'responses'")

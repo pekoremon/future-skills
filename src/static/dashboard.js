@@ -98,8 +98,8 @@ function vizBarRow(label, bar, value, tip, extra = "") {
 
 // IT area names under a column: translated here, with soft hyphens where long words may break, so a
 // narrow column on a phone splits "Cyber-security" rather than "Cybersec-urity".
-const VIZ_SHY = Object.fromEntries(["Cyber|security", "Infra|structure", "Engin|eering", "Manage|ment", "Network|ing",
-  "Inter|face", "Infra|struktur", "Kejuru|teraan", "Kese|lamatan", "Peng|urusan", "Rang|kaian"].map((w) => [w.replace("|", ""), w.replace("|", "­")]));
+const VIZ_SHY = Object.fromEntries(["Cyber|security", "Infra|structure", "Engin|eering", "Network|ing",
+  "Inter|face", "Infra|struktur", "Kejuru|teraan", "Kese|lamatan", "Rang|kaian"].map((w) => [w.replace("|", ""), w.replace("|", "­")]));
 const vizAreaLabel = (area) => `<span data-no-i18n>${esc(trName(AREA_NAMES[area])).replace(/[A-Za-z]{9,}/g, (w) => VIZ_SHY[w] || w)}</span>`;
 
 // A vertical column chart. cols: { label, value (shown at the bar's tip), from, to (bar ends as % of the plot
@@ -186,17 +186,16 @@ function vizAreaChart(t) {
     [{ at: 0, cls: "zero" }, { at: 50 }])}
       </div>
       <aside class="viz-explain">
-        <h4>What is a trend score?</h4>
-        <p>A number from 0 to 100 for how much an IT area is growing, built from recent data.</p>
-        <p>Half is Malaysian demand: whether TalentCorp's MyCOL lists its jobs as ones Malaysia is short of, and whether DOSM job ads for it are rising.</p>
-        <p>Half is AI momentum: whether AI research papers in the area are growing on arXiv.</p>
-        <p>50 means flat. Above 50, more of its signals are rising; below 50, more are falling.</p>
-        <p class="muted">It shows the recent past, not a forecast.</p>
+        <h4>What is a Trend Score?</h4>
+        <p>A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:</p>
+        <ul>
+          <li><span aria-hidden="true">📊</span> <strong>Malaysian Demand:</strong> Based on TalentCorp MyCOL shortages and DOSM job ad data. Higher scores mean greater local vacancy and urgency.</li>
+          <li><span aria-hidden="true">🚀</span> <strong>Global AI Momentum:</strong> Based on the growth rate of AI papers on arXiv, latest 6 months against the 6 before. Higher scores mean faster technological disruption.</li>
+          <li><span aria-hidden="true">💡</span> <strong>50 Means Flat:</strong> Above 50 indicates accelerating growth; below 50 indicates a slowdown.</li>
+        </ul>
       </aside>
     </div>`;
-  return vizCard("Trend score by IT area",
-    "Malaysian demand (MyCOL, DOSM job ads) and AI momentum (arXiv) count equally. Each bar is a score from 0 to 100.",
-    body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`, true);
+  return vizCard("Trend score by IT area", "", body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`, true);
 }
 
 function vizJobsChart(t) {
@@ -262,7 +261,7 @@ function vizRolesChart(t, roles) {
   const falling = rs.some((r) => r.score < 50);
   const body = `<div class="viz-pair">${list("Most momentum", most, "")}${list("Least momentum", least, "muted")}</div>
     ${falling ? "" : '<p class="small muted">No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.</p>'}`;
-  return vizCard("Rising and flat IT roles", "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.",
+  return vizCard("Rising and flat IT roles", "Trend score of each of our 25 IT roles: its IT area's signals plus whether MyCOL lists the role itself.",
     body, `<span>Sources:</span> TalentCorp MyCOL 2024/2025 · DOSM · arXiv · <span>computed</span> ${esc(t.computed_date || "")}`, true);
 }
 

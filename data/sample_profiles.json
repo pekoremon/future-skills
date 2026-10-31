@@ -56,8 +56,7 @@
       "data_ai": 55,
       "cybersecurity": 0,
       "cloud_infra": 20,
-      "web_ux": 30,
-      "it_mgmt": 10
+      "web_ux": 30
     },
     "skills": {
       "SK001": 4.0,
@@ -98,13 +97,13 @@
     "note": "Fictional final-year IT student who likes design and helping people; not a real person; area scores are invented demo values; the skills test checked only the 3 areas the CV and interests point to.",
     "education_job_zone": 4,
     "test_areas": {
+      "software_dev": 62,
       "data_ai": 40,
-      "web_ux": 80,
-      "it_mgmt": 62
+      "web_ux": 80
     },
     "test_in_depth": [
       "web_ux",
-      "it_mgmt"
+      "software_dev"
     ],
     "interest_answers": [
       1,
@@ -149,8 +148,7 @@
       "data_ai": 10,
       "cybersecurity": 0,
       "cloud_infra": 0,
-      "web_ux": 75,
-      "it_mgmt": 40
+      "web_ux": 75
     },
     "skills": {
       "SK001": 4.0,

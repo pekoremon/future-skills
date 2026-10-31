@@ -9,7 +9,6 @@ let LANG = (() => { try { const l = localStorage.getItem(LANG_KEY); return l ===
 
 const AREAS_MS = {
   "Cloud, Infrastructure & Networking": "Awan, Infrastruktur & Rangkaian",
-  "IT Management & Analysis": "Pengurusan & Analisis IT",
   "Web & Interface Design": "Reka Bentuk Web & Antara Muka",
   "Software Engineering": "Kejuruteraan Perisian",
   "Cybersecurity": "Keselamatan Siber",
@@ -39,9 +38,6 @@ const ROLES_MS = {
   "Web and Digital Interface Designers": "Pereka Antara Muka Web dan Digital",
   "Video Game Designers": "Pereka Permainan Video",
   "Web Administrators": "Pentadbir Web",
-  "Computer Systems Analysts": "Penganalisis Sistem Komputer",
-  "Information Technology Project Managers": "Pengurus Projek Teknologi Maklumat",
-  "Computer and Information Systems Managers": "Pengurus Sistem Komputer dan Maklumat",
   "Statisticians": "Ahli Statistik",
   "Special Effects Artists and Animators": "Artis Kesan Khas dan Animator",
 };
@@ -58,7 +54,6 @@ const SDG_MS = {
 // Chinese area names as in data/it_assessment.json (name_zh).
 const AREAS_ZH = {
   "Cloud, Infrastructure & Networking": "云端与基础设施 / 网络",
-  "IT Management & Analysis": "IT 管理与分析",
   "Web & Interface Design": "Web 与界面设计",
   "Software Engineering": "软件工程",
   "Cybersecurity": "网络安全",
@@ -88,9 +83,6 @@ const ROLES_ZH = {
   "Web and Digital Interface Designers": "网页与数字界面设计师",
   "Video Game Designers": "电子游戏设计师",
   "Web Administrators": "网站管理员",
-  "Computer Systems Analysts": "计算机系统分析师",
-  "Information Technology Project Managers": "IT 项目经理",
-  "Computer and Information Systems Managers": "计算机与信息系统经理",
   "Statisticians": "统计师",
   "Special Effects Artists and Animators": "特效艺术家与动画师",
 };
@@ -216,8 +208,8 @@ const MS = {
     "Mengatur maklumat dan mengikut prosedur yang jelas: pentadbiran, perakaunan, data, operasi IT dan kewangan.",
   "Every answer is the same, so the questionnaire cannot tell your interests apart. It is left out of your matches.":
     "Semua jawapan sama, jadi soal selidik tidak dapat membezakan minat anda. Ia tidak digunakan dalam padanan anda.",
-  "Your interest in the six IT areas is very even. You may still be exploring: treat this part of the result as a light hint.":
-    "Minat anda dalam enam bidang IT sangat sekata. Anda mungkin masih meneroka: anggap bahagian keputusan ini sebagai petunjuk ringan sahaja.",
+  "Your interest in the five IT areas is very even. You may still be exploring: treat this part of the result as a light hint.":
+    "Minat anda dalam lima bidang IT sangat sekata. Anda mungkin masih meneroka: anggap bahagian keputusan ini sebagai petunjuk ringan sahaja.",
   // skills page
   "What can you already do?": "Apa yang anda sudah mampu lakukan?",
   "Fastest: upload your CV.": "Paling pantas: muat naik CV anda.",
@@ -331,30 +323,29 @@ const MS = {
   "AI-era trend signals": "Isyarat trend era AI",
   "Which IT areas does Malaysia need, and how fast is AI entering them?": "Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya?",
   "These signals describe the recent past; they do not predict the future.": "Isyarat ini menggambarkan masa lalu terdekat; ia tidak meramal masa depan.",
-  "Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.":
-    "Setiap satu membandingkan 1 hingga 4 titik data, jadi skor trend daripadanya ialah anggaran. Lihat tahap keyakinan setiap isyarat di bawah, dan tiga senario masa depan di halaman kerjaya anda.",
+  "Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.":
+    "Setiap satu membandingkan 1 hingga 4 titik data, jadi skor trend daripadanya ialah anggaran. Lihat tiga senario masa depan di halaman kerjaya anda.",
   "Malaysian demand:": "Permintaan Malaysia:", "AI momentum:": "Momentum AI:", "· AI momentum:": "· Momentum AI:", "Malaysian demand": "Permintaan Malaysia", "AI momentum": "Momentum AI",
   "no data": "tiada data",
-  "Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction.":
-    "Setiap isyarat ada arah (naik atau dalam MyCOL = +1; mendatar, hampir atau tiada dalam MyCOL = 0) dan tahap keyakinan (tinggi, sederhana, rendah). Setiap bahagian = 50 + 50 × purata arah berpemberat keyakinan.",
-  ": MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL.":
-    ": liputan MyCOL bagi bidang itu, iklan dalam talian DOSM jika DOSM ada siri data, dan, bagi sesuatu peranan, sama ada ia dalam MyCOL.",
-  ": growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.":
-    ": pertumbuhan kertas AI dalam kategori arXiv bidang itu. Skor trend = 50% permintaan + 50% momentum AI; bahagian tanpa data ditinggalkan, tidak pernah dianggarkan. Pemberat ini pilihan pasukan; senario masa depan di halaman Padanan mengubahnya.",
+  "Each signal has a strength from −1 (falling) through 0 (flat) to +1 (rising) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average strength.":
+    "Setiap isyarat ada kekuatan daripada −1 (turun) melalui 0 (mendatar) hingga +1 (naik) dan tahap keyakinan (tinggi, sederhana, rendah). Setiap bahagian = 50 + 50 × purata kekuatan berpemberat keyakinan.",
+  ": the share of the area's roles on MyCOL (a related MyCOL title counts half), DOSM online ads where DOSM has a series, and, for a role, its own MyCOL status.":
+    ": bahagian peranan bidang itu yang ada dalam MyCOL (jawatan MyCOL yang berkaitan dikira separuh), iklan dalam talian DOSM jika DOSM ada siri data, dan, bagi sesuatu peranan, status MyCOL peranan itu sendiri.",
+  ": growth in AI papers in the area's arXiv categories, where +40% or more counts in full. Trend score = 50% demand + 50% AI momentum; a part with no data counts as 50 (flat). The weights are team choices; the future scenarios on the Matches page change them.":
+    ": pertumbuhan kertas AI dalam kategori arXiv bidang itu; pertumbuhan +40% atau lebih dikira penuh. Skor trend = 50% permintaan + 50% momentum AI; bahagian tanpa data dikira 50 (mendatar). Pemberat ini pilihan pasukan; senario masa depan di halaman Padanan mengubahnya.",
   "Update data": "Kemas kini data",
   "Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.":
     "Mengambil angka OpenDOSM terkini (dan arXiv jika dipilih, kira-kira 2 minit), kemudian mengira semula isyarat dan skor. Jika sesuatu sumber gagal, data sebelumnya dikekalkan.",
   "Also refresh arXiv paper counts": "Juga kemas kini bilangan kertas arXiv", "Update data now": "Kemas kini data sekarang", "Updating…": "Sedang mengemas kini…",
   "Update failed; previous data kept.": "Kemas kini gagal; data sebelumnya dikekalkan.",
-  "Signals by IT area": "Isyarat mengikut bidang IT", "ICT sector background (not scored)": "Latar belakang sektor ICT (tiada skor)", "All input data with sources": "Semua data input dengan sumber",
   "For": "Untuk", "Signal": "Isyarat", "Direction": "Arah", "Confidence": "Keyakinan", "Detail": "Butiran", "Entity": "Entiti", "Metric": "Metrik", "Value": "Nilai", "Period": "Tempoh", "Source": "Sumber",
   "composition effect": "kesan komposisi",
   "Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked \"composition effect\".":
     "Had: DOSM menerbitkan iklan bagi satu pekerjaan IT sahaja (Pembangun Perisian), MyCOL hanya satu edisi (status, bukan trend), dan arXiv bersifat global. Jika kertas AI bertambah hanya kerana semua kertas bertambah, isyarat ditanda \"kesan komposisi\".",
   // test
   "Test your IT skills": "Uji kemahiran IT anda",
-  "No CV or interest answers yet, so the test covers all 6 areas.": "Belum ada CV atau jawapan minat, jadi ujian merangkumi kesemua 6 bidang.",
-  "The test covers all 6 areas.": "Ujian merangkumi kesemua 6 bidang.", "or": "atau", "to make it shorter.": "untuk memendekkannya.",
+  "No CV or interest answers yet, so the test covers all 5 areas.": "Belum ada CV atau jawapan minat, jadi ujian merangkumi kesemua 5 bidang.",
+  "The test covers all 5 areas.": "Ujian merangkumi kesemua 5 bidang.", "or": "atau", "to make it shorter.": "untuk memendekkannya.",
   "Answer the interest questions": "Jawab soalan minat",
   "See your last result": "Lihat keputusan terakhir anda", "Start a new test": "Mula ujian baharu", "Start the test": "Mula ujian", "Skip to step 4, my jobs": "Langkau ke langkah 4, kerjaya saya",
   "Every question is checked against official docs such as Python, MDN, OWASP and NIST.": "Setiap soalan disemak dengan dokumentasi rasmi seperti Python, MDN, OWASP dan NIST.",
@@ -516,7 +507,7 @@ const MS = {
   "All signals, data and sources →": "Semua isyarat, data dan sumber →",
   "Loading the trend data…": "Memuatkan data trend…",
   "Where do you fit in?": "Di mana tempat anda?",
-  "Find the IT area that suits you and which of 28 IT roles to aim for, with the skills you still need and free courses to learn them.": "Cari bidang IT yang sesuai dengan anda dan peranan IT yang patut disasarkan daripada 28, dengan kemahiran yang masih perlu dan kursus percuma untuk mempelajarinya.",
+  "Find the IT area that suits you and which of 25 IT roles to aim for, with the skills you still need and free courses to learn them.": "Cari bidang IT yang sesuai dengan anda dan peranan IT yang patut disasarkan daripada 25, dengan kemahiran yang masih perlu dan kursus percuma untuk mempelajarinya.",
   "Could not load the trend data.": "Tidak dapat memuatkan data trend.",
   "Open the Trends page": "Buka halaman Trend",
   "ICT jobs, growth in a year": "Pekerjaan ICT, pertumbuhan setahun",
@@ -527,13 +518,14 @@ const MS = {
   "Fastest-growing AI research": "Penyelidikan AI paling pantas berkembang",
   "arXiv, latest 6 months": "arXiv, 6 bulan terkini",
   "Trend score by IT area": "Skor trend mengikut bidang IT",
-  "Malaysian demand (MyCOL, DOSM job ads) and AI momentum (arXiv) count equally. Each bar is a score from 0 to 100.": "Permintaan Malaysia (MyCOL, iklan kerja DOSM) dan momentum AI (arXiv) dikira sama rata. Setiap bar ialah skor 0 hingga 100.",
-  "What is a trend score?": "Apakah skor trend?",
-  "A number from 0 to 100 for how much an IT area is growing, built from recent data.": "Nombor 0 hingga 100 tentang sejauh mana sesuatu bidang IT sedang berkembang, dibina daripada data terkini.",
-  "Half is Malaysian demand: whether TalentCorp's MyCOL lists its jobs as ones Malaysia is short of, and whether DOSM job ads for it are rising.": "Separuh ialah permintaan Malaysia: sama ada MyCOL TalentCorp menyenaraikan pekerjaannya sebagai yang kekurangan di Malaysia, dan sama ada iklan kerja DOSM untuknya meningkat.",
-  "Half is AI momentum: whether AI research papers in the area are growing on arXiv.": "Separuh ialah momentum AI: sama ada kertas kajian AI dalam bidang ini bertambah di arXiv.",
-  "50 means flat. Above 50, more of its signals are rising; below 50, more are falling.": "50 bermaksud mendatar. Melebihi 50, lebih banyak isyaratnya naik; di bawah 50, lebih banyak yang turun.",
-  "It shows the recent past, not a forecast.": "Ia menunjukkan masa lalu terdekat, bukan ramalan.",
+  "What is a Trend Score?": "Apakah Skor Trend?",
+  "A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:": "Indeks 0–100 yang mengukur kelajuan pertumbuhan dan permintaan pasaran sesuatu bidang IT, dikira daripada dua aliran yang sama berat:",
+  "Malaysian Demand:": "Permintaan Malaysia:",
+  "Based on TalentCorp MyCOL shortages and DOSM job ad data. Higher scores mean greater local vacancy and urgency.": "Berdasarkan kekurangan dalam MyCOL TalentCorp dan data iklan kerja DOSM. Skor lebih tinggi bermaksud kekosongan dan keperluan tempatan yang lebih besar.",
+  "Global AI Momentum:": "Momentum AI Global:",
+  "Based on the growth rate of AI papers on arXiv, latest 6 months against the 6 before. Higher scores mean faster technological disruption.": "Berdasarkan kadar pertumbuhan kertas AI di arXiv, 6 bulan terkini berbanding 6 bulan sebelumnya. Skor lebih tinggi bermaksud perubahan teknologi yang lebih pantas.",
+  "50 Means Flat:": "50 Bermaksud Mendatar:",
+  "Above 50 indicates accelerating growth; below 50 indicates a slowdown.": "Melebihi 50 menunjukkan pertumbuhan yang semakin pantas; di bawah 50 menunjukkan kelembapan.",
   "Sources:": "Sumber:",
   "computed": "dikira",
   "released": "diterbitkan",
@@ -560,7 +552,7 @@ const MS = {
   "MyCOL is TalentCorp's official list of occupations Malaysia is short of. Each bar counts our IT roles in that area.": "MyCOL ialah senarai rasmi TalentCorp bagi pekerjaan yang kekurangan tenaga kerja di Malaysia. Setiap bar mengira peranan IT kami dalam bidang itu.",
   "roles matched to MyCOL occupations by the team": "peranan dipadankan dengan pekerjaan MyCOL oleh pasukan",
   "Rising and flat IT roles": "Peranan IT yang naik dan mendatar",
-  "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "Skor trend setiap 28 peranan IT kami: isyarat bidang IT-nya serta sama ada MyCOL menyenaraikan peranan itu sendiri.",
+  "Trend score of each of our 25 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "Skor trend setiap 25 peranan IT kami: isyarat bidang IT-nya serta sama ada MyCOL menyenaraikan peranan itu sendiri.",
   "Most momentum": "Momentum tertinggi",
   "Least momentum": "Momentum terendah",
   "No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.": "Tiada peranan yang menurun dalam data terkini: skor terendah bermaksud isyarat mendatar, bukan menurun.",
@@ -836,8 +828,8 @@ const ZH = {
     "整理信息并遵循清楚的程序：行政、会计、数据、IT 运维和金融。",
   "Every answer is the same, so the questionnaire cannot tell your interests apart. It is left out of your matches.":
     "所有答案都一样，问卷无法分辨你的兴趣，所以不会用在你的匹配结果中。",
-  "Your interest in the six IT areas is very even. You may still be exploring: treat this part of the result as a light hint.":
-    "你对六个 IT 领域的兴趣非常平均，可能还在探索中：这部分结果只当作参考。",
+  "Your interest in the five IT areas is very even. You may still be exploring: treat this part of the result as a light hint.":
+    "你对五个 IT 领域的兴趣非常平均，可能还在探索中：这部分结果只当作参考。",
   // skills page
   "What can you already do?": "你已经会做什么？",
   "Fastest: upload your CV.": "最快的方法：上传你的履历。",
@@ -951,30 +943,29 @@ const ZH = {
   "AI-era trend signals": "AI 时代趋势信号",
   "Which IT areas does Malaysia need, and how fast is AI entering them?": "马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？",
   "These signals describe the recent past; they do not predict the future.": "这些信号描述的是最近的过去，不是预测未来。",
-  "Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the confidence of each signal below, and the three future scenarios on your jobs page.":
-    "每个信号只比较 1 至 4 个数据点，所以由此算出的趋势分只是估计。请看下面每个信号的可信度，以及职位页上的三个未来情景。",
+  "Each one compares 1 to 4 data points, so the trend scores built from them are estimates. See the three future scenarios on your jobs page.":
+    "每个信号只比较 1 至 4 个数据点，所以由此算出的趋势分只是估计。请看职位页上的三个未来情景。",
   "Malaysian demand:": "马来西亚需求：", "AI momentum:": "AI 势头：", "· AI momentum:": "· AI 势头：", "Malaysian demand": "马来西亚需求", "AI momentum": "AI 势头",
   "no data": "没有数据",
-  "Each signal has a direction (up or on MyCOL = +1; flat, near or not on MyCOL = 0) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average direction.":
-    "每个信号都有方向（上升或列于 MyCOL = +1；持平、接近或不在 MyCOL = 0）和可信度（高、中、低）。每个部分 = 50 + 50 × 按可信度加权的平均方向。",
-  ": MyCOL coverage of the area, DOSM online ads where DOSM has a series, and, for a role, whether it is on MyCOL.":
-    "：该领域的 MyCOL 覆盖率、DOSM 有数据系列时的网上招聘广告，以及（针对职位）是否列于 MyCOL。",
-  ": growth in AI papers in the area's arXiv categories. Trend score = 50% demand + 50% AI momentum; a part with no data is left out, never estimated. The weights are team choices; the future scenarios on the Matches page change them.":
-    "：该领域 arXiv 类别中 AI 论文的增长。趋势分 = 50% 需求 + 50% AI 势头；没有数据的部分会被略过，绝不估算。权重由团队选定；职位匹配页上的未来情景会改变权重。",
+  "Each signal has a strength from −1 (falling) through 0 (flat) to +1 (rising) and a confidence (high, medium, low). Each part = 50 + 50 × the confidence-weighted average strength.":
+    "每个信号都有一个强度，从 −1（下降）到 0（持平）再到 +1（上升），还有可信度（高、中、低）。每个部分 = 50 + 50 × 按可信度加权的平均强度。",
+  ": the share of the area's roles on MyCOL (a related MyCOL title counts half), DOSM online ads where DOSM has a series, and, for a role, its own MyCOL status.":
+    "：该领域职位中列于 MyCOL 的比例（相近的 MyCOL 职位算一半）、DOSM 有数据系列时的网上招聘广告，以及（针对职位）该职位本身的 MyCOL 状态。",
+  ": growth in AI papers in the area's arXiv categories, where +40% or more counts in full. Trend score = 50% demand + 50% AI momentum; a part with no data counts as 50 (flat). The weights are team choices; the future scenarios on the Matches page change them.":
+    "：该领域 arXiv 类别中 AI 论文的增长，增长 40% 或以上算满分。趋势分 = 50% 需求 + 50% AI 势头；没有数据的部分算 50（持平）。权重由团队选定；职位匹配页上的未来情景会改变权重。",
   "Update data": "更新数据",
   "Fetches the latest OpenDOSM figures (and optionally arXiv, about 2 minutes), then recomputes the signals and scores. If a source fails, its previous data is kept.":
     "获取最新的 OpenDOSM 数据（可选择同时更新 arXiv，约 2 分钟），然后重新计算信号和分数。某个来源失败时，会保留它之前的数据。",
   "Also refresh arXiv paper counts": "同时更新 arXiv 论文数量", "Update data now": "立即更新数据", "Updating…": "正在更新……",
   "Update failed; previous data kept.": "更新失败，已保留之前的数据。",
-  "Signals by IT area": "各 IT 领域的信号", "ICT sector background (not scored)": "ICT 行业背景（不计分）", "All input data with sources": "所有输入数据及来源",
   "For": "对象", "Signal": "信号", "Direction": "方向", "Confidence": "可信度", "Detail": "详情", "Entity": "实体", "Metric": "指标", "Value": "数值", "Period": "期间", "Source": "来源",
   "composition effect": "结构效应",
   "Limits: DOSM publishes ads for only one IT occupation (Software Developers), MyCOL is one edition (a status, not a trend), and arXiv is global. Where AI papers grew only because all papers grew, the signal is marked \"composition effect\".":
     "限制：DOSM 只公布一个 IT 职业（软件开发人员）的招聘广告，MyCOL 只有一期（是状态，不是趋势），arXiv 是全球数据。如果 AI 论文增加只是因为所有论文都在增加，该信号会标为“结构效应”。",
   // test
   "Test your IT skills": "测测你的 IT 技能",
-  "No CV or interest answers yet, so the test covers all 6 areas.": "还没有履历或兴趣答案，所以测验涵盖全部 6 个领域。",
-  "The test covers all 6 areas.": "测验涵盖全部 6 个领域。", "or": "或", "to make it shorter.": "可以让测验更短。",
+  "No CV or interest answers yet, so the test covers all 5 areas.": "还没有履历或兴趣答案，所以测验涵盖全部 5 个领域。",
+  "The test covers all 5 areas.": "测验涵盖全部 5 个领域。", "or": "或", "to make it shorter.": "可以让测验更短。",
   "Answer the interest questions": "回答兴趣问题",
   "See your last result": "查看上次结果", "Start a new test": "开始新的测验", "Start the test": "开始测验", "Skip to step 4, my jobs": "跳到第 4 步，我的职位",
   "Every question is checked against official docs such as Python, MDN, OWASP and NIST.": "每一题都对照 Python、MDN、OWASP、NIST 等官方文档核对过。",
@@ -1136,7 +1127,7 @@ const ZH = {
   "All signals, data and sources →": "全部信号、数据和来源 →",
   "Loading the trend data…": "正在载入趋势数据……",
   "Where do you fit in?": "你适合哪里？",
-  "Find the IT area that suits you and which of 28 IT roles to aim for, with the skills you still need and free courses to learn them.": "找出适合你的 IT 领域，以及 28 个 IT 职位中该瞄准哪一个，还有你仍需的技能和免费课程。",
+  "Find the IT area that suits you and which of 25 IT roles to aim for, with the skills you still need and free courses to learn them.": "找出适合你的 IT 领域，以及 25 个 IT 职位中该瞄准哪一个，还有你仍需的技能和免费课程。",
   "Could not load the trend data.": "无法载入趋势数据。",
   "Open the Trends page": "打开趋势页面",
   "ICT jobs, growth in a year": "ICT 就业一年增长",
@@ -1147,13 +1138,14 @@ const ZH = {
   "Fastest-growing AI research": "增长最快的 AI 研究",
   "arXiv, latest 6 months": "arXiv，最近 6 个月",
   "Trend score by IT area": "各 IT 领域的趋势分数",
-  "Malaysian demand (MyCOL, DOSM job ads) and AI momentum (arXiv) count equally. Each bar is a score from 0 to 100.": "马来西亚需求（MyCOL、DOSM 招聘广告）和 AI 势头（arXiv）各占一半。每条是 0 到 100 的分数。",
-  "What is a trend score?": "什么是趋势分数？",
-  "A number from 0 to 100 for how much an IT area is growing, built from recent data.": "0 到 100 的分数，表示一个 IT 领域最近增长得多快，根据最新数据计算。",
-  "Half is Malaysian demand: whether TalentCorp's MyCOL lists its jobs as ones Malaysia is short of, and whether DOSM job ads for it are rising.": "一半来自马来西亚需求：TalentCorp 的 MyCOL 是否把这个领域的职位列为马来西亚紧缺的职位，以及 DOSM 的相关招聘广告是否在增加。",
-  "Half is AI momentum: whether AI research papers in the area are growing on arXiv.": "一半来自 AI 势头：这个领域在 arXiv 上的 AI 研究论文是否在增加。",
-  "50 means flat. Above 50, more of its signals are rising; below 50, more are falling.": "50 表示持平。高于 50，上升的信号较多；低于 50，下降的信号较多。",
-  "It shows the recent past, not a forecast.": "它反映的是最近的过去，不是预测。",
+  "What is a Trend Score?": "什么是趋势分数？",
+  "A 0–100 index measuring an IT area's growth speed and market demand, calculated from two equally weighted streams:": "0–100 的指数，衡量一个 IT 领域的增长速度和市场需求，由两个权重相同的部分计算：",
+  "Malaysian Demand:": "马来西亚需求：",
+  "Based on TalentCorp MyCOL shortages and DOSM job ad data. Higher scores mean greater local vacancy and urgency.": "根据 TalentCorp MyCOL 紧缺职业清单和 DOSM 招聘广告数据。分数越高，表示本地职位空缺越多、越紧迫。",
+  "Global AI Momentum:": "全球 AI 势头：",
+  "Based on the growth rate of AI papers on arXiv, latest 6 months against the 6 before. Higher scores mean faster technological disruption.": "根据 arXiv 上 AI 论文的增长率，最近 6 个月对比之前 6 个月。分数越高，表示技术变革越快。",
+  "50 Means Flat:": "50 表示持平：",
+  "Above 50 indicates accelerating growth; below 50 indicates a slowdown.": "高于 50 表示增长在加快；低于 50 表示在放缓。",
   "Sources:": "来源：",
   "computed": "计算于",
   "released": "发布于",
@@ -1180,7 +1172,7 @@ const ZH = {
   "MyCOL is TalentCorp's official list of occupations Malaysia is short of. Each bar counts our IT roles in that area.": "MyCOL 是 TalentCorp 公布的马来西亚紧缺职业官方名单。每条统计该领域内我们的 IT 职位数。",
   "roles matched to MyCOL occupations by the team": "职位与 MyCOL 职业的对应由团队完成",
   "Rising and flat IT roles": "上升和持平的 IT 职位",
-  "Trend score of each of our 28 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "我们 28 个 IT 职位各自的趋势分数：所属 IT 领域的信号，加上 MyCOL 是否列出该职位本身。",
+  "Trend score of each of our 25 IT roles: its IT area's signals plus whether MyCOL lists the role itself.": "我们 25 个 IT 职位各自的趋势分数：所属 IT 领域的信号，加上 MyCOL 是否列出该职位本身。",
   "Most momentum": "势头最强",
   "Least momentum": "势头最弱",
   "No role is falling in the latest data: the lowest scores mean flat signals, not falling ones.": "最新数据中没有职位在下降：最低分代表信号持平，而不是下降。",

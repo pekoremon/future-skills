@@ -2,11 +2,11 @@
 
 Two steps, so the student first sees *which part of IT* fits them, then the roles:
 
-1. Area fit, for each of the 6 IT areas of the skills test (data/it_assessment.json):
+1. Area fit, for each of the 5 IT areas of the skills test (data/it_assessment.json):
 
     area_fit = 0.45 x test + 0.30 x preference + 0.25 x CV evidence     (each part 0-100)
 
-   - test: the IT skills test's area_score (scripts/assessment.py). The test checks 3-6
+   - test: the IT skills test's area_score (scripts/assessment.py). The test checks 3-5
      areas (what the CV shows plus the top interests); each gets 3 quick-check items, the 2
      tested in depth combine quick check and deep items, and an area seen only in the quick
      check may not score above them. An area not tested has no test part. On a tie, an
@@ -97,7 +97,7 @@ GROUP_TOP = 3  # "high" interest or skill: among the student's top 3 areas on it
 GROUP_GAPS = 5  # biggest skill gaps shown for an area the student wants to grow into
 RIASEC = ["R", "I", "A", "S", "E", "C"]
 SUBFIELD_AREA = {"SE": "software_dev", "DA": "data_ai", "CS": "cybersecurity",
-                 "CI": "cloud_infra", "WD": "web_ux", "IM": "it_mgmt"}  # roles.csv subfield_code
+                 "CI": "cloud_infra", "WD": "web_ux"}  # roles.csv subfield_code
 
 # Future scenarios re-weight the two measured parts of each trend score
 # (data/trend_scores.csv). They change no data; the weights are team assumptions.
@@ -121,7 +121,7 @@ def read_csv(name: str) -> list[dict]:
 
 
 def load_areas() -> list[dict]:
-    """The 6 IT areas, from the skills test bank so test and matching always agree."""
+    """The 5 IT areas, from the skills test bank so test and matching always agree."""
     bank = json.loads((DATA / "it_assessment.json").read_text(encoding="utf-8"))
     return [{k: d[k] for k in ("id", "name", "name_zh", "description", "onet_soc")}
             for d in bank["domains"]]
@@ -189,14 +189,15 @@ def number(value: str) -> float | None:
 
 
 def scenario_trend_scores(data: dict, scenario: str) -> dict:
-    """Trend score per key under a scenario; a part with no data is left out, never filled."""
+    """Trend score per key under a scenario; a part with no data counts as 50 (flat), as in
+    trend_score.py, so the baseline scenario gives the scores in data/trend_scores.csv."""
     s = SCENARIOS[scenario]
     scores = {}
     for key, parts in data["trend_parts"].items():
-        used = {k: v for k, v in parts.items() if v is not None}
-        weight = sum(s[k] for k in used)
-        if weight:
-            scores[key] = round(min(100.0, max(0.0, sum(s[k] * v for k, v in used.items()) / weight)), 1)
+        if all(v is None for v in parts.values()):
+            continue
+        total = sum(s[k] * (50.0 if v is None else v) for k, v in parts.items()) / sum(s[k] for k in parts)
+        scores[key] = round(min(100.0, max(0.0, total)), 1)
     return scores
 
 
@@ -362,7 +363,7 @@ def cv_area_scores(technologies: list[str], data: dict) -> tuple[dict, dict]:
 
 
 def area_fit(profile: dict, areas: list[dict], roles: list[dict] | None = None) -> dict:
-    """Score the 6 IT areas from test, preferences and CV, and say what the sources agree on."""
+    """Score the 5 IT areas from test, preferences and CV, and say what the sources agree on."""
     interest = profile.get("interest")
     pref_why = {}
     if profile.get("preferences"):
@@ -599,7 +600,7 @@ def with_interest(profile: dict) -> dict:
 
 
 def it_roles(data: dict) -> list[dict]:
-    """Roles that belong to one of the 6 IT areas; every other role is left out."""
+    """Roles that belong to one of the 5 IT areas; every other role is left out."""
     ids = {a["id"] for a in data["areas"]}
     return [r for r in data["roles"] if r["it_area"] in ids]
 

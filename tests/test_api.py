@@ -96,7 +96,7 @@ class TestApi(unittest.TestCase):
         r = self.client.post("/api/questionnaire/score", json={"answers": answers}).json
         self.assertEqual(r["riasec"]["I"], 30)
         self.assertEqual(r["code"][0], "I")
-        self.assertEqual(len(r["area_items"]), 6)
+        self.assertEqual(len(r["area_items"]), 5)
 
     def test_questionnaire_rejects_bad_answer(self):
         r = self.client.post("/api/questionnaire/score", json={"answers": [3] * 35 + [6]})
@@ -112,7 +112,7 @@ class TestApi(unittest.TestCase):
         self.assertEqual(len(r.json["results"]), 3)
         self.assertEqual(r.json["best"], "data_ai")
         self.assertEqual(r.json["sources_used"], ["preference", "cv"])
-        self.assertEqual(len(r.json["areas"]), 6)
+        self.assertEqual(len(r.json["areas"]), 5)
         first = r.json["results"][0]
         self.assertIn("area", first["components"])
         self.assertIn("skill_detail", first)

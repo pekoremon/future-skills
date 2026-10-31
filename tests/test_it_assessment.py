@@ -121,9 +121,9 @@ class TestItAssessment(unittest.TestCase):
         ids = [q["id"] for q in BANK["questions"]]
         self.assertEqual(len(ids), len(set(ids)))
 
-    def test_the_six_team_areas(self):
+    def test_the_five_team_areas(self):
         self.assertEqual([d["id"] for d in BANK["domains"]],
-                         ["software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux", "it_mgmt"])
+                         ["software_dev", "data_ai", "cybersecurity", "cloud_infra", "web_ux"])
         for d in BANK["domains"]:
             self.assertEqual(len(d["onet_soc"]), len(d["onet_titles"]))
 
@@ -242,17 +242,6 @@ class TestItAssessment(unittest.TestCase):
         self.assertAlmostEqual(by_id["CL-D3"]["answer"], 30 * 24 * 60 * 0.001)
         self.assertAlmostEqual(by_id["DA-D5"]["answer"], round(7 / 3, 2))
         self.assertEqual(network_address("192.168.50.192", 27) + "/27", by_id["NW-P2"]["answer"])
-        self.assertAlmostEqual(by_id["IM-D1"]["answer"], 60_000 / 75_000)
-        self.assertEqual(by_id["IM-D6"]["answer"], 210 / 30 * 2)
-        spi, cpi = 55_000 / 50_000, 55_000 / 60_000
-        self.assertTrue(spi > 1 and cpi < 1)
-        self.assertEqual(by_id["IM-D2"]["options"][by_id["IM-D2"]["answer"]], "Ahead of schedule but over budget")
-        tasks = {"A": (3, []), "B": (5, ["A"]), "C": (2, ["A"]), "D": (4, ["C"]), "E": (3, ["B", "D"]), "F": (2, ["A"])}
-        finish = {}
-        for name in "ABCDEF":
-            days, deps = tasks[name]
-            finish[name] = days + max((finish[d] for d in deps), default=0)
-        self.assertEqual(max(finish.values()), by_id["IM-P1"]["answer"])
 
     def test_path_traversal_lines(self):
         q = next(q for q in BANK["questions"] if q["id"] == "CS-P2")
@@ -339,10 +328,10 @@ class TestAssessmentFlow(unittest.TestCase):
     def test_strong_screen_domains_are_chosen(self):
         _, start = self.call("GET", "/api/assessment/start")
         bank = {q["id"]: q for q in BANK["questions"]}
-        picked = [q for q in start["questions"] if q["domain"] in ("cybersecurity", "it_mgmt")]
+        picked = [q for q in start["questions"] if q["domain"] in ("cybersecurity", "software_dev")]
         responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in picked}
         _, nxt = self.call("POST", "/api/assessment/next", {"seed": start["seed"], "responses": responses})
-        self.assertEqual(sorted(nxt["domains"]), ["cybersecurity", "it_mgmt"])
+        self.assertEqual(sorted(nxt["domains"]), ["cybersecurity", "software_dev"])
 
     def test_quick_check_only_area_never_beats_the_in_depth_areas(self):
         """Right on every quick check in 3 areas, wrong on every deep item: the area seen
@@ -402,10 +391,10 @@ class TestAssessmentFlow(unittest.TestCase):
 
     def test_focused_test_asks_only_the_chosen_areas(self):
         bank = {q["id"]: q for q in BANK["questions"]}
-        areas = ["web_ux", "data_ai", "it_mgmt"]
+        areas = ["web_ux", "data_ai", "cloud_infra"]
         status, start = self.call("GET", "/api/assessment/start?areas=" + ",".join(areas))
         self.assertEqual(status, 200)
-        self.assertEqual(start["areas"], ["data_ai", "web_ux", "it_mgmt"])  # bank order
+        self.assertEqual(start["areas"], ["data_ai", "cloud_infra", "web_ux"])  # bank order
         self.assertEqual(start["question_count"], 15)
         self.assertEqual({q["domain"] for q in start["questions"]}, set(areas))
         self.assertEqual(len(start["questions"]), 9)
@@ -437,13 +426,15 @@ class TestAssessmentFlow(unittest.TestCase):
         only the added areas' quick checks are asked, and the match uses their scores."""
         from assessment import report
         bank = {q["id"]: q for q in BANK["questions"]}
-        areas = ["data_ai", "web_ux", "it_mgmt"]
+        areas = ["data_ai", "cloud_infra", "web_ux"]
         _, start = self.call("GET", "/api/assessment/start?areas=" + ",".join(areas))
         responses = {q["id"]: self.right_answer(bank[q["id"]], q) for q in start["questions"]}
         req = {"seed": start["seed"], "areas": areas, "responses": responses}
         _, nxt = self.call("POST", "/api/assessment/next", req)
         responses.update({q["id"]: 0 for q in nxt["questions"]})
         before = report(start["seed"], responses, areas)
+        not_yet = {d["id"]: d for d in before["domains"]}["software_dev"]
+        self.assertFalse(not_yet["tested"])
 
         status, more = self.call("POST", "/api/assessment/more", {**req, "added": ["cybersecurity"]})
         self.assertEqual(status, 200)
@@ -463,8 +454,6 @@ class TestAssessmentFlow(unittest.TestCase):
         by_id = {d["id"]: d for d in after["domains"]}
         self.assertTrue(by_id["cybersecurity"]["tested"] and by_id["cybersecurity"]["added"])
         self.assertEqual(by_id["cybersecurity"]["profile"], 100)
-        self.assertFalse(by_id["cloud_infra"]["tested"])
-        self.assertIn("quick_check_minutes", by_id["cloud_infra"])
 
         _, m0 = self.call("POST", "/api/match", {"test": req | {"responses": responses}, "top": 1})
         _, m1 = self.call("POST", "/api/match", {"test": added, "top": 1})
@@ -479,9 +468,9 @@ class TestAssessmentFlow(unittest.TestCase):
         self.assertEqual(self.call("POST", "/api/assessment/more", {**req, "added": []})[0], 400)
 
     def test_no_areas_means_the_full_test(self):
-        """Old requests and share links have no areas: they were the 6-area test."""
+        """Old requests and share links have no areas: they get the full test of every area."""
         _, start = self.call("GET", "/api/assessment/start")
-        self.assertEqual(len(start["areas"]), 6)
+        self.assertEqual(len(start["areas"]), 5)
         from assessment import report
         self.assertEqual(report(start["seed"], {})["areas"], [d["id"] for d in BANK["domains"]])
 
@@ -499,16 +488,15 @@ class TestAssessmentFlow(unittest.TestCase):
         from assessment import choose_areas
         everything = [d["id"] for d in BANK["domains"]]
         self.assertEqual(choose_areas(None, None)["areas"], everything)
-        prefs = {"software_dev": 10, "data_ai": 80, "cybersecurity": 0, "cloud_infra": 1, "web_ux": 70, "it_mgmt": 5}
+        prefs = {"software_dev": 10, "data_ai": 80, "cybersecurity": 0, "cloud_infra": 1, "web_ux": 70}
         plan = choose_areas(None, prefs)
         self.assertEqual(plan["from_interest"], ["data_ai", "web_ux", "software_dev"])
         self.assertEqual(plan["areas"], ["software_dev", "data_ai", "web_ux"])
-        # CV areas at 50+ (at most 3, highest first) are added to the top 3 interests: up to 6.
-        cv = {"cybersecurity": 90, "cloud_infra": 60, "it_mgmt": 55, "web_ux": 99, "software_dev": 49}
+        # CV areas at 50+ (at most 3, highest first) are added to the top 3 interests: up to 5.
+        cv = {"cybersecurity": 90, "cloud_infra": 60, "software_dev": 55, "web_ux": 99, "data_ai": 49}
         plan = choose_areas(cv, prefs)
-        self.assertEqual(plan["from_cv"], ["web_ux", "cybersecurity", "cloud_infra"])
+        self.assertEqual(plan["from_cv"], ["web_ux", "cybersecurity", "cloud_infra"])  # not the 4th, software_dev
         self.assertEqual(len(plan["areas"]), 5)
-        self.assertNotIn("it_mgmt", plan["areas"])
         # Fewer than 3: fill up so at least 3 areas are compared.
         plan = choose_areas({"data_ai": 70, "web_ux": 20}, None)
         self.assertEqual(plan["from_cv"], ["data_ai"])
@@ -522,10 +510,10 @@ class TestAssessmentFlow(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(plan["from_cv"], ["data_ai"])
         self.assertEqual(plan["from_interest"][0], "cybersecurity")
-        self.assertTrue(3 <= len(plan["areas"]) <= 6)
+        self.assertTrue(3 <= len(plan["areas"]) <= 5)
         self.assertGreater(plan["minutes"], 0)
         _, empty = self.call("POST", "/api/assessment/plan", {})
-        self.assertEqual(len(empty["areas"]), 6)
+        self.assertEqual(len(empty["areas"]), 5)
         self.assertEqual(self.call("POST", "/api/assessment/plan", {"cv_areas": {"data_ai": 101}})[0], 400)
 
     def test_sql_runner_is_read_only(self):

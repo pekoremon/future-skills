@@ -55,8 +55,7 @@ Rules:
 
 evidence lists up to 12 things the person has done that show ability in an IT area:
 - area is one of: software_dev (Software Engineering), data_ai (Data & AI), cybersecurity (Cybersecurity),
-  cloud_infra (Cloud, Infrastructure & Networking), web_ux (Web & Interface Design),
-  it_mgmt (IT Management & Analysis: business analysis, project management, IT support).
+  cloud_infra (Cloud, Infrastructure & Networking), web_ux (Web & Interface Design).
 - kind is one of: coursework, personal_project, competition, certification, internship, work.
 - quote is copied character for character from the CV, 5 to 30 words, from the line that describes it. Do not reword, shorten inside or join lines.
 - Give each item the area it shows best; repeat it for a second area only if it clearly shows that one too.

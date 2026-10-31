@@ -1,13 +1,13 @@
 """IT domain readiness assessment: pick questions, grade answers, build the report.
 
-The question bank is data/it_assessment.json. A student is tested in 3 to 6 of the 6 IT
+The question bank is data/it_assessment.json. A student is tested in 3 to 5 of the 5 IT
 areas (choose_areas: what their CV shows and their top interests). They answer the same
 number of quick-check (screen) items in each tested area, which ranks those areas against
 each other, then deep and practical items in the 2 tested areas they scored best on. An area
 that was not tested gets no test score at all, never a filled-in one.
 
 Every call takes the tested area list next to the seed, because the seed alone no longer
-decides which questions were asked. No list means all 6 areas (the full test, and share
+decides which questions were asked. No list means all 5 areas (the full test, and share
 links made before areas were chosen). Afterwards the student may add untested areas
 ("added"): each gets the same quick check, while the areas tested in depth stay as they were.
 
@@ -43,7 +43,7 @@ SQLITE_RECURSIVE = 33  # authorizer code for WITH RECURSIVE; not exported by the
 SQL_ALLOWED = {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION, SQLITE_RECURSIVE}
 
 # Which areas the focused test checks (team choices; SOURCES.md, "Choices and limits").
-MIN_AREAS, MAX_AREAS = 3, 6
+MIN_AREAS, MAX_AREAS = 3, 5
 CV_MIN_SCORE = 50  # CV evidence (0-100) from which "your CV shows this area"
 CV_MAX_AREAS = 3   # at most this many areas picked because of the CV, highest first
 INTEREST_AREAS = 3  # the top interest areas are always tested
@@ -92,7 +92,7 @@ def _pick(stage: str, domain: str, n: int, rng: random.Random) -> list:
 def tested_areas(areas=None) -> list:
     """The tested area ids in bank order, so the same set always gives the same questions.
 
-    None means all areas. Otherwise a list of 3-6 distinct area ids, or AssessmentError.
+    None means all areas. Otherwise a list of 3-5 distinct area ids, or AssessmentError.
     """
     ids = [d["id"] for d in load_bank()["domains"]]
     if areas is None:

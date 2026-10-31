@@ -6,7 +6,7 @@
 
 # Future Skills
 
-Future Skills helps IT students find the part of IT that suits them. An interest questionnaire, an IT skills test and the student's CV score 6 IT areas (software engineering, data & AI, cybersecurity, cloud & networking, web & interface design, IT management), then 28 IT roles are ranked with an explained score, the skills still missing, a free-course pathway, Malaysian demand and AI-trend signals, and SDG links.
+Future Skills helps IT students find the part of IT that suits them. An interest questionnaire, an IT skills test and the student's CV score 5 IT areas (software engineering, data & AI, cybersecurity, cloud & networking, web & interface design), then 25 IT roles are ranked with an explained score, the skills still missing, a free-course pathway, Malaysian demand and AI-trend signals, and SDG links.
 
 ## Team Information
 
@@ -49,7 +49,7 @@ Every number shown to the user carries its source and date. The system never inv
 
 Domain 1 requires all six:
 
-1. **Skills profile intake** — in this order: CV (optional; or rate your skills instead), a 36-item IT interest questionnaire (RIASEC + IT area), then a focused IT skills test graded in the browser that checks only the 3–6 IT areas the CV and interests point to (15–24 questions, and the page says why these areas; afterwards any left-out area can be added with its own 3-question quick check), CV reading (an AI summary, and evidence per IT area: the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off), plus 1–5 skill ratings and technologies
+1. **Skills profile intake** — in this order: CV (optional; or rate your skills instead), a 36-item IT interest questionnaire (RIASEC + IT area), then a focused IT skills test graded in the browser that checks only the 3–5 IT areas the CV and interests point to (15–21 questions, and the page says why these areas; afterwards any left-out area can be added with its own 3-question quick check), CV reading (an AI summary, and evidence per IT area: the AI quotes the CV, our code keeps only quotes really in the CV and scores them, or uses the technologies the CV names when AI is off), plus 1–5 skill ratings and technologies
 2. **AI-trend signal layer** — updatable, dated sources (MyCOL, DOSM, OpenDOSM, arXiv) with direction and confidence per IT area and role
 3. **Future-role matching** — which IT area fits (test + interests + CV, with agreements and mismatches spelled out), results grouped by interest × skill ("Best fit for you" first, then "You can do this, but it may not excite you"; "Want to get there?" areas shown with their biggest gaps and learning paths, not recommended), then an explainable role score and skills gap
 4. **Personalised reskilling pathway** — gaps ordered biggest first, checked free courses and videos, total hours and weeks at the student's study time; paid HRD Corp-claimable courses listed apart for working adults; students tick each course, video or certificate when done, and a "My learning" page tracks progress per path (saved in the browser, no account needed)
@@ -58,7 +58,7 @@ Domain 1 requires all six:
 
 Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend input (an IT area's arXiv AI paper count, the DOSM job ad count for Software Developers, or a role's MyCOL status), or pick a ready-made example, and the same code that builds the real scores runs on a private copy. The page shows each step: the data you changed → the signals whose direction moved (and why a small change moves nothing: it must cross a threshold) → the trend scores → your job ranking, before and after. "Show all my matches with this data" re-plans the whole jobs page until you go back to the real data. The data files and other users never see the change.
 
-Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 28 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
+Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 25 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
 
 Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
@@ -83,7 +83,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── trend_signals.csv    # Direction + confidence per IT area and role (generated)
 │   ├── trend_scores.csv     # 0–100 trend score per IT area and role (generated)
 │   ├── subdomains.csv       # IT areas -> arXiv categories and DOSM series
-│   ├── it_assessment.json   # IT skills test: 90 questions in 6 areas
+│   ├── it_assessment.json   # IT skills test: 77 questions in 5 areas
 │   ├── certifications.csv
 │   ├── sdg_map.csv
 │   ├── courses.csv
@@ -143,7 +143,7 @@ python src/main.py
 | GET | `/api` | List of endpoints |
 | GET | `/api/health` | Health check |
 | GET | `/api/questionnaire` | The 36 interest items (RIASEC type + IT area), answer scale and attribution |
-| GET / POST | `/api/assessment/plan`, `/start`, `/next`, `/more`, `/sql`, `/result` | IT skills test: which 3–6 areas to test (from CV + interests) and why, questions for those areas (`areas`, and `added` for areas tested later, travel with the seed), the 2 strongest areas, read-only SQL runs, graded report |
+| GET / POST | `/api/assessment/plan`, `/start`, `/next`, `/more`, `/sql`, `/result` | IT skills test: which 3–5 areas to test (from CV + interests) and why, questions for those areas (`areas`, and `added` for areas tested later, travel with the seed), the 2 strongest areas, read-only SQL runs, graded report |
 | GET | `/api/skills?type=` | Skills for the intake form (`general`, `domain_knowledge`, `technology`) |
 | GET | `/api/roles`, `/api/roles/<role_id>` | Roles; one role's skills, technologies, SDG targets and certifications |
 | GET | `/api/profiles` | Fictional demo profiles |
@@ -205,7 +205,7 @@ python -m unittest discover tests
 
 - **Real trends, not snapshots.** Add the next DOSM Job Market Insights quarter (2026 Q3) and future MyCOL editions, so demand signals compare several periods instead of one status.
 - **Rising and declining skills.** Derive skill-level signals (for example, skills named in job ads over time), not only area- and role-level ones.
-- **Calibrate the trend score** with the team: a single medium-confidence signal can currently move a part to 100.
+- **Calibrate the trend score** with the team: the half credit for a related MyCOL title and the +40% AI paper growth that counts in full are team choices.
 - **Employer and HR view:** a skills-gap heatmap and reskilling plan for a whole team.
 - **Test questions and AI explanations** in Bahasa Melayu and Chinese, not only the interface.
 - **More HRD Corp-claimable programmes,** checked against HRD Corp's own records, not only provider pages.

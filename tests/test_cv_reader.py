@@ -161,7 +161,7 @@ class TestEvidence(unittest.TestCase):
         self.assertEqual(r["cv_areas_method"], "llm_evidence")
         self.assertEqual(r["evidence_dropped"], 1)  # the invented penetration testing job
         self.assertEqual(r["cv_areas"], {"software_dev": 0, "data_ai": 35, "cybersecurity": 0,
-                                         "cloud_infra": 0, "web_ux": 20, "it_mgmt": 0})
+                                         "cloud_infra": 0, "web_ux": 20})
 
     @mock.patch.object(cv_reader.explain, "api_key", return_value="test-key")
     def test_llm_with_no_true_quote_falls_back_to_technologies(self, _):
