@@ -217,16 +217,17 @@ function levelDialog(pathId, key, n) {
   const kind = KIND[m.kind] || { icon: "•", label: "Item" };
   const isVideo = VIDEO_FORMATS.includes(m.kind);
   const checked = QUIZ_FORMATS.includes(m.kind);
+  const project = m.kind === "project" && !progress.projects[key];  // cleared once the upload passes its check
   const done = Boolean(progress.done[key]);
   const { dialog, frame } = openDialog();
   frame(`Level ${n} · ${kind.label}`, m.title, `
     ${done
       ? `<div class="note">Cleared on ${esc(progress.done[key])} ★${progress.quizzes[key] ? ` · check ${progress.quizzes[key].score}/${progress.quizzes[key].total}` : ""}</div>`
-      : `<p class="small muted">${checked ? `${isVideo ? "Watch" : "Finish"} it, then pass a ${VIDEO_QUIZ_SIZE}-question check (${VIDEO_PASS_MARK} right) to clear this level. Every right answer earns 🪙 ${COINS.perRight}; all ${VIDEO_QUIZ_SIZE} right earns 🪙 ${COINS.perfect} more.` : "Finish it, then mark the level as cleared."}</p>`}
+      : `<p class="small muted">${project ? "Build it, then upload it. AI checks it against the brief." : checked ? `${isVideo ? "Watch" : "Finish"} it, then pass a ${VIDEO_QUIZ_SIZE}-question check (${VIDEO_PASS_MARK} right) to clear this level. Every right answer earns 🪙 ${COINS.perRight}; all ${VIDEO_QUIZ_SIZE} right earns 🪙 ${COINS.perfect} more.` : "Finish it, then mark the level as cleared."}</p>`}
     <div class="row">
       ${/^https?:\/\//i.test(m.url || "") ? `<a class="btn" href="${safeUrl(m.url)}" target="_blank" rel="noopener">Open ${isVideo ? "video" : "it"} ↗</a>` : ""}
       ${done ? '<button class="btn ghost" type="button" id="lv-undo">Mark as not done</button>'
-        : `<button class="btn primary" type="button" id="lv-done">${checked && !progress.quizzes[key] ? "Start the test" : "Mark as cleared"}</button>`}
+        : `<button class="btn primary" type="button" id="lv-done">${project ? "Upload my project" : checked && !progress.quizzes[key] ? "Start the test" : "Mark as cleared"}</button>`}
     </div>`);
   const finish = () => {
     progress.done[key] = today();
@@ -236,7 +237,10 @@ function levelDialog(pathId, key, n) {
     pageMyLearning();
   };
   dialog.querySelector("#lv-done")?.addEventListener("click", () => {
-    if (checked && !progress.quizzes[key]) {
+    if (project) {
+      dialog.close();
+      projectCheck(key, m.title, (r) => { progress.projects[key] = { date: today(), method: r.method }; finish(); });
+    } else if (checked && !progress.quizzes[key]) {
       dialog.close();
       videoQuiz(key, m.title, (r) => { progress.quizzes[key] = { score: r.score, total: r.total, date: today() }; finish(); });
     } else {
@@ -531,6 +535,81 @@ function videoQuiz(url, title, onPass) {
     };
   };
   start();
+}
+
+// "Prove it": upload the project (a .zip, or one document or code file) and AI checks it
+// against the brief. The limits match scripts/project_check.py; the files are not stored.
+const PROJECT_MAX_BYTES = 2_000_000;
+const PROJECT_TEXT = /\.(md|txt|py|js|jsx|ts|tsx|java|c|cpp|cs|go|rs|php|rb|kt|swift|dart|sol|sql|r|html|css|ipynb|json|csv|ya?ml)$/i;
+
+async function projectRequestBody(file, projectId) {
+  const name = file.name.toLowerCase();
+  if (file.size > PROJECT_MAX_BYTES) throw new Error("the file is larger than 2 MB");
+  if (name.endsWith(".zip")) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return { project_id: projectId, zip_base64: btoa(bin) };
+  }
+  if (name.endsWith(".pdf")) return { project_id: projectId, file: { name: file.name, text: await pdfText(file) } };
+  if (PROJECT_TEXT.test(name)) return { project_id: projectId, file: { name: file.name, text: await file.text() } };
+  throw new Error("use a .zip of your project, a .pdf, or one code or text file");
+}
+
+function projectResultHtml(r) {
+  const row = (met, label, note) => `<li class="check-row ${met ? "is-met" : "is-missing"}"><span aria-hidden="true">${met ? "✓" : "✗"}</span>
+    <div class="stack" style="gap: 0"><span>${esc(label)}</span>${note ? `<span class="small muted">${esc(note)}</span>` : ""}</div></li>`;
+  return `
+    <div class="${r.passed ? "note" : "warn"} quiz-verdict" role="status">
+      <strong>${r.passed ? "Passed ★ This project counts as done." : "Not yet. Fix the items marked ✗ and upload again."}</strong>
+      ${r.summary ? `<div class="small">${esc(r.summary)}</div>` : ""}
+    </div>
+    ${r.requirements.length ? `<h3>What the brief asks</h3><ul class="proj-checks">${r.requirements.map((x) => row(x.met, x.requirement, [x.note, x.met ? x.file : ""].filter(Boolean).join(" · "))).join("")}</ul>` : ""}
+    <h3>Basic checks</h3>
+    <ul class="proj-checks">${r.basic_checks.map((c) => row(c.met, c.check, c.note)).join("")}</ul>
+    ${!r.passed && r.next_steps.length ? `<h3>Fix next</h3><ol class="small">${r.next_steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>` : ""}
+    <p class="small muted">${r.method === "llm" ? "Checked by AI. It can make mistakes." : "AI check not available right now, so only the basic checks were run."}</p>
+    ${r.files_skipped ? `<p class="small muted">Skipped ${r.files_skipped} files (images, large or secret files).</p>` : ""}`;
+}
+
+function projectCheck(key, title, onPass) {
+  const { dialog, frame } = openDialog();
+  const projectId = key.replace(/^project:/, "");
+  frame("Prove it", title, `
+    <p class="small">Upload your project. AI checks it against the brief.</p>
+    <ul class="small muted privacy">
+      <li>A .zip of your project folder, a .pdf, or one code or text file. Up to 2 MB.</li>
+      <li>Leave out node_modules, venv and build folders. Files like .env and keys are never read.</li>
+      <li>Your files go to our server and an AI service for this check only. They are not saved.</li>
+    </ul>
+    <label class="btn primary proj-pick" for="proj-file">Choose a file</label>
+    <input id="proj-file" class="visually-hidden" type="file" accept=".zip,.pdf,.md,.txt,.py,.js,.ts,.java,.ipynb,.html,.sql,application/zip,application/pdf,text/plain">
+    <div id="proj-status" role="status" aria-live="polite"></div>
+    <div id="proj-out" class="stack" style="gap: 10px"></div>`);
+  const input = dialog.querySelector("#proj-file"), status = dialog.querySelector("#proj-status"), out = dialog.querySelector("#proj-out");
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    input.disabled = true;
+    out.innerHTML = "";
+    status.className = "row";
+    status.innerHTML = '<span class="spinner" aria-hidden="true"></span><strong>Checking your project…</strong> <span class="small muted"></span>';
+    status.lastChild.textContent = file.name;
+    try {
+      const r = await api("/api/project/check", { body: JSON.stringify(await projectRequestBody(file, projectId)) });
+      status.className = "";
+      status.innerHTML = "";
+      out.innerHTML = projectResultHtml(r) + `<div class="row">${r.passed ? '<button class="btn primary" type="button" data-close>Done</button>' : '<button class="btn ghost" type="button" data-close>Later</button>'}</div>`;
+      out.querySelectorAll("[data-close]").forEach((b) => { b.onclick = () => dialog.close(); });
+      if (r.passed) onPass(r);
+    } catch (e) {
+      status.className = "warn";
+      status.textContent = `Could not check it: ${e.message}`;
+    } finally {
+      input.disabled = false;
+      input.value = "";
+    }
+  };
 }
 
 // The coin count and the shop look, once app.js has loaded (readSaved is defined there).

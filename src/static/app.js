@@ -1982,10 +1982,11 @@ const FORMAT_LABEL = { video: "▶ YouTube video", playlist: "▶ YouTube playli
 // Videos, playlists and courses only count as done after a short quiz on their topic (play.js):
 // the box reads "Test" until it is passed, then "Done".
 function doneBox(key, title, format = "") {
-  const quiz = QUIZ_FORMATS.includes(format);
-  return `<label class="done-box" title="${quiz ? `Pass a ${VIDEO_QUIZ_SIZE}-question check to mark it done` : "Tick when you have finished it"}">
-    <input type="checkbox" data-done="${esc(key)}"${quiz ? ` data-quiz="${esc(title)}"` : ""}${progress.done[key] ? " checked" : ""}>
-    <span class="visually-hidden">${quiz ? "Test" : "Finished"}: ${esc(title)}</span>${quiz ? '<span aria-hidden="true" class="if-off">Test</span><span aria-hidden="true" class="if-on">Done</span>' : '<span aria-hidden="true">Done</span>'}
+  const quiz = QUIZ_FORMATS.includes(format), project = format === "project";
+  const gate = quiz ? "Test" : project ? "Check" : "";
+  return `<label class="done-box" title="${quiz ? `Pass a ${VIDEO_QUIZ_SIZE}-question check to mark it done` : project ? "Upload your project and pass the check to mark it done" : "Tick when you have finished it"}">
+    <input type="checkbox" data-done="${esc(key)}"${quiz ? ` data-quiz="${esc(title)}"` : ""}${project ? ` data-project="${esc(title)}"` : ""}${progress.done[key] ? " checked" : ""}>
+    <span class="visually-hidden">${gate || "Finished"}: ${esc(title)}</span>${gate ? `<span aria-hidden="true" class="if-off">${gate}</span><span aria-hidden="true" class="if-on">Done</span>` : '<span aria-hidden="true">Done</span>'}
   </label>`;
 }
 
@@ -2005,6 +2006,7 @@ const sdgTile = (goal, name) => `<img class="sdg-tile" src="/static/sdg/${encode
 
 // { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, titles: {itemKey: title},
 //   updated, start, missed: [Monday "YYYY-MM-DD"]}}, quizzes: {videoUrl: {score, total, date}} (the video's quiz was passed),
+//   projects: {"project:ID": {date, method}} (the project upload passed its check),
 //   learner: random id for the SDG tally, calendar: {day: 0-6 from Monday, time: "HH:MM"} }
 // A path is tracked from the first item ticked on it; its item list is refreshed on every visit.
 const PROGRESS_KEY = "future-skills-progress-v1";
@@ -2012,7 +2014,7 @@ let progress = loadProgress();
 
 function loadProgress() {
   const saved = readSaved(PROGRESS_KEY) || {};
-  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {}, learner: saved.learner || null, calendar: saved.calendar || null };
+  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {}, projects: saved.projects || {}, learner: saved.learner || null, calendar: saved.calendar || null };
 }
 const saveProgress = () => writeSaved(PROGRESS_KEY, progress);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -2066,7 +2068,7 @@ async function pageLearn(roleId) {
   const skills = p.skills.slice(0, 3).map(skillHtml).join("") + more(p.skills.slice(3), p.skills.slice(3).map(skillHtml).join(""));
   // Projects to build first (every role has them), then any certification; all can be ticked.
   const proveIt = `<ul class="res-list">${p.projects.map((x) => `<li class="res${progress.done[`project:${x.id}`] ? " is-done" : ""}">
-      <div class="res-top"><span class="chip plain res-kind">Project</span>${doneBox(`project:${x.id}`, x.title)}</div>
+      <div class="res-top"><span class="chip plain res-kind">Project</span>${doneBox(`project:${x.id}`, x.title, "project")}</div>
       <strong>${esc(x.title)}</strong>
       <span class="muted small">${esc(x.description)}</span>
       <a class="small" href="${safeUrl(x.guide.url)}" target="_blank" rel="noopener">Guide: ${esc(x.guide.name)} ↗</a></li>`).join("")}${p.certifications.map((c) => `<li class="res${progress.done[`cert:${c.cert_id}`] ? " is-done" : ""}">
@@ -2153,6 +2155,15 @@ async function pageLearn(roleId) {
         box.checked = false;
         videoQuiz(key, box.dataset.quiz, (result) => {
           progress.quizzes[key] = { score: result.score, total: result.total, date: today() };
+          box.checked = true;
+          box.onchange();
+        });
+        return;
+      }
+      if (box.checked && box.dataset.project !== undefined && !progress.projects[key]) {  // done once the upload passes
+        box.checked = false;
+        projectCheck(key, box.dataset.project, (result) => {
+          progress.projects[key] = { date: today(), method: result.method };
           box.checked = true;
           box.onchange();
         });

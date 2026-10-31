@@ -93,6 +93,7 @@ import impact  # noqa: E402
 import interest  # noqa: E402
 import learning  # noqa: E402
 import matching  # noqa: E402
+import project_check  # noqa: E402
 import puzzles  # noqa: E402
 import whatif  # noqa: E402
 
@@ -605,6 +606,15 @@ def cv_summary(request):
     try:
         return jsonify(cv_reader.summarise(body(request), data["skills"], data))
     except cv_reader.CVError as e:
+        raise BadRequest(str(e)) from None
+
+
+@route("POST", "/api/project/check")
+def project_check_upload(request):
+    """Check a "Prove it" project upload. The files are used for this request only, never stored."""
+    try:
+        return jsonify(project_check.check(body(request)))
+    except project_check.ProjectError as e:
         raise BadRequest(str(e)) from None
 
 

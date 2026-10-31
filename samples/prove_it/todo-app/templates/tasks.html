@@ -1,0 +1,13 @@
+<!doctype html>
+<title>My tasks</title>
+<h1>My tasks</h1>
+<form method="post"><input name="title" placeholder="New task" required> <button>Add</button></form>
+<ul>
+  {% for t in tasks %}
+  <li>{% if t.done %}<s>{{ t.title }}</s>{% else %}{{ t.title }}
+    <form method="post" action="{{ url_for('mark_done', task_id=t.id) }}" style="display: inline"><button>Done</button></form>{% endif %}</li>
+  {% else %}
+  <li>No tasks yet.</li>
+  {% endfor %}
+</ul>
+<p><a href="{{ url_for('logout') }}">Sign out</a></p>
