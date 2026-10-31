@@ -104,6 +104,7 @@ Plus **"Explain this for me"**: a GenAI explanation of each match, written by an
 │   ├── trend_score.py       # Signals -> 0-100 trend score per IT area and role
 │   ├── whatif.py            # Run signals -> scores -> matching on a changed copy of the trend data
 │   ├── validate_data.py     # Check every row has a source and date
+│   ├── fairness_check.py    # Same CV, different personal details -> same recommendations
 │   └── check_links.py       # Check every course, video and project link still opens
 ├── src/
 │   ├── main.py              # Web server and JSON API (Replit entry point)
@@ -168,7 +169,10 @@ python src/main.py
 python scripts/validate_data.py
 python -m unittest discover tests
 python scripts/check_links.py   # needs internet: every course, video, certification and project link still opens
+python scripts/fairness_check.py  # the same CV as 8 different students gives the same recommendations
 ```
+
+`fairness_check.py` sends one fictional CV through `/api/cv/summary` and `/api/match` eight times, changing only the name, gender, age, ethnicity, religion and home state, and also sends those details in the match request. It passes only if the technologies found, the IT area scores and all 25 role scores are identical. `--llm` repeats it with the LLM reading each CV.
 
 `check_links.py` checks YouTube links through YouTube's oEmbed, so a removed video counts as broken. Sites that refuse scripts (HTTP 401/403/429, e.g. OpenLearn, TryHackMe) are listed as "blocked" to open by hand, not as broken.
 
@@ -214,7 +218,7 @@ python scripts/check_links.py   # needs internet: every course, video, certifica
 - **Test questions and AI explanations** in Bahasa Melayu and Chinese, not only the interface.
 - **More HRD Corp-claimable programmes,** checked against HRD Corp's own records, not only provider pages.
 - **Keep refreshed trend data across deployment restarts** (today the committed CSVs come back after a restart).
-- **A fairness check:** the app collects no age, gender or background, and a test could show that recommendations depend only on interests, skills and the CV.
+- **Fairness of the AI CV reading:** `scripts/fairness_check.py` proves the word-match path ignores personal details; the LLM path (`--llm`) can vary run to run and needs repeated runs to measure.
 
 ## Team
 
