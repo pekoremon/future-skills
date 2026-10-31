@@ -1,5 +1,5 @@
-/* My learning as a game (#/progress): each learning path is a map of levels, the daily
-   challenge and the video checks earn coins, and coins buy page backgrounds in the shop.
+/* The level map (#/progress/map): each learning path is a map of levels, the video checks
+   earn coins, and coins buy page backgrounds in the shop.
    A video only counts as done after a 5-question check with 4 right. Loaded before app.js
    and uses its helpers (api, cached, esc, render, progress, ...) once a page opens. The
    server keeps the answers; the page only learns one after it sends a choice. */
@@ -11,9 +11,9 @@ const VIDEO_QUIZ_SIZE = 5;
 const VIDEO_PASS_MARK = 4;
 const PLAY_KEY = "future-skills-puzzles-v1";
 const LETTERS = "ABCD";
-const COINS = { perRight: 10, perfect: 30, daily: { easy: 30, medium: 40, hard: 50 } };
-// The shop. Coins come 30-50 a day from the daily challenge and up to 80 a video, so the first
-// colour takes a few days and a special theme a few weeks. Colours tint the background
+const COINS = { perRight: 10, perfect: 30 };
+// The shop. Coins come up to 80 a video, so the first colour takes a few videos and a
+// special theme a few weeks. Colours tint the background
 // (play.css); cursors swap the mouse pointer, and trails add an effect behind it; a special
 // theme changes everything: picture, colours, fonts, banner and cursor.
 const BACKGROUNDS = [
@@ -43,14 +43,7 @@ const SPECIALS = [
   { id: "pirate", name: "Pirate ship", price: 2500, cursor: "🗡️", font: "Pirata+One", sample: "Pirata One",
     desc: "A ship at sea, parchment pages, a pirate font and a sword cursor." },
 ];
-// Hints are used up: each one shows what to check first on one daily challenge.
-const HINTS = [
-  { id: "hint1", name: "1 hint", price: 20, count: 1 },
-  { id: "hint3", name: "3 hints", price: 50, count: 3 },
-  { id: "hint10", name: "10 hints", price: 150, count: 10 },
-];
 const SHOP_TABS = [
-  { id: "hints", label: "💡 Hints", items: HINTS },
   { id: "colours", label: "Colours", items: BACKGROUNDS },
   { id: "cursors", label: "Cursors & effects", items: CURSORS },
   { id: "specials", label: "Special themes", items: SPECIALS },
@@ -62,19 +55,18 @@ const KIND = {
 };
 const ROW = 5;  // levels per row of the map
 
-// { coins, earned, daily: {"YYYY-MM-DD": {correct, coins}}, video: {url: coins earned},
-//   owned: [shop item ids], bg, cursor, special (null when off), hints (left to use),
-//   hinted: {"YYYY-MM-DD": hint text already paid for} }, in this browser.
+// { coins, earned, video: {url: coins earned}, owned: [shop item ids], bg, cursor,
+//   special (null when off) }, in this browser.
 let play = null;
 function playStore() {
   if (!play) {
     const s = readSaved(PLAY_KEY) || {};
     const sold = (list, id) => list.some((b) => b.id === id);  // items the shop no longer sells are dropped
     const all = [...BACKGROUNDS, ...CURSORS, ...SPECIALS];
-    play = { coins: s.coins || 0, earned: s.earned || 0, daily: s.daily || {}, video: s.video || {},
+    play = { coins: s.coins || 0, earned: s.earned || 0, video: s.video || {},
       owned: [...new Set(["classic", "arrow", ...(s.owned || []).filter((id) => sold(all, id))])],
       bg: sold(BACKGROUNDS, s.bg) ? s.bg : "classic", cursor: sold(CURSORS, s.cursor) ? s.cursor : "arrow",
-      special: sold(SPECIALS, s.special) ? s.special : null, hints: s.hints || 0, hinted: s.hinted || {} };
+      special: sold(SPECIALS, s.special) ? s.special : null };
     applyLook();
   }
   return play;
@@ -100,51 +92,25 @@ function addCoins(n, why) {
   setTimeout(() => t.remove(), 2600);
 }
 
-function streak(day) {
-  // Days in a row with the daily challenge played, up to today (or yesterday, before today's is played).
-  const d = new Date(`${day}T00:00:00Z`);
-  const daily = playStore().daily;
-  if (!daily[day]) d.setUTCDate(d.getUTCDate() - 1);
-  let n = 0;
-  while (daily[d.toISOString().slice(0, 10)]) { n += 1; d.setUTCDate(d.getUTCDate() - 1); }
-  return n;
-}
-
 /* ---------- the page ---------- */
 
 async function pageMyLearning() {
-  const daily = await cached("/api/puzzles/daily").catch(() => null);
   const s = playStore();
   const paths = trackedPaths();
   const cleared = Object.keys(progress.done).length;
-  const played = daily && s.daily[daily.date];
-  const dailyCard = daily ? `
-    <section class="card stack daily-card" style="gap: 10px" aria-labelledby="daily-title">
-      <div class="row" style="justify-content: space-between; gap: 8px">
-        <p class="eyebrow">Daily challenge · ${esc(daily.date)}</p>
-        <span class="chip">🔥 ${streak(daily.date)} day streak</span>
-      </div>
-      <h2 id="daily-title">${esc(nameIn(daily.area_name))} · ${esc(daily.level_label)}</h2>
-      <p class="muted small">One code puzzle a day, the same for every student. Solve it for 🪙 ${COINS.daily[daily.level]} coins. The area changes every day. Stuck? Use a 💡 hint from the shop.</p>
-      ${played
-        ? `<div class="${played.correct ? "note" : "warn"}">${played.correct ? `Solved today: +${played.coins} 🪙.` : "Not this time."} A new challenge comes out tomorrow.</div>`
-        : '<div class="row"><button class="btn primary" type="button" id="daily-go">Play today\'s challenge</button></div>'}
-    </section>` : "";
   render(`
   <div class="stack">
     <div class="row" style="justify-content: space-between; align-items: flex-end; gap: 10px">
       <div class="stack" style="gap: 6px">
         <p class="eyebrow">Your learning journey</p>
-        <h1>My learning</h1>
+        <h1>My level map</h1>
       </div>
       <button class="btn shop-btn" type="button" id="shop-open">🛍️ Shop</button>
     </div>
     <div class="play-stats">
       <div class="card"><strong>🪙 ${s.coins}</strong><span class="muted small">coins</span></div>
       <div class="card"><strong>★ ${cleared}</strong><span class="muted small">levels cleared</span></div>
-      <div class="card"><strong>🔥 ${daily ? streak(daily.date) : 0}</strong><span class="muted small">day streak</span></div>
     </div>
-    ${dailyCard}
     ${paths.length ? paths.map(pathMapHtml).join("") + `
       <a class="card impact-link" href="#/impact">${sdgTile(4, "Quality Education")}<span class="stack" style="gap: 2px"><strong>Your hours count towards SDG 4 and 8</strong><span class="small muted">See what every student here adds up to →</span></span></a>` : `
       <section class="card stack" style="gap: 10px">
@@ -155,7 +121,6 @@ async function pageMyLearning() {
     <p class="muted small">Coins, levels and shop items are saved in this browser.</p>
   </div>`);
   document.getElementById("shop-open").onclick = () => openShop();
-  document.getElementById("daily-go")?.addEventListener("click", () => dailyChallenge(daily));
   app.querySelectorAll("[data-level]").forEach((b) => {
     b.onclick = () => levelDialog(b.dataset.path, b.dataset.level, Number(b.dataset.n));
   });
@@ -300,7 +265,7 @@ document.addEventListener("mousemove", (e) => {
   setTimeout(() => dot.remove(), 900);
 });
 
-function openShop(tab = "hints") {
+function openShop(tab = "colours") {
   const { dialog, frame } = openDialog();
   dialog.classList.add("shop-dialog");
   const draw = (current) => {
@@ -308,17 +273,12 @@ function openShop(tab = "hints") {
     const t = SHOP_TABS.find((x) => x.id === current);
     const equipped = (kind, id) => (kind === "colours" ? s.bg === id && !s.special : kind === "cursors" ? s.cursor === id : s.special === id);
     const preview = (kind, it) => (kind === "colours" ? `<div class="bg-swatch bg-${it.id}" aria-hidden="true"></div>`
-      : kind === "cursors" || kind === "hints" ?`<div class="shop-icon" aria-hidden="true">${it.icon}</div>`
+      : kind === "cursors" ? `<div class="shop-icon" aria-hidden="true">${it.icon}</div>`
       : `<div class="special-thumb" aria-hidden="true" style="background-image: url('/static/themes/${it.id}.svg')"><span style="font-family: '${it.sample}', serif">Aa ${it.cursor}</span></div>`);
     frame("Shop", `🪙 ${s.coins} coins`, `
       <div class="shop-tabs" role="tablist">${SHOP_TABS.map((x) => `<button type="button" role="tab" aria-selected="${x.id === current}" data-tab="${x.id}">${esc(x.label)}</button>`).join("")}</div>
       ${current === "colours" && s.special ? '<p class="small warn">A special theme is on, so colours are hidden. Turn it off on the Special themes tab.</p>' : ""}
-      ${current === "hints" ? `<p class="small muted">Stuck on the daily challenge? A hint tells you what to check or try first, without giving the answer away. You have <strong>💡 ${s.hints}</strong>.</p>` : ""}
       <div class="shop-grid">${t.items.map((it) => {
-        if (current === "hints") {
-          return `<div class="shop-item"><div class="shop-icon" aria-hidden="true"><span>💡<small class="hint-count">×${it.count}</small></span></div><strong>${esc(it.name)}</strong>
-            <button class="btn${s.coins >= it.price ? " primary" : ""}" type="button" data-hints="${it.id}"${s.coins >= it.price ? "" : " disabled"}>🪙 ${it.price}</button></div>`;
-        }
         const owned = s.owned.includes(it.id);
         const on = equipped(current, it.id);
         const action = on ? (current === "specials" ? `<button class="btn" type="button" data-off>Turn off</button>` : '<span class="chip">In use</span>')
@@ -335,17 +295,6 @@ function openShop(tab = "hints") {
     dialog.querySelectorAll("[data-tab]").forEach((b) => { b.onclick = () => draw(b.dataset.tab); });
     dialog.querySelectorAll("[data-use]").forEach((b) => { b.onclick = () => use(b.dataset.use); });
     dialog.querySelector("[data-off]")?.addEventListener("click", () => { s.special = null; savePlay(); applyLook(); draw(current); });
-    dialog.querySelectorAll("[data-hints]").forEach((b) => {
-      b.onclick = () => {
-        const it = HINTS.find((x) => x.id === b.dataset.hints);
-        if (!it || s.coins < it.price) return;
-        s.coins -= it.price;
-        s.hints += it.count;
-        savePlay();
-        showCoins();
-        draw(current);
-      };
-    });
     dialog.querySelectorAll("[data-buy]").forEach((b) => {
       b.onclick = () => {
         const it = t.items.find((x) => x.id === b.dataset.buy);
@@ -358,10 +307,10 @@ function openShop(tab = "hints") {
     });
   };
   draw(tab);
-  dialog.addEventListener("close", () => { if (location.hash === "#/progress") pageMyLearning(); });
+  dialog.addEventListener("close", () => { if (location.hash === "#/progress/map") pageMyLearning(); });
 }
 
-/* ---------- dialogs: daily challenge and video check ---------- */
+/* ---------- dialogs: video check ---------- */
 
 function openDialog() {
   const dialog = document.createElement("dialog");
@@ -403,70 +352,6 @@ function markAnswer(buttons, choice, r) {
     x.removeAttribute("aria-pressed");
     if (i === r.answer) x.classList.add("is-right");
     else if (i === choice) x.classList.add("is-wrong");
-  });
-}
-
-function dailyChallenge(daily) {
-  const { dialog, frame } = openDialog();
-  const reward = COINS.daily[daily.level];
-  frame(`Daily challenge · ${daily.date}`, `${nameIn(daily.area_name)} · ${daily.level_label}`, `
-    <p class="small muted">Solve it for 🪙 ${reward}. One try only.</p>
-    <section class="stack quiz-q" style="gap: 10px">${puzzleHtml(daily.puzzle)}</section>
-    <div class="hint-box" id="daily-hint" aria-live="polite"></div>
-    <div id="daily-feedback" aria-live="polite"></div>`);
-  const buttons = [...dialog.querySelectorAll(".puzzle-options button")];
-  const hintBox = dialog.querySelector("#daily-hint");
-  const drawHint = () => {
-    const s = playStore();
-    const seen = s.hinted[daily.date];
-    hintBox.innerHTML = seen ? `<div class="note"><strong>💡 Hint:</strong> ${esc(seen)}</div>`
-      : s.hints ? `<button class="btn" type="button" id="hint-use">💡 Use a hint <span class="muted small">(${s.hints} left)</span></button>`
-      : '<button class="btn ghost" type="button" id="hint-shop">💡 Get hints in the shop</button>';
-    hintBox.querySelector("#hint-use")?.addEventListener("click", async (e) => {
-      e.target.closest("button").disabled = true;
-      try {
-        const r = await api("/api/puzzles/daily/hint", { body: JSON.stringify({ date: daily.date }) });
-        s.hints -= 1;
-        s.hinted[daily.date] = r.hint;
-        savePlay();
-      } catch (err) {
-        alert(`Could not get the hint: ${err.message}`);
-      }
-      drawHint();
-    });
-    hintBox.querySelector("#hint-shop")?.addEventListener("click", () => {
-      dialog.close();
-      openShop("hints");
-    });
-  };
-  drawHint();
-  buttons.forEach((b) => {
-    b.onclick = async () => {
-      buttons.forEach((x) => { x.disabled = true; });
-      const choice = Number(b.dataset.i);
-      let r;
-      try {
-        r = await api("/api/puzzles/daily/check", { body: JSON.stringify({ date: daily.date, choice }) });
-      } catch (e) {
-        buttons.forEach((x) => { x.disabled = false; });
-        alert(`Could not check the answer: ${e.message}`);
-        return;
-      }
-      markAnswer(buttons, choice, r);
-      const s = playStore();
-      if (!s.hinted[daily.date]) hintBox.innerHTML = "";  // too late for a hint
-      s.daily[daily.date] = { correct: r.correct, coins: r.correct ? reward : 0 };
-      savePlay();
-      if (r.correct) addCoins(reward, "daily challenge");
-      dialog.querySelector("#daily-feedback").innerHTML = `
-        <div class="stack" style="gap: 10px">
-          <div class="${r.correct ? "note" : "warn"}"><strong>${r.correct ? `Solved! +${reward} 🪙` : `Not quite. The answer is ${LETTERS[r.answer]}.`}</strong> 🔥 ${streak(daily.date)} day streak.</div>
-          <p class="small">${esc(r.explain)}</p>
-          <div class="row"><button class="btn primary" type="button" data-close>Back to my levels</button></div>
-        </div>`;
-      dialog.querySelectorAll("[data-close]").forEach((x) => { x.onclick = () => dialog.close(); });
-      dialog.addEventListener("close", () => { if (location.hash === "#/progress") pageMyLearning(); });
-    };
   });
 }
 

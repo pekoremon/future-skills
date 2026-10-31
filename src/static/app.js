@@ -2007,14 +2007,15 @@ const sdgTile = (goal, name) => `<img class="sdg-tile" src="/static/sdg/${encode
 // { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, titles: {itemKey: title},
 //   updated, start, missed: [Monday "YYYY-MM-DD"]}}, quizzes: {videoUrl: {score, total, date}} (the video's quiz was passed),
 //   projects: {"project:ID": {date, method}} (the project upload passed its check),
-//   learner: random id for the SDG tally, calendar: {day: 0-6 from Monday, time: "HH:MM"} }
+//   learner: random id for the SDG tally, calendar: {day: 0-6 from Monday, time: "HH:MM"},
+//   last: roleId of the learning path opened last (My learning opens it) }
 // A path is tracked from the first item ticked on it; its item list is refreshed on every visit.
 const PROGRESS_KEY = "future-skills-progress-v1";
 let progress = loadProgress();
 
 function loadProgress() {
   const saved = readSaved(PROGRESS_KEY) || {};
-  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {}, projects: saved.projects || {}, learner: saved.learner || null, calendar: saved.calendar || null };
+  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {}, projects: saved.projects || {}, learner: saved.learner || null, calendar: saved.calendar || null, last: saved.last || null };
 }
 const saveProgress = () => writeSaved(PROGRESS_KEY, progress);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -2049,6 +2050,7 @@ async function pageLearn(roleId) {
       <div class="wait-bar" aria-hidden="true"><div></div></div>
     </div>`);
   const p = await learnData(roleId);
+  if (progress.last !== roleId) { progress.last = roleId; saveProgress(); }
   const stage = (n, title, hint, body) => `
     <section class="card stack learn-stage" style="gap: 10px">
       <h2><span class="stage-num" aria-hidden="true">${n}</span>${esc(title)}</h2>
@@ -2138,7 +2140,7 @@ async function pageLearn(roleId) {
       <h2 id="progress-title">Your progress</h2>
       <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
       <div id="learn-plan">${planNow()}</div>
-      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns 🪙 coins. <a href="#/progress">See your level map &rarr;</a></p>
+      <p class="small muted">Videos and courses count once you pass a ${VIDEO_QUIZ_SIZE}-question test. Every right answer earns 🪙 coins. <a href="#/progress/map">See your level map &rarr;</a></p>
     </section>
     ${stage(1, p.stages[0].title, "", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "", list(p.stages[1].resources)) : ""}
@@ -2146,7 +2148,7 @@ async function pageLearn(roleId) {
     ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "", proveIt)}
     ${hrd}
     ${sdgCard}
-    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a><a class="btn" href="#/progress">My learning</a></div>
+    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a><a class="btn" href="#/progress/map">My level map</a></div>
   </div>`);
   app.querySelectorAll("[data-done]").forEach((box) => {
     box.onchange = () => {
@@ -2452,7 +2454,7 @@ async function pageImpact() {
   </div>`);
 }
 
-/* ---------- my learning page: the level map, study plan, daily challenge and shop are in play.js ---------- */
+/* ---------- my learning: the last learning path opened; the level map and shop are in play.js ---------- */
 
 /* ---------- router ---------- */
 
@@ -2482,7 +2484,11 @@ async function route() {
     else if (page === "trends") await pageTrends();
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
-    else if (page === "progress") await pageMyLearning();
+    else if (page === "progress" && parts[1] === "map") await pageMyLearning();
+    else if (page === "progress") {
+      const last = progress.last || (trackedPaths()[0] || {}).id;
+      if (last) await pageLearn(last); else await pageMyLearning();
+    }
     else if (page === "advisor") await pageAdvisor();
     else if (page === "impact") await pageImpact();
     else await pageTrends();

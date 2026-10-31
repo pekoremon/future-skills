@@ -1,9 +1,8 @@
-/* My learning as a game (play.js): stats, daily challenge, level map, shop, coin toast and dialogs. */
+/* The level map (play.js): stats, level map, shop, coin toast and dialogs. */
 .coin-chip { text-decoration: none; color: var(--text); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
-.play-stats { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+.play-stats { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
 .play-stats .card { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
 .play-stats strong { font-size: 22px; line-height: 1.2; }
-.daily-card { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-soft), var(--surface) 70%); }
 
 /* level map: rows of 5 that snake, a line joining the levels */
 .lv-map { display: grid; gap: 22px; padding: 6px 4px; }
@@ -35,8 +34,6 @@
 .shop-tabs button { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer; }
 .shop-tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .shop-icon { width: 100%; height: 64px; display: grid; place-items: center; font-size: 34px; border-radius: 10px; background: var(--track); }
-.hint-box:empty { display: none; }
-.hint-count { font-size: 16px; font-weight: 700; margin-left: 2px; }
 .special-thumb { width: 100%; height: 96px; border-radius: 10px; border: 1px solid var(--border); background: center / cover no-repeat; display: flex; align-items: flex-end; padding: 8px; }
 .special-thumb span { background: rgba(0, 0, 0, 0.55); color: #fff; border-radius: 8px; padding: 2px 8px; font-size: 15px; }
 .shop-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
