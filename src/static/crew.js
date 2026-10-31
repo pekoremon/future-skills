@@ -120,7 +120,7 @@ function crewHex(values, grew) {
   const spokes = CREW_ORDER.map((_, i) => { const [x, y] = at(i, R); return `<line class="hex-ring" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join("");
   const icons = CREW_ORDER.map((k, i) => {
     const [x, y] = at(i, R + 20), [lx, ly] = at(i, R + 46);
-    return `<text class="crew-ico${k === grew ? " grew" : ""}" x="${x.toFixed(1)}" y="${(y + 6).toFixed(1)}" text-anchor="middle">${CREW[k].icon}</text>`
+    return `<text class="crew-ico ico-${k}${k === grew ? " grew" : ""}" x="${x.toFixed(1)}" y="${(y + 6).toFixed(1)}" text-anchor="middle">${CREW[k].icon}</text>`
       + `<text class="crew-letter" x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="middle">${k}</text>`;
   }).join("");
   const label = CREW_ORDER.map((k) => `${CREW[k].role} ${Math.round(values[k])}`).join(", ");
