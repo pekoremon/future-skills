@@ -125,8 +125,7 @@ async function pageAdvisor() {
       <h1>Your IT career plan</h1>
       <p class="muted small">${today()}${who ? ` · demo: ${esc(who.name)}` : ""}</p>
       <div class="row" style="gap: 6px"><span class="muted small">Based on</span>${done}
-        <span class="muted small">Education</span><span class="chip plain">${esc(ZONES[input.zone] || "")}</span>
-        <span class="muted small">Study time</span><span class="chip plain">${esc(state.hoursPerWeek)} h a week</span></div>
+        <span class="muted small">Education</span><span class="chip plain">${esc(ZONES[input.zone] || "")}</span></div>
       ${caution ? `<p class="warn small">${caution}</p>` : ""}
       ${state.trendChanges ? '<p class="muted small">Built on the real trend data, not your what-if.</p>' : ""}
     </div>
@@ -159,11 +158,11 @@ async function pageAdvisor() {
     ${learn ? `<section class="card stack" style="gap: 10px">
       <div class="row" style="gap: 8px"><h2>Skills to work on first</h2><span class="chip plain">${esc(learn.role.name)}</span></div>
       <ol class="sheet-list">${learn.skills.slice(0, 3).map(skill).join("")}</ol>
-      ${learn.total_hours && learn.weeks ? `<p class="muted small">Whole path: about ${fmt(learn.total_hours, 0)} hours, ${Math.max(1, Math.round(learn.weeks))} weeks at ${esc(learn.hours_per_week)} h a week.</p>` : ""}
+      ${learn.total_hours ? `<p class="muted small">Whole path: about ${fmt(learn.total_hours, 0)} hours.</p>` : ""}
     </section>` : ""}
     ${paths.length ? `<section class="card stack" style="gap: 10px">
       <h2>Your learning so far</h2>
-      ${paths.map((p) => `<div class="stack" style="gap: 4px"><strong>${esc(p.name)}</strong>${progressHtml(p, state.hoursPerWeek)}</div>`).join("")}
+      ${paths.map((p) => `<div class="stack" style="gap: 4px"><strong>${esc(p.name)}</strong>${progressHtml(p, 0)}</div>`).join("")}
     </section>` : ""}
     <section class="card stack" style="gap: 8px">
       <h2>Questions to ask</h2>
@@ -208,7 +207,7 @@ addWords(MS, {
   "Make my page": "Sediakan halaman saya", "Making your page…": "Sedang menyediakan halaman anda…",
   "Print or save as PDF": "Cetak atau simpan sebagai PDF", "For your career advisor": "Untuk penasihat kerjaya anda",
   "Your IT career plan": "Pelan kerjaya IT anda", "Built on the real trend data, not your what-if.": "Dibina daripada data trend sebenar, bukan senario bagaimana-jika anda.",
-  "Based on": "Berdasarkan", "Education": "Pendidikan", "Study time": "Masa belajar",
+  "Based on": "Berdasarkan", "Education": "Pendidikan",
   "Skills not checked yet: this is from interests only.": "Kemahiran belum disemak: ini daripada minat sahaja.",
   "Skills not tested yet: skill scores come from the CV and technologies only.": "Kemahiran belum diuji: skor kemahiran hanya daripada CV dan teknologi.",
   "Strengths by IT area": "Kekuatan mengikut bidang IT", "Interest": "Minat", "CV and tools": "CV dan alat", "Fit": "Kesesuaian",
@@ -227,8 +226,7 @@ PATTERNS_MS.push(
   [/^(.+) ranks #(\d+) to #(\d+) across the 3 future scenarios\. Is it a safe choice\?$/, (m) => `${names(m[1])} berada di kedudukan #${m[2]} hingga #${m[3]} dalam 3 senario masa depan. Adakah ia pilihan yang selamat?`],
   [/^I like (.+), but my skills are not there yet\. Is it worth working towards\?$/, (m) => `Saya meminati ${names(m[1])}, tetapi kemahiran saya belum mencukupi. Adakah ia berbaloi untuk diusahakan?`],
   [/^For (.+), which internship or project should I aim for\?$/, (m) => `Untuk ${names(m[1])}, latihan industri atau projek apakah yang patut saya sasarkan?`],
-  [/^Whole path: about (\d+) hours, (\d+) weeks at ([\d.]+) h a week\.$/, (m) => `Seluruh laluan: kira-kira ${m[1]} jam, ${m[2]} minggu pada ${m[3]} jam seminggu.`],
-  [/^([\d.]+) h a week$/, (m) => `${m[1]} jam seminggu`],
+  [/^Whole path: about (\d+) hours\.$/, (m) => `Seluruh laluan: kira-kira ${m[1]} jam.`],
   [/^✓ (.+)$/, (m) => `✓ ${tr(m[1])}`], [/^✕ (.+)$/, (m) => `✕ ${tr(m[1])}`],
   [/^(Realistic|Investigative|Artistic|Social|Enterprising|Conventional) (\d+)%$/, (m) => `${tr(m[1])} ${m[2]}%`],
 );
@@ -238,7 +236,7 @@ addWords(ZH, {
   "Make my page": "生成我的页面", "Making your page…": "正在生成你的页面……",
   "Print or save as PDF": "打印或存为 PDF", "For your career advisor": "给你的职业顾问",
   "Your IT career plan": "你的 IT 职业规划", "Built on the real trend data, not your what-if.": "按真实趋势数据生成，不是你的假设情况。",
-  "Based on": "依据", "Education": "学历", "Study time": "学习时间",
+  "Based on": "依据", "Education": "学历",
   "Skills not checked yet: this is from interests only.": "技能尚未检查：这只根据兴趣。",
   "Skills not tested yet: skill scores come from the CV and technologies only.": "技能尚未测验：技能分数只来自履历和技术。",
   "Strengths by IT area": "各 IT 领域的强项", "Interest": "兴趣", "CV and tools": "履历与工具", "Fit": "契合度",
@@ -257,8 +255,7 @@ PATTERNS_ZH.push(
   [/^(.+) ranks #(\d+) to #(\d+) across the 3 future scenarios\. Is it a safe choice\?$/, (m) => `${names(m[1])}在 3 个未来情景中排第 ${m[2]} 到第 ${m[3]} 名。这是稳妥的选择吗？`],
   [/^I like (.+), but my skills are not there yet\. Is it worth working towards\?$/, (m) => `我对${names(m[1])}有兴趣，但技能还不够。值得朝这个方向努力吗？`],
   [/^For (.+), which internship or project should I aim for\?$/, (m) => `想做${names(m[1])}，我应该争取哪种实习或项目？`],
-  [/^Whole path: about (\d+) hours, (\d+) weeks at ([\d.]+) h a week\.$/, (m) => `整条路径：约 ${m[1]} 小时，按每周 ${m[3]} 小时约需 ${m[2]} 周。`],
-  [/^([\d.]+) h a week$/, (m) => `每周 ${m[1]} 小时`],
+  [/^Whole path: about (\d+) hours\.$/, (m) => `整条路径：约 ${m[1]} 小时。`],
   [/^✓ (.+)$/, (m) => `✓ ${tr(m[1])}`], [/^✕ (.+)$/, (m) => `✕ ${tr(m[1])}`],
   [/^(Realistic|Investigative|Artistic|Social|Enterprising|Conventional) (\d+)%$/, (m) => `${tr(m[1])} ${m[2]}%`],
 );
