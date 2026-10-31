@@ -144,14 +144,10 @@ const MS = {
   // interests intro
   "What kind of work do you actually enjoy?": "Kerja jenis apa yang anda benar-benar minati?",
   "36 items": "36 item", "About 8 minutes": "Kira-kira 8 minit", "Skip any time": "Boleh langkau bila-bila masa",
-  "Why": "Kenapa", "How it is used": "Cara ia digunakan", "Your data": "Data anda",
-  "Finds the kind of IT work you enjoy most: building, analysing, designing, helping, leading or organising, and which of the 6 IT areas it points to.":
-    "Mencari jenis kerja IT yang paling anda minati: membina, menganalisis, mereka bentuk, membantu, memimpin atau mengatur, dan bidang IT mana daripada 6 bidang yang ditunjukkannya.",
-  "Your top 3 interest areas are always in your skills test, so the test checks what you care about. In your results, interest and skill together decide which areas' jobs come first.":
-    "3 bidang minat teratas anda sentiasa dimasukkan dalam ujian kemahiran, jadi ujian menyemak apa yang anda minati. Dalam keputusan, minat dan kemahiran bersama-sama menentukan kerjaya bidang mana yang didahulukan.",
-  "Answers stay in this browser tab and are only used to compute your matches.": "Jawapan kekal dalam tab pelayar ini dan hanya digunakan untuk mengira padanan anda.",
-  "Each item starts with \"I would enjoy...\". Say how much you agree, based on what you would enjoy, not what you are already good at.":
-    "Setiap item bermula dengan \"Saya akan seronok...\". Nyatakan sejauh mana anda bersetuju, berdasarkan apa yang anda akan seronok lakukan, bukan apa yang anda sudah mahir.",
+  "A proven interest test": "Ujian minat yang terbukti",
+  "Built on Holland's RIASEC model, the interest model career services use worldwide, including the US Department of Labor's O*NET.":
+    "Berasaskan model RIASEC Holland, model minat yang digunakan oleh perkhidmatan kerjaya di seluruh dunia, termasuk O*NET Jabatan Buruh AS.",
+  "Answer by what you would enjoy, not what you are already good at.": "Jawab berdasarkan apa yang anda akan seronok lakukan, bukan apa yang anda sudah mahir.",
   "Continue questionnaire": "Sambung soal selidik", "Start questionnaire": "Mula soal selidik",
   "Skip to step 3: the skills test": "Langkau ke langkah 3: ujian kemahiran",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "Soalan ditulis oleh pasukan, berdasarkan jenis minat RIASEC Holland seperti yang digunakan oleh",
@@ -361,6 +357,10 @@ const MS = {
   "The test covers all 6 areas.": "Ujian merangkumi kesemua 6 bidang.", "or": "atau", "to make it shorter.": "untuk memendekkannya.",
   "Answer the interest questions": "Jawab soalan minat",
   "See your last result": "Lihat keputusan terakhir anda", "Start a new test": "Mula ujian baharu", "Start the test": "Mula ujian", "Skip to step 4, my jobs": "Langkau ke langkah 4, kerjaya saya",
+  "Every question is checked against official docs such as Python, MDN, OWASP and NIST.": "Setiap soalan disemak dengan dokumentasi rasmi seperti Python, MDN, OWASP dan NIST.",
+  "Topics follow certification exams such as CompTIA, AWS and Python Institute.": "Topik mengikut peperiksaan pensijilan seperti CompTIA, AWS dan Python Institute.",
+  "Quick questions first, then hands-on code tasks in your 2 strongest areas.": "Soalan pantas dahulu, kemudian tugasan kod amali dalam 2 bidang terkuat anda.",
+  "Graded in your browser, with an explanation for every answer.": "Dinilai dalam pelayar anda, dengan penjelasan untuk setiap jawapan.",
   "Quick check": "Semakan pantas", "In depth": "Mendalam", "Hands-on": "Amali",
   "Each score comes from 3 questions, so one lucky or unlucky answer moves it by 33 points.": "Setiap skor datang daripada 3 soalan, jadi satu jawapan bertuah atau tidak bertuah mengubahnya sebanyak 33 mata.",
   "Also in:": "Juga dalam:",
@@ -764,14 +764,10 @@ const ZH = {
   // interests intro
   "What kind of work do you actually enjoy?": "你真正喜欢做哪一类工作？",
   "36 items": "36 题", "About 8 minutes": "约 8 分钟", "Skip any time": "可随时跳过",
-  "Why": "目的", "How it is used": "如何使用", "Your data": "你的资料",
-  "Finds the kind of IT work you enjoy most: building, analysing, designing, helping, leading or organising, and which of the 6 IT areas it points to.":
-    "找出你最喜欢的 IT 工作类型：建造、分析、设计、帮助、领导或整理，以及它指向 6 个 IT 领域中的哪一个。",
-  "Your top 3 interest areas are always in your skills test, so the test checks what you care about. In your results, interest and skill together decide which areas' jobs come first.":
-    "你兴趣最高的 3 个领域一定会出现在技能测验里，所以测验会检查你在意的领域。在结果中，兴趣和技能一起决定哪些领域的职位排在前面。",
-  "Answers stay in this browser tab and are only used to compute your matches.": "答案只保存在这个浏览器分页里，只用来计算你的匹配结果。",
-  "Each item starts with \"I would enjoy...\". Say how much you agree, based on what you would enjoy, not what you are already good at.":
-    "每一题都以“我会喜欢……”开头。请按你会不会喜欢来回答同意程度，而不是按你已经擅长什么。",
+  "A proven interest test": "经过验证的兴趣测验",
+  "Built on Holland's RIASEC model, the interest model career services use worldwide, including the US Department of Labor's O*NET.":
+    "基于 Holland 的 RIASEC 模型，这是全球职业辅导机构普遍使用的兴趣模型，美国劳工部的 O*NET 也采用它。",
+  "Answer by what you would enjoy, not what you are already good at.": "按你会不会喜欢来回答，而不是按你已经擅长什么。",
   "Continue questionnaire": "继续问卷", "Start questionnaire": "开始问卷",
   "Skip to step 3: the skills test": "跳到第 3 步：技能测验",
   "Questions written by the team, based on Holland's RIASEC interest types as used by": "题目由团队编写，依据 Holland 的 RIASEC 兴趣类型，参考",
@@ -981,6 +977,10 @@ const ZH = {
   "The test covers all 6 areas.": "测验涵盖全部 6 个领域。", "or": "或", "to make it shorter.": "可以让测验更短。",
   "Answer the interest questions": "回答兴趣问题",
   "See your last result": "查看上次结果", "Start a new test": "开始新的测验", "Start the test": "开始测验", "Skip to step 4, my jobs": "跳到第 4 步，我的职位",
+  "Every question is checked against official docs such as Python, MDN, OWASP and NIST.": "每一题都对照 Python、MDN、OWASP、NIST 等官方文档核对过。",
+  "Topics follow certification exams such as CompTIA, AWS and Python Institute.": "题目范围参照 CompTIA、AWS、Python Institute 等认证考试。",
+  "Quick questions first, then hands-on code tasks in your 2 strongest areas.": "先做快速题，再在你最强的 2 个领域做实作代码题。",
+  "Graded in your browser, with an explanation for every answer.": "在浏览器内评分，每一题都附有解释。",
   "Quick check": "快速检测", "In depth": "深入", "Hands-on": "实作",
   "Each score comes from 3 questions, so one lucky or unlucky answer moves it by 33 points.": "每个分数只来自 3 道题，所以一题蒙对或失手，分数就会变动 33 分。",
   "Also in:": "也见于：",

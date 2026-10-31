@@ -180,12 +180,11 @@ async function pageQuizIntro() {
     <p class="eyebrow">Step 2 of 4 · Interests</p>
     <h1>What kind of work do you actually enjoy?</h1>
     <div class="row"><span class="chip">36 items</span><span class="chip">About 8 minutes</span><span class="chip">Skip any time</span></div>
-    <div class="card stack">
-      <div><h3>Why</h3><p class="muted">Finds the kind of IT work you enjoy most: building, analysing, designing, helping, leading or organising, and which of the 6 IT areas it points to.</p></div>
-      <div><h3>How it is used</h3><p class="muted">Your top 3 interest areas are always in your skills test, so the test checks what you care about. In your results, interest and skill together decide which areas' jobs come first.</p></div>
-      <div><h3>Your data</h3><p class="muted">Answers stay in this browser tab and are only used to compute your matches.</p></div>
+    <div class="card stack" style="gap: 6px">
+      <h3>A proven interest test</h3>
+      <p class="muted">Built on Holland's RIASEC model, the interest model career services use worldwide, including the US Department of Labor's O*NET.</p>
     </div>
-    <p class="muted small">Each item starts with "I would enjoy...". Say how much you agree, based on what you would enjoy, not what you are already good at.</p>
+    <p class="muted small">Answer by what you would enjoy, not what you are already good at.</p>
     <div class="stack">
       <button class="btn primary" type="button" id="start">${state.answers.some((a) => a !== null) ? "Continue questionnaire" : "Start questionnaire"}</button>
       <button class="btn" type="button" id="skip">Skip to step 3: the skills test</button>
@@ -1380,6 +1379,12 @@ async function pageTestIntro() {
       <p class="big">About ${plan.minutes} min</p>
       <p class="muted">${plan.question_count} questions</p>
       <div class="row" style="gap: 6px">${plan.areas.map((id) => `<span class="chip">${esc(AREA_NAMES[id] || id)}</span>`).join("")}</div>
+      <ul class="quals muted small" style="margin-top: 6px">
+        <li>Every question is checked against official docs such as Python, MDN, OWASP and NIST.</li>
+        <li>Topics follow certification exams such as CompTIA, AWS and Python Institute.</li>
+        <li>Quick questions first, then hands-on code tasks in your 2 strongest areas.</li>
+        <li>Graded in your browser, with an explanation for every answer.</li>
+      </ul>
     </div>
     <div class="stack">
       ${going ? `<a class="btn primary" href="#/test/${nextOpen + 1}">Continue (${answered} answered)</a>` : ""}
