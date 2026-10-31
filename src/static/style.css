@@ -459,3 +459,37 @@ details.fold-card[open] > summary { margin-bottom: 12px; }
 .viz-hero .btn { min-height: 56px; padding: 0 28px; font-size: 17px; }
 .viz-hero-chart:empty { display: none; }
 .viz-lead { font-size: 21px; line-height: 1.35; margin-top: 8px; }
+/* Career advisor page (advisor.js): reads like a document on screen, prints on one A4 sheet. */
+.sheet { max-width: 760px; width: 100%; margin: 0 auto; }
+.sheet-area { font-size: 24px; font-weight: 800; line-height: 1.2; }
+.sheet-jobs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sheet-jobs li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.sheet-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.sheet-list a { font-weight: 600; overflow-wrap: anywhere; }
+.print-only { display: none; }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html:root, html:root:not([data-theme="light"]), html:root[data-theme="dark"] {
+    --bg: #FFFFFF; --surface: #FFFFFF; --text: #17202B; --muted: #4B5563; --border: #C9D0D9; --line: #DCE1E8;
+    --accent: #0F6E66; --accent-strong: #0A4F49; --accent-soft: #E3F1EF; --on-accent: #FFFFFF; --track: #E1E6ED; color-scheme: light;
+    --fx-card: #FFFFFF; --fx-edge: #C9D0D9;  /* fx.css glass cards */
+  }
+  html { zoom: 1; }
+  html body { background: #FFFFFF; font-size: 12px; }
+  body::before, .topbar, .no-print { display: none !important; }
+  main { max-width: none; padding: 0; }
+  .sheet { max-width: none; gap: 6px; }
+  .sheet h1 { font-size: 22px; }
+  .sheet h2 { font-size: 14px; }
+  .sheet .card { padding: 6px 12px; border-radius: 8px; box-shadow: none; break-inside: avoid; }
+  .sheet .card::after { display: none; }
+  .sheet .fx-reveal { opacity: 1; transform: none; }  /* cards fx.js had not slid in yet */
+  .sheet a { color: inherit; text-decoration: none; }
+  .sheet .chip { padding: 1px 8px; }
+  .sheet .score { font-size: 20px; }
+  .sheet-jobs { gap: 4px; }
+  .sheet-jobs li { padding: 4px 10px; }
+  .sheet-list { gap: 4px; }
+  .print-only { display: block; }
+  .sheet-notes { min-height: 32mm; }
+}
