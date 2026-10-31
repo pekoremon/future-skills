@@ -60,7 +60,7 @@ Plus **"What if the trend data changed?"** (`#/whatif`): change a raw trend inpu
 
 Plus **English, Bahasa Melayu or Chinese (中文)**: a menu in the header translates the interface, the interest questions and the 25 role names (test questions, O*NET skill names and course titles stay in English, as in most IT workplaces).
 
-Plus **"Explain this for me"**: a GenAI explanation of each match, written by an open model on Fireworks AI from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
+Plus **"Explain this for me"**: a GenAI explanation of each match, written by an LLM (live: `gpt-5.4-mini` through the SDC sponsor KrackedDevs gateway) from that match's computed facts only. A reply containing any number not in those facts is rejected and a plain summary is shown instead. *GenAI explains, our data decides.*
 
 ## Tech Stack
 
@@ -192,7 +192,7 @@ python scripts/check_links.py   # needs internet: every course, video, certifica
 
 ## AI Disclosure
 
-- **In the product:** `gpt-oss-120b` (open-weight model, Apache 2.0) served by **Fireworks AI** (team's own paid account), used for two features only: the "Explain this for me" text (`scripts/explain.py`), which receives one match's computed facts and no personal data, and the CV summary (`scripts/cv_reader.py`), which receives the CV text the student uploads. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. CV evidence items are kept only when their quote is really in the CV, and our code, not the model, turns them into area scores. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
+- **In the product:** `gpt-5.4-mini` (OpenAI) through the **KrackedDevs** LiteLLM gateway (SDC sponsor keys, `LLM_BASE_URL=https://litellm.rapidscreen.io/v1`) since 31 Oct 2026; before that `gpt-oss-120b` (open-weight, Apache 2.0) on **Fireworks AI** (team's own account). Any OpenAI-compatible API works. Used for two features only: the "Explain this for me" text (`scripts/explain.py`), which receives one match's computed facts and no personal data, and the CV summary (`scripts/cv_reader.py`), which receives the CV text the student uploads. CV text is never written to disk, logged or cached by our server. A reply containing a number not in its input is rejected and a rule-based text is shown. CV evidence items are kept only when their quote is really in the CV, and our code, not the model, turns them into area scores. Match scores, skill gaps, trends and learning paths are computed by our own code, not by the model.
 - **In development:** Claude Code (Anthropic) for writing and testing code, data checks, source research and documentation drafts (major); ChatGPT (OpenAI) for discussion only, not code (minor); Replit Agent for deployment settings (minor). The team set the direction, IT areas, questionnaire items and weights, and reviewed every change with automated tests, the data validator and manual checks in the browser.
 
 ## Challenges & Learnings

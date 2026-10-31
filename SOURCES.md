@@ -101,7 +101,7 @@ Intermediate extracts made from these files with `scripts/onet_extract.py`: `rol
 
 ## AI model in the product
 
-- **gpt-oss-120b** on **Fireworks AI** (`accounts/fireworks/models/gpt-oss-120b`), open-weight model under Apache 2.0, called through the Fireworks chat completions API. Used only to word the "Explain this for me" text from facts our code computed, and to read an uploaded CV: a summary, and evidence items whose quotes our code checks against the CV before scoring them (`scripts/cv_reader.py`). Replies with numbers not in those facts or in the CV are rejected (`scripts/explain.py`). It is not a data source.
+- **gpt-5.4-mini** (OpenAI) through the KrackedDevs LiteLLM gateway (SDC sponsor keys, OpenAI usage policies), live since 31 Oct 2026; before that **gpt-oss-120b** on **Fireworks AI** (`accounts/fireworks/models/gpt-oss-120b`), open-weight model under Apache 2.0. Both are called through an OpenAI-compatible chat completions API. Used only to word the "Explain this for me" text from facts our code computed, and to read an uploaded CV: a summary, and evidence items whose quotes our code checks against the CV before scoring them (`scripts/cv_reader.py`). Replies with numbers not in those facts or in the CV are rejected (`scripts/explain.py`). It is not a data source.
 
 ## Known risks and fallbacks
 
