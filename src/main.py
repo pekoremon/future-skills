@@ -356,7 +356,12 @@ def skills(request):
     kind = request.args.get("type")
     if kind:
         rows = [r for r in rows if r["skill_type"] == kind]
-    return jsonify(rows)
+    # How many roles list each In Demand technology, so the app can show the common ones first.
+    counts = {}
+    for r in read_csv("role_skills.csv"):
+        if r["row_type"] == "in_demand_tech":
+            counts[r["skill_id"]] = counts.get(r["skill_id"], 0) + 1
+    return jsonify([{**r, "role_count": counts.get(r["skill_id"], 0)} for r in rows])
 
 
 @route("GET", "/api/roles")

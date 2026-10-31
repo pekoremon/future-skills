@@ -13,7 +13,6 @@ const ORDER = ["R", "I", "A", "S", "E", "C"];
 const AREA_NAMES = { software_dev: "Software Engineering", data_ai: "Data & AI", cybersecurity: "Cybersecurity",
   cloud_infra: "Cloud, Infrastructure & Networking", web_ux: "Web & Interface Design", it_mgmt: "IT Management & Analysis" };
 const SUBFIELD_AREA = { SE: "software_dev", DA: "data_ai", CS: "cybersecurity", CI: "cloud_infra", WD: "web_ux", IM: "it_mgmt" };
-const RATING = ["None", "Basic", "Some", "Good", "Strong", "Expert"];
 const ZONES = { 3: "Diploma", 4: "Bachelor's degree", 5: "Master's degree or higher" };
 const FLAGS = {
   needs_extra_education: "Needs further study",
@@ -24,37 +23,6 @@ const FLAGS = {
 const QUIET_FLAGS = ["area_not_scored", "interest_not_scored"];  // explained once at the top of the page
 const PART_LABEL = { area: "IT area fit", interest: "Interest fit", skill: "Skill fit", trend: "AI-era trend" };
 const STORE_KEY = "future-skills-v1";
-// The 51 O*NET skills and knowledge areas, grouped so a student rates 21 groups instead.
-// A group's rating is copied to every O*NET skill in it, so matching still runs per skill.
-const SKILL_GROUPS = {
-  general: [
-    ["Communication", "Reading, writing, listening and speaking", ["SK001", "SK002", "SK003", "SK004"]],
-    ["Maths and science", "Using maths and scientific methods to solve problems", ["SK005", "SK006"]],
-    ["Problem solving", "Critical thinking, complex problems, judgement and decisions", ["SK007", "SK017", "SK027"]],
-    ["Learning and teaching", "Picking up new things fast and teaching others", ["SK008", "SK009", "SK015"]],
-    ["Working with people", "Reading people, coordinating with others, helping customers", ["SK011", "SK012", "SK016"]],
-    ["Persuading and negotiating", "Changing minds and reaching agreements", ["SK013", "SK014"]],
-    ["Programming and design", "Writing code, designing technology, working out what users need", ["SK018", "SK019", "SK020"]],
-    ["Systems and quality", "Analysing and evaluating systems, monitoring performance, testing quality", ["SK010", "SK026", "SK028", "SK029"]],
-    ["Running and watching systems", "Operating systems and watching how they perform", ["SK021", "SK022"]],
-    ["Troubleshooting and repair", "Finding faults, maintaining and fixing equipment", ["SK023", "SK024", "SK025"]],
-    ["Managing time, money and people", "Planning time, budgets, materials and staff", ["SK030", "SK031", "SK032", "SK033"]],
-  ],
-  domain_knowledge: [
-    ["Business and management", "Running organisations, office administration, HR", ["SK034", "SK035", "SK039"]],
-    ["Finance and economics", "Accounting, banking, economics", ["SK036"]],
-    ["Sales and customer service", "Marketing, selling, serving customers", ["SK037", "SK038"]],
-    ["Computers and telecoms", "Hardware, software, networks, telecommunications", ["SK040", "SK050"]],
-    ["Engineering and mechanics", "Engineering, technology and machines", ["SK041", "SK043"]],
-    ["Mathematics", "Maths knowledge: algebra, statistics, calculus", ["SK044"]],
-    ["Psychology", "How people think, learn and behave", ["SK045"]],
-    ["Education and training", "Teaching and designing training", ["SK046"]],
-    ["Language, media and design", "English, media and design", ["SK042", "SK047", "SK051"]],
-    ["Law and public safety", "Law, government, security", ["SK048", "SK049"]],
-  ],
-};
-// Older saved answers rated single skills; show the group at its highest member rating.
-const groupRating = (ids) => Math.max(0, ...ids.map((id) => state.ratings[id] || 0));
 
 
 const app = document.getElementById("app");
@@ -170,10 +138,10 @@ function pageHome() {
       <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
       <div class="row">
         <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
-        <a class="btn" href="#/skills" id="quick">Quick start: about 3 minutes</a>
+        <a class="btn" href="#/skills" id="quick">Quick start: about 2 minutes</a>
         <button class="btn" type="button" id="demo">Try the demo student (fictional)</button>
       </div>
-      <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.</p>
+      <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 2 minutes: tick your technologies, see your jobs at once, and add the rest later.</p>
       <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
       <p class="muted small">Your progress is saved in this browser.</p>
       ${JOURNEY.some((st) => st.done() || skipped(st)) || trackedPaths().length ? '<div class="row"><button class="btn ghost small" type="button" id="forget">Clear my saved answers and progress</button></div>' : ""}
@@ -299,74 +267,59 @@ async function pageInterests() {
   document.getElementById("redo").onclick = () => { state.answers = Array(QUIZ_ITEMS).fill(null); saveState(); location.hash = "#/quiz/1"; };
 }
 
+// Step 1 ends here with or without a CV: the student ticks the technologies they use.
+// The most common ones (listed by the most roles) show first; search finds the rest.
+const TECH_COMMON = 20;
+
 async function pageSkills() {
   const skills = await cached("/api/skills");
-  const groups = [
-    ["general", "General skills", "Skills used in most jobs, rated by O*NET for each role. Similar skills are grouped together."],
-    ["domain_knowledge", "Knowledge areas", "Subjects you have studied or worked with."],
-  ];
-  const known = new Set(skills.map((s) => s.skill_id));
-  const allGroups = Object.values(SKILL_GROUPS).flat();
-  const rated = () => allGroups.filter(([, , ids]) => groupRating(ids) > 0).length;
-  const groupHtml = groups.map(([type, title, hint], gi) => {
-    const rows = SKILL_GROUPS[type].map(([name, covers, ids]) => [name, covers, ids.filter((id) => known.has(id))])
-      .filter(([, , ids]) => ids.length).map(([name, covers, ids]) => `
-      <div class="skill-row">
-        <span class="skill-name">${esc(name)}<span class="muted small">${esc(covers)}</span></span>
-        <span class="rating" role="group" aria-label="${esc(name)} level">
-          ${RATING.map((label, v) => `<button type="button" data-skills="${ids.join(" ")}" data-v="${v}" aria-pressed="${groupRating(ids) === v}" title="${label}" aria-label="${label}">${v === 0 ? "–" : v}</button>`).join("")}
-        </span>
-      </div>`).join("");
-    return `<details class="group"${gi === 0 ? " open" : ""}><summary><span>${title} <span class="muted small">(${SKILL_GROUPS[type].length})</span></span></summary>
-      <div class="group-body"><p class="muted small">${hint}</p>${rows}</div></details>`;
-  }).join("");
-  const techs = skills.filter((s) => s.skill_type === "technology");
-  const techHtml = `
-    <details class="group" open><summary><span>Technologies you use <span class="muted small">(${techs.length} that O*NET marks In Demand)</span></span></summary>
-      <div class="group-body">
-        <label class="small muted" for="tech-search">Search technologies</label>
-        <input id="tech-search" class="search" type="search" placeholder="e.g. Python, SQL, Figma" autocomplete="off">
-        <div class="techs" id="techs" style="margin-top: 10px">
-          ${techs.map((s) => `<button type="button" data-tech="${esc(s.skill_id)}" data-name="${esc(s.skill_name.toLowerCase())}" aria-pressed="${state.techs.includes(s.skill_id)}">${esc(s.skill_name)}</button>`).join("")}
-        </div>
-      </div>
-    </details>`;
-  // Quick start: the tools first (they place the student in IT areas), then straight to the jobs.
+  const techs = skills.filter((s) => s.skill_type === "technology")
+    .sort((a, b) => b.role_count - a.role_count || a.skill_name.localeCompare(b.skill_name));
+  const common = new Set(techs.slice(0, TECH_COMMON).map((s) => s.skill_id));
+  const hasCV = Boolean(cvResult || state.cvAreas);
   const quick = Boolean(state.quick);
   const next = '<a class="btn primary" href="#/quiz" id="go">Next: step 2, interests</a>';
   const see = `<a class="btn${quick ? " primary" : ""}" href="#/results" id="see">See my jobs now</a>`;
   render(`
   <div class="stack">
     ${stepBar("cv")}
-    <p class="eyebrow">Step 1 of 4 · Your skills (no CV needed)</p>
-    <h1>What can you already do?</h1>
-    ${quick ? '<div class="note small">Quick start: tick the tools you use and rate a few skills, then press "See my jobs now". You can add your interests and the skills test later for a better match.</div>' : `
-    <div class="note stack" style="gap: 8px">
-      <p><strong>Fastest: upload your CV.</strong> AI reads it and ticks the technologies you use; then check the list below.</p>
-      <div class="row"><a class="btn primary" href="#/cv">Upload my CV</a></div>
+    <p class="eyebrow">Step 1 of 4 · Your technologies</p>
+    <h1>Which technologies do you use?</h1>
+    ${hasCV ? '<p class="muted">Ticked from your CV. Add or remove any.</p>' : `
+    <div class="note row" style="justify-content: space-between">
+      <p><strong>Have a CV?</strong> AI ticks these for you.</p>
+      <a class="btn primary" href="#/cv">Upload my CV</a>
     </div>`}
-    <p class="muted">Or rate what you know below; anything left at “–” counts as not yet learned. Scale: 1 Basic · 2 Some · 3 Good · 4 Strong · 5 Expert.</p>
-    <div class="card row">
-      <label for="zone"><strong>Highest education (finished or about to finish)</strong></label>
-      <select id="zone">${Object.entries(ZONES).map(([z, l]) => `<option value="${z}"${Number(z) === Number(state.zone) ? " selected" : ""}>${l}</option>`).join("")}</select>
-    </div>
-    ${quick ? techHtml + groupHtml : groupHtml + techHtml}
+    <section class="card stack" style="gap: 12px">
+      <h2>Technologies</h2>
+      <input id="tech-search" class="search" type="search" placeholder="Search, e.g. Python, SQL, Figma" aria-label="Search technologies" autocomplete="off">
+      <div class="techs" id="techs">
+        ${techs.map((s) => `<button type="button" data-tech="${esc(s.skill_id)}" data-name="${esc(s.skill_name.toLowerCase())}" aria-pressed="${state.techs.includes(s.skill_id)}">${esc(s.skill_name)}</button>`).join("")}
+      </div>
+      <p class="muted small" id="tech-none" hidden>Not in the list.</p>
+      <button class="btn ghost small" type="button" id="tech-all">Show all ${techs.length}</button>
+    </section>
     <div class="sticky-actions row">
       ${quick ? see + next.replace("btn primary", "btn") : next + see}
       <span class="muted small" id="count"></span>
     </div>
   </div>`);
-  const count = () => { document.getElementById("count").textContent = `${rated()} of ${allGroups.length} skill groups rated · ${state.techs.length} technologies`; };
-  count();
-  document.getElementById("zone").onchange = (e) => { state.zone = Number(e.target.value); saveState(); };
-  app.querySelectorAll(".rating button").forEach((b) => {
-    b.onclick = () => {
-      const v = Number(b.dataset.v);
-      b.dataset.skills.split(" ").forEach((id) => { if (v) state.ratings[id] = v; else delete state.ratings[id]; });
-      b.parentElement.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      saveState(); count();
-    };
-  });
+  let showAll = false;
+  const all = document.getElementById("tech-all");
+  const search = document.getElementById("tech-search");
+  // Picked and common ones always show; a search shows every match; "Show all" shows the rest.
+  const filter = () => {
+    const q = search.value.trim().toLowerCase();
+    let shown = 0;
+    app.querySelectorAll("[data-tech]").forEach((b) => {
+      b.hidden = q ? !b.dataset.name.includes(q) : !(showAll || common.has(b.dataset.tech) || b.getAttribute("aria-pressed") === "true");
+      if (!b.hidden) shown++;
+    });
+    document.getElementById("tech-none").hidden = shown > 0;
+    all.hidden = Boolean(q) || showAll;
+  };
+  const count = () => { document.getElementById("count").textContent = `${state.techs.length} picked`; };
+  filter(); count();
   app.querySelectorAll("[data-tech]").forEach((b) => {
     b.onclick = () => {
       const id = b.dataset.tech;
@@ -375,12 +328,11 @@ async function pageSkills() {
       saveState(); count();
     };
   });
-  document.getElementById("tech-search").oninput = (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    app.querySelectorAll("[data-tech]").forEach((b) => { b.hidden = q && !b.dataset.name.includes(q); });
-  };
-  document.getElementById("go").onclick = () => { state.demo = null; saveState(); };
-  document.getElementById("see").onclick = () => { state.demo = null; saveState(); };
+  search.oninput = filter;
+  all.onclick = () => { showAll = true; filter(); };
+  const leave = () => { state.demo = null; state.cvSkipped = !hasCV; saveState(); };
+  document.getElementById("go").onclick = leave;
+  document.getElementById("see").onclick = leave;
 }
 
 // The CV summary lives in memory only: it is never saved to the browser's storage. Only the
@@ -452,7 +404,7 @@ function cvResultHtml(r) {
       <p class="small muted">Technologies found by matching words in your CV against the app's list (O*NET In Demand technologies), not by AI. Untick anything that is wrong.</p>
       ${r.technologies.length ? `<div class="check-list" id="cv-techs">${r.technologies.map((t) => `<label title="Matched “${esc(t.matched)}” in your CV"><input type="checkbox" value="${esc(t.skill_id)}" checked>${esc(t.skill_name)}</label>`).join("")}</div>` : '<p class="small">None of the tracked technologies were found.</p>'}
       ${zone ? `<label class="row small"><input type="checkbox" id="cv-zone" checked> Set highest education to <strong>${esc(zone)}</strong></label>` : ""}
-      <div class="row"><button class="btn primary" type="button" id="cv-apply">Add to my skills</button><span class="small muted">You still rate the general skills yourself.</span></div>
+      <div class="row"><button class="btn primary" type="button" id="cv-apply">Add to my technologies</button></div>
     </section>
     ${cvEvidenceHtml(r)}`;
 }
@@ -503,9 +455,8 @@ async function pageCV() {
     <p class="small muted">Your CV is sent to our server and, when AI is on, to our AI provider to write the summary. It is not saved. Leave out your IC number, address and phone if you prefer.</p>
     <div id="cv-status" role="status" aria-live="polite"></div>
     <div id="cv-out" class="stack"></div>
-    <div class="row"><a class="btn primary" href="#/quiz">Next: step 2, interests</a><a class="btn" href="#/skills">No CV? Rate your skills instead</a><button class="btn ghost" type="button" id="cv-skip">Skip this step</button></div>
+    <div class="row"><a class="btn primary" href="#/skills">Next: pick your technologies</a><a class="btn ghost" href="#/skills">No CV? Skip</a></div>
   </div>`);
-  document.getElementById("cv-skip").onclick = () => { state.cvSkipped = true; saveState(); location.hash = "#/quiz"; };
   const status = document.getElementById("cv-status");
   const out = document.getElementById("cv-out");
   const show = (r) => {
@@ -926,7 +877,7 @@ async function pageResults() {
     <div id="list" class="stack"></div>
     <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
     <div class="row">
-      ${demo ? '<a class="btn primary" href="#/cv">Start with your own answers</a>' : `<a class="btn" href="#/skills">Change my skills</a>${testDone() ? "" : '<a class="btn" href="#/test">Take the skills test</a>'}`}
+      ${demo ? '<a class="btn primary" href="#/cv">Start with your own answers</a>' : `<a class="btn" href="#/skills">Change my technologies</a>${testDone() ? "" : '<a class="btn" href="#/test">Take the skills test</a>'}`}
       <a class="btn ghost" href="#/trends">How the trend score works</a>
     </div>
   </div>`);
