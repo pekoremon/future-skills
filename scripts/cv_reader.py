@@ -4,7 +4,7 @@ Two parts, kept apart on purpose:
 - Our code decides which of the app's technologies the CV names (word match against
   skills.csv) and the highest education level it mentions. The student can add these
   to their Skills page; nothing is added without them choosing it.
-- An LLM (the same Fireworks AI model as explain.py) writes a short summary and lists
+- An LLM (the same model as explain.py) writes a short summary and lists
   the skills and qualifications it reads in the CV. A reply that contains a number not
   found in the CV is rejected. Without an API key, or when the call or the check fails,
   the summary is built from the matched technologies and qualification lines instead.
@@ -187,10 +187,10 @@ def fallback(techs: list[dict], quals: list[str]) -> dict:
 
 
 def _call_llm(text: str) -> dict:
-    body = {"model": explain.model_name(), "max_tokens": MAX_TOKENS, "temperature": 0.2,
-            "messages": [{"role": "system", "content": SYSTEM_PROMPT},
-                         {"role": "user", "content": f"<cv>\n{text}\n</cv>\nSummarise this CV."}]}
-    req = urllib.request.Request(explain.API_URL, data=json.dumps(body).encode("utf-8"), headers={
+    body = explain.chat_body([{"role": "system", "content": SYSTEM_PROMPT},
+                              {"role": "user", "content": f"<cv>\n{text}\n</cv>\nSummarise this CV."}],
+                             MAX_TOKENS, 0.2)
+    req = urllib.request.Request(explain.api_url(), data=json.dumps(body).encode("utf-8"), headers={
         "Authorization": f"Bearer {explain.api_key()}",
         "Content-Type": "application/json", "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=explain.TIMEOUT_S + 15) as r:
@@ -271,7 +271,7 @@ def summarise(req: dict, skills: dict, data: dict | None = None) -> dict:
            "cv_areas": cv_areas, "cv_areas_why": cv_why,
            "cv_areas_method": "technologies" if cv_areas else None}
     if not explain.configured():
-        out["reason"] = "no FIREWORKS_API_KEY set"
+        out["reason"] = "no LLM_API_KEY set"
         return out
     try:
         result = _call_llm(text)
@@ -282,7 +282,7 @@ def summarise(req: dict, skills: dict, data: dict | None = None) -> dict:
         elif bad:
             out["reason"] = f"reply had numbers not in the CV: {', '.join(bad[:5])}"
         else:
-            out.update(result, source="llm", model=explain.model_name())
+            out.update(result, source="llm", model=explain.model_name(), provider=explain.provider())
             kept, dropped = checked_evidence(evidence, text, set(area_ids))
             out["evidence_dropped"] = dropped
             if kept:

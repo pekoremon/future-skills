@@ -107,6 +107,17 @@ const SDG_ZH = {
 
 // Exact text, keyed by the English with spaces collapsed.
 const MS = {
+  // learning progress (app.js doneBox, progressHtml, pageProgress)
+  "Your progress": "Kemajuan anda", "Done": "Selesai", "Tick when you have finished it": "Tandakan apabila anda sudah menamatkannya",
+  "Learning path progress": "Kemajuan laluan pembelajaran", "My learning": "Pembelajaran saya",
+  "Tick “Done” on each course, video or certificate when you finish it. Your ticks are saved in this browser and listed on the My learning page.": "Tandakan “Selesai” pada setiap kursus, video atau sijil apabila anda menamatkannya. Tanda anda disimpan dalam pelayar ini dan disenaraikan di halaman Pembelajaran saya.",
+  "The learning paths you are working on": "Laluan pembelajaran yang sedang anda ikuti",
+  "Open a learning path from your jobs and tick each course, video or certificate when you finish it. A path shows here from your first tick. Progress is saved in this browser only: use the same browser and device to come back to it.": "Buka laluan pembelajaran daripada kerjaya anda dan tandakan setiap kursus, video atau sijil apabila anda menamatkannya. Laluan dipaparkan di sini selepas tanda pertama anda. Kemajuan disimpan dalam pelayar ini sahaja: gunakan pelayar dan peranti yang sama untuk kembali kepadanya.",
+  "No learning path tracked yet. Pick a job, open its learning path and tick what you finish.": "Belum ada laluan pembelajaran dijejaki. Pilih satu kerjaya, buka laluan pembelajarannya dan tandakan apa yang anda tamatkan.",
+  "Go to my jobs →": "Pergi ke kerjaya saya →", "Path complete ✓": "Laluan selesai ✓", "Continue this path →": "Teruskan laluan ini →",
+  "Open this path →": "Buka laluan ini →", "Stop tracking": "Berhenti menjejak",
+  "Your answers and learning progress are saved in this browser only, so you can close the page and come back.": "Jawapan dan kemajuan pembelajaran anda disimpan dalam pelayar ini sahaja, jadi anda boleh menutup halaman dan kembali kemudian.",
+  "Clear my saved answers and progress": "Padam jawapan dan kemajuan yang disimpan",
   // header, footer, steps
   "Skills": "Kemahiran", "Interests": "Minat", "IT Test": "Ujian IT", "Matches": "Padanan", "Trends": "Trend",
   "Your CV": "CV anda", "Skills test": "Ujian kemahiran", "Your jobs": "Kerjaya anda", "(done)": "(selesai)",
@@ -562,6 +573,16 @@ const HELD = /^(.+) also scored (.+) in the quick check, but (?:was|were) not te
 
 // Text built from numbers or names: [pattern, (match) => BM].
 const PATTERNS_MS = [
+  // learning progress
+  [/^(\d+) of (\d+) finished · (\d+)%$/, (m) => `${m[1]} daripada ${m[2]} selesai · ${m[3]}%`],
+  [/^([\d.]+) of ([\d.]+) timed hours done(?: · about ([\d.]+) weeks left at ([\d.]+) h a week)?$/,
+    (m) => `${m[1]} daripada ${m[2]} jam bertempoh selesai${m[3] ? ` · kira-kira ${m[3]} minggu lagi pada ${m[4]} jam seminggu` : ""}`],
+  [/^· finished (\d{4}-\d{2}-\d{2})$/, (m) => `· selesai ${m[1]}`],
+  [/^Finished: (.+)$/, (m) => `Selesai: ${m[1]}`],
+  [/^How to get there: learning path \((\d+)\/(\d+) done\) →$/, (m) => `Cara ke sana: laluan pembelajaran (${m[1]}/${m[2]} selesai) →`],
+  [/^(\d+) items? finished across (\d+) paths?\. A course that sits on more than one path counts on each\.$/,
+    (m) => `${m[1]} item selesai merentasi ${m[2]} laluan. Kursus yang berada dalam lebih daripada satu laluan dikira pada setiap laluan.`],
+  [/^last updated (\d{4}-\d{2}-\d{2})$/, (m) => `kemas kini terakhir ${m[1]}`],
   [/^Step (\d) of 4 · (.+)$/, (m) => `Langkah ${m[1]} daripada 4 · ${tr(m[2])}`],
   [/^(.+) · demo: (.+)$/, (m) => `${tr(m[1])} · demo: ${m[2].replace("(fictional)", "(rekaan)")}`],
   [/^Your CV · optional, about 1 minute$/, () => "CV anda · pilihan, kira-kira 1 minit"],
@@ -703,6 +724,17 @@ const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 
 // Chinese (Simplified), keyed like MS.
 const ZH = {
+  // learning progress (app.js doneBox, progressHtml, pageProgress)
+  "Your progress": "你的进度", "Done": "完成", "Tick when you have finished it": "学完后打勾",
+  "Learning path progress": "学习路径进度", "My learning": "我的学习",
+  "Tick “Done” on each course, video or certificate when you finish it. Your ticks are saved in this browser and listed on the My learning page.": "学完每门课程、视频或证书后，勾选“完成”。你的勾选保存在这个浏览器里，并列在“我的学习”页面上。",
+  "The learning paths you are working on": "你正在学习的路径",
+  "Open a learning path from your jobs and tick each course, video or certificate when you finish it. A path shows here from your first tick. Progress is saved in this browser only: use the same browser and device to come back to it.": "从你的职位打开一条学习路径，学完每门课程、视频或证书后打勾。第一次打勾后，这条路径就会出现在这里。进度只保存在这个浏览器里：请用同一个浏览器和设备回来查看。",
+  "No learning path tracked yet. Pick a job, open its learning path and tick what you finish.": "还没有追踪任何学习路径。选一个职位，打开它的学习路径，学完就打勾。",
+  "Go to my jobs →": "前往我的职位 →", "Path complete ✓": "路径已完成 ✓", "Continue this path →": "继续这条路径 →",
+  "Open this path →": "打开这条路径 →", "Stop tracking": "停止追踪",
+  "Your answers and learning progress are saved in this browser only, so you can close the page and come back.": "你的答案和学习进度只保存在这个浏览器里，关掉网页后回来还在。",
+  "Clear my saved answers and progress": "清除已保存的答案和进度",
   // header, footer, steps
   "Skills": "技能", "Interests": "兴趣", "IT Test": "IT 测验", "Matches": "职位匹配", "Trends": "趋势",
   "Your CV": "你的履历", "Skills test": "技能测验", "Your jobs": "你的职位", "(done)": "（已完成）",
@@ -1148,6 +1180,16 @@ const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and t
 
 // Same shapes as PATTERNS_MS, in Chinese word order.
 const PATTERNS_ZH = [
+  // learning progress
+  [/^(\d+) of (\d+) finished · (\d+)%$/, (m) => `已完成 ${m[2]} 项中的 ${m[1]} 项 · ${m[3]}%`],
+  [/^([\d.]+) of ([\d.]+) timed hours done(?: · about ([\d.]+) weeks left at ([\d.]+) h a week)?$/,
+    (m) => `已完成 ${m[1]} / ${m[2]} 个计时小时${m[3] ? ` · 按每周 ${m[4]} 小时，约还需 ${m[3]} 周` : ""}`],
+  [/^· finished (\d{4}-\d{2}-\d{2})$/, (m) => `· 完成于 ${m[1]}`],
+  [/^Finished: (.+)$/, (m) => `已完成：${m[1]}`],
+  [/^How to get there: learning path \((\d+)\/(\d+) done\) →$/, (m) => `怎么达到：学习路径（已完成 ${m[1]}/${m[2]}）→`],
+  [/^(\d+) items? finished across (\d+) paths?\. A course that sits on more than one path counts on each\.$/,
+    (m) => `在 ${m[2]} 条路径中共完成 ${m[1]} 项。同一门课出现在多条路径时，每条都算。`],
+  [/^last updated (\d{4}-\d{2}-\d{2})$/, (m) => `最后更新 ${m[1]}`],
   [/^Step (\d) of 4 · (.+)$/, (m) => `第 ${m[1]} 步，共 4 步 · ${tr(m[2])}`],
   [/^(.+) · demo: (.+)$/, (m) => `${tr(m[1])} · 示范：${m[2].replace(" (fictional)", "（虚构）")}`],
   [/^Your CV · optional, about 1 minute$/, () => "你的履历 · 可选，约 1 分钟"],

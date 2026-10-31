@@ -90,7 +90,7 @@ class TestExplain(unittest.TestCase):
         self.assertIn("9123", r["reason"])
 
     def test_api_error_falls_back(self):
-        err = urllib.error.HTTPError(explain.API_URL, 401, "Unauthorized", None, None)
+        err = urllib.error.HTTPError(explain.api_url(), 401, "Unauthorized", None, None)
         with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "bad"}), \
                 mock.patch.object(explain, "_call_llm", side_effect=err):
             r = explain.explain(self.match)
@@ -118,10 +118,34 @@ class TestExplain(unittest.TestCase):
         with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "k", "FIREWORKS_MODEL": "m"}), \
                 mock.patch.object(explain.urllib.request, "urlopen", fake_urlopen):
             self.assertEqual(explain._call_llm(self.facts), "Hi.")
-        self.assertEqual(sent["url"], explain.API_URL)
+        self.assertEqual(sent["url"], explain.DEFAULT_BASE_URL + "/chat/completions")
         self.assertEqual(sent["auth"], "Bearer k")
         self.assertEqual(sent["body"]["model"], "m")
         self.assertIn("<facts>", sent["body"]["messages"][1]["content"])
+
+    def test_reasoning_models_get_their_own_parameters(self):
+        msgs = [{"role": "user", "content": "hi"}]
+        for model in ("gpt-5.4-mini", "gpt-6-sol", "o3-mini", "openai/gpt-5.5"):
+            with mock.patch.dict(os.environ, {"LLM_MODEL": model}, clear=True):
+                body = explain.chat_body(msgs, 100, 0.3)
+            self.assertEqual((body["max_completion_tokens"], body["model"]), (100, model))
+            self.assertNotIn("temperature", body)
+            self.assertNotIn("max_tokens", body)
+        for model in ("deepseek-v4-flash", "accounts/fireworks/models/gpt-oss-120b", "gpt-4o-mini"):
+            with mock.patch.dict(os.environ, {"LLM_MODEL": model}, clear=True):
+                body = explain.chat_body(msgs, 100, 0.3)
+            self.assertEqual((body["max_tokens"], body["temperature"]), (100, 0.3), model)
+
+    def test_any_openai_compatible_api(self):
+        env = {"LLM_API_KEY": "kd", "LLM_BASE_URL": "https://litellm.rapidscreen.io/v1/",
+               "LLM_MODEL": "gpt-4o-mini", "FIREWORKS_API_KEY": "fw"}
+        with mock.patch.dict(os.environ, env, clear=True):
+            self.assertEqual(explain.api_url(), "https://litellm.rapidscreen.io/v1/chat/completions")
+            self.assertEqual((explain.api_key(), explain.model_name()), ("kd", "gpt-4o-mini"))
+            self.assertEqual(explain.provider(), "litellm.rapidscreen.io")
+        with mock.patch.dict(os.environ, {"FIREWORKS_API_KEY": "fw"}, clear=True):
+            self.assertEqual((explain.api_key(), explain.model_name()), ("fw", explain.DEFAULT_MODEL))
+            self.assertEqual(explain.provider(), "Fireworks AI")
 
 
 if __name__ == "__main__":

@@ -5,10 +5,13 @@ matching.py for that student and role, and a reply that contains any number not
 found in those facts is rejected. Without an API key, or when the call or the check
 fails, a template written from the same facts is returned instead.
 
-LLM: an open model served by Fireworks AI (OpenAI-compatible chat completions API),
-called with the standard library only. Configuration (environment / Replit Secrets):
-    FIREWORKS_API_KEY   required to use the LLM
-    FIREWORKS_MODEL     optional, default DEFAULT_MODEL below
+LLM: any OpenAI-compatible chat completions API, called with the standard library only.
+By default an open model served by Fireworks AI. Configuration (environment / Replit Secrets):
+    LLM_API_KEY         the API key (FIREWORKS_API_KEY is read when this is not set)
+    LLM_BASE_URL        optional, e.g. https://litellm.rapidscreen.io/v1 for the KrackedDevs
+                        keys; default DEFAULT_BASE_URL below (Fireworks AI)
+    LLM_MODEL           the model id on that API (FIREWORKS_MODEL is read when this is not set);
+                        default DEFAULT_MODEL below, which only Fireworks serves
 """
 
 import hashlib
@@ -16,9 +19,10 @@ import json
 import os
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 
-API_URL = "https://api.fireworks.ai/inference/v1/chat/completions"
+DEFAULT_BASE_URL = "https://api.fireworks.ai/inference/v1"
 DEFAULT_MODEL = "accounts/fireworks/models/gpt-oss-120b"
 TIMEOUT_S = 25
 MAX_TOKENS = 1500  # reasoning models spend part of this before the answer
@@ -60,16 +64,44 @@ def _env(name: str) -> str:
 
 
 def api_key() -> str:
-    return _env("FIREWORKS_API_KEY")
+    return _env("LLM_API_KEY") or _env("FIREWORKS_API_KEY")
+
+
+def base_url() -> str:
+    return (_env("LLM_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")
+
+
+def api_url() -> str:
+    return base_url() + "/chat/completions"
+
+
+def provider() -> str:
+    """A name for the API host, for the status page."""
+    host = urllib.parse.urlsplit(base_url()).hostname or base_url()
+    return "Fireworks AI" if host.endswith("fireworks.ai") else host
 
 
 def env_names_seen() -> list[str]:
-    """Names (never values) of environment variables that mention Fireworks, for diagnosis."""
-    return sorted(repr(k) for k in os.environ if "FIREWORKS" in k.upper())
+    """Names (never values) of LLM environment variables, for diagnosis."""
+    return sorted(repr(k) for k in os.environ if "FIREWORKS" in k.upper() or k.strip().upper().startswith("LLM_"))
 
 
 def model_name() -> str:
-    return _env("FIREWORKS_MODEL") or DEFAULT_MODEL
+    return _env("LLM_MODEL") or _env("FIREWORKS_MODEL") or DEFAULT_MODEL
+
+
+# OpenAI reasoning models (o-series, GPT-5 and later) take max_completion_tokens instead of
+# max_tokens and only their default temperature, so they get a different request body.
+REASONING_MODEL = re.compile(r"^(?:.*/)?(?:o\d|gpt-(?:[5-9]|\d{2}))", re.IGNORECASE)
+
+
+def chat_body(messages: list[dict], max_tokens: int, temperature: float) -> dict:
+    """Chat completions request body for the configured model."""
+    model = model_name()
+    if REASONING_MODEL.match(model):
+        return {"model": model, "max_completion_tokens": max_tokens, "reasoning_effort": "low",
+                "messages": messages}
+    return {"model": model, "max_tokens": max_tokens, "temperature": temperature, "messages": messages}
 
 
 def build_facts(match: dict) -> dict:
@@ -160,17 +192,12 @@ def fallback_text(facts: dict) -> str:
 
 
 def _call_llm(facts: dict) -> str:
-    body = {
-        "model": model_name(),
-        "max_tokens": MAX_TOKENS,
-        "temperature": 0.3,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": "<facts>\n" + json.dumps(facts, ensure_ascii=False, indent=1)
-                                        + "\n</facts>\nExplain this match to me."},
-        ],
-    }
-    req = urllib.request.Request(API_URL, data=json.dumps(body).encode("utf-8"), headers={
+    body = chat_body([
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": "<facts>\n" + json.dumps(facts, ensure_ascii=False, indent=1)
+                                    + "\n</facts>\nExplain this match to me."},
+    ], MAX_TOKENS, 0.3)
+    req = urllib.request.Request(api_url(), data=json.dumps(body).encode("utf-8"), headers={
         "Authorization": f"Bearer {api_key()}",
         "Content-Type": "application/json", "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
@@ -190,7 +217,7 @@ def explain(match: dict) -> dict:
 
     result = {"text": fallback_text(facts), "source": "fallback", "model": None, "reason": None}
     if not configured():
-        result["reason"] = "no FIREWORKS_API_KEY set"
+        result["reason"] = "no LLM_API_KEY set"
         return result
     try:
         text = _call_llm(facts)
@@ -205,7 +232,7 @@ def explain(match: dict) -> dict:
         elif len(text) > MAX_REPLY_CHARS:
             result["reason"] = "reply too long"
         else:
-            result = {"text": text, "source": "llm", "model": model_name(), "reason": None}
+            result = {"text": text, "source": "llm", "model": model_name(), "provider": provider(), "reason": None}
     except urllib.error.HTTPError as e:
         result["reason"] = f"LLM API error {e.code}"
     except (urllib.error.URLError, TimeoutError, OSError) as e:

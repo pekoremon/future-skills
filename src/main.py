@@ -540,7 +540,7 @@ def learn_for_student(request):
 @route("GET", "/api/explain/status")
 def explain_status(request):
     return jsonify(configured=explain.configured(), model=explain.model_name(),
-                   provider="Fireworks AI", env_names_seen=explain.env_names_seen(),
+                   provider=explain.provider(), env_names_seen=explain.env_names_seen(),
                    # yes/no only: do other deployment secrets reach the app?
                    other_secrets_seen={n: bool(os.getenv(n)) for n in
                                        ("SESSION_SECRET", "REPLIT_CONNECTORS_HOSTNAME")})

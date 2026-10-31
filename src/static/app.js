@@ -62,11 +62,21 @@ const cache = {};
 const QUIZ_ITEMS = 36;
 let state = loadState();
 
+// Answers and learning progress are kept in this browser's localStorage, so they survive
+// closing the tab; nothing is saved on the server. readSaved also picks up answers saved
+// in sessionStorage by older versions of the app.
+function readSaved(key) {
+  try { return JSON.parse(localStorage.getItem(key) || sessionStorage.getItem(key) || "null"); } catch (e) { return null; }
+}
+function writeSaved(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage off: keep in memory */ }
+}
+
 function loadState() {
   const base = { answers: Array(QUIZ_ITEMS).fill(null), quizSkipped: false, cvSkipped: false, ratings: {}, techs: [], zone: 4, demo: null, cvAreas: null,
     scenario: "baseline", hoursPerWeek: 5 };
   try {
-    const saved = Object.assign(base, JSON.parse(sessionStorage.getItem(STORE_KEY) || "{}"));
+    const saved = Object.assign(base, readSaved(STORE_KEY) || {});
     if (saved.answers.length !== QUIZ_ITEMS) saved.answers = Array(QUIZ_ITEMS).fill(null);  // older 30-item questionnaire
     return saved;
   } catch (e) {
@@ -74,7 +84,12 @@ function loadState() {
   }
 }
 function saveState() {
-  try { sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage off: keep in memory */ }
+  writeSaved(STORE_KEY, state);
+}
+function clearSaved() {
+  for (const key of [STORE_KEY, PLAN_KEY, PROGRESS_KEY]) {
+    try { localStorage.removeItem(key); sessionStorage.removeItem(key); } catch (e) { /* storage off */ }
+  }
 }
 
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -157,10 +172,21 @@ function pageHome() {
       </div>
       <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 3 minutes: tick your tools and rate your skills, see your jobs at once, and add the rest later.</p>
       <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
+      <p class="muted small">Your answers and learning progress are saved in this browser only, so you can close the page and come back.</p>
+      ${JOURNEY.some((st) => st.done() || skipped(st)) || trackedPaths().length ? '<div class="row"><button class="btn ghost small" type="button" id="forget">Clear my saved answers and progress</button></div>' : ""}
     </section>
   </div>`);
   document.getElementById("demo").onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; };
   document.getElementById("quick").onclick = () => { state.quick = true; saveState(); };
+  const forget = document.getElementById("forget");
+  if (forget) forget.onclick = () => {
+    if (!confirm("Clear your answers, test and learning progress from this browser? This cannot be undone.")) return;
+    clearSaved();
+    state = loadState();
+    progress = loadProgress();
+    cvResult = null;
+    pageHome();
+  };
   document.getElementById("to-start").onclick = () => document.getElementById("start").scrollIntoView({ behavior: "smooth", block: "start" });
   Promise.all([api("/api/trends"), cached("/api/roles")]).then(([t, roles]) => {
     const dash = document.getElementById("home-dash");
@@ -351,7 +377,7 @@ async function pageSkills() {
   document.getElementById("see").onclick = () => { state.demo = null; saveState(); };
 }
 
-// The CV summary lives in memory only: it is never saved to sessionStorage. Only the
+// The CV summary lives in memory only: it is never saved to the browser's storage. Only the
 // 0-100 evidence score per IT area (state.cvAreas) is kept, for /api/match.
 let cvResult = null;
 const cvAreasOf = (r) => (Object.keys(r.cv_areas || {}).length ? { scores: r.cv_areas, method: r.cv_areas_method } : null);
@@ -397,7 +423,7 @@ async function cvRequestBody(file) {
 
 function cvResultHtml(r) {
   const label = r.source === "llm"
-    ? `Summary written by AI (${esc(r.model.split("/").pop())} on Fireworks AI) from your CV. It can make mistakes, so check it against your CV.`
+    ? `Summary written by AI (${esc(r.model.split("/").pop())} on ${esc(r.provider || "Fireworks AI")}) from your CV. It can make mistakes, so check it against your CV.`
     : "AI summary not available right now, so this summary lists what our matcher found in your CV.";
   const quals = r.qualifications.map((q) => `<li><strong>${esc(q.title)}</strong>${q.institution ? ` · ${esc(q.institution)}` : ""}${q.year ? ` · ${esc(q.year)}` : ""}</li>`).join("");
   const zone = ZONES[r.education_job_zone];
@@ -468,7 +494,7 @@ async function pageCV() {
       <input id="cv-file" type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
       <button class="btn ghost" type="button" id="cv-sample">Try a sample CV (fictional)</button>
     </div>
-    <p class="small muted">Your CV is sent to our server and, when AI is on, to Fireworks AI to write the summary. It is not saved. Leave out your IC number, address and phone if you prefer.</p>
+    <p class="small muted">Your CV is sent to our server and, when AI is on, to our AI provider to write the summary. It is not saved. Leave out your IC number, address and phone if you prefer.</p>
     <div id="cv-status" role="status" aria-live="polite"></div>
     <div id="cv-out" class="stack"></div>
     <div class="row"><a class="btn primary" href="#/quiz">Next: step 2, interests</a><a class="btn" href="#/skills">No CV? Rate your skills instead</a><button class="btn ghost" type="button" id="cv-skip">Skip this step</button></div>
@@ -586,7 +612,7 @@ function matchCard(m, rank) {
       </div>
     </div>
     ${splitBar(m)}
-    <a class="btn learn-link" href="#/learn/${esc(m.role_id)}">How to get there: learning path &rarr;</a>
+    <a class="btn learn-link" href="#/learn/${esc(m.role_id)}">How to get there: learning path${pathProgressLabel(m.role_id)} &rarr;</a>
     <details class="more">
       <summary>Why this score, and what to learn</summary>
       <div class="stack" style="gap: 14px">
@@ -685,7 +711,7 @@ async function explainRole(button) {
     const r = await api("/api/explain", { body: JSON.stringify({ ...lastMatchBody, role_id: button.dataset.explain }) });
     out.className = "explain-out note";
     const label = r.source === "llm"
-      ? `Written by AI (${esc(r.model.split("/").pop())} on Fireworks AI) from your scores above. It may still be wrong; the numbers above are the source of truth.`
+      ? `Written by AI (${esc(r.model.split("/").pop())} on ${esc(r.provider || "Fireworks AI")}) from your scores above. It may still be wrong; the numbers above are the source of truth.`
       : "AI explanation not available right now, so this is a plain summary of your scores.";
     out.innerHTML = `<p>${esc(r.text)}</p><p class="small" style="margin-top: 6px; opacity: 0.85" title="${esc(r.reason || "")}">${label}</p>`;
     button.textContent = "Explain again";
@@ -721,8 +747,8 @@ function replanNote(body, res) {
   const best = res.results.filter(isBestMatch).sort((x, y) => y.total - x.total);
   const now = { who, data: res.trend_data, roles: Object.fromEntries(best.map((m, i) => [m.role_id, { rank: i + 1, name: m.role_name, total: m.total, trend: m.components.trend.score }])) };
   let before = null;
-  try { before = JSON.parse(sessionStorage.getItem(PLAN_KEY) || "null"); } catch (e) { /* storage off */ }
-  try { sessionStorage.setItem(PLAN_KEY, JSON.stringify(now)); } catch (e) { /* storage off */ }
+  before = readSaved(PLAN_KEY);
+  writeSaved(PLAN_KEY, now);
   if (!before || before.who !== who || !before.data || !now.data || before.data.id === now.data.id) return "";
   const moved = Object.entries(now.roles).filter(([id, r]) => before.roles[id] && (before.roles[id].rank !== r.rank || before.roles[id].trend !== r.trend))
     .sort((a, b) => a[1].rank - b[1].rank).slice(0, 8);
@@ -1792,13 +1818,61 @@ function pageTestResult(sharedResult = null) {
 
 const FORMAT_LABEL = { video: "▶ YouTube video", playlist: "▶ YouTube playlist", course: "Free course" };
 
+// A tick box for one item on a learning path. The same course ticked on one path counts on
+// every path that lists it, so items are keyed by URL (certifications by their id).
+function doneBox(key, title) {
+  return `<label class="done-box" title="Tick when you have finished it">
+    <input type="checkbox" data-done="${esc(key)}"${progress.done[key] ? " checked" : ""}>
+    <span class="visually-hidden">Finished: ${esc(title)}</span><span aria-hidden="true">Done</span>
+  </label>`;
+}
+
 function resourceHtml(r) {
   const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr === 0 || r.cost_myr === null ? "Free" : `RM ${fmt(r.cost_myr, 0)}`, r.level ? esc(r.level) : ""].filter(Boolean);
-  return `<li class="res">
-    <span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>
+  const done = progress.done[r.url];
+  return `<li class="res${done ? " is-done" : ""}">
+    <div class="res-top"><span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>${doneBox(r.url, r.title)}</div>
     <a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
-    <span class="muted small">${facts.join(" · ")}${r.notes ? ` · ${esc(r.notes)}` : ""}</span>
+    <span class="muted small">${facts.join(" · ")}${r.notes ? ` · ${esc(r.notes)}` : ""}<span class="done-when">${done ? ` · finished ${esc(done)}` : ""}</span></span>
   </li>`;
+}
+
+/* ---------- learning progress ---------- */
+
+// { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, updated}} }
+// A path is tracked from the first item ticked on it; its item list is refreshed on every visit.
+const PROGRESS_KEY = "future-skills-progress-v1";
+let progress = loadProgress();
+
+function loadProgress() {
+  const saved = readSaved(PROGRESS_KEY) || {};
+  return { done: saved.done || {}, paths: saved.paths || {} };
+}
+const saveProgress = () => writeSaved(PROGRESS_KEY, progress);
+const today = () => new Date().toISOString().slice(0, 10);
+const trackedPaths = () => Object.entries(progress.paths).map(([id, p]) => ({ id, ...p, ...pathStats(p.items) }))
+  .sort((a, b) => (b.updated || "").localeCompare(a.updated || ""));
+
+function pathStats(items) {
+  const keys = Object.keys(items || {});
+  const done = keys.filter((k) => progress.done[k]);
+  const hours = (ks) => ks.reduce((t, k) => t + (items[k] || 0), 0);
+  return { total: keys.length, done: done.length, hoursTotal: hours(keys), hoursDone: hours(done),
+    pct: keys.length ? Math.round((done.length / keys.length) * 100) : 0 };
+}
+function pathProgressLabel(roleId) {
+  const p = progress.paths[roleId];
+  if (!p) return "";
+  const st = pathStats(p.items);
+  return st.total ? ` (${st.done}/${st.total} done)` : "";
+}
+function progressHtml(st, hoursPerWeek) {
+  const left = Math.max(0, st.hoursTotal - st.hoursDone);
+  return `<div class="row" style="justify-content: space-between; gap: 6px">
+      <strong>${st.done} of ${st.total} finished · ${st.pct}%</strong>
+      <span class="muted small">${st.hoursTotal ? `${fmt(st.hoursDone)} of ${fmt(st.hoursTotal)} timed hours done${left && hoursPerWeek ? ` · about ${fmt(left / hoursPerWeek)} weeks left at ${esc(hoursPerWeek)} h a week` : ""}` : ""}</span>
+    </div>
+    <div class="progress learn-progress" role="progressbar" aria-label="Learning path progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${st.pct}"><div style="width: ${st.pct}%"></div></div>`;
 }
 
 async function pageLearn(roleId) {
@@ -1826,7 +1900,7 @@ async function pageLearn(roleId) {
     </div>`;
   const skills = p.skills.slice(0, 3).map(skillHtml).join("") + more(p.skills.slice(3), p.skills.slice(3).map(skillHtml).join(""));
   const certs = p.certifications.length
-    ? `<ul class="res-list">${p.certifications.map((c) => `<li class="res"><span class="chip plain res-kind">Certification</span>
+    ? `<ul class="res-list">${p.certifications.map((c) => `<li class="res${progress.done[`cert:${c.cert_id}`] ? " is-done" : ""}"><div class="res-top"><span class="chip plain res-kind">Certification</span>${doneBox(`cert:${c.cert_id}`, c.cert_name)}</div>
         <a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.cert_name)}</a>
         <span class="muted small">${esc(c.issuer)}${c.cost_amount ? ` · ${esc(c.cost_currency)} ${esc(c.cost_amount)}` : ""} · ${esc(c.how_to_get)}</span></li>`).join("")}</ul>`
     : '<p class="muted small">No certification listed for this role yet. A portfolio of the projects from the courses above is the best proof.</p>';
@@ -1853,6 +1927,14 @@ async function pageLearn(roleId) {
         ${c.notes && !/^Same course as/.test(c.notes) ? `<span class="small muted">${esc(c.notes)}</span>` : ""}
       </li>`).join("")}</ul>
     </details>` : "";
+  // Every item on this page that can be ticked, with its hours (certifications have none).
+  const items = {};
+  for (const r of [...p.stages.flatMap((st) => st.resources), ...p.skills.flatMap((k) => k.resources)]) items[r.url] = r.hours || null;
+  for (const c of p.certifications) items[`cert:${c.cert_id}`] = null;
+  const track = () => {
+    progress.paths[roleId] = { name: p.role.name, area: p.role.area_name, personal: p.personal, items, updated: today() };
+  };
+  if (progress.paths[roleId]) { track(); saveProgress(); }
   const time = p.total_hours ? `About <strong>${fmt(p.total_hours)} hours</strong> of free material, or <strong>${fmt(p.weeks)} weeks</strong> at ${esc(p.hours_per_week)} hours a week${p.resources_without_hours ? `, plus ${p.resources_without_hours} self-paced course${p.resources_without_hours > 1 ? "s" : ""}` : ""}.` : "";
   render(`
   <div class="stack">
@@ -1865,6 +1947,11 @@ async function pageLearn(roleId) {
       <a class="chip plain" href="https://www.onetonline.org/link/summary/${esc(p.role.onet_soc)}" target="_blank" rel="noopener">What the job involves (O*NET)</a>
     </div>
     <div class="note">${time} Everything here is free. We opened every link and checked its title, channel and length; videos open on YouTube in a new tab.</div>
+    <section class="card stack" style="gap: 8px" aria-labelledby="progress-title">
+      <h2 id="progress-title">Your progress</h2>
+      <div id="learn-progress" aria-live="polite">${progressHtml(pathStats(items), p.hours_per_week)}</div>
+      <p class="muted small">Tick “Done” on each course, video or certificate when you finish it. Your ticks are saved in this browser and listed on the My learning page.</p>
+    </section>
     ${stage(1, p.stages[0].title, "Start here: the basics every student in this area needs.", list(p.stages[0].resources))}
     ${p.stages[1].resources.length ? stage(2, p.stages[1].title, "Courses aimed at this exact job.", list(p.stages[1].resources)) : ""}
     ${stage(p.stages[1].resources.length ? 3 : 2, p.personal ? "Close your skill gaps" : "Skills and tools this job uses",
@@ -1873,8 +1960,63 @@ async function pageLearn(roleId) {
     ${stage(p.stages[1].resources.length ? 4 : 3, "Prove it", "A recognised certificate or a portfolio shows employers what you can do.", certs)}
     ${hrd}
     ${sdgCard}
-    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a></div>
+    <div class="row"><a class="btn primary" href="#/results">Back to my jobs</a><a class="btn" href="#/progress">My learning</a></div>
   </div>`);
+  app.querySelectorAll("[data-done]").forEach((box) => {
+    box.onchange = () => {
+      const key = box.dataset.done;
+      if (box.checked) progress.done[key] = today(); else delete progress.done[key];
+      track();
+      saveProgress();
+      // the same item can appear twice on a page (a foundation course that also teaches a skill)
+      app.querySelectorAll(`[data-done="${CSS.escape(key)}"]`).forEach((b) => {
+        b.checked = box.checked;
+        const li = b.closest(".res");
+        li.classList.toggle("is-done", box.checked);
+        const when = li.querySelector(".done-when");
+        if (when) when.textContent = box.checked ? ` · finished ${progress.done[key]}` : "";
+      });
+      document.getElementById("learn-progress").innerHTML = progressHtml(pathStats(items), p.hours_per_week);
+    };
+  });
+}
+
+/* ---------- my learning page ---------- */
+
+function pageProgress() {
+  const paths = trackedPaths();
+  const finished = Object.keys(progress.done).length;
+  const cards = paths.map((p) => `
+    <article class="card stack" style="gap: 10px">
+      <div class="stack" style="gap: 4px">
+        <h2>${esc(p.name)}</h2>
+        <div class="row" style="gap: 6px">
+          <span class="chip plain">${esc(p.area || "IT")}</span>
+          ${p.pct === 100 ? '<span class="chip">Path complete ✓</span>' : ""}
+          <span class="muted small">last updated ${esc(p.updated || "–")}</span>
+        </div>
+      </div>
+      ${progressHtml(p, state.hoursPerWeek)}
+      <div class="row">
+        <a class="btn primary" href="#/learn/${esc(p.id)}">${p.done ? "Continue" : "Open"} this path &rarr;</a>
+        <button class="btn ghost" type="button" data-untrack="${esc(p.id)}">Stop tracking</button>
+      </div>
+    </article>`).join("");
+  render(`
+  <div class="stack">
+    <p class="eyebrow">My learning</p>
+    <h1>The learning paths you are working on</h1>
+    <p class="muted">Open a learning path from your jobs and tick each course, video or certificate when you finish it. A path shows here from your first tick. Progress is saved in this browser only: use the same browser and device to come back to it.</p>
+    ${paths.length ? `<p class="small muted">${finished} item${finished === 1 ? "" : "s"} finished across ${paths.length} path${paths.length === 1 ? "" : "s"}. A course that sits on more than one path counts on each.</p>${cards}`
+      : `<div class="note">No learning path tracked yet. Pick a job, open its learning path and tick what you finish.</div><div class="row"><a class="btn primary" href="#/results">Go to my jobs &rarr;</a></div>`}
+  </div>`);
+  app.querySelectorAll("[data-untrack]").forEach((b) => {
+    b.onclick = () => {
+      delete progress.paths[b.dataset.untrack];  // ticks stay, so they come back if the path is opened again
+      saveProgress();
+      pageProgress();
+    };
+  });
 }
 
 /* ---------- router ---------- */
@@ -1903,6 +2045,7 @@ async function route() {
     else if (page === "trends") await pageTrends();
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
+    else if (page === "progress") pageProgress();
     else pageHome();
   } catch (e) {
     showError(e);
