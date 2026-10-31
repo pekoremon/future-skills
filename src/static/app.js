@@ -149,10 +149,8 @@ function startCard() {
       <div class="row trust" style="gap: 6px"><span class="chip">Free</span><span class="chip">No login</span><span class="chip">Nothing saved on our server</span><span class="chip">English · Bahasa Melayu · 中文</span></div>
       <div class="row">
         <a class="btn primary" href="${(JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href}">${JOURNEY.some((st) => st.done() || skipped(st)) ? "Continue where I left off" : "Start: step 1, your CV"}</a>
-        <a class="btn" href="#/skills" data-start="quick">Quick start: about 2 minutes</a>
         <button class="btn" type="button" data-start="demo">Try the demo student (fictional)</button>
       </div>
-      <p class="muted small">The full path takes about 20 minutes and gives the most accurate result. Quick start takes about 2 minutes: tick your technologies, see your jobs at once, and add the rest later.</p>
       <p class="muted small lang-note">Test questions, O*NET skill names, course titles and AI-written text stay in English, as in most IT workplaces.</p>
       <p class="muted small">Your progress is saved in this browser.</p>
       ${JOURNEY.some((st) => st.done() || skipped(st)) || trackedPaths().length ? '<div class="row"><button class="btn ghost small" type="button" id="forget">Clear my saved answers and progress</button></div>' : ""}
@@ -161,20 +159,18 @@ function startCard() {
 }
 
 // The same way in on the landing page's first screen, so a first-time student sees where to start
-// without scrolling: quick start first (jobs in about 2 minutes), or carry on where they stopped.
+// without scrolling: step 1, or carry on where they stopped.
 function heroStart() {
   const started = JOURNEY.some((st) => st.done() || skipped(st));
   const next = (JOURNEY.find((st) => !st.done() && !skipped(st)) || JOURNEY[3]).href;
   return `<div class="row hero-start">
-      ${started ? `<a class="btn primary" href="${next}">Continue where I left off</a>` : '<a class="btn primary" href="#/skills" data-start="quick">Quick start: about 2 minutes</a>'}
-      ${started ? "" : '<a class="btn" href="#/cv">Start: step 1, your CV</a>'}
+      ${started ? `<a class="btn primary" href="${next}">Continue where I left off</a>` : '<a class="btn primary" href="#/cv">Start: step 1, your CV</a>'}
       <button class="btn ghost" type="button" data-start="demo">Try the demo student</button>
     </div>`;
 }
 
 function wireStartCard() {
   document.querySelectorAll('[data-start="demo"]').forEach((b) => { b.onclick = () => { state.demo = "P01"; saveState(); location.hash = "#/results"; }; });
-  document.querySelectorAll('[data-start="quick"]').forEach((b) => { b.onclick = () => { state.quick = true; saveState(); }; });
   const forget = document.getElementById("forget");
   if (forget) forget.onclick = () => {
     if (!confirm("Clear your answers, test and learning progress from this browser? This cannot be undone.")) return;
@@ -325,74 +321,6 @@ async function pageInterests() {
   document.getElementById("redo").onclick = () => { state.answers = Array(QUIZ_ITEMS).fill(null); saveState(); location.hash = "#/quiz/1"; };
 }
 
-// Step 1 ends here with or without a CV: the student ticks the technologies they use.
-// The most common ones (listed by the most roles) show first; search finds the rest.
-const TECH_COMMON = 20;
-
-async function pageSkills() {
-  const skills = await cached("/api/skills");
-  const techs = skills.filter((s) => s.skill_type === "technology")
-    .sort((a, b) => b.role_count - a.role_count || a.skill_name.localeCompare(b.skill_name));
-  const common = new Set(techs.slice(0, TECH_COMMON).map((s) => s.skill_id));
-  const hasCV = Boolean(cvResult || state.cvAreas);
-  const quick = Boolean(state.quick);
-  const next = '<a class="btn primary" href="#/quiz" id="go">Next: step 2, interests</a>';
-  const see = `<a class="btn${quick ? " primary" : ""}" href="#/results" id="see">See my jobs now</a>`;
-  render(`
-  <div class="stack">
-    ${stepBar("cv")}
-    <p class="eyebrow">Step 1 of 4 · Your technologies</p>
-    <h1>Which technologies do you use?</h1>
-    ${hasCV ? '<p class="muted">Ticked from your CV. Add or remove any.</p>' : `
-    <div class="note row" style="justify-content: space-between">
-      <p><strong>Have a CV?</strong> AI ticks these for you.</p>
-      <a class="btn primary" href="#/cv">Upload my CV</a>
-    </div>`}
-    <section class="card stack" style="gap: 12px">
-      <h2>Technologies</h2>
-      <input id="tech-search" class="search" type="search" placeholder="Search, e.g. Python, SQL, Figma" aria-label="Search technologies" autocomplete="off">
-      <div class="techs" id="techs">
-        ${techs.map((s) => `<button type="button" data-tech="${esc(s.skill_id)}" data-name="${esc(s.skill_name.toLowerCase())}" aria-pressed="${state.techs.includes(s.skill_id)}">${esc(s.skill_name)}</button>`).join("")}
-      </div>
-      <p class="muted small" id="tech-none" hidden>Not in the list.</p>
-      <button class="btn ghost small" type="button" id="tech-all">Show all ${techs.length}</button>
-    </section>
-    <div class="sticky-actions row">
-      ${quick ? see + next.replace("btn primary", "btn") : next + see}
-      <span class="muted small" id="count"></span>
-    </div>
-  </div>`);
-  let showAll = false;
-  const all = document.getElementById("tech-all");
-  const search = document.getElementById("tech-search");
-  // Picked and common ones always show; a search shows every match; "Show all" shows the rest.
-  const filter = () => {
-    const q = search.value.trim().toLowerCase();
-    let shown = 0;
-    app.querySelectorAll("[data-tech]").forEach((b) => {
-      b.hidden = q ? !b.dataset.name.includes(q) : !(showAll || common.has(b.dataset.tech) || b.getAttribute("aria-pressed") === "true");
-      if (!b.hidden) shown++;
-    });
-    document.getElementById("tech-none").hidden = shown > 0;
-    all.hidden = Boolean(q) || showAll;
-  };
-  const count = () => { document.getElementById("count").textContent = `${state.techs.length} picked`; };
-  filter(); count();
-  app.querySelectorAll("[data-tech]").forEach((b) => {
-    b.onclick = () => {
-      const id = b.dataset.tech;
-      state.techs = state.techs.includes(id) ? state.techs.filter((x) => x !== id) : [...state.techs, id];
-      b.setAttribute("aria-pressed", String(state.techs.includes(id)));
-      saveState(); count();
-    };
-  });
-  search.oninput = filter;
-  all.onclick = () => { showAll = true; filter(); };
-  const leave = () => { state.demo = null; state.cvSkipped = !hasCV; saveState(); };
-  document.getElementById("go").onclick = leave;
-  document.getElementById("see").onclick = leave;
-}
-
 // The CV summary lives in memory only: it is never saved to the browser's storage. Only the
 // 0-100 evidence score per IT area (state.cvAreas) is kept, for /api/match.
 let cvResult = null;
@@ -516,8 +444,11 @@ async function pageCV() {
     </div>
     <div id="cv-status" role="status" aria-live="polite"></div>
     <div id="cv-out" class="stack"></div>
-    <div class="row"><a class="btn primary" href="#/skills">Next: pick your technologies</a><a class="btn ghost" href="#/skills">No CV? Skip</a></div>
+    <div class="row"><a class="btn primary" href="#/quiz" id="cv-next">Next: step 2, interests</a><a class="btn ghost" href="#/quiz" id="cv-skip">No CV? Skip</a></div>
   </div>`);
+  const leave = () => { state.demo = null; state.cvSkipped = !(cvResult || state.cvAreas); saveState(); };
+  document.getElementById("cv-next").onclick = leave;
+  document.getElementById("cv-skip").onclick = leave;
   const status = document.getElementById("cv-status");
   const out = document.getElementById("cv-out");
   const show = (r) => {
@@ -1036,7 +967,7 @@ async function drawJobs() {
     ${why}
     ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     <div class="row">
-      ${demo ? '<a class="btn primary" href="#/cv">Start with your own answers</a>' : `<a class="btn" href="#/skills">Change my technologies</a>${testDone() ? "" : '<a class="btn" href="#/test">Take the skills test</a>'}`}
+      ${demo ? '<a class="btn primary" href="#/cv">Start with your own answers</a>' : `${testDone() ? "" : '<a class="btn" href="#/test">Take the skills test</a>'}`}
       <a class="btn ghost" href="#/trends">How the trend score works</a>
     </div>`;
   jobs.classList.remove("loading");
@@ -2505,7 +2436,7 @@ async function route() {
     else if (page === "quiz") await pageQuizIntro();
     else if (page === "interests") await pageInterests();
     else if (page === "cv") await pageCV();
-    else if (page === "skills") await pageSkills();
+    else if (page === "skills") location.replace("#/cv");  // the technologies page is gone
     else if (page === "results") await pageResults();
     else if (page === "trends" && parts[1] === "data") await pageTrendData(parts[2]);
     else if (page === "trends") await pageTrends();

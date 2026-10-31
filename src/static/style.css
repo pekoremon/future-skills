@@ -261,9 +261,6 @@ details.group[open] > summary::after { content: "–"; }
 .rating button:first-child { border-left: 0; }
 .rating button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 .search { width: 100%; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
-.techs { display: flex; flex-wrap: wrap; gap: 8px; }
-.techs button { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 14px; }
-.techs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
 .sticky-actions { position: sticky; bottom: 0; padding: 12px 0; background: linear-gradient(to top, var(--bg) 70%, transparent); }
 
