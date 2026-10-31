@@ -532,6 +532,22 @@ function listedRoles(results, g) {
   return g.mode === "none" ? eligible : ["best_fit", "can_do"].flatMap((name) => eligible.filter((m) => groupOf[m.it_area] === name));
 }
 
+// listedRoles with each role's rank, and its rank under every scenario within this grouped
+// list (the groups do not depend on the scenario): the jobs page and the advisor page.
+function rankedRoles(res) {
+  const g = res.groups;
+  const best = listedRoles(res.results, g);
+  if (g.mode !== "none" && best.length) {
+    const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
+    const gi = (m) => (groupOf[m.it_area] === "best_fit" ? 0 : 1);
+    const ranks = {};
+    Object.keys(best[0].scenario_ranks || {}).forEach((s) => [...best].sort((a, b) => gi(a) - gi(b) || a.scenario_ranks[s] - b.scenario_ranks[s])
+      .forEach((m, i) => { (ranks[m.role_id] = ranks[m.role_id] || {})[s] = i + 1; }));
+    best.forEach((m, i) => { m.scenario_ranks = ranks[m.role_id]; m.rank = i + 1; m.baseline_rank = ranks[m.role_id] && ranks[m.role_id].baseline; });
+  }
+  return best;
+}
+
 const hasAnswers = () => Boolean(state.demo) || testDone() || quizDone() || state.quizSkipped || skillsDone();
 
 // The /api/match request for the student's answers (or a demo student), with the page options
@@ -792,14 +808,7 @@ async function drawJobs() {
     ${Object.entries(sc.trend_scores).filter(([k]) => AREA_NAMES[k]).map(([k, v]) => `${esc(AREA_NAMES[k])} ${fmt(v)}`).join(" · ")}. An area with only one measured part keeps the same score.`;
   const g = res.groups;
   const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
-  const best = listedRoles(res.results, g);
-  if (g.mode !== "none" && best.length) {  // ranks per scenario within this grouped list (groups do not depend on the scenario)
-    const gi = (m) => (groupOf[m.it_area] === "best_fit" ? 0 : 1);
-    const ranks = {};
-    Object.keys(best[0].scenario_ranks || {}).forEach((s) => [...best].sort((a, b) => gi(a) - gi(b) || a.scenario_ranks[s] - b.scenario_ranks[s])
-      .forEach((m, i) => { (ranks[m.role_id] = ranks[m.role_id] || {})[s] = i + 1; }));
-    best.forEach((m, i) => { m.scenario_ranks = ranks[m.role_id]; m.rank = i + 1; m.baseline_rank = ranks[m.role_id] && ranks[m.role_id].baseline; });
-  }
+  const best = rankedRoles(res);
   let shown = 6;
   const draw = () => {
     const list = best.slice(0, shown);
@@ -829,6 +838,10 @@ async function drawJobs() {
       <details class="fold"><summary>How the match score works</summary>
       <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p></details>
     </section>
+    ${best.length ? `<section class="note row" style="justify-content: space-between">
+      <p><strong>Seeing a career advisor?</strong> Take one page with your top jobs, skills to work on and questions to ask.</p>
+      <a class="btn primary" href="#/advisor">Make my page</a>
+    </section>` : ""}
     ${why}
     ${!demo && testDone() ? moreAreasHtml(state.test.result) : ""}
     <div class="row">
@@ -1723,12 +1736,12 @@ function doneBox(key, title, format = "") {
   </label>`;
 }
 
+const resourceFacts = (r) => [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr ? `RM ${fmt(r.cost_myr, 0)}` : "", r.level ? esc(r.level) : ""].filter(Boolean).join(" · ");
 function resourceHtml(r) {
-  const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr ? `RM ${fmt(r.cost_myr, 0)}` : "", r.level ? esc(r.level) : ""].filter(Boolean);
   return `<li class="res${progress.done[r.url] ? " is-done" : ""}">
     <div class="res-top"><span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>${doneBox(r.url, r.title, r.format)}</div>
     <a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
-    <span class="muted small">${facts.join(" · ")}</span>
+    <span class="muted small">${resourceFacts(r)}</span>
   </li>`;
 }
 
@@ -1953,6 +1966,7 @@ async function route() {
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
     else if (page === "progress") pageProgress();
     else if (page === "play") await pagePlay(parts[1], parts[2]);
+    else if (page === "advisor") await pageAdvisor();
     else await pageTrends();
   } catch (e) {
     showError(e);
