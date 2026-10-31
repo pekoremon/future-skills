@@ -681,6 +681,15 @@ def last_api_fetch() -> date | None:
     return date.fromisoformat(max(days)) if days else None
 
 
+def api_fetch_dates() -> dict[str, str]:
+    """Newest fetched_date per api source: an update can skip arXiv, so the sources can differ."""
+    out = {}
+    for r in read_csv("trends.csv"):
+        if r.get("fetch_method") == "api":
+            out[r["source_name"]] = max(out.get(r["source_name"], ""), r["fetched_date"])
+    return out
+
+
 def next_auto_update() -> date | None:
     last = last_api_fetch()
     if AUTO_UPDATE_DAYS <= 0 or last is None:
@@ -711,6 +720,7 @@ def trends_update_status(request):
     due = next_auto_update()
     return jsonify({**_update_state, "auto_update_days": AUTO_UPDATE_DAYS,
                     "last_fetched": str(last_api_fetch() or "") or None,
+                    "fetched_by_source": api_fetch_dates(),
                     "next_auto_update": due.isoformat() if due else None})
 
 

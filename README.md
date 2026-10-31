@@ -179,7 +179,7 @@ python src/main.py
 | POST | `/api/project/check` | `{"project_id", "zip_base64"}` or `{"project_id", "file": {"name", "text"}}` → `passed`, basic checks (readable files, README, tests when the brief asks), the AI's requirement checks with the file that shows each, and `method` (`llm` or `basic`). Limits: 2 MB upload, 300 files, 8 MB unpacked text; `.env` and key files are never read. Not stored |
 | GET | `/api/scenarios` | Future scenarios (`baseline`, `fast_ai`, `local_demand`) and each area's and role's trend score under them |
 | GET | `/api/trends?area=` | Trend scores, the signals behind them and the dated inputs |
-| POST / GET | `/api/trends/update` | Start the "Update data" job (OpenDOSM and arXiv, about a minute; `{"arxiv": false}` skips arXiv) / check its status |
+| POST / GET | `/api/trends/update` | Start the "Update data" job (OpenDOSM and arXiv, about a minute; `{"arxiv": false}` skips arXiv) / check its status; `fetched_by_source` gives each live source's own fetch date |
 | GET | `/api/whatif` | The trend inputs a what-if may change (value now, the earlier value it is compared with, limit, source) and ready-made examples |
 | POST | `/api/whatif` | Same body as `/api/match` plus `"trend_changes": {"inputs": {"T0077": 14630}, "mycol": {"IT01": "no"}}` → the changed inputs, signals and trend scores, and every role's score and trend before and after. Nothing is saved |
 

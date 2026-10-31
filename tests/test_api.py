@@ -263,6 +263,8 @@ class TestApi(unittest.TestCase):
         status = self.client.get("/api/trends/update").json
         last = main.last_api_fetch()
         self.assertEqual(status["last_fetched"], last.isoformat())
+        self.assertEqual(max(status["fetched_by_source"].values()), last.isoformat())
+        self.assertIn("arXiv API", status["fetched_by_source"])
         self.assertEqual(status["next_auto_update"], (last + main.timedelta(days=main.AUTO_UPDATE_DAYS)).isoformat())
         with mock.patch.object(main, "AUTO_UPDATE_DAYS", 0):
             self.assertIsNone(main.next_auto_update())
