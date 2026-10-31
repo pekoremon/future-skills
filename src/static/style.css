@@ -158,7 +158,10 @@ main:focus-visible { outline: none; }  /* route() focuses <main> for screen read
 .crew-hex { display: block; width: 100%; max-width: 230px; margin: 0 auto; overflow: visible; }
 .crew-ico { font-size: 17px; }
 .crew-ico.ico-E { font-size: 20px; }  /* the flag draws smaller than the other icons */
-.crew-letter { font-size: 11px; font-weight: 700; fill: var(--muted, currentColor); }
+.crew-letter { font-size: 12px; font-weight: 800; fill: var(--text, currentColor); }
+/* The small live hexagon: firmer rings and shape so they read against the card. */
+.crew-hex .hex-ring { stroke: var(--muted); stroke-opacity: 0.55; }
+.crew-hex .hex-shape { fill-opacity: 0.35; stroke-width: 2.5; }
 .crew-ico.grew { animation: crew-pulse 0.7s ease-out; transform-box: fill-box; transform-origin: center; }
 .crew-toast { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); white-space: nowrap; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); font-size: 13px; font-weight: 700; animation: crew-toast 1.6s ease-out forwards; pointer-events: none; }
 .crew-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
