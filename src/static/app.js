@@ -849,6 +849,7 @@ ${startCard()}
       <p class="small">Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
       <div class="row"><a class="btn primary" href="#/whatif">Change the trend data</a></div>
     </section>
+    <p class="small muted"><span>See every record:</span> <a href="#/trends/data/ict">ICT sector background</a> (${t.signals.filter((r) => r.scored !== "TRUE").length}) · <a href="#/trends/data/inputs">All input data with sources</a> (${t.inputs.length})</p>
   </div>`);
   const dash = document.getElementById("trend-dash"), jobs = document.getElementById("trend-jobs");
   jobs.innerHTML = trendHeroChart(t);
@@ -866,7 +867,7 @@ ${startCard()}
     const s = await api("/api/trends/update");
     show(s);
     if (s.status === "running") setTimeout(poll, 2000);
-    else if (location.hash.startsWith("#/trends")) { delete cache["/api/match"]; delete cache["/api/whatif"]; setTimeout(() => pageTrends().catch(showError), 1500); }
+    else if (location.hash === "#/trends") { delete cache["/api/match"]; delete cache["/api/whatif"]; setTimeout(() => pageTrends().catch(showError), 1500); }
   };
   show(status);
   if (status.status === "running") setTimeout(poll, 2000);
@@ -880,6 +881,36 @@ ${startCard()}
       btn.disabled = false;
     }
   };
+}
+
+// Every record behind the Trends page, linked from its foot: the ICT sector signals that are
+// context only, and each input value with its source. focus = "ict" or "inputs" scrolls there.
+async function pageTrendData(focus) {
+  const t = await api("/api/trends");
+  const context = t.signals.filter((r) => r.scored !== "TRUE");
+  const sigRows = context.map((r) => `
+    <tr><td>${esc(r.entity_label)}</td><td>${esc(r.signal.replace(/_/g, " "))}</td><td>${esc(r.direction.replace(/_/g, " "))}</td>
+    <td>${esc(r.confidence)}</td><td class="small">${esc(r.detail)}<br><span class="muted">${esc(r.confidence_reason)}</span></td></tr>`).join("");
+  const inRows = t.inputs.map((r) => `
+    <tr><td>${esc(r.entity_type)} · ${esc(r.entity_id)}</td><td>${esc(r.metric.replace(/_/g, " "))}</td><td class="num">${r.value ? esc(r.value) : `≤ ${esc(r.upper_bound)}`} ${esc(r.unit === "percent" ? "%" : r.unit)}</td>
+    <td>${esc(r.period_start)}${r.period_end && r.period_end !== r.period_start ? ` – ${esc(r.period_end)}` : ""}</td>
+    <td><a href="${safeUrl(r.source_url)}" rel="noopener" target="_blank">${esc(r.source_name)}</a><br><span class="muted">released ${esc(r.release_date)} · fetched ${esc(r.fetched_date)}</span></td></tr>`).join("");
+  render(`
+  <div class="stack">
+    <p><a href="#/trends">← Back to trends</a></p>
+    <section class="card stack" id="data-ict" style="gap: 10px; scroll-margin-top: 80px">
+      <h2>ICT sector background (not scored) <span class="muted small">(${context.length})</span></h2>
+      <p class="small muted">The whole ICT sector, not only IT roles, so these are context only and do not change any trend score.</p>
+      <div class="table-wrap"><table><thead><tr><th>For</th><th>Signal</th><th>Direction</th><th>Confidence</th><th>Detail</th></tr></thead><tbody>${sigRows}</tbody></table></div>
+    </section>
+    <section class="card stack" id="data-inputs" style="gap: 10px; scroll-margin-top: 80px">
+      <h2>All input data with sources <span class="muted small">(${t.inputs.length})</span></h2>
+      <p class="small muted">Every value the trend scores are built from. Scores computed ${esc(t.computed_date)}.</p>
+      <div class="table-wrap"><table><thead><tr><th>Entity</th><th>Metric</th><th>Value</th><th>Period</th><th>Source</th></tr></thead><tbody>${inRows}</tbody></table></div>
+    </section>
+  </div>`);
+  const target = document.getElementById(`data-${focus}`);
+  if (target) target.scrollIntoView();
 }
 
 /* ---------- what if: change the trend data ---------- */
@@ -1888,6 +1919,7 @@ async function route() {
     else if (page === "cv") await pageCV();
     else if (page === "skills") await pageSkills();
     else if (page === "results") await pageResults();
+    else if (page === "trends" && parts[1] === "data") await pageTrendData(parts[2]);
     else if (page === "trends") await pageTrends();
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
