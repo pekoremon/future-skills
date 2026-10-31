@@ -791,7 +791,10 @@ async function pageTrends() {
   const [t, status, roles] = await Promise.all([api("/api/trends"), api("/api/trends/update"), cached("/api/roles")]);
   render(`
   <div class="stack">
+    <section class="stack" style="gap: 6px">
     <h1>Malaysia’s IT Students: What’s Next?</h1>
+    <p class="small muted">Many IT students in Malaysia are unsure which career path suits them, which tech fields will be in demand, and how AI may affect their future jobs. Our platform helps students understand their interests and skills, explore Malaysia’s IT job market trends, and find a career direction that fits them.</p>
+    </section>
     <div class="viz-hero">
     <section class="stack" style="gap: 10px">
     <p class="eyebrow">AI-era trend signals</p>

@@ -321,6 +321,7 @@ const MS = {
   "Learning paths below now follow the new ranking.": "Laluan pembelajaran di bawah kini mengikut kedudukan baharu.", "Nothing in your ranking changed.": "Tiada perubahan dalam kedudukan anda.",
   // trends
   "Malaysia’s IT Students: What’s Next?": "Pelajar IT Malaysia: Apa Seterusnya?",
+  "Many IT students in Malaysia are unsure which career path suits them, which tech fields will be in demand, and how AI may affect their future jobs. Our platform helps students understand their interests and skills, explore Malaysia’s IT job market trends, and find a career direction that fits them.": "Ramai pelajar IT di Malaysia tidak pasti laluan kerjaya mana yang sesuai, bidang teknologi mana yang akan diperlukan, dan bagaimana AI mungkin menjejaskan pekerjaan masa depan mereka. Platform kami membantu pelajar memahami minat dan kemahiran mereka, meneroka trend pasaran kerja IT Malaysia, dan mencari hala tuju kerjaya yang sesuai.",
   "AI-era trend signals": "Isyarat trend era AI",
   "Which IT areas does Malaysia need, and how fast is AI entering them?": "Bidang IT mana yang diperlukan Malaysia, dan betapa cepat AI memasukinya?",
   "These signals describe the recent past; they do not predict the future.": "Isyarat ini menggambarkan masa lalu terdekat; ia tidak meramal masa depan.",
@@ -946,6 +947,7 @@ const ZH = {
   "Learning paths below now follow the new ranking.": "下面的学习路径已按新排名更新。", "Nothing in your ranking changed.": "你的排名没有变化。",
   // trends
   "Malaysia’s IT Students: What’s Next?": "马来西亚 IT 学生：下一步去哪？",
+  "Many IT students in Malaysia are unsure which career path suits them, which tech fields will be in demand, and how AI may affect their future jobs. Our platform helps students understand their interests and skills, explore Malaysia’s IT job market trends, and find a career direction that fits them.": "许多马来西亚 IT 学生不确定哪条职业道路适合自己、哪些技术领域会有需求，以及 AI 会如何影响他们未来的工作。我们的平台帮助学生了解自己的兴趣和技能，探索马来西亚 IT 就业市场趋势，并找到适合自己的职业方向。",
   "AI-era trend signals": "AI 时代趋势信号",
   "Which IT areas does Malaysia need, and how fast is AI entering them?": "马来西亚需要哪些 IT 领域？AI 进入这些领域有多快？",
   "These signals describe the recent past; they do not predict the future.": "这些信号描述的是最近的过去，不是预测未来。",
