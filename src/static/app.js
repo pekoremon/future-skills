@@ -42,7 +42,7 @@ function writeSaved(key, value) {
 
 function loadState() {
   const base = { answers: Array(QUIZ_ITEMS).fill(null), quizSkipped: false, cvSkipped: false, ratings: {}, techs: [], zone: 4, demo: null, cvAreas: null,
-    scenario: "baseline", hoursPerWeek: 5 };
+    scenario: "baseline", hoursPerWeek: 5, sdgGoals: [] };
   try {
     const saved = Object.assign(base, readSaved(STORE_KEY) || {});
     if (saved.answers.length !== QUIZ_ITEMS) saved.answers = Array(QUIZ_ITEMS).fill(null);  // older 30-item questionnaire
@@ -560,8 +560,9 @@ async function pageCV() {
 }
 
 function splitBar(m) {
-  return `<div class="split" role="img" aria-label="${ORDER_PARTS.map((k) => `${PART_LABEL[k]} ${fmt(m.components[k].points)} points`).join(", ")}">
-    ${ORDER_PARTS.map((k) => `<span class="k-${k}" style="width: ${m.components[k].points || 0}%"></span>`).join("")}
+  const bonus = m.sdg_choice ? m.total - m.sdg_choice.total_without : 0;  // capped at 100
+  return `<div class="split" role="img" aria-label="${ORDER_PARTS.map((k) => `${PART_LABEL[k]} ${fmt(m.components[k].points)} points`).join(", ")}${bonus ? `, your global goals ${fmt(bonus)} points` : ""}">
+    ${ORDER_PARTS.map((k) => `<span class="k-${k}" style="width: ${m.components[k].points || 0}%"></span>`).join("")}${bonus ? `<span class="k-sdg" style="width: ${bonus}%"></span>` : ""}
   </div>`;
 }
 const ORDER_PARTS = ["area", "interest", "skill", "trend"];
@@ -582,9 +583,12 @@ function listedRoles(results, g) {
 function rankedRoles(res) {
   const g = res.groups;
   const best = listedRoles(res.results, g);
+  const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
+  const gi = (m) => (g.mode === "none" || groupOf[m.it_area] === "best_fit" ? 0 : 1);
+  // The rank each job would have without the student's global goals, so the page can show what they moved.
+  [...best].sort((a, b) => gi(a) - gi(b) || b.sdg_choice.total_without - a.sdg_choice.total_without)
+    .forEach((m, i) => { m.rank_without_goals = i + 1; });
   if (g.mode !== "none" && best.length) {
-    const groupOf = Object.fromEntries(g.areas.map((a) => [a.id, a.group]));
-    const gi = (m) => (groupOf[m.it_area] === "best_fit" ? 0 : 1);
     const ranks = {};
     Object.keys(best[0].scenario_ranks || {}).forEach((s) => [...best].sort((a, b) => gi(a) - gi(b) || a.scenario_ranks[s] - b.scenario_ranks[s])
       .forEach((m, i) => { (ranks[m.role_id] = ranks[m.role_id] || {})[s] = i + 1; }));
@@ -599,6 +603,7 @@ const hasAnswers = () => Boolean(state.demo) || testDone() || quizDone() || stat
 // and the changed trend data of a what-if, if one is on.
 function matchBody(demo = state.demo) {
   const options = { top: 35, scenario: state.scenario, hours_per_week: Number(state.hoursPerWeek) };
+  if ((state.sdgGoals || []).length) options.sdg_goals = state.sdgGoals;
   if (state.trendChanges) options.trend_changes = state.trendChanges;
   if (demo) return { profile_id: demo, ...options };
   const test = testDone() ? gradedTest(state.test) : undefined;
@@ -615,14 +620,15 @@ function jobCard(m, rank) {
   const parts = ORDER_PARTS.map((k) => {
     const c = m.components[k];
     return `<span title="${PART_LABEL[k]}: ${c.score === null ? "not scored" : `${fmt(c.score)} / 100 × ${Math.round(c.weight * 100)}%`}"><i class="k-${k}"></i>${PART_LABEL[k]} <strong>${c.score === null ? "–" : fmt(c.points)}</strong></span>`;
-  }).join("");
+  }).join("") + (m.sdg_choice && m.sdg_choice.bonus ? `<span title="Supports a global goal you picked"><i class="k-sdg"></i>Your global goals <strong>+${fmt(m.total - m.sdg_choice.total_without)}</strong></span>` : "");
   return `
     <li class="top-card${rank === 1 ? " first" : ""}" data-role="${esc(m.role_id)}">
       <div class="top-main">
-        <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)}</h3>
+        <h3>${rank}. ${esc(m.role_name)} ${moveBadge(m)} ${goalBadge(m, rank)}</h3>
         <div class="row" style="gap: 6px">
           <span class="chip plain">${esc(m.area_name || "Other IT area")}</span>
           ${rangeBadge(m)}
+          ${m.sdg_choice && m.sdg_choice.goals.length ? `<span class="chip sdg-pick" title="Supports the global goal you picked, so it gets ${fmt(m.sdg_choice.bonus)} extra points">Your goal: SDG ${m.sdg_choice.goals.map(esc).join(", ")}</span>` : ""}
           ${sdg}
           ${flags}
         </div>
@@ -661,6 +667,32 @@ function moveBadge(m) {
   if (state.scenario === "baseline" || !m.baseline_rank || m.baseline_rank === m.rank) return "";
   const up = m.baseline_rank - m.rank;
   return `<span class="chip ${up > 0 ? "" : "plain"}" title="Rank under current trends: ${m.baseline_rank}">${up > 0 ? "▲" : "▼"} ${Math.abs(up)} vs current trends</span>`;
+}
+
+// How the student's global goals moved this job: up for a job that supports one, down for one passed by those.
+function goalBadge(m, rank) {
+  if (!(state.sdgGoals || []).length || !m.rank_without_goals || m.rank_without_goals === rank) return "";
+  const up = m.rank_without_goals - rank;
+  return `<span class="chip ${up > 0 ? "sdg-pick" : "plain"}" title="Rank without your global goals: ${m.rank_without_goals}">${up > 0 ? "▲" : "▼"} ${Math.abs(up)} from your goals</span>`;
+}
+
+// "Global goals you care about": one button per UN goal an IT job here supports.
+function drawGoalPick(res) {
+  const box = document.getElementById("goal-pick");
+  if (!box) return;
+  const picked = new Set(state.sdgGoals || []);
+  box.innerHTML = res.sdg_goals.map((g) => `<button type="button" data-goal="${esc(g.goal)}" aria-pressed="${picked.has(g.goal)}">
+    ${sdgTile(g.goal, g.goal_name)}<span><strong data-no-i18n>SDG ${esc(g.goal)}</strong> <span>${esc(g.goal_name)}</span><small><span data-no-i18n>${g.roles}</span> <span>${g.roles === 1 ? "IT job" : "IT jobs"}</span></small></span></button>`).join("");
+  box.querySelectorAll("[data-goal]").forEach((b) => {
+    b.onclick = () => {
+      const goals = new Set(state.sdgGoals || []);
+      goals.has(b.dataset.goal) ? goals.delete(b.dataset.goal) : goals.add(b.dataset.goal);
+      state.sdgGoals = [...goals].sort((x, y) => x - y);
+      saveState();
+      b.setAttribute("aria-pressed", String(goals.has(b.dataset.goal)));
+      drawJobs().catch(showError);
+    };
+  });
 }
 
 let lastMatchBody = null;
@@ -823,6 +855,11 @@ async function pageResults() {
       </div></details>
       <div class="row"><a class="btn" href="#/whatif">What if the trend data changed? Try it &rarr;</a></div>
     </section>
+    <section class="card stack" style="gap: 10px" aria-labelledby="goal-title">
+      <h2 id="goal-title">Global goals you care about</h2>
+      <p class="small">Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.</p>
+      <div class="goal-pick" id="goal-pick" role="group" aria-label="Global goals you care about"></div>
+    </section>
     <div id="jobs" class="stack"></div>
   </div>`);
   app.querySelectorAll("[data-scenario]").forEach((b) => {
@@ -846,8 +883,9 @@ async function drawJobs() {
   jobs.classList.add("loading");
   const body = matchBody();
   const res = await api("/api/match", { body: JSON.stringify(body) });
-  if (body.scenario !== state.scenario || !jobs.isConnected) return;  // switched again, or left the page
+  if (body.scenario !== state.scenario || String(body.sdg_goals || []) !== String(state.sdgGoals || []) || !jobs.isConnected) return;  // switched again, or left the page
   lastMatchBody = body;
+  drawGoalPick(res);
   const replan = replanNote(body, res);
   const sc = res.scenario;
   document.getElementById("sc-desc").textContent = sc.description;
@@ -883,7 +921,8 @@ async function drawJobs() {
       <div id="list" class="stack"></div>
       <button class="btn" type="button" id="more">Show all ${best.length} roles</button>
       <details class="fold"><summary>How the match score works</summary>
-      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p></details>
+      <p class="small">Match score = ${Math.round(res.weights.area * 100)}% fit with the role's IT area + ${Math.round(res.weights.interest * 100)}% interest fit with the role + ${Math.round(res.weights.skill * 100)}% skill fit + ${Math.round(res.weights.trend * 100)}% AI-era trend of the role. The weights are the team's design choice. Roles are ranked by match score, highest first. Roles that need a higher qualification than yours, or a professional licence, are not shown.</p>
+      <p class="small">If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.</p></details>
     </section>
     ${best.length ? `<section class="note row" style="justify-content: space-between">
       <p><strong>Seeing a career advisor?</strong> Take one page with your top jobs, skills to work on and questions to ask.</p>
@@ -925,6 +964,16 @@ ${startCard()}
       <p class="small">Change an arXiv paper count or the DOSM job ad count, and see the signals, the trend scores and your job ranking move. Only your copy changes.</p>
       <div class="row"><a class="btn primary" href="#/whatif">Change the trend data</a></div>
     </section>
+    <details class="card fold-card" id="compare">
+      <summary><h2>How is this different from JobStreet, LinkedIn or Coursera?</h2></summary>
+      <ul class="stack small" style="gap: 10px; margin: 0; padding-left: 18px">
+        <li><strong>Job sites: JobStreet, Hiredly, LinkedIn Jobs</strong><br><span>They list today's job ads and match the keywords on your profile.</span> <span class="muted">They do not say which part of IT suits you, which skills you are missing for a job, or how AI is changing demand.</span></li>
+        <li><strong>Government portals: MyFutureJobs, MyMahir, TalentCorp's MyCOL list</strong><br><span>They publish official jobs and labour-market facts.</span> <span class="muted">The facts are the same for everyone: no ranking for you, no reasons and no idea how sure they are.</span></li>
+        <li><strong>Course platforms: Coursera, Udemy, edX, LinkedIn Learning</strong><br><span>They offer thousands of courses, many of them paid.</span> <span class="muted">They do not tell you which course closes your biggest gap for a job Malaysia needs.</span></li>
+        <li><strong>Yearly reports: LinkedIn Jobs on the Rise, WEF Future of Jobs</strong><br><span>They name growing jobs once a year.</span> <span class="muted">One list for everyone, for the world or a whole country, with no confidence and no update in between.</span></li>
+      </ul>
+      <p class="small" style="margin-top: 10px">What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.</p>
+    </details>
     <p class="small muted"><span>See every record:</span> <a href="#/trends/data/ict">ICT sector background</a> (${t.signals.filter((r) => r.scored !== "TRUE").length}) · <a href="#/trends/data/inputs">All input data with sources</a> (${t.inputs.length})</p>
   </div>`);
   const dash = document.getElementById("trend-dash"), jobs = document.getElementById("trend-jobs");

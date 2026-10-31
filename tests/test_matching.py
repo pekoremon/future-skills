@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import interest
-from matching import (AREA_WEIGHTS, SCENARIOS, area_fit, area_groups, cv_area_scores, interest_score, it_roles,
+from matching import (AREA_WEIGHTS, SCENARIOS, SDG_BONUS, area_fit, area_groups, cv_area_scores, interest_score, it_roles,
                       learning_path, load_data, match_student, rank_roles, rating_to_level, role_area, role_trend,
                       scenario_trend_scores, skill_score, test_area_scores, with_interest)
 
@@ -191,6 +191,16 @@ class TestMatching(unittest.TestCase):
         after = {m["role_id"]: m["total"] for m in rank_roles(self.profile, self.data, boom)}
         self.assertGreater(after["IT05"], base["IT05"])
         self.assertEqual(after["IT01"], base["IT01"])
+
+    def test_picked_sdg_goal_adds_bonus_only_to_roles_that_support_it(self):
+        base = {m["role_id"]: m for m in rank_roles(self.profile, self.data)}
+        picked = {m["role_id"]: m for m in rank_roles({**self.profile, "sdg_goals": ["16"]}, self.data)}
+        for rid, m in picked.items():
+            supports = any(s["target"].split(".")[0] == "16" for s in m["sdg"])
+            self.assertEqual(m["sdg_choice"]["goals"], ["16"] if supports else [])
+            self.assertEqual(m["sdg_choice"]["total_without"], base[rid]["total"])
+            self.assertEqual(m["total"], min(100.0, round(base[rid]["total"] + (SDG_BONUS if supports else 0), 1)))
+        self.assertTrue(any(m["sdg_choice"]["bonus"] for m in picked.values()))
 
     def test_baseline_scenario_matches_trend_score_file(self):
         self.assertEqual(scenario_trend_scores(self.data, "baseline"), self.data["trend_scores"])

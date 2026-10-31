@@ -157,6 +157,16 @@ class TestApi(unittest.TestCase):
         bad = self.client.post("/api/match", json={"test": {"seed": "x"}})
         self.assertEqual(bad.status_code, 400)
 
+    def test_match_sdg_goals_move_supporting_roles_up(self):
+        base = self.client.post("/api/match", json={"profile_id": "P01", "top": 40}).json
+        picked = self.client.post("/api/match", json={"profile_id": "P01", "sdg_goals": [16], "top": 40}).json
+        self.assertIn("16", [g["goal"] for g in picked["sdg_goals"]])
+        before = {m["role_id"]: m["total"] for m in base["results"]}
+        for m in picked["results"]:
+            self.assertEqual(m["total"] > before[m["role_id"]], bool(m["sdg_choice"]["goals"]))
+        for bad in (["99"], "16", [0]):
+            self.assertEqual(self.client.post("/api/match", json={"profile_id": "P01", "sdg_goals": bad}).status_code, 400)
+
     def test_match_rejects_bad_area_scores(self):
         for body in ({"preferences": {"gardening": 50}}, {"cv_areas": {"data_ai": 150}},
                      {"test_areas": {"data_ai": True}}, {"preferences": [1, 2]}):

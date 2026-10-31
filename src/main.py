@@ -43,6 +43,7 @@ Endpoints (all JSON):
 
 /api/match, /api/explain and /api/learn also take "trend_changes" (scripts/whatif.py): the
 results are then built from a changed copy of the trend data, for that request only.
+They also take "sdg_goals": the UN goals the student cares about (matching.SDG_BONUS).
 
 Run locally: python src/main.py   (PORT sets the port, default 8080)
 """
@@ -454,7 +455,10 @@ def match_options(req: dict, data: dict) -> tuple[dict, str]:
     hours = req.get("hours_per_week", matching.DEFAULT_HOURS_PER_WEEK)
     if isinstance(hours, bool) or not isinstance(hours, (int, float)) or not 1 <= hours <= 40:
         raise BadRequest("'hours_per_week' must be a number from 1 to 40")
-    return {**profile, "hours_per_week": hours}, scenario
+    goals = req.get("sdg_goals", [])
+    if not isinstance(goals, list) or not all(str(g) in {str(i) for i in range(1, 18)} for g in goals):
+        raise BadRequest("'sdg_goals' must be a list of UN goal numbers 1-17")
+    return {**profile, "hours_per_week": hours, "sdg_goals": [str(g) for g in goals]}, scenario
 
 
 def trend_data_version(changes: dict | None = None) -> dict:
@@ -525,7 +529,8 @@ def match(request):
                    skill_split=matching.SKILL_SPLIT,
                    scenario={"id": scenario, **matching.SCENARIOS[scenario],
                              "trend_scores": matching.scenario_trend_scores(data, scenario)},
-                   trend_data=trend_data_version(changes), results=ranked[:top])
+                   trend_data=trend_data_version(changes), sdg_bonus=matching.SDG_BONUS,
+                   sdg_goals=matching.sdg_goal_options(data), results=ranked[:top])
 
 
 @route("POST", "/api/explain")

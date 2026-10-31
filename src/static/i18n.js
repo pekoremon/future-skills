@@ -665,6 +665,51 @@ const MS = {
   "Your hours count towards SDG 4 and 8": "Jam anda menyumbang kepada SDG 4 dan 8",
   "See what every student here adds up to →": "Lihat jumlah sumbangan semua pelajar →",
   "What every student's hours add up to →": "Jumlah jam semua pelajar →",
+  // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
+  "Global goals you care about":
+    "Matlamat global yang anda pentingkan",
+  "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
+    "Pilih Matlamat Pembangunan Mampan PBB yang anda mahu kerja anda bantu. Pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan, jadi ia naik dalam senarai anda. Jangan pilih apa-apa untuk menyusun mengikut kesesuaian dan trend sahaja.",
+  "IT job":
+    "pekerjaan IT",
+  "IT jobs":
+    "pekerjaan IT",
+  "Your global goals":
+    "Matlamat global anda",
+  "Supports a global goal you picked":
+    "Menyokong matlamat global yang anda pilih",
+  "If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.":
+    "Jika anda memilih matlamat global, pekerjaan yang menyokong salah satunya mendapat 5 mata tambahan (paling banyak 100 kesemuanya). Matlamat yang disokong setiap pekerjaan datang daripada sasaran SDG PBB dalam data kami, dengan sebab bagi setiap satu.",
+  "Supports the global goal you picked, so it gets 5 extra points":
+    "Menyokong matlamat global yang anda pilih, jadi ia mendapat 5 mata tambahan",
+  "How is this different from JobStreet, LinkedIn or Coursera?":
+    "Apakah bezanya dengan JobStreet, LinkedIn atau Coursera?",
+  "Job sites: JobStreet, Hiredly, LinkedIn Jobs":
+    "Laman kerja: JobStreet, Hiredly, LinkedIn Jobs",
+  "They list today's job ads and match the keywords on your profile.":
+    "Ia menyenaraikan iklan kerja hari ini dan memadankan kata kunci pada profil anda.",
+  "They do not say which part of IT suits you, which skills you are missing for a job, or how AI is changing demand.":
+    "Ia tidak memberitahu bahagian IT mana yang sesuai dengan anda, kemahiran apa yang anda kurang untuk sesuatu kerja, atau bagaimana AI mengubah permintaan.",
+  "Government portals: MyFutureJobs, MyMahir, TalentCorp's MyCOL list":
+    "Portal kerajaan: MyFutureJobs, MyMahir, senarai MyCOL TalentCorp",
+  "They publish official jobs and labour-market facts.":
+    "Ia menerbitkan kerja dan fakta pasaran buruh rasmi.",
+  "The facts are the same for everyone: no ranking for you, no reasons and no idea how sure they are.":
+    "Fakta itu sama untuk semua orang: tiada susunan untuk anda, tiada sebab dan tiada tanda sejauh mana ia pasti.",
+  "Course platforms: Coursera, Udemy, edX, LinkedIn Learning":
+    "Platform kursus: Coursera, Udemy, edX, LinkedIn Learning",
+  "They offer thousands of courses, many of them paid.":
+    "Ia menawarkan beribu-ribu kursus, kebanyakannya berbayar.",
+  "They do not tell you which course closes your biggest gap for a job Malaysia needs.":
+    "Ia tidak memberitahu kursus mana yang menutup jurang terbesar anda untuk kerja yang diperlukan Malaysia.",
+  "Yearly reports: LinkedIn Jobs on the Rise, WEF Future of Jobs":
+    "Laporan tahunan: LinkedIn Jobs on the Rise, WEF Future of Jobs",
+  "They name growing jobs once a year.":
+    "Ia menamakan kerja yang berkembang sekali setahun.",
+  "One list for everyone, for the world or a whole country, with no confidence and no update in between.":
+    "Satu senarai untuk semua, untuk dunia atau seluruh negara, tanpa tahap keyakinan dan tanpa kemas kini di antaranya.",
+  "What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.":
+    "Apa yang Future Skills tambah: ia menggabungkan sumber-sumber ini untuk seorang pelajar. Kesesuaian bidang dan jurang kemahiran anda datang daripada ujian, minat dan CV anda sendiri. Skor trend dibina semula daripada DOSM, MyCOL dan arXiv setiap kali anda menekan “Update data now”, setiap nombor menunjukkan sumbernya, tahap keyakinannya dan sejauh mana kedudukan anda berubah dalam tiga masa depan, dan matlamat global yang anda pilih mengubah susunan kerja anda. Kemudian ia memberi anda kursus percuma untuk jurang terbesar anda.",
 };
 
 // Area, role and SDG names inside longer text, longest first so "Data & AI" never splits a longer name.
@@ -818,6 +863,10 @@ const PATTERNS_MS = [
   [/^\((\d+) sessions?\)$/, (m) => `(${m[1]} sesi)`],
   [/^studied, of ([\d.]+) h planned$/, (m) => `dipelajari, daripada ${m[1]} j yang dirancang`],
   [/^Lite mode: no photos, animation or charts\. Page size now: (.+)$/, (m) => `Mod ringan: tanpa foto, animasi atau carta. Saiz halaman sekarang: ${m[1]}`],
+  [/^([▲▼]) (\d+) from your goals$/, (m) => `${m[1]} ${m[2]} kerana matlamat anda`],
+  [/^Your goal: SDG (.+)$/, (m) => `Matlamat anda: SDG ${m[1]}`],
+  [/^Rank without your global goals: (\d+)$/, (m) => `Kedudukan tanpa matlamat global anda: ${m[1]}`],
+  [/^(.+)$/, (m) => SDG_MS[m[1]] || null],  // a UN goal name on its own
 ];
 
 const srcMs = (s) => s.replace(/skills test/g, "ujian kemahiran").replace(/CV and tools/g, "CV dan alat").replace(/preferences/g, "keutamaan").replace(/ and /g, " dan ");
@@ -1402,6 +1451,51 @@ const ZH = {
   "Your hours count towards SDG 4 and 8": "你的学习时数贡献于 SDG 4 和 8",
   "See what every student here adds up to →": "看看所有学生加起来的贡献 →",
   "What every student's hours add up to →": "所有学生的学习时数加起来 →",
+  // Global goals on the matches page; how this differs from job sites and course platforms (Trends page)
+  "Global goals you care about":
+    "你关心的全球目标",
+  "Pick the UN Sustainable Development Goals you want your work to help. A job that supports one gets 5 extra points, so it moves up your list. Pick none to rank on fit and trends only.":
+    "选出你希望自己的工作能帮助的联合国可持续发展目标。支持其中任一目标的工作加 5 分，在你的列表里排得更前。不选的话，只按匹配度和趋势排序。",
+  "IT job":
+    "个 IT 职位",
+  "IT jobs":
+    "个 IT 职位",
+  "Your global goals":
+    "你的全球目标",
+  "Supports a global goal you picked":
+    "支持你选的全球目标",
+  "If you pick global goals, a job that supports one of them gets 5 extra points (at most 100 in total). The goals each job supports come from the UN SDG targets in our data, with a reason for each.":
+    "选了全球目标后，支持其中任一目标的工作加 5 分（总分最多 100）。每份工作支持哪些目标来自我们数据里的联合国 SDG 具体目标，每条都附有理由。",
+  "Supports the global goal you picked, so it gets 5 extra points":
+    "支持你选的全球目标，所以加 5 分",
+  "How is this different from JobStreet, LinkedIn or Coursera?":
+    "这和 JobStreet、LinkedIn 或 Coursera 有什么不同？",
+  "Job sites: JobStreet, Hiredly, LinkedIn Jobs":
+    "求职网站：JobStreet、Hiredly、LinkedIn Jobs",
+  "They list today's job ads and match the keywords on your profile.":
+    "列出当下的招聘广告，按你资料里的关键词匹配。",
+  "They do not say which part of IT suits you, which skills you are missing for a job, or how AI is changing demand.":
+    "不会告诉你适合 IT 的哪个方向、做某份工作还缺哪些技能，也不会说 AI 正在怎样改变需求。",
+  "Government portals: MyFutureJobs, MyMahir, TalentCorp's MyCOL list":
+    "政府平台：MyFutureJobs、MyMahir、TalentCorp 的 MyCOL 名单",
+  "They publish official jobs and labour-market facts.":
+    "发布官方的职位和劳动力市场数据。",
+  "The facts are the same for everyone: no ranking for you, no reasons and no idea how sure they are.":
+    "数据对每个人都一样：不会为你排序，不说理由，也不说有多可靠。",
+  "Course platforms: Coursera, Udemy, edX, LinkedIn Learning":
+    "课程平台：Coursera、Udemy、edX、LinkedIn Learning",
+  "They offer thousands of courses, many of them paid.":
+    "提供成千上万门课程，很多要付费。",
+  "They do not tell you which course closes your biggest gap for a job Malaysia needs.":
+    "不会告诉你哪门课能补上你做马来西亚需要的工作时最大的差距。",
+  "Yearly reports: LinkedIn Jobs on the Rise, WEF Future of Jobs":
+    "年度报告：LinkedIn Jobs on the Rise、WEF Future of Jobs",
+  "They name growing jobs once a year.":
+    "每年列一次增长中的职位。",
+  "One list for everyone, for the world or a whole country, with no confidence and no update in between.":
+    "所有人同一张名单，针对全球或整个国家，没有可信度，中间也不更新。",
+  "What Future Skills adds: it puts these sources together for one student. Your area fit and skill gaps come from your own test, interests and CV. The trend score is rebuilt from DOSM, MyCOL and arXiv whenever you press “Update data now”, every number shows its source, its confidence and how much your ranking changes across three futures, and the global goals you pick change the order of your jobs. Then it gives you free courses for your biggest gaps.":
+    "Future Skills 多做的：把这些来源合在一起，为一个学生所用。你的方向匹配和技能差距来自你自己的测验、兴趣和履历。每次按“Update data now”，趋势分数都会用 DOSM、MyCOL 和 arXiv 重新计算；每个数字都标出来源、可信度，以及你的排名在三种未来情景下变化多少；你选的全球目标会改变职位的排序。最后为你最大的差距给出免费课程。",
 };
 
 const srcZh = (s) => s.replace(/skills test/g, "技能测验").replace(/CV and tools/g, "履历与工具").replace(/preferences/g, "偏好").replace(/ and /g, "和");
@@ -1541,6 +1635,10 @@ const PATTERNS_ZH = [
   [/^\((\d+) sessions?\)$/, (m) => `（${m[1]} 次）`],
   [/^studied, of ([\d.]+) h planned$/, (m) => `已学，计划共 ${m[1]} 小时`],
   [/^Lite mode: no photos, animation or charts\. Page size now: (.+)$/, (m) => `省流模式：不加载照片、动画和图表。当前页面大小：${m[1]}`],
+  [/^([▲▼]) (\d+) from your goals$/, (m) => `${m[1]} ${m[2]}（因你的目标）`],
+  [/^Your goal: SDG (.+)$/, (m) => `你的目标：SDG ${m[1]}`],
+  [/^Rank without your global goals: (\d+)$/, (m) => `不算你的全球目标时排第 ${m[1]} 名`],
+  [/^(.+)$/, (m) => SDG_ZH[m[1]] || null],  // a UN goal name on its own
 ];
 
 

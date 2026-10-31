@@ -139,6 +139,9 @@ def build_facts(match: dict) -> dict:
         "flags": match["flags"],
         "sdg": [{"target": s["target"], "goal": s["goal_name"], "why": s["rationale"]}
                 for s in match["sdg"][:2]],
+        # the student's picked UN goals this role supports, and the points they added
+        "sdg_goals_picked": (match.get("sdg_choice") or {}).get("goals", []),
+        "sdg_bonus": (match.get("sdg_choice") or {}).get("bonus", 0.0),
     }
 
 
@@ -198,6 +201,9 @@ def fallback_text(facts: dict) -> str:
     if facts["sdg"]:
         s = facts["sdg"][0]
         parts.append(f"The role links to SDG target {s['target']}: {s['why']}")
+    if facts.get("sdg_goals_picked"):
+        parts.append(f"It supports SDG {', '.join(facts['sdg_goals_picked'])}, which you picked, "
+                     f"so it gets {facts['sdg_bonus']:g} extra points.")
     return " ".join(parts)
 
 
