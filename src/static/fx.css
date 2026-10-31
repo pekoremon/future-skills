@@ -1,0 +1,283 @@
+/* Visual layer: photos, glow and motion on top of style.css. Only looks change here;
+   fx.js adds the animated network background, the page photos and the reveal effects.
+   Photos: Unsplash (free licence), loaded from images.unsplash.com. */
+:root {
+  --fx-a: #0F9C8E; --fx-b: #2B6CB0; --fx-c: #7B4FB8;
+  --fx-glow: rgba(15, 156, 142, 0.28);
+  --fx-card: rgba(255, 255, 255, 0.86);
+  --fx-edge: rgba(15, 110, 102, 0.16);
+  --fx-net: 15, 110, 102;
+  --fx-bg-1: rgba(15, 156, 142, 0.10); --fx-bg-2: rgba(43, 108, 176, 0.10); --fx-bg-3: rgba(123, 79, 184, 0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fx-a: #3FD3C2; --fx-b: #6EA8FF; --fx-c: #B08BE6;
+    --fx-glow: rgba(63, 211, 194, 0.35);
+    --fx-card: rgba(22, 30, 40, 0.82);
+    --fx-edge: rgba(63, 211, 194, 0.18);
+    --fx-net: 63, 211, 194;
+    --fx-bg-1: rgba(63, 211, 194, 0.12); --fx-bg-2: rgba(110, 168, 255, 0.12); --fx-bg-3: rgba(176, 139, 230, 0.10);
+    --bg: #0A0F16;
+  }
+}
+:root[data-theme="dark"] {
+  --fx-a: #3FD3C2; --fx-b: #6EA8FF; --fx-c: #B08BE6;
+  --fx-glow: rgba(63, 211, 194, 0.35);
+  --fx-card: rgba(22, 30, 40, 0.82);
+  --fx-edge: rgba(63, 211, 194, 0.18);
+  --fx-net: 63, 211, 194;
+  --fx-bg-1: rgba(63, 211, 194, 0.12); --fx-bg-2: rgba(110, 168, 255, 0.12); --fx-bg-3: rgba(176, 139, 230, 0.10);
+  --bg: #0A0F16;
+}
+
+/* ---------- background: soft colour fields, a faint grid and the network canvas ---------- */
+body {
+  background:
+    radial-gradient(60vw 50vh at 10% -10%, var(--fx-bg-1), transparent 70%),
+    radial-gradient(50vw 50vh at 100% 10%, var(--fx-bg-2), transparent 70%),
+    radial-gradient(60vw 60vh at 50% 110%, var(--fx-bg-3), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(var(--fx-net), 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--fx-net), 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+}
+#fx-net { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+main, .footer { position: relative; }
+
+/* ---------- top bar: frosted glass, glowing brand ---------- */
+.topbar {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-bottom: 1px solid var(--fx-edge);
+}
+.topbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--fx-a), var(--fx-b), var(--fx-c), transparent);
+  background-size: 200% 100%; animation: fx-flow 8s linear infinite; opacity: 0.8;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 900px) { .brand::before { display: none; } }
+.brand::before {
+  content: ""; width: 26px; height: 26px; border-radius: 8px; flex: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M9 22l5-6 4 3 5-8' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% no-repeat,
+    linear-gradient(135deg, var(--fx-a), var(--fx-b));
+  box-shadow: 0 0 14px var(--fx-glow);
+}
+.brand {
+  background: linear-gradient(90deg, var(--text), var(--fx-a) 60%, var(--fx-b));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.topbar nav a { position: relative; transition: color 0.2s, background 0.2s; }
+.topbar nav a::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--fx-a), var(--fx-b)); transform: scaleX(0); transition: transform 0.25s;
+}
+.topbar nav a:hover { color: var(--text); }
+.topbar nav a:hover::after, .topbar nav a[aria-current="page"]::after { transform: scaleX(1); }
+
+/* ---------- page photo banner (fx.js sets body[data-fx-photo] and --fx-photo) ---------- */
+.fx-banner {
+  position: relative; height: 150px; border-radius: 20px; overflow: hidden; margin-bottom: 4px;
+  background: var(--fx-photo) center / cover no-repeat, linear-gradient(135deg, #0B3B37, #13305A);
+  box-shadow: 0 10px 30px -12px var(--fx-glow);
+  animation: fx-rise 0.6s ease both;
+}
+.fx-banner::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(4, 22, 28, 0.78), rgba(4, 22, 28, 0.25) 60%, rgba(10, 30, 60, 0.45)),
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 100% 4px;
+}
+.fx-banner::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 30%; left: -30%;
+  background: linear-gradient(90deg, transparent, rgba(120, 255, 235, 0.22), transparent);
+  animation: fx-scan 4.5s ease-in-out infinite;
+}
+.fx-banner .fx-tag {
+  position: absolute; left: 18px; bottom: 14px; display: flex; gap: 8px; align-items: center;
+  font: 600 12px/1 ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: 0.08em;
+  color: #BFFCF3; font-size: 14px; z-index: 1;
+}
+.fx-banner .fx-tag::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3FFFE0;
+  box-shadow: 0 0 10px #3FFFE0; animation: fx-pulse 1.6s ease-in-out infinite;
+}
+.fx-banner .fx-chips { position: absolute; right: 16px; top: 14px; display: flex; gap: 6px; z-index: 1; }
+.fx-banner .fx-chips span {
+  font: 600 11px/1 ui-monospace, Consolas, monospace; color: #DFFDF8; padding: 6px 8px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: fx-float 5s ease-in-out infinite;
+}
+.fx-banner .fx-chips span:nth-child(2) { animation-delay: -1.6s; }
+.fx-banner .fx-chips span:nth-child(3) { animation-delay: -3.2s; }
+@media (max-width: 560px) { .fx-banner { height: 104px; border-radius: 16px; } .fx-banner .fx-chips span:nth-child(n+2) { display: none; } }
+
+/* ---------- landing page hero: the opening section sits on the Kuala Lumpur photo ---------- */
+.fx-hero {
+  position: relative; overflow: hidden; border-radius: 24px; padding: 40px 28px 34px !important; gap: 12px !important;
+  background: url("https://images.unsplash.com/photo-1531819177115-428566ccfb50?auto=format&fit=crop&w=1800&q=70") center 40% / cover no-repeat, #0B2730;
+  box-shadow: 0 24px 60px -24px var(--fx-glow);
+  isolation: isolate;
+}
+.fx-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(100deg, rgba(3, 18, 24, 0.92) 10%, rgba(3, 30, 40, 0.70) 55%, rgba(20, 30, 80, 0.35)),
+    radial-gradient(circle at 85% 20%, rgba(63, 255, 224, 0.25), transparent 40%);
+}
+.fx-hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(120, 255, 235, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 255, 235, 0.12) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(90deg, transparent, #000 70%);
+  animation: fx-grid 20s linear infinite;
+}
+.fx-hero h1 {
+  color: #fff; font-size: clamp(30px, 5.5vw, 46px); letter-spacing: -0.01em; max-width: 18ch;
+  background: linear-gradient(90deg, #FFFFFF, #A9FFF2 45%, #9CC7FF 75%, #FFFFFF);
+  background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: fx-flow 9s linear infinite;
+}
+.fx-hero p { color: rgba(230, 245, 245, 0.88) !important; max-width: 62ch; font-size: 15px !important; }
+.fx-hero .fx-hero-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.fx-hero .fx-hero-tags span {
+  font: 600 12px/1 ui-monospace, "Cascadia Code", Consolas, monospace; color: #CFFFF7;
+  padding: 7px 10px; border-radius: 999px; border: 1px solid rgba(160, 255, 240, 0.3); background: rgba(63, 255, 224, 0.08);
+}
+@media (max-width: 560px) { .fx-hero { padding: 28px 18px 24px !important; border-radius: 18px; } }
+
+/* ---------- photo strip of the six IT areas on the landing page ---------- */
+.fx-areas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.fx-area {
+  position: relative; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden;
+  background: var(--fx-photo) center / cover no-repeat, #0B2730;
+  transition: transform 0.35s cubic-bezier(.2, .8, .2, 1), box-shadow 0.35s;
+}
+.fx-area::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(3, 14, 20, 0.9), rgba(3, 14, 20, 0.1) 60%); transition: background 0.35s; }
+.fx-area span { position: absolute; left: 10px; right: 10px; bottom: 10px; color: #fff; font-weight: 700; font-size: 13px; line-height: 1.25; }
+.fx-area:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 16px 34px -14px var(--fx-glow); }
+.fx-area:hover::before { background: linear-gradient(to top, rgba(4, 60, 56, 0.9), rgba(4, 60, 56, 0.05) 70%); }
+@media (max-width: 760px) { .fx-areas { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx-area { aspect-ratio: 4 / 3; } }
+
+/* ---------- cards: glass, hover lift and a light that follows the pointer ---------- */
+.card, details.group, .top-card, .table-wrap, .drop {
+  background: var(--fx-card);
+  border-color: var(--fx-edge);
+}
+.card, .top-card, details.group { position: relative; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s; }
+.card { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -16px rgba(15, 23, 42, 0.25); }
+.card::after, .top-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), var(--fx-glow), transparent 45%);
+  mix-blend-mode: soft-light;
+}
+.card:hover, .top-card:hover { border-color: color-mix(in srgb, var(--fx-a) 45%, transparent); box-shadow: 0 14px 36px -18px var(--fx-glow); }
+.card:hover::after, .top-card:hover::after { opacity: 1; }
+.top-card.first {
+  border: 1.5px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(120deg, var(--fx-a), var(--fx-b), var(--fx-c)) border-box;
+  box-shadow: 0 12px 34px -18px var(--fx-glow);
+}
+#start { border: 1.5px solid transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(120deg, var(--fx-a), var(--fx-b), var(--fx-c), var(--fx-a)) border-box; background-size: 100% 100%, 300% 300%; animation: fx-border 10s linear infinite; }
+
+/* ---------- headings ---------- */
+main h1:not(.fx-hero h1) {
+  background: linear-gradient(90deg, var(--text) 0%, var(--text) 45%, var(--fx-a) 75%, var(--fx-b));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--fx-a); font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+.eyebrow::before { content: ""; width: 18px; height: 2px; background: linear-gradient(90deg, var(--fx-a), var(--fx-b)); border-radius: 2px; }
+.viz-hero h2 { letter-spacing: 0.02em; background: linear-gradient(90deg, var(--text), var(--fx-a)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ---------- buttons ---------- */
+.btn { transition: transform 0.15s ease, box-shadow 0.25s ease, border-color 0.2s, background 0.2s; position: relative; overflow: hidden; }
+.btn:not(:disabled):hover { transform: translateY(-1px); }
+.btn:not(:disabled):active { transform: translateY(0) scale(0.98); }
+.btn.primary {
+  background: linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--fx-b)));
+  border-color: transparent; box-shadow: 0 6px 18px -8px var(--fx-glow);
+}
+.btn.primary:hover { background: linear-gradient(120deg, var(--accent-strong), color-mix(in srgb, var(--accent-strong) 55%, var(--fx-b))); box-shadow: 0 10px 26px -8px var(--fx-glow); }
+.btn.primary::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent); transform: skewX(-20deg);
+}
+.btn.primary:hover::after { animation: fx-shine 0.8s ease; }
+
+/* ---------- chips, steps, progress ---------- */
+.chip { border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); }
+.journey a { transition: border-color 0.2s, transform 0.2s; background: var(--fx-card); }
+.journey a:hover { transform: translateY(-2px); border-color: var(--fx-a); }
+.journey li.done .num, .stage-num, .letter, .steps .card::before { background: linear-gradient(135deg, var(--fx-a), var(--fx-b)); box-shadow: 0 0 10px var(--fx-glow); }
+.journey li[aria-current="step"] a { box-shadow: 0 0 0 3px color-mix(in srgb, var(--fx-a) 18%, transparent); }
+.progress > div, .bar > div.on, .levels .have {
+  background: linear-gradient(90deg, var(--fx-a), var(--fx-b));
+  background-size: 200% 100%; animation: fx-flow 3s linear infinite;
+  box-shadow: 0 0 10px var(--fx-glow);
+}
+.options button, .rating button, .techs button, .tabs button, .check-list label { transition: transform 0.15s, border-color 0.2s, background 0.2s, box-shadow 0.2s; }
+.options button:hover { border-color: var(--fx-a); transform: translateX(4px); box-shadow: -4px 0 0 var(--fx-a); }
+.techs button:hover, .tabs button:hover { border-color: var(--fx-a); transform: translateY(-1px); }
+.options button[aria-pressed="true"], .techs button[aria-pressed="true"], .rating button[aria-pressed="true"] {
+  background: linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--fx-b))); box-shadow: 0 6px 16px -8px var(--fx-glow);
+}
+.search:focus, select:focus, .code-input:focus, .wi-num:focus { border-color: var(--fx-a); box-shadow: 0 0 0 4px color-mix(in srgb, var(--fx-a) 18%, transparent); outline: none; }
+.score { background: linear-gradient(135deg, var(--fx-a), var(--fx-b)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.score small { -webkit-text-fill-color: var(--muted); }
+
+/* ---------- trend dashboard ---------- */
+.viz-tile { position: relative; overflow: hidden; }
+.viz-tile::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--fx-a), var(--fx-b), var(--fx-c)); }
+.viz-tile-value { background: linear-gradient(135deg, var(--text) 30%, var(--fx-a)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.viz-bar:not(.muted), .viz-col-bar:not(.muted) { background: linear-gradient(90deg, var(--viz-accent), color-mix(in srgb, var(--viz-accent) 60%, var(--fx-b))); }
+.viz-col-bar:not(.muted) { background: linear-gradient(0deg, var(--viz-accent), color-mix(in srgb, var(--viz-accent) 60%, var(--fx-b))); }
+.fx-on .viz-bar { transform-origin: left center; animation: fx-grow-x 0.9s cubic-bezier(.2, .8, .2, 1) both; }
+.fx-on .viz-col-bar { animation: fx-grow-y 0.9s cubic-bezier(.2, .8, .2, 1) both; }
+.fx-on .viz-col-bar:not(.neg) { transform-origin: center bottom; }
+.fx-on .viz-col-bar.neg { transform-origin: center top; }
+.viz-path.accent { filter: drop-shadow(0 0 6px var(--fx-glow)); }
+.fx-on .viz-path { stroke-dasharray: 2000; animation: fx-draw 2s ease both; }
+.viz-explain { border: 1px solid var(--fx-edge); }
+.viz-tip { background: var(--fx-card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-color: var(--fx-edge); }
+.hex-shape { fill: url(#fx-hex-grad); filter: drop-shadow(0 0 8px var(--fx-glow)); }
+.fx-on .hex-shape { transform-box: fill-box; transform-origin: center; animation: fx-pop 0.8s cubic-bezier(.2, .8, .2, 1.2) both; }
+.hex-dot.on { filter: drop-shadow(0 0 4px var(--fx-a)); }
+
+/* ---------- reveal on scroll (fx.js adds .fx-reveal, then .fx-in) ---------- */
+.fx-reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.2, .8, .2, 1); }
+.fx-reveal.fx-in { opacity: 1; transform: none; }
+#app > * { animation: fx-rise 0.45s ease both; }
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(var(--fx-a), var(--fx-b)); border-radius: 10px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-track { background: transparent; }
+::selection { background: color-mix(in srgb, var(--fx-a) 35%, transparent); }
+
+@keyframes fx-flow { to { background-position: 200% 0; } }
+@keyframes fx-border { to { background-position: 0 0, 300% 0; } }
+@keyframes fx-scan { 0% { left: -30%; } 60%, 100% { left: 110%; } }
+@keyframes fx-pulse { 50% { opacity: 0.35; transform: scale(0.8); } }
+@keyframes fx-float { 50% { transform: translateY(-5px); } }
+@keyframes fx-grid { to { background-position: 32px 32px, 32px 32px; } }
+@keyframes fx-shine { to { left: 130%; } }
+@keyframes fx-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes fx-grow-x { from { transform: scaleX(0); } }
+@keyframes fx-grow-y { from { transform: translateX(-50%) scaleY(0); } to { transform: translateX(-50%) scaleY(1); } }
+@keyframes fx-draw { from { stroke-dashoffset: 2000; } to { stroke-dashoffset: 0; } }
+@keyframes fx-pop { from { transform: scale(0.3); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }
+  .fx-reveal { opacity: 1; transform: none; }
+}
+@media print { #fx-net, .fx-banner, .fx-areas { display: none; } }
