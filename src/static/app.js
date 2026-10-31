@@ -57,7 +57,7 @@ function saveState() {
   writeSaved(STORE_KEY, state);
 }
 function clearSaved() {
-  for (const key of [STORE_KEY, PLAN_KEY, PROGRESS_KEY]) {
+  for (const key of [STORE_KEY, PLAN_KEY, PROGRESS_KEY, PLAY_KEY]) {
     try { localStorage.removeItem(key); sessionStorage.removeItem(key); } catch (e) { /* storage off */ }
   }
 }
@@ -1714,9 +1714,11 @@ const FORMAT_LABEL = { video: "▶ YouTube video", playlist: "▶ YouTube playli
 
 // A tick box for one item on a learning path. The same course ticked on one path counts on
 // every path that lists it, so items are keyed by URL (certifications by their id).
-function doneBox(key, title) {
-  return `<label class="done-box" title="Tick when you have finished it">
-    <input type="checkbox" data-done="${esc(key)}"${progress.done[key] ? " checked" : ""}>
+// Videos and playlists only count as done after a short quiz on their topic (play.js).
+function doneBox(key, title, format = "") {
+  const quiz = VIDEO_FORMATS.includes(format);
+  return `<label class="done-box" title="${quiz ? `Tick when you have finished it, then pass a ${VIDEO_QUIZ_SIZE}-question check` : "Tick when you have finished it"}">
+    <input type="checkbox" data-done="${esc(key)}"${quiz ? ` data-quiz="${esc(title)}"` : ""}${progress.done[key] ? " checked" : ""}>
     <span class="visually-hidden">Finished: ${esc(title)}</span><span aria-hidden="true">Done</span>
   </label>`;
 }
@@ -1724,7 +1726,7 @@ function doneBox(key, title) {
 function resourceHtml(r) {
   const facts = [esc(r.provider), r.hours ? `${fmt(r.hours)} h` : "self-paced", r.cost_myr ? `RM ${fmt(r.cost_myr, 0)}` : "", r.level ? esc(r.level) : ""].filter(Boolean);
   return `<li class="res${progress.done[r.url] ? " is-done" : ""}">
-    <div class="res-top"><span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>${doneBox(r.url, r.title)}</div>
+    <div class="res-top"><span class="chip plain res-kind">${FORMAT_LABEL[r.format] || esc(r.format)}</span>${doneBox(r.url, r.title, r.format)}</div>
     <a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
     <span class="muted small">${facts.join(" · ")}</span>
   </li>`;
@@ -1735,14 +1737,15 @@ const sdgTile = (goal, name) => `<img class="sdg-tile" src="/static/sdg/${encode
 
 /* ---------- learning progress ---------- */
 
-// { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, updated}} }
+// { done: {itemKey: "YYYY-MM-DD"}, paths: {roleId: {name, area, personal, items: {itemKey: hours|null}, updated}},
+//   quizzes: {videoUrl: {score, total, date}} (the video's quiz was passed) }
 // A path is tracked from the first item ticked on it; its item list is refreshed on every visit.
 const PROGRESS_KEY = "future-skills-progress-v1";
 let progress = loadProgress();
 
 function loadProgress() {
   const saved = readSaved(PROGRESS_KEY) || {};
-  return { done: saved.done || {}, paths: saved.paths || {} };
+  return { done: saved.done || {}, paths: saved.paths || {}, quizzes: saved.quizzes || {} };
 }
 const saveProgress = () => writeSaved(PROGRESS_KEY, progress);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -1868,6 +1871,15 @@ async function pageLearn(roleId) {
   app.querySelectorAll("[data-done]").forEach((box) => {
     box.onchange = () => {
       const key = box.dataset.done;
+      if (box.checked && box.dataset.quiz !== undefined && !progress.quizzes[key]) {  // a video: done once its quiz is passed
+        box.checked = false;
+        videoQuiz(key, box.dataset.quiz, (result) => {
+          progress.quizzes[key] = { score: result.score, total: result.total, date: today() };
+          box.checked = true;
+          box.onchange();
+        });
+        return;
+      }
       if (box.checked) progress.done[key] = today(); else delete progress.done[key];
       track();
       saveProgress();
@@ -1940,6 +1952,7 @@ async function route() {
     else if (page === "whatif") await pageWhatIf();
     else if (page === "learn" && parts[1]) await pageLearn(decodeURIComponent(parts[1]));
     else if (page === "progress") pageProgress();
+    else if (page === "play") await pagePlay(parts[1], parts[2]);
     else await pageTrends();
   } catch (e) {
     showError(e);

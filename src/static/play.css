@@ -1,0 +1,36 @@
+/* IT Puzzles (play.js): the game pages and the video check dialog. */
+.play-stats { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+.play-stats .card { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
+.play-stats strong { font-size: 22px; line-height: 1.2; }
+.daily-card { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-soft), var(--surface) 70%); }
+.play-areas { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.level-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); text-decoration: none; }
+.level-row:hover { border-color: var(--accent); color: var(--text); }
+.stars { color: #D99A00; letter-spacing: 1px; white-space: nowrap; }
+.stars-off { color: var(--bar-muted); }
+.big-stars .stars { font-size: 34px; }
+.puzzle-q { font-size: 18px; }
+.puzzle-options button { display: flex; align-items: center; gap: 12px; height: auto; padding: 12px 16px; line-height: 1.4; }
+.puzzle-options button:disabled { cursor: default; }
+.opt-letter { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--track); color: var(--text); font-size: 13px; font-weight: 700; }
+.puzzle-options button[aria-pressed="true"] .opt-letter { background: var(--on-accent); color: var(--accent); }
+.puzzle-options button.is-right { border-color: #1F8A4C; background: #E5F5EC; color: #145C33; }
+.puzzle-options button.is-wrong { border-color: #C0392B; background: #FBEAEA; color: #8E2A20; }
+.puzzle-options button.is-right .opt-letter { background: #1F8A4C; color: #fff; }
+.puzzle-options button.is-wrong .opt-letter { background: #C0392B; color: #fff; }
+:root[data-theme="dark"] .puzzle-options button.is-right { background: #143A26; color: #A6E3BF; }
+:root[data-theme="dark"] .puzzle-options button.is-wrong { background: #3D1A17; color: #F2B1A9; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .puzzle-options button.is-right { background: #143A26; color: #A6E3BF; }
+  :root:not([data-theme="light"]) .puzzle-options button.is-wrong { background: #3D1A17; color: #F2B1A9; }
+}
+.round-result { text-align: left; }
+.quiz-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--text); }
+.quiz-dialog::backdrop { background: rgba(15, 20, 25, 0.55); }
+.quiz-q { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+@media (max-width: 520px) {
+  .play-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .play-stats .card { padding: 10px; }
+  .play-stats strong { font-size: 18px; }
+  .quiz-dialog { padding: 14px; }
+}

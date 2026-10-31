@@ -33,6 +33,13 @@ Endpoints (all JSON):
     GET  /api/whatif                 the trend inputs a what-if may change, and ready-made examples
     POST /api/whatif                 same body as /api/match + trend_changes -> what changes: inputs,
                                      signals, trend scores and the student's role ranks, before and after
+    GET  /api/puzzles                the puzzle game: IT areas, levels and puzzle counts
+    GET  /api/puzzles/round          ?area=&level=  that set's puzzles (no answers)
+    POST /api/puzzles/check          puzzle id + chosen option -> right or wrong, and why
+    GET  /api/puzzles/daily          today's daily challenge (LLM-written, or from the bank)
+    POST /api/puzzles/daily/check    date + chosen option -> right or wrong, and why
+    POST /api/puzzles/video          learning-path video URL -> 5 questions on its topic
+    POST /api/puzzles/video/check    quiz id + 5 answers -> score, and passed when 4 or more are right
 
 /api/match, /api/explain and /api/learn also take "trend_changes" (scripts/whatif.py): the
 results are then built from a changed copy of the trend data, for that request only.
@@ -62,12 +69,26 @@ SCRIPTS = ROOT / "scripts"
 STATIC = Path(__file__).resolve().parent / "static"
 sys.path.insert(0, str(SCRIPTS))
 
+
+def load_env_file(path: Path = ROOT / ".env") -> None:
+    """Read KEY=value lines from a local .env file. Real environment values (Replit Secrets) win."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        key, sep, value = line.strip().partition("=")
+        if sep and key and not key.startswith("#") and value.strip():
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 import assessment  # noqa: E402  (scripts/ is added to the path above)
 import cv_reader  # noqa: E402
 import explain  # noqa: E402
 import interest  # noqa: E402
 import learning  # noqa: E402
 import matching  # noqa: E402
+import puzzles  # noqa: E402
 import whatif  # noqa: E402
 
 UPDATE_TIMEOUT_S = 600
@@ -647,6 +668,56 @@ def what_if(request):
                    groups=groups, before=before_roles, after=after_roles)
 
 
+def puzzle_call(fn, *args):
+    try:
+        return jsonify(fn(*args))
+    except puzzles.PuzzleError as e:
+        raise BadRequest(str(e)) from None
+
+
+@route("GET", "/api/puzzles")
+def puzzle_menu(request):
+    return jsonify(**puzzles.summary(), llm=puzzles.llm_status(), video_pass=puzzles.VIDEO_PASS,
+                   video_questions=puzzles.VIDEO_QUESTIONS)
+
+
+@route("GET", "/api/puzzles/round")
+def puzzle_round(request):
+    area, level = request.args.get("area"), request.args.get("level")
+    try:
+        return jsonify(area=area, level=level, puzzles=puzzles.round_for(area, level))
+    except puzzles.PuzzleError as e:
+        raise BadRequest(str(e)) from None
+
+
+@route("POST", "/api/puzzles/check")
+def puzzle_check(request):
+    data = body(request)
+    return puzzle_call(puzzles.check, data.get("id"), data.get("choice"))
+
+
+@route("GET", "/api/puzzles/daily")
+def puzzle_daily(request):
+    return jsonify(puzzles.daily())
+
+
+@route("POST", "/api/puzzles/daily/check")
+def puzzle_daily_check(request):
+    data = body(request)
+    return puzzle_call(puzzles.check_daily, data.get("date"), data.get("choice"))
+
+
+@route("POST", "/api/puzzles/video")
+def puzzle_video(request):
+    return puzzle_call(puzzles.video_quiz, body(request).get("url"))
+
+
+@route("POST", "/api/puzzles/video/check")
+def puzzle_video_check(request):
+    data = body(request)
+    return puzzle_call(puzzles.check_video_quiz, data.get("quiz_id"), data.get("answers"))
+
+
 def low_data(res: Response, method: str, headers) -> tuple[int, bytes, dict]:
     """Status, body and headers that cost students on mobile data as little as possible.
 
@@ -697,6 +768,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
+    load_env_file()  # here, not on import, so the tests never pick up a real API key
     port = int(os.getenv("PORT", "8080"))
     server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print(f"Future Skills running on http://0.0.0.0:{port}", flush=True)
